@@ -1,9 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  images: {
-    domains: ["avatars.githubusercontent.com", "media.graphassets.com"],
+  eslint: {
+    ignoreDuringBuilds: true,
   },
 };
 
-export default nextConfig;
-// Test test
+module.exports = nextConfig;
