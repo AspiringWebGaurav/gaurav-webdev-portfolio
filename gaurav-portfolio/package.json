@@ -10,7 +10,10 @@
     "release": "standard-version"
   },
   "dependencies": {
+    "@react-three/drei": "^9.89.2",
+    "@react-three/fiber": "^8.13.5",
     "clsx": "^2.1.1",
+    "lottie-web": "^5.13.0",
     "mini-svg-data-uri": "^1.4.4",
     "motion": "^12.12.1",
     "next": "15.3.2",
@@ -18,14 +21,18 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.5.0",
+    "react-lottie": "^1.2.10",
     "tailwind-merge": "^3.3.0",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "three": "^0.176.0",
+    "three-globe": "^2.42.4"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/react-lottie": "^1.2.10",
     "autoprefixer": "^10.4.21",
     "eslint": "^9",
     "eslint-config-next": "15.3.2",
