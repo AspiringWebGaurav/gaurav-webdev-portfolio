@@ -1,201 +1,309 @@
 "use client";
-import { useState } from "react";
-import { IoCopyOutline } from "react-icons/io5";
+import { useEffect, useRef, useState } from "react";
+import { Color, Scene, Fog, PerspectiveCamera, Vector3 } from "three";
+import ThreeGlobe from "three-globe";
+import { useThree, Canvas, extend } from "@react-three/fiber";
+import { OrbitControls } from "@react-three/drei";
+import countries from "@/data/globe.json";
+declare module "@react-three/fiber" {
+  interface ThreeElements {
+    threeGlobe: ThreeElements["mesh"] & {
+      new (): ThreeGlobe;
+    };
+  }
+}
 
-// Also install this npm i --save-dev @types/react-lottie
-import Lottie from "react-lottie";
+extend({ ThreeGlobe: ThreeGlobe });
 
-import { cn } from "@/lib/utils";
+const RING_PROPAGATION_SPEED = 3;
+const aspect = 1.2;
+const cameraZ = 300;
 
-import { BackgroundGradientAnimation } from "./GradientBg";
-import GridGlobe from "./GridGlobe";
-import animationData from "@/data/confetti.json";
-import MagicButton from "./MagicButton";
-
-export const BentoGrid = ({
-  className,
-  children,
-}: {
-  className?: string;
-  children?: React.ReactNode;
-}) => {
-  return (
-    <div
-      className={cn(
-        // change gap-4 to gap-8, change grid-cols-3 to grid-cols-5, remove md:auto-rows-[18rem], add responsive code
-        "grid grid-cols-1 md:grid-cols-6 lg:grid-cols-5 md:grid-row-7 gap-4 lg:gap-8 mx-auto",
-        className
-      )}
-    >
-      {children}
-    </div>
-  );
+type Position = {
+  order: number;
+  startLat: number;
+  startLng: number;
+  endLat: number;
+  endLng: number;
+  arcAlt: number;
+  color: string;
 };
 
-export const BentoGridItem = ({
-  className,
-  id,
-  title,
-  description,
-  //   remove unecessary things here
-  img,
-  imgClassName,
-  titleClassName,
-  spareImg,
-}: {
-  className?: string;
-  id: number;
-  title?: string | React.ReactNode;
-  description?: string | React.ReactNode;
-  img?: string;
-  imgClassName?: string;
-  titleClassName?: string;
-  spareImg?: string;
-}) => {
-  const leftLists = ["ReactJS", "Express", "Typescript"];
-  const rightLists = ["VueJS", "NuxtJS", "GraphQL"];
-
-  const [copied, setCopied] = useState(false);
-
-  const defaultOptions = {
-    loop: copied,
-    autoplay: copied,
-    animationData: animationData,
-    rendererSettings: {
-      preserveAspectRatio: "xMidYMid slice",
-    },
+export type GlobeConfig = {
+  pointSize?: number;
+  globeColor?: string;
+  showAtmosphere?: boolean;
+  atmosphereColor?: string;
+  atmosphereAltitude?: number;
+  emissive?: string;
+  emissiveIntensity?: number;
+  shininess?: number;
+  polygonColor?: string;
+  ambientLight?: string;
+  directionalLeftLight?: string;
+  directionalTopLight?: string;
+  pointLight?: string;
+  arcTime?: number;
+  arcLength?: number;
+  rings?: number;
+  maxRings?: number;
+  initialPosition?: {
+    lat: number;
+    lng: number;
   };
-
-  const handleCopy = () => {
-    const text = "hsu@jsmastery.pro";
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-  };
-
-  return (
-    <div
-      className={cn(
-        // remove p-4 rounded-3xl dark:bg-black dark:border-white/[0.2] bg-white  border border-transparent, add border border-white/[0.1] overflow-hidden relative
-        "row-span-1 relative overflow-hidden rounded-3xl border border-white/[0.1] group/bento hover:shadow-xl transition duration-200 shadow-input dark:shadow-none justify-between flex flex-col space-y-4",
-        className
-      )}
-      style={{
-        //   add these two
-        //   you can generate the color from here https://cssgradient.io/
-        background: "rgb(4,7,29)",
-        backgroundColor:
-          "linear-gradient(90deg, rgba(4,7,29,1) 0%, rgba(12,14,35,1) 100%)",
-      }}
-    >
-      {/* add img divs */}
-      <div className={`${id === 6 && "flex justify-center"} h-full`}>
-        <div className="w-full h-full absolute">
-          {img && (
-            <img
-              src={img}
-              alt={img}
-              className={cn(imgClassName, "object-cover object-center ")}
-            />
-          )}
-        </div>
-        <div
-          className={`absolute right-0 -bottom-5 ${
-            id === 5 && "w-full opacity-80"
-          } `}
-        >
-          {spareImg && (
-            <img
-              src={spareImg}
-              alt={spareImg}
-              //   width={220}
-              className="object-cover object-center w-full h-full"
-            />
-          )}
-        </div>
-        {id === 6 && (
-          // add background animation , remove the p tag
-          <BackgroundGradientAnimation>
-            <div className="absolute z-50 inset-0 flex items-center justify-center text-white font-bold px-4 pointer-events-none text-3xl text-center md:text-4xl lg:text-7xl"></div>
-          </BackgroundGradientAnimation>
-        )}
-
-        <div
-          className={cn(
-            titleClassName,
-            "group-hover/bento:translate-x-2 transition duration-200 relative md:h-full min-h-40 flex flex-col px-5 p-5 lg:p-10"
-          )}
-        >
-          {/* change the order of the title and des, font-extralight, remove text-xs text-neutral-600 dark:text-neutral-300 , change the text-color */}
-          <div className="font-sans font-extralight md:max-w-32 md:text-xs lg:text-base text-sm text-[#C1C2D3] z-10">
-            {description}
-          </div>
-          {/* add text-3xl max-w-96 , remove text-neutral-600 dark:text-neutral-300*/}
-          {/* remove mb-2 mt-2 */}
-          <div
-            className={`font-sans text-lg lg:text-3xl max-w-96 font-bold z-10`}
-          >
-            {title}
-          </div>
-
-          {/* for the github 3d globe */}
-          {id === 2 && <GridGlobe />}
-
-          {/* Tech stack list div */}
-          {id === 3 && (
-            <div className="flex gap-1 lg:gap-5 w-fit absolute -right-3 lg:-right-2">
-              {/* tech stack lists */}
-              <div className="flex flex-col gap-3 md:gap-3 lg:gap-8">
-                {leftLists.map((item, i) => (
-                  <span
-                    key={i}
-                    className="lg:py-4 lg:px-3 py-2 px-3 text-xs lg:text-base opacity-50 
-                    lg:opacity-100 rounded-lg text-center bg-[#10132E]"
-                  >
-                    {item}
-                  </span>
-                ))}
-                <span className="lg:py-4 lg:px-3 py-4 px-3  rounded-lg text-center bg-[#10132E]"></span>
-              </div>
-              <div className="flex flex-col gap-3 md:gap-3 lg:gap-8">
-                <span className="lg:py-4 lg:px-3 py-4 px-3  rounded-lg text-center bg-[#10132E]"></span>
-                {rightLists.map((item, i) => (
-                  <span
-                    key={i}
-                    className="lg:py-4 lg:px-3 py-2 px-3 text-xs lg:text-base opacity-50 
-                    lg:opacity-100 rounded-lg text-center bg-[#10132E]"
-                  >
-                    {item}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-          {id === 6 && (
-            <div className="mt-5 relative">
-              {/* button border magic from tailwind css buttons  */}
-              {/* add rounded-md h-8 md:h-8, remove rounded-full */}
-              {/* remove focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50 */}
-              {/* add handleCopy() for the copy the text */}
-              <div
-                className={`absolute -bottom-5 right-0 ${
-                  copied ? "block" : "block"
-                }`}
-              >
-                {/* <img src="/confetti.gif" alt="confetti" /> */}
-                <Lottie options={defaultOptions} height={200} width={400} />
-              </div>
-
-              <MagicButton
-                title={copied ? "Email is Copied!" : "Copy my email address"}
-                icon={<IoCopyOutline />}
-                position="left"
-                handleClick={handleCopy}
-                otherClasses="!bg-[#161A31]"
-              />
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+  autoRotate?: boolean;
+  autoRotateSpeed?: number;
 };
+
+interface WorldProps {
+  globeConfig: GlobeConfig;
+  data: Position[];
+}
+
+let numbersOfRings = [0];
+
+export function Globe({ globeConfig, data }: WorldProps) {
+  const globeRef = useRef<ThreeGlobe | null>(null);
+  const groupRef = useRef();
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  const defaultProps = {
+    pointSize: 1,
+    atmosphereColor: "#ffffff",
+    showAtmosphere: true,
+    atmosphereAltitude: 0.1,
+    polygonColor: "rgba(255,255,255,0.7)",
+    globeColor: "#1d072e",
+    emissive: "#000000",
+    emissiveIntensity: 0.1,
+    shininess: 0.9,
+    arcTime: 2000,
+    arcLength: 0.9,
+    rings: 1,
+    maxRings: 3,
+    ...globeConfig,
+  };
+
+  // Initialize globe only once
+  useEffect(() => {
+    if (!globeRef.current && groupRef.current) {
+      globeRef.current = new ThreeGlobe();
+      (groupRef.current as any).add(globeRef.current);
+      setIsInitialized(true);
+    }
+  }, []);
+
+  // Build material when globe is initialized or when relevant props change
+  useEffect(() => {
+    if (!globeRef.current || !isInitialized) return;
+
+    const globeMaterial = globeRef.current.globeMaterial() as unknown as {
+      color: Color;
+      emissive: Color;
+      emissiveIntensity: number;
+      shininess: number;
+    };
+    globeMaterial.color = new Color(globeConfig.globeColor);
+    globeMaterial.emissive = new Color(globeConfig.emissive);
+    globeMaterial.emissiveIntensity = globeConfig.emissiveIntensity || 0.1;
+    globeMaterial.shininess = globeConfig.shininess || 0.9;
+  }, [
+    isInitialized,
+    globeConfig.globeColor,
+    globeConfig.emissive,
+    globeConfig.emissiveIntensity,
+    globeConfig.shininess,
+  ]);
+
+  // Build data when globe is initialized or when data changes
+  useEffect(() => {
+    if (!globeRef.current || !isInitialized || !data) return;
+
+    const arcs = data;
+    let points = [];
+    for (let i = 0; i < arcs.length; i++) {
+      const arc = arcs[i];
+      const rgb = hexToRgb(arc.color) as { r: number; g: number; b: number };
+      points.push({
+        size: defaultProps.pointSize,
+        order: arc.order,
+        color: arc.color,
+        lat: arc.startLat,
+        lng: arc.startLng,
+      });
+      points.push({
+        size: defaultProps.pointSize,
+        order: arc.order,
+        color: arc.color,
+        lat: arc.endLat,
+        lng: arc.endLng,
+      });
+    }
+
+    // remove duplicates for same lat and lng
+    const filteredPoints = points.filter(
+      (v, i, a) =>
+        a.findIndex((v2) =>
+          ["lat", "lng"].every(
+            (k) => v2[k as "lat" | "lng"] === v[k as "lat" | "lng"]
+          )
+        ) === i
+    );
+
+    globeRef.current
+      .hexPolygonsData(countries.features)
+      .hexPolygonResolution(3)
+      .hexPolygonMargin(0.7)
+      .showAtmosphere(defaultProps.showAtmosphere)
+      .atmosphereColor(defaultProps.atmosphereColor)
+      .atmosphereAltitude(defaultProps.atmosphereAltitude)
+      .hexPolygonColor(() => defaultProps.polygonColor);
+
+    globeRef.current
+      .arcsData(data)
+      .arcStartLat((d) => (d as { startLat: number }).startLat * 1)
+      .arcStartLng((d) => (d as { startLng: number }).startLng * 1)
+      .arcEndLat((d) => (d as { endLat: number }).endLat * 1)
+      .arcEndLng((d) => (d as { endLng: number }).endLng * 1)
+      .arcColor((e: any) => (e as { color: string }).color)
+      .arcAltitude((e) => (e as { arcAlt: number }).arcAlt * 1)
+      .arcStroke(() => [0.32, 0.28, 0.3][Math.round(Math.random() * 2)])
+      .arcDashLength(defaultProps.arcLength)
+      .arcDashInitialGap((e) => (e as { order: number }).order * 1)
+      .arcDashGap(15)
+      .arcDashAnimateTime(() => defaultProps.arcTime);
+
+    globeRef.current
+      .pointsData(filteredPoints)
+      .pointColor((e) => (e as { color: string }).color)
+      .pointsMerge(true)
+      .pointAltitude(0.0)
+      .pointRadius(2);
+
+    globeRef.current
+      .ringsData([])
+      .ringColor(() => defaultProps.polygonColor)
+      .ringMaxRadius(defaultProps.maxRings)
+      .ringPropagationSpeed(RING_PROPAGATION_SPEED)
+      .ringRepeatPeriod(
+        (defaultProps.arcTime * defaultProps.arcLength) / defaultProps.rings
+      );
+  }, [
+    isInitialized,
+    data,
+    defaultProps.pointSize,
+    defaultProps.showAtmosphere,
+    defaultProps.atmosphereColor,
+    defaultProps.atmosphereAltitude,
+    defaultProps.polygonColor,
+    defaultProps.arcLength,
+    defaultProps.arcTime,
+    defaultProps.rings,
+    defaultProps.maxRings,
+  ]);
+
+  // Handle rings animation with cleanup
+  useEffect(() => {
+    if (!globeRef.current || !isInitialized || !data) return;
+
+    const interval = setInterval(() => {
+      if (!globeRef.current) return;
+
+      const newNumbersOfRings = genRandomNumbers(
+        0,
+        data.length,
+        Math.floor((data.length * 4) / 5)
+      );
+
+      const ringsData = data
+        .filter((d, i) => newNumbersOfRings.includes(i))
+        .map((d) => ({
+          lat: d.startLat,
+          lng: d.startLng,
+          color: d.color,
+        }));
+
+      globeRef.current.ringsData(ringsData);
+    }, 2000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [isInitialized, data]);
+
+  return <group ref={groupRef} />;
+}
+
+export function WebGLRendererConfig() {
+  const { gl, size } = useThree();
+
+  useEffect(() => {
+    gl.setPixelRatio(window.devicePixelRatio);
+    gl.setSize(size.width, size.height);
+    gl.setClearColor(0xffaaff, 0);
+  }, []);
+
+  return null;
+}
+
+export function World(props: WorldProps) {
+  const { globeConfig } = props;
+  const scene = new Scene();
+  scene.fog = new Fog(0xffffff, 400, 2000);
+  return (
+    <Canvas scene={scene} camera={new PerspectiveCamera(50, aspect, 180, 1800)}>
+      <WebGLRendererConfig />
+      <ambientLight color={globeConfig.ambientLight} intensity={0.6} />
+      <directionalLight
+        color={globeConfig.directionalLeftLight}
+        position={new Vector3(-400, 100, 400)}
+      />
+      <directionalLight
+        color={globeConfig.directionalTopLight}
+        position={new Vector3(-200, 500, 200)}
+      />
+      <pointLight
+        color={globeConfig.pointLight}
+        position={new Vector3(-200, 500, 200)}
+        intensity={0.8}
+      />
+      <Globe {...props} />
+      <OrbitControls
+        enablePan={false}
+        enableZoom={false}
+        minDistance={cameraZ}
+        maxDistance={cameraZ}
+        autoRotateSpeed={1}
+        autoRotate={true}
+        minPolarAngle={Math.PI / 3.5}
+        maxPolarAngle={Math.PI - Math.PI / 3}
+      />
+    </Canvas>
+  );
+}
+
+export function hexToRgb(hex: string) {
+  var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+  hex = hex.replace(shorthandRegex, function (m, r, g, b) {
+    return r + r + g + g + b + b;
+  });
+
+  var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result
+    ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16),
+      }
+    : null;
+}
+
+export function genRandomNumbers(min: number, max: number, count: number) {
+  const arr = [];
+  while (arr.length < count) {
+    const r = Math.floor(Math.random() * (max - min)) + min;
+    if (arr.indexOf(r) === -1) arr.push(r);
+  }
+
+  return arr;
+}

@@ -10,8 +10,8 @@
     "release": "standard-version"
   },
   "dependencies": {
-    "@react-three/drei": "^9.89.2",
-    "@react-three/fiber": "^8.13.5",
+    "@react-three/drei": "^10.0.8",
+    "@react-three/fiber": "^9.0.0-alpha.8",
     "clsx": "^2.1.1",
     "lottie-web": "^5.13.0",
     "mini-svg-data-uri": "^1.4.4",
