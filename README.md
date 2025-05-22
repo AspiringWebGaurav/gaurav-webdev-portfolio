@@ -2,7 +2,6 @@
 
 A sleek, performance-optimized, and highly interactive developer portfolio built using **Next.js**, **Framer Motion**, and a modern development workflow. Designed for developers, by a developer — inspired by **JavaScript Mastery** style and UX principles.
 
-[![Netlify](https://img.shields.io/badge/Development--Preview-Netlify-brightgreen?logo=netlify)](https://gaurav-webdev-portfolio.netlify.app)
 [![Vercel](https://img.shields.io/badge/Production--Deployment-Vercel-black?logo=vercel)](https://vercel.com)
 [![Made with Next.js](https://img.shields.io/badge/Made%20with-Next.js-000000?logo=nextdotjs)](https://nextjs.org)
 [![Framer Motion](https://img.shields.io/badge/Animation-Framer--Motion-purple?logo=framer)](https://www.framer.com/motion/)
@@ -12,8 +11,8 @@ A sleek, performance-optimized, and highly interactive developer portfolio built
 
 ## 🚀 Live Links
 
-- **🔧 Development & Testing:** [Netlify Preview](https://gaurav-webdev-portfolio.netlify.app)
-- **🌐 Production:** Deployed on **Vercel** _(main branch only)_
+- **🔧 Development & Testing:** [Vercel Preview](https://gaurav-webdev-portfolio.vercel.app/)
+- **🌐 Production:** Deployed on **Vercel** _(https://gaurav-webdev-portfolio.vercel.app/)_
 
 ---
 
