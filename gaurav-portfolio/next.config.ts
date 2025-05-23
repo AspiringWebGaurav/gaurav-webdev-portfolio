@@ -4,12 +4,13 @@ const nextConfig = {
     domains: ["avatars.githubusercontent.com", "media.graphassets.com"],
   },
   eslint: {
-    // Skip ESLint during builds (e.g., on Vercel)
     ignoreDuringBuilds: true,
   },
   typescript: {
-    // Skip type errors during builds (useful while debugging)
     ignoreBuildErrors: true,
+  },
+  experimental: {
+    allowedDevOrigins: ["http://192.168.0.246"],
   },
 };
 
