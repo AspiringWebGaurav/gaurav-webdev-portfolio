@@ -1,16 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  images: {
-    domains: ["avatars.githubusercontent.com", "media.graphassets.com"],
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  reactStrictMode: true,
+
+  // ✅ Disable TypeScript errors during build
   typescript: {
     ignoreBuildErrors: true,
   },
-  experimental: {
-    allowedDevOrigins: ["http://192.168.0.246"],
+
+  // ✅ Disable ESLint during build
+  eslint: {
+    ignoreDuringBuilds: true,
   },
 };
 
