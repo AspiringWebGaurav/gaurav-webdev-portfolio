@@ -13,6 +13,7 @@
     "@netlify/next": "^1.4.9",
     "@react-three/drei": "^10.0.8",
     "@react-three/fiber": "^9.0.0-alpha.8",
+    "@sentry/nextjs": "^9.22.0",
     "clsx": "^2.1.1",
     "lottie-web": "^5.13.0",
     "mini-svg-data-uri": "^1.4.4",
