@@ -5,10 +5,19 @@ import { Input } from "./ui/input";
 import { cn } from "@/lib/utils";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useRouter } from "next/navigation";
 
 export function SignupFormDemo() {
   const formRef = useRef<HTMLFormElement>(null);
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [submittedData, setSubmittedData] = useState<{
+    firstname: string;
+    lastname: string;
+    email: string;
+    message: string;
+  } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -41,12 +50,32 @@ export function SignupFormDemo() {
       if (!res.ok) throw new Error("Failed to send message");
 
       toast.success("✅ Message sent successfully!");
-      formRef.current?.reset();
+      setSubmittedData(formData);
+      setShowModal(true);
     } catch (error) {
       toast.error("❌ Failed to send message. Please try again.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEditAndResend = () => {
+    if (submittedData) {
+      (document.getElementById("firstname") as HTMLInputElement).value =
+        submittedData.firstname;
+      (document.getElementById("lastname") as HTMLInputElement).value =
+        submittedData.lastname;
+      (document.getElementById("email") as HTMLInputElement).value =
+        submittedData.email;
+      (document.getElementById("message") as HTMLTextAreaElement).value =
+        submittedData.message;
+    }
+    setShowModal(false);
+  };
+
+  const handleNewMessage = () => {
+    formRef.current?.reset();
+    setShowModal(false);
   };
 
   return (
@@ -96,7 +125,6 @@ export function SignupFormDemo() {
           />
         </LabelInputContainer>
 
-        {/* Sticky Footer Button */}
         <div className="fixed bottom-0 left-0 w-full px-4 py-4 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 sm:static sm:p-0">
           <button
             type="submit"
@@ -130,6 +158,77 @@ export function SignupFormDemo() {
           </button>
         </div>
       </form>
+
+      {showModal && submittedData && (
+        <div
+          className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center animate-fade-in"
+          onClick={() => setShowModal(false)}
+        >
+          <div
+            className="bg-white dark:bg-black p-6 rounded-lg shadow-xl max-w-lg w-full m-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-xl font-semibold mb-4 text-center">
+              🎉 Message Delivered
+            </h3>
+            <div className="text-sm space-y-2 bg-gray-100 dark:bg-gray-800 p-4 rounded-md">
+              <p>
+                <strong>Name:</strong> {submittedData.firstname}{" "}
+                {submittedData.lastname}
+              </p>
+              <p>
+                <strong>Email:</strong> {submittedData.email}
+              </p>
+              <p>
+                <strong>Message:</strong> {submittedData.message}
+              </p>
+            </div>
+            <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
+              A confirmation email has been sent to{" "}
+              <strong>{submittedData.email}</strong> from{" "}
+              <strong>gauravbackendservices@outlook.com</strong>.
+              <br />
+              If it's not in your inbox, please check your spam or junk folder.
+              <br />
+              It includes a beautiful short overview of Gaurav’s tech,
+              background & projects.
+            </div>
+
+            <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm font-medium">
+              <button
+                onClick={handleEditAndResend}
+                className="bg-yellow-500 text-white py-2 px-3 rounded hover:bg-yellow-400"
+              >
+                ✏️ Edit & Resend
+              </button>
+              <button
+                onClick={handleNewMessage}
+                className="bg-gray-800 text-white py-2 px-3 rounded hover:bg-gray-700"
+              >
+                🆕 New Message
+              </button>
+              <button
+                onClick={() => router.push("/")}
+                className="bg-blue-600 text-white py-2 px-3 rounded hover:bg-blue-500"
+              >
+                🏠 Go to Home
+              </button>
+              <button
+                onClick={() => router.push("/resume")}
+                className="bg-purple-600 text-white py-2 px-3 rounded hover:bg-purple-500 col-span-1"
+              >
+                📄 View Resume
+              </button>
+              <button
+                onClick={() => router.push("/projects")}
+                className="bg-green-600 text-white py-2 px-3 rounded hover:bg-green-500 col-span-1"
+              >
+                💡 Explore Projects
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -148,4 +247,4 @@ const LabelInputContainer = ({
   );
 };
 
-export default SignupFormDemo; 
+export default SignupFormDemo;
