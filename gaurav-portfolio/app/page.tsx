@@ -8,6 +8,7 @@ import Clients from "@/components/Clients";
 import Experience from "@/components/Experience";
 import Approach from "@/components/Approach";
 import Footer from "@/components/Footer";
+import { HeroParallaxDemo } from "@/components/HeoParallaxDemo";
 
 export default function Home() {
   return (
@@ -17,6 +18,7 @@ export default function Home() {
           <FloatingNav navItems={navItems} />
           <Hero />
           <Grid />
+          <HeroParallaxDemo />
           <RecentProjects />
           <Clients />
           <Experience />
