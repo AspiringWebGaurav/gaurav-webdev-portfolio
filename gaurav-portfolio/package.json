@@ -15,6 +15,7 @@
     "@radix-ui/react-label": "^2.1.7",
     "@react-three/drei": "^10.0.8",
     "@react-three/fiber": "^9.0.0-alpha.8",
+    "@sendgrid/mail": "^8.1.5",
     "@sentry/nextjs": "^9.22.0",
     "@tabler/icons-react": "^3.33.0",
     "clsx": "^2.1.1",

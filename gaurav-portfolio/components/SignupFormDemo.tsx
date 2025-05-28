@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { cn } from "@/lib/utils";
@@ -26,29 +26,42 @@ export function SignupFormDemo() {
 
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [showCaptcha, setShowCaptcha] = useState(false);
+  const [turnstilePassed, setTurnstilePassed] = useState(false);
+  const [recaptchaPassed, setRecaptchaPassed] = useState(false);
+  const [captchaKey, setCaptchaKey] = useState(0);
 
   const isFormFilled = () => {
-    const fname = (document.getElementById("firstname") as HTMLInputElement)
-      .value;
-    const lname = (document.getElementById("lastname") as HTMLInputElement)
-      .value;
-    const email = (document.getElementById("email") as HTMLInputElement).value;
-    const msg = (document.getElementById("message") as HTMLTextAreaElement)
-      .value;
-    return fname && lname && email && msg;
+    const fnameInput = document.getElementById(
+      "firstname"
+    ) as HTMLInputElement | null;
+    const lnameInput = document.getElementById(
+      "lastname"
+    ) as HTMLInputElement | null;
+    const emailInput = document.getElementById(
+      "email"
+    ) as HTMLInputElement | null;
+    const msgInput = document.getElementById(
+      "message"
+    ) as HTMLTextAreaElement | null;
+
+    return (
+      fnameInput?.value.trim() &&
+      lnameInput?.value.trim() &&
+      emailInput?.value.trim() &&
+      msgInput?.value.trim()
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    const start = Date.now();
 
-    // Recap
-    const recaptcha = recaptchaRef.current?.getValue();
-    const turnstile = turnstileRef.current?.getResponse();
-
-    if (!recaptcha || !turnstile) {
-      toast.error("Please complete both CAPTCHA verifications.");
+    if (!recaptchaToken || !turnstileToken) {
+      toast.error("CAPTCHA may not be ready. Please wait or refresh it.");
+      setRecaptchaPassed(false);
+      setTurnstilePassed(false);
+      setCaptchaKey((k) => k + 1); // force re-render both
       setLoading(false);
       return;
     }
@@ -60,31 +73,54 @@ export function SignupFormDemo() {
       email: (document.getElementById("email") as HTMLInputElement).value,
       message: (document.getElementById("message") as HTMLTextAreaElement)
         .value,
-      recaptchaToken: recaptcha,
-      turnstileToken: turnstile,
+      recaptchaToken, // ✅ use current state
+      turnstileToken, // ✅ use current state
     };
 
+    const start = Date.now();
+
     try {
-      const res = await fetch(
-        "https://portfoliomailsender.onrender.com/send-contact",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        }
-      );
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000); // ⏱️ 10s timeout
+
+      const res = await fetch("/api/send-contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeout); // 🧹 Clear timeout once fetch completes
 
       const timeTaken = Date.now() - start;
       const delay = Math.max(0, 3000 - timeTaken);
       await new Promise((resolve) => setTimeout(resolve, delay));
 
-      if (!res.ok) throw new Error("Failed to send message");
+      if (!res.ok) {
+        const errorRes = await res.json();
+        throw new Error(errorRes.message || "Failed to send message");
+      }
 
       toast.success("✅ Message sent successfully!");
       setSubmittedData(formData);
       setShowModal(true);
-    } catch (error) {
-      toast.error("❌ Failed to send message. Please try again.");
+      formRef.current?.reset();
+      setCaptchaKey((prev) => prev + 1);
+      setRecaptchaToken(null);
+      setTurnstileToken(null);
+      setRecaptchaPassed(false);
+      setTurnstilePassed(false);
+    } catch (error: any) {
+      if (error.name === "AbortError") {
+        toast.error("⏱️ Request timed out. Please try again.");
+      } else {
+        toast.error("❌ Failed to send message. " + error.message);
+      }
+      setCaptchaKey((prev) => prev + 1);
+      setRecaptchaToken(null);
+      setTurnstileToken(null);
+      setRecaptchaPassed(false);
+      setTurnstilePassed(false);
     } finally {
       setLoading(false);
     }
@@ -108,7 +144,48 @@ export function SignupFormDemo() {
     formRef.current?.reset();
     setShowModal(false);
   };
+  useEffect(() => {
+    const checkForm = () => {
+      const fnameInput = document.getElementById(
+        "firstname"
+      ) as HTMLInputElement | null;
+      const lnameInput = document.getElementById(
+        "lastname"
+      ) as HTMLInputElement | null;
+      const emailInput = document.getElementById(
+        "email"
+      ) as HTMLInputElement | null;
+      const msgInput = document.getElementById(
+        "message"
+      ) as HTMLTextAreaElement | null;
 
+      const isFilled =
+        fnameInput?.value.trim() &&
+        lnameInput?.value.trim() &&
+        emailInput?.value.trim() &&
+        msgInput?.value.trim();
+
+      setShowCaptcha(!!isFilled);
+    };
+
+    document.getElementById("firstname")?.addEventListener("input", checkForm);
+    document.getElementById("lastname")?.addEventListener("input", checkForm);
+    document.getElementById("email")?.addEventListener("input", checkForm);
+    document.getElementById("message")?.addEventListener("input", checkForm);
+
+    return () => {
+      document
+        .getElementById("firstname")
+        ?.removeEventListener("input", checkForm);
+      document
+        .getElementById("lastname")
+        ?.removeEventListener("input", checkForm);
+      document.getElementById("email")?.removeEventListener("input", checkForm);
+      document
+        .getElementById("message")
+        ?.removeEventListener("input", checkForm);
+    };
+  }, []);
   return (
     <div className="relative w-full max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
       <ToastContainer position="top-center" />
@@ -157,54 +234,71 @@ export function SignupFormDemo() {
         </LabelInputContainer>
 
         {/* CAPTCHA Section: Visible only when form is filled */}
-        {isFormFilled() && (
-          <div className="mb-6 space-y-4">
-            <ReCAPTCHA
-              sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY as string}
-              ref={recaptchaRef}
-              onChange={setRecaptchaToken}
-            />
-            <Turnstile
-              siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY as string}
-              ref={turnstileRef}
-              onSuccess={setTurnstileToken}
-            />
+        {showCaptcha && (
+          <div className="mb-6 flex justify-center">
+            {!turnstilePassed ? (
+              <div className="w-full sm:w-[280px] h-[78px] flex justify-center items-center border border-gray-700 rounded-md bg-white dark:bg-black">
+                <Turnstile
+                  key={`turnstile-${captchaKey}`} // ✅ ensures fresh reload
+                  siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY as string}
+                  ref={turnstileRef}
+                  onSuccess={(token) => {
+                    setTurnstileToken(token);
+                    setTurnstilePassed(true);
+                  }}
+                />
+              </div>
+            ) : !recaptchaPassed ? (
+              <div className="w-full sm:w-[280px] h-[78px] flex justify-center items-center border border-gray-700 rounded-md bg-white dark:bg-black">
+                <ReCAPTCHA
+                  key={`recaptcha-${captchaKey}`} // ✅ ensures fresh reload
+                  sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY as string}
+                  ref={recaptchaRef}
+                  onChange={(token) => {
+                    setRecaptchaToken(token);
+                    setRecaptchaPassed(true);
+                  }}
+                />
+              </div>
+            ) : null}
           </div>
         )}
 
         {/* Submit Button Section */}
-        <div className="fixed bottom-0 left-0 w-full px-4 py-4 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 sm:static sm:p-0">
-          <button
-            type="submit"
-            disabled={loading || !recaptchaToken || !turnstileToken}
-            className="w-full bg-black text-white rounded-md py-3 font-semibold text-sm sm:text-base hover:bg-gray-800 transition flex items-center justify-center"
-          >
-            {loading ? (
-              <svg
-                className="animate-spin h-5 w-5 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                />
-              </svg>
-            ) : (
-              "Send Message →"
-            )}
-          </button>
-        </div>
+        {(!showCaptcha || (turnstilePassed && recaptchaPassed)) && (
+          <div className="fixed bottom-0 left-0 w-full px-4 py-4 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 sm:static sm:p-0">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-black text-white rounded-md py-3 font-semibold text-sm sm:text-base hover:bg-gray-800 transition flex items-center justify-center"
+            >
+              {loading ? (
+                <svg
+                  className="animate-spin h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                  />
+                </svg>
+              ) : (
+                "Send Message →"
+              )}
+            </button>
+          </div>
+        )}
       </form>
 
       {showModal && submittedData && (
