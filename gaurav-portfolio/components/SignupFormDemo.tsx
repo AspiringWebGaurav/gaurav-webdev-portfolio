@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useRouter } from "next/navigation";
+import ReCAPTCHA from "react-google-recaptcha";
+import { Turnstile } from "@marsidev/react-turnstile";
 
 export function SignupFormDemo() {
   const formRef = useRef<HTMLFormElement>(null);
@@ -18,11 +20,38 @@ export function SignupFormDemo() {
     email: string;
     message: string;
   } | null>(null);
+  // RECAPTCHA and TURNSTILE
+  const recaptchaRef = useRef<any>(null);
+  const turnstileRef = useRef<any>(null);
+
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+  const isFormFilled = () => {
+    const fname = (document.getElementById("firstname") as HTMLInputElement)
+      .value;
+    const lname = (document.getElementById("lastname") as HTMLInputElement)
+      .value;
+    const email = (document.getElementById("email") as HTMLInputElement).value;
+    const msg = (document.getElementById("message") as HTMLTextAreaElement)
+      .value;
+    return fname && lname && email && msg;
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     const start = Date.now();
+
+    // Recap
+    const recaptcha = recaptchaRef.current?.getValue();
+    const turnstile = turnstileRef.current?.getResponse();
+
+    if (!recaptcha || !turnstile) {
+      toast.error("Please complete both CAPTCHA verifications.");
+      setLoading(false);
+      return;
+    }
 
     const formData = {
       firstname: (document.getElementById("firstname") as HTMLInputElement)
@@ -31,6 +60,8 @@ export function SignupFormDemo() {
       email: (document.getElementById("email") as HTMLInputElement).value,
       message: (document.getElementById("message") as HTMLTextAreaElement)
         .value,
+      recaptchaToken: recaptcha,
+      turnstileToken: turnstile,
     };
 
     try {
@@ -125,10 +156,27 @@ export function SignupFormDemo() {
           />
         </LabelInputContainer>
 
+        {/* CAPTCHA Section: Visible only when form is filled */}
+        {isFormFilled() && (
+          <div className="mb-6 space-y-4">
+            <ReCAPTCHA
+              sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY as string}
+              ref={recaptchaRef}
+              onChange={setRecaptchaToken}
+            />
+            <Turnstile
+              siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY as string}
+              ref={turnstileRef}
+              onSuccess={setTurnstileToken}
+            />
+          </div>
+        )}
+
+        {/* Submit Button Section */}
         <div className="fixed bottom-0 left-0 w-full px-4 py-4 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 sm:static sm:p-0">
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !recaptchaToken || !turnstileToken}
             className="w-full bg-black text-white rounded-md py-3 font-semibold text-sm sm:text-base hover:bg-gray-800 transition flex items-center justify-center"
           >
             {loading ? (
