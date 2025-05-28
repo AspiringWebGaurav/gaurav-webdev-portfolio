@@ -166,7 +166,7 @@ const Unauthorized = ({
           />
         </div>
 
-        <div className="mt-4 flex justify-center">
+        {/* <div className="mt-4 flex justify-center">
           <button
             type="button"
             onClick={handleLogin}
@@ -174,7 +174,7 @@ const Unauthorized = ({
           >
             Verify Credentials
           </button>
-        </div>
+        </div> */}
 
         {error && <p className="text-red-500 mt-2 py-2 text-sm">{error}</p>}
 
