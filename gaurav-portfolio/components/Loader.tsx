@@ -35,9 +35,9 @@ const Loader: React.FC = () => {
         <div className="w-16 h-16 rounded-full shadow-[0_0_60px_rgba(139,92,246,0.8)] animate-colorpulse z-10" />
       </div>
       {/* Words below Loader */}
-      <div className="mt-4">
+      {/* <div className="mt-4">
         <TypewriterEffectSmooth words={words} />
-      </div>
+      </div> */}
     </div>
   );
 };
