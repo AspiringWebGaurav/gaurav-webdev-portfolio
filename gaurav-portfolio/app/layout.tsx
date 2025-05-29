@@ -4,7 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "./provider";
 import { LoaderProvider } from "./loader-context";
 import { RouteLoader } from "./route-loader";
-import GlobalLoader from "./global-loader"; // ✅ updated import
+import GlobalLoader from "./global-loader";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({
@@ -22,7 +22,29 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className="dark" style={{ colorScheme: "dark" }}>
+      <head>
+        <style>{`html { background-color: #000; }`}</style>
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
+        {/* Fallback loader that shows instantly with glass effect */}
+        <div
+          id="fallback-loader"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "rgba(17, 17, 17, 0.4)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            transition: "opacity 0.3s ease-in-out",
+          }}
+        >
+          <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent animate-spin rounded-full" />
+        </div>
+
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
