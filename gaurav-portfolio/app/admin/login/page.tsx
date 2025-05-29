@@ -8,6 +8,7 @@ import Unauthorized from "@/components/admin/Unauthorized";
 import Loader from "@/components/Loader"; // Adjust the path if needed
 import { auth } from "@/lib/firebase";
 import { ADMIN_CREDENTIALS } from "@/lib/auth";
+import { MultiStepLoaderDemo } from "@/components/admin/MultiStepLoaderDemo";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -44,6 +45,7 @@ export default function AdminLoginPage() {
       )}
 
       {/* <Loader /> */}
+      {/* <MultiStepLoaderDemo /> */}
       <Unauthorized
         email={email}
         setEmail={setEmail}

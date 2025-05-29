@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "./provider";
-import { LoaderProvider } from "./loader-context";
-import { RouteLoader } from "./route-loader";
-import GlobalLoader from "./global-loader";
+import ClientLayoutShell from "./ClientLayoutShell";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({
@@ -26,37 +23,7 @@ export default function RootLayout({
         <style>{`html { background-color: #000; }`}</style>
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        {/* Fallback loader that shows instantly with glass effect */}
-        <div
-          id="fallback-loader"
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 9999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: "rgba(17, 17, 17, 0.4)",
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)",
-            transition: "opacity 0.3s ease-in-out",
-          }}
-        >
-          <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent animate-spin rounded-full" />
-        </div>
-
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <LoaderProvider>
-            <GlobalLoader />
-            <RouteLoader />
-            {children}
-          </LoaderProvider>
-        </ThemeProvider>
+        <ClientLayoutShell>{children}</ClientLayoutShell>
       </body>
     </html>
   );

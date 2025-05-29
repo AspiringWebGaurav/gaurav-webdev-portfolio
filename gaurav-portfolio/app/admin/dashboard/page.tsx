@@ -5,8 +5,9 @@ import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
-import DashboardNavbar from "./../../../components/admin/DashboardNavbar";
-import VisitorLogs from "./../../../components/admin/VisitorLogs";
+import DashboardNavbar from "@/components/admin/DashboardNavbar";
+import Loader from "@/components/Loader";
+import Visitors from '../visitors/page';
 
 interface VisitorLog {
   id: string;
@@ -42,13 +43,18 @@ export default function AdminDashboardPage() {
     router.push("/admin/login");
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading)
+    return (
+      <div>
+        <Loader />
+      </div>
+    );
   if (!authorized) return null; // just in case
 
   return (
     <main className="p-6">
       <DashboardNavbar />
-      <VisitorLogs />
+      <Visitors />
     </main>
   );
 }
