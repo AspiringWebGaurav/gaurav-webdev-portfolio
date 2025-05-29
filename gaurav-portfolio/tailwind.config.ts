@@ -147,6 +147,24 @@ const config = {
             transform: "translate(calc(-50% - 0.5rem))",
           },
         },
+        orbitpulse: {
+          "0%, 100%": {
+            transform: "scale(1)",
+            boxShadow: "0 0 30px rgba(124, 58, 237, 0.4)",
+          },
+          "50%": {
+            transform: "scale(1.1)",
+            boxShadow: "0 0 60px rgba(124, 58, 237, 0.8)",
+          },
+        },
+        colorpulse: {
+          "0%, 100%": {
+            background: "linear-gradient(to bottom right, #a855f7, #4f46e5)",
+          },
+          "50%": {
+            background: "linear-gradient(to bottom right, #9333ea, #6366f1)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -160,6 +178,9 @@ const config = {
         fifth: "moveInCircle 20s ease infinite",
         scroll:
           "scroll var(--animation-duration, 40s) var(--animation-direction, forwards) linear infinite",
+        "spin-slow": "spin 6s linear infinite",
+        orbitpulse: "orbitpulse 2s ease-in-out infinite",
+        colorpulse: "colorpulse 2.5s ease-in-out infinite",
       },
     },
     fontFamily: {
