@@ -10,7 +10,6 @@
       }
     ],
     "no-inline-styles": "off",
-    "typescript-config/consistent-casing": "off",
-    "button-type": "off"
+    "typescript-config/consistent-casing": "off"
   }
 }

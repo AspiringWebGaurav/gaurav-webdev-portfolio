@@ -1,5 +1,4 @@
 import type { Config } from "tailwindcss";
-import defaultTheme from "tailwindcss/defaultTheme";
 
 const svgToDataUri = require("mini-svg-data-uri");
 
@@ -147,24 +146,6 @@ const config = {
             transform: "translate(calc(-50% - 0.5rem))",
           },
         },
-        orbitpulse: {
-          "0%, 100%": {
-            transform: "scale(1)",
-            boxShadow: "0 0 30px rgba(124, 58, 237, 0.4)",
-          },
-          "50%": {
-            transform: "scale(1.1)",
-            boxShadow: "0 0 60px rgba(124, 58, 237, 0.8)",
-          },
-        },
-        colorpulse: {
-          "0%, 100%": {
-            background: "linear-gradient(to bottom right, #a855f7, #4f46e5)",
-          },
-          "50%": {
-            background: "linear-gradient(to bottom right, #9333ea, #6366f1)",
-          },
-        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -178,20 +159,7 @@ const config = {
         fifth: "moveInCircle 20s ease infinite",
         scroll:
           "scroll var(--animation-duration, 40s) var(--animation-direction, forwards) linear infinite",
-        "spin-slow": "spin 6s linear infinite",
-        orbitpulse: "orbitpulse 2s ease-in-out infinite",
-        colorpulse: "colorpulse 2.5s ease-in-out infinite",
       },
-    },
-    fontFamily: {
-      sans: ["Inter", ...defaultTheme.fontFamily.sans],
-    },
-    boxShadow: {
-      input: `0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)`,
-    },
-    transitionProperty: {
-      spacing: "margin, padding, inset",
-      border: "border, border-width, border-color",
     },
   },
   plugins: [
