@@ -5,7 +5,7 @@ export default function AdminPage() {
 
   const loginUrl = isDev
     ? "http://localhost:5173/login"
-    : "https://gaurav-portfolio-admin.netlify.app/login";
+    : "https://gaurav-portfolio-admin-services.netlify.app/login";
 
   return (
     <div style={{ textAlign: "center", padding: "2rem" }}>
