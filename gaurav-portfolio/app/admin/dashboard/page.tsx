@@ -7,7 +7,6 @@ import { auth, db } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import DashboardNavbar from "@/components/admin/DashboardNavbar";
 import Loader from "@/components/Loader";
-import Visitors from '../visitors/page';
 
 interface VisitorLog {
   id: string;
@@ -49,12 +48,28 @@ export default function AdminDashboardPage() {
         <Loader />
       </div>
     );
-  if (!authorized) return null; // just in case
+  if (!authorized) return null;
 
   return (
     <main className="p-6">
       <DashboardNavbar />
-      <Visitors />
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mt-6">
+        {/* Visitors Card */}
+        <a
+          href="/admin/visitors"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block p-6 bg-white rounded-2xl shadow-md hover:shadow-xl transition duration-300"
+        >
+          <h2 className="text-xl font-semibold mb-2">Visitors</h2>
+          <p className="text-gray-600">
+            View website visitor logs and details.
+          </p>
+        </a>
+
+        {/* Add more cards here as needed */}
+        {/* Example: Analytics, Users, Messages etc. */}
+      </div>
     </main>
   );
 }
