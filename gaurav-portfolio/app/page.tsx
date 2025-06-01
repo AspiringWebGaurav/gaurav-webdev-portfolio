@@ -1,10 +1,4 @@
 "use client";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { doc, onSnapshot } from "firebase/firestore";
-import { db } from "@/utils/firebase";
-import { getVisitorId } from "@/utils/uuid";
-import { logVisitor } from "@/utils/logVisitor"; // ✅ updated import
 import Hero from "@/components/Hero";
 import { FloatingNav } from "../components/ui/FloatingNav";
 import { navItems } from "@/data";
@@ -16,44 +10,6 @@ import Approach from "@/components/Approach";
 import Footer from "@/components/Footer";
 
 export default function Home() {
-  const router = useRouter();
-
-  useEffect(() => {
-    const start = Date.now();
-    const visitorId = getVisitorId();
-    const banURL = "/ban";
-
-    let unsub: any;
-
-    const monitorBanStatus = async () => {
-      const docRef = doc(db, "visitors", visitorId);
-      unsub = onSnapshot(docRef, (docSnap) => {
-        if (docSnap.exists() && docSnap.data().banned === true) {
-          window.location.href = banURL;
-        }
-      });
-    };
-
-    logVisitor(0).then((res) => {
-      if (res?.banned) {
-        window.location.href = banURL;
-      } else {
-        monitorBanStatus();
-
-        const handleBeforeUnload = () => {
-          const duration = Math.floor((Date.now() - start) / 1000);
-          logVisitor(duration);
-        };
-
-        window.addEventListener("beforeunload", handleBeforeUnload);
-        return () => {
-          window.removeEventListener("beforeunload", handleBeforeUnload);
-          if (unsub) unsub();
-        };
-      }
-    });
-  }, [router]);
-
   return (
     <main className="relative bg-black-100 flex justify-center items-center flex-col mx-auto sm:px-10 px-5 overflow-clip">
       <div>
