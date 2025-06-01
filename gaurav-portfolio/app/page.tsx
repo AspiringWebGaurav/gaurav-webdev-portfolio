@@ -1,9 +1,12 @@
 "use client";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { logVisitor } from "@/utils/logVisitor";
+import { doc, onSnapshot } from "firebase/firestore";
+import { db } from "@/utils/firebase";
+import { getVisitorId } from "@/utils/uuid";
+import { logVisitor } from "@/utils/logVisitor"; // ✅ updated import
 import Hero from "@/components/Hero";
-import { FloatingNav } from "./../components/ui/FloatingNav";
+import { FloatingNav } from "../components/ui/FloatingNav";
 import { navItems } from "@/data";
 import Grid from "@/components/Grid";
 import RecentProjects from "@/components/RecentProjects";
@@ -11,36 +14,24 @@ import Clients from "@/components/Clients";
 import Experience from "@/components/Experience";
 import Approach from "@/components/Approach";
 import Footer from "@/components/Footer";
-import { db } from "@/utils/firebase";
-import { doc, onSnapshot } from "firebase/firestore";
 
 export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
     const start = Date.now();
-
-    const banURL =
-      process.env.NODE_ENV === "development"
-        ? "http://localhost:5173/ban"
-        : "https://gaurav-portfolio-admin-services.netlify.app/ban";
+    const visitorId = getVisitorId();
+    const banURL = "/ban";
 
     let unsub: any;
 
     const monitorBanStatus = async () => {
-      try {
-        const ipRes = await fetch("https://api.ipify.org?format=json");
-        const { ip } = await ipRes.json();
-
-        const docRef = doc(db, "visitors", ip);
-        unsub = onSnapshot(docRef, (docSnap) => {
-          if (docSnap.exists() && docSnap.data().banned === true) {
-            window.location.href = banURL;
-          }
-        });
-      } catch (err) {
-        console.error("Failed to set up ban listener:", err);
-      }
+      const docRef = doc(db, "visitors", visitorId);
+      unsub = onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists() && docSnap.data().banned === true) {
+          window.location.href = banURL;
+        }
+      });
     };
 
     logVisitor(0).then((res) => {

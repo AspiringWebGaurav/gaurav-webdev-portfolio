@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "./provider";
+import BanHandler from "@/components/BanHandler"; // ✅ Global listener added
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,6 +33,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <BanHandler /> {/* 🔥 React middleware logic runs globally */}
           {children}
         </ThemeProvider>
       </body>
