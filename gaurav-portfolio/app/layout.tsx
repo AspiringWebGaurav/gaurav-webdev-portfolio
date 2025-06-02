@@ -26,13 +26,16 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const cookieStore = await cookies(); // ✅ FIXED
+  const cookieStore = await cookies(); // ✅ Await cookie read
   const uuid = cookieStore.get("uuid")?.value;
 
   if (uuid) {
     try {
       const docSnap = await db.collection("visitors").doc(uuid).get();
-      if (docSnap.exists && docSnap.data()?.status === "banned") {
+      const isBanned = docSnap.exists && docSnap.data()?.status === "banned";
+
+      // ✅ Safe redirect before render
+      if (isBanned) {
         console.log("🚫 SSR redirect: user is banned");
         redirect("/ban");
       }
