@@ -1,6 +1,6 @@
 // app/api/log-visit/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/utils/firebase";
+import { db } from "@/utils/firebase"; // ✅ correct path to firebase.js
 import {
   collection,
   addDoc,
@@ -12,12 +12,15 @@ import {
 
 export async function POST(req: NextRequest) {
   try {
+    console.log("🔥 /api/log-visit hit");
+
     const body = await req.json();
     const { uuid, visitId, ip, device, os } = body;
 
     if (!uuid || !visitId || !ip) {
+      console.warn("❌ Missing required fields");
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "Missing uuid, visitId, or ip" },
         { status: 400 }
       );
     }
@@ -35,6 +38,7 @@ export async function POST(req: NextRequest) {
 
     const existing = await getDocs(q);
     if (!existing.empty) {
+      console.log("⚠️ Duplicate visitor found. Skipping.");
       return NextResponse.json(
         { message: "Duplicate visitor" },
         { status: 200 }
@@ -45,15 +49,16 @@ export async function POST(req: NextRequest) {
       uuid,
       visitId,
       ip,
-      device: device || "unknown",
-      os: os || "unknown",
-      timestamp: new Date().toISOString(), // ✅ required by rules
+      device,
+      os,
+      timestamp: new Date().toISOString(), // ✅ required for Firestore rule
       status: "active",
     });
 
+    console.log("✅ Visitor logged:", { uuid, visitId });
     return NextResponse.json({ message: "Visit logged" }, { status: 201 });
   } catch (err) {
-    console.error("Logging error:", err);
+    console.error("🔥 API error:", err);
     if (err instanceof Error) {
       return NextResponse.json({ error: err.message }, { status: 500 });
     }
