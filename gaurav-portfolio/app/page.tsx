@@ -1,4 +1,3 @@
-// app/page.tsx
 "use client";
 
 import { useEffect } from "react";
@@ -27,7 +26,7 @@ export default function Home() {
         const visitId = cookies.visitId;
 
         if (!uuid || !visitId) {
-          console.warn("Missing UUID or Visit ID from cookies");
+          console.warn("❌ Missing UUID or Visit ID from cookies");
           return;
         }
 
@@ -37,25 +36,33 @@ export default function Home() {
           const data = await res.json();
           ip = data.ip || "unknown";
         } catch (err) {
-          console.warn("Could not fetch IP:", err);
+          console.warn("⚠️ Could not fetch IP:", err);
         }
 
         const parser = new UAParser();
         const ua = parser.getResult();
 
-        await fetch("/api/log-visit", {
+        const payload = {
+          uuid,
+          visitId,
+          ip,
+          device: ua.device.type || "desktop",
+          os: `${ua.os.name} ${ua.os.version}`,
+          timestamp: new Date().toISOString(),
+        };
+
+        console.log("📡 Sending visit payload:", payload);
+
+        const res = await fetch("/api/log-visit", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            uuid,
-            visitId,
-            ip,
-            device: ua.device.type || "desktop",
-            os: `${ua.os.name} ${ua.os.version}`,
-          }),
+          body: JSON.stringify(payload),
         });
+
+        const result = await res.json();
+        console.log("✅ Visit log result:", result);
       } catch (err) {
-        console.error("Error logging visit:", err);
+        console.error("🔥 Error logging visit:", err);
       }
     };
 

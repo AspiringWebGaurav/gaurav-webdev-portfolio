@@ -1,13 +1,21 @@
-import { initializeApp, cert, getApps } from "firebase-admin/app";
+import { initializeApp, cert, getApps, getApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+const raw = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
 
-const app = !getApps().length
-  ? initializeApp({
-      credential: cert(serviceAccount),
-    })
-  : getApps()[0];
+if (!raw) {
+  throw new Error("❌ FIREBASE_SERVICE_ACCOUNT_KEY is not defined in env");
+}
+
+const serviceAccount = JSON.parse(raw);
+
+// ✅ Unescape private_key (convert \\n → \n)
+serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, "\n");
+
+const app =
+  getApps().length === 0
+    ? initializeApp({ credential: cert(serviceAccount) })
+    : getApp();
 
 const db = getFirestore(app);
 

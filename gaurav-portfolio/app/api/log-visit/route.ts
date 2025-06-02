@@ -1,22 +1,11 @@
 // app/api/log-visit/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/firebase-admin"; // ✅ server-safe
-import {
-  collection,
-  addDoc,
-  getDocs,
-  query,
-  where,
-  or,
-} from "firebase/firestore";
-// test
-export async function POST(req: NextRequest) {
-  // 🔥 DEBUG LOGS HERE
-  console.log("🔥 log-visit route called");
-  console.log("✅ Firebase DB instance:", db);
-  try {
-    console.log("🔥 /api/log-visit hit");
+import { db } from "@/lib/firebase-admin"; // Admin SDK
 
+export async function POST(req: NextRequest) {
+  console.log("🔥 log-visit route called");
+
+  try {
     const body = await req.json();
     const { uuid, visitId, ip, device, os } = body;
 
@@ -28,19 +17,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const visitorsRef = collection(db, "visitors");
+    const visitorsRef = db.collection("visitors");
 
-    const q = query(
-      visitorsRef,
-      or(
-        where("uuid", "==", uuid),
-        where("ip", "==", ip),
-        where("visitId", "==", visitId)
-      )
-    );
+    // Check for duplicates by uuid, ip, or visitId
+    const [uuidSnap, ipSnap, visitIdSnap] = await Promise.all([
+      visitorsRef.where("uuid", "==", uuid).get(),
+      visitorsRef.where("ip", "==", ip).get(),
+      visitorsRef.where("visitId", "==", visitId).get(),
+    ]);
 
-    const existing = await getDocs(q);
-    if (!existing.empty) {
+    if (!uuidSnap.empty || !ipSnap.empty || !visitIdSnap.empty) {
       console.log("⚠️ Duplicate visitor found. Skipping.");
       return NextResponse.json(
         { message: "Duplicate visitor" },
@@ -48,13 +34,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await addDoc(visitorsRef, {
+    await visitorsRef.add({
       uuid,
       visitId,
       ip,
-      device,
-      os,
-      timestamp: new Date().toISOString(), // ✅ required for Firestore rule
+      device: device || "unknown",
+      os: os || "unknown",
+      timestamp: new Date().toISOString(),
       status: "active",
     });
 
