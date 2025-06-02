@@ -19,6 +19,9 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "Gaurav's Portfolio",
   description: "Modern Slick and Minimal Portfolio Showcasing JS Mastery",
+  icons: {
+    icon: "/favicon.ico", // ✅ This line ensures it's included
+  },
 };
 
 export default async function RootLayout({
