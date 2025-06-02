@@ -1,6 +1,6 @@
 // app/api/log-visit/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/utils/firebase"; // ✅ correct path to firebase.js
+import { db } from "@/lib/firebase"; // ✅ correct path to firebase.js
 import {
   collection,
   addDoc,
