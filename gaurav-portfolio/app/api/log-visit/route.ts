@@ -23,6 +23,7 @@ export async function POST(req: NextRequest) {
     }
 
     const visitorsRef = collection(db, "visitors");
+
     const q = query(
       visitorsRef,
       or(
@@ -33,7 +34,6 @@ export async function POST(req: NextRequest) {
     );
 
     const existing = await getDocs(q);
-
     if (!existing.empty) {
       return NextResponse.json(
         { message: "Duplicate visitor" },
@@ -43,20 +43,20 @@ export async function POST(req: NextRequest) {
 
     await addDoc(visitorsRef, {
       uuid,
-      ip,
       visitId,
-      timestamp: new Date().toISOString(),
+      ip,
       device: device || "unknown",
       os: os || "unknown",
+      timestamp: new Date().toISOString(), // ✅ required by rules
       status: "active",
     });
 
-    return NextResponse.json({ message: "Visitor logged" }, { status: 201 });
+    return NextResponse.json({ message: "Visit logged" }, { status: 201 });
   } catch (err) {
     console.error("Logging error:", err);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    if (err instanceof Error) {
+      return NextResponse.json({ error: err.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: "Unknown error" }, { status: 500 });
   }
 }
