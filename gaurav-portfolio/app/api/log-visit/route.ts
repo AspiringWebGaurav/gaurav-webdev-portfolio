@@ -9,7 +9,7 @@ import {
   where,
   or,
 } from "firebase/firestore";
-
+// test
 export async function POST(req: NextRequest) {
   // 🔥 DEBUG LOGS HERE
   console.log("🔥 log-visit route called");
