@@ -1,7 +1,10 @@
-import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "./provider";
+import ToastProvider from "@/components/ToastProvider";
+import { db } from "@/lib/firebase-admin";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,16 +16,31 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "Gaurav's Portfolio",
-  description: "Moders Slick and Minimal Portfolio Showcasing Js Mastery",
+  description: "Modern Slick and Minimal Portfolio Showcasing JS Mastery",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
+  const cookieStore = await cookies(); // ✅ FIXED
+  const uuid = cookieStore.get("uuid")?.value;
+
+  if (uuid) {
+    try {
+      const docSnap = await db.collection("visitors").doc(uuid).get();
+      if (docSnap.exists && docSnap.data()?.status === "banned") {
+        console.log("🚫 SSR redirect: user is banned");
+        redirect("/ban");
+      }
+    } catch (err) {
+      console.error("🔥 SSR ban check failed:", err);
+    }
+  }
+
   return (
     <html lang="en" className="dark" style={{ colorScheme: "dark" }}>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
@@ -32,6 +50,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <ToastProvider />
           {children}
         </ThemeProvider>
       </body>

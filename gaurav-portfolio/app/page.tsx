@@ -11,6 +11,7 @@ import Clients from "@/components/Clients";
 import Experience from "@/components/Experience";
 import Approach from "@/components/Approach";
 import Footer from "@/components/Footer";
+import VisitorStatusWatcher from "@/components/VisitorStatusWatcher"; // ✅ ADD THIS
 
 export default function Home() {
   useEffect(() => {
@@ -71,6 +72,7 @@ export default function Home() {
 
   return (
     <main className="relative bg-black-100 flex justify-center items-center flex-col mx-auto sm:px-10 px-5 overflow-clip">
+      <VisitorStatusWatcher /> {/* ✅ MOUNT THIS */}
       <div>
         <h1 className="text-white max-w-7xl w-full">
           <FloatingNav navItems={navItems} />

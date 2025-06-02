@@ -17,24 +17,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const visitorsRef = db.collection("visitors");
+    const visitorRef = db.collection("visitors").doc(uuid);
 
-    // Check for duplicates by uuid, ip, or visitId
-    const [uuidSnap, ipSnap, visitIdSnap] = await Promise.all([
-      visitorsRef.where("uuid", "==", uuid).get(),
-      visitorsRef.where("ip", "==", ip).get(),
-      visitorsRef.where("visitId", "==", visitId).get(),
-    ]);
-
-    if (!uuidSnap.empty || !ipSnap.empty || !visitIdSnap.empty) {
-      console.log("⚠️ Duplicate visitor found. Skipping.");
+    // Check if the document with this UUID already exists
+    const existingDoc = await visitorRef.get();
+    if (existingDoc.exists) {
+      console.log("⚠️ Duplicate visitor detected (by UUID):", uuid);
       return NextResponse.json(
         { message: "Duplicate visitor" },
         { status: 200 }
       );
     }
 
-    await visitorsRef.add({
+    // Save new visitor using UUID as document ID
+    await visitorRef.set({
       uuid,
       visitId,
       ip,
@@ -44,7 +40,7 @@ export async function POST(req: NextRequest) {
       status: "active",
     });
 
-    console.log("✅ Visitor logged:", { uuid, visitId });
+    console.log("✅ Visitor logged:", uuid);
     return NextResponse.json({ message: "Visit logged" }, { status: 201 });
   } catch (err) {
     console.error("🔥 API error:", err);
