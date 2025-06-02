@@ -11,6 +11,9 @@ import {
 } from "firebase/firestore";
 
 export async function POST(req: NextRequest) {
+  // 🔥 DEBUG LOGS HERE
+  console.log("🔥 log-visit route called");
+  console.log("✅ Firebase DB instance:", db);
   try {
     console.log("🔥 /api/log-visit hit");
 
