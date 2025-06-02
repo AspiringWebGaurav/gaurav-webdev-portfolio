@@ -1,9 +1,7 @@
 // app/page.tsx
 "use client";
+
 import { useEffect } from "react";
-import { v4 as uuidv4 } from "uuid";
-import { db } from "@/utils/firebase";
-import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
 import { UAParser } from "ua-parser-js";
 import Hero from "@/components/Hero";
 import { FloatingNav } from "../components/ui/FloatingNav";
@@ -19,30 +17,45 @@ export default function Home() {
   useEffect(() => {
     const logVisit = async () => {
       try {
-        const ipRes = await fetch("https://ipapi.co/json");
-        const ipData = await ipRes.json();
-        const ip = ipData.ip;
+        const cookies = document.cookie.split(";").reduce((acc, curr) => {
+          const [k, v] = curr.trim().split("=");
+          acc[k] = v;
+          return acc;
+        }, {} as Record<string, string>);
 
-        const visitorsRef = collection(db, "visitors");
-        const q = query(visitorsRef, where("ip", "==", ip));
-        const existing = await getDocs(q);
+        const uuid = cookies.uuid;
+        const visitId = cookies.visitId;
 
-        if (existing.empty) {
-          const uuid = uuidv4() + "-" + btoa(ip).replace(/=+$/, "");
-          const parser = new UAParser();
-          const ua = parser.getResult();
-
-          await addDoc(visitorsRef, {
-            uuid,
-            ip,
-            timestamp: new Date().toISOString(),
-            device: ua.device.type || "desktop",
-            os: ua.os.name + " " + ua.os.version,
-            status: "active",
-          });
+        if (!uuid || !visitId) {
+          console.warn("Missing UUID or Visit ID from cookies");
+          return;
         }
+
+        let ip = "unknown";
+        try {
+          const res = await fetch("https://ipapi.co/json");
+          const data = await res.json();
+          ip = data.ip || "unknown";
+        } catch (err) {
+          console.warn("Could not fetch IP:", err);
+        }
+
+        const parser = new UAParser();
+        const ua = parser.getResult();
+
+        await fetch("/api/log-visit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            uuid,
+            visitId,
+            ip,
+            device: ua.device.type || "desktop",
+            os: `${ua.os.name} ${ua.os.version}`,
+          }),
+        });
       } catch (err) {
-        console.error("Error logging visitor:", err);
+        console.error("Error logging visit:", err);
       }
     };
 
