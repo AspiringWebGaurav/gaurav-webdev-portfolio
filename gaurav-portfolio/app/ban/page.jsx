@@ -15,7 +15,8 @@ export default function BanPage() {
       return;
     }
 
-    const target = `https://ban-redirect-server.onrender.com/ban-redirect?uuid=${uuid}`;
+    const target = `ban-redirect-server-production.up.railway.app/ban-redirect?uuid=${uuid}`;
+    //https://ban-redirect-server.onrender.com
     window.location.replace(target);
 
     const timeout = setTimeout(() => setFallback(true), 3000);
