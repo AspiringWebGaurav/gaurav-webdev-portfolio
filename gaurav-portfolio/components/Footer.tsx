@@ -74,7 +74,7 @@ const Footer = () => {
         {/* Bottom row */}
         <div className="flex mt-16 md:flex-row flex-col justify-between items-center">
           <p className="md:text-base text-sm font-light">© 2025 Gaurav Patil</p>
-          <div className="flex items-center md:gap-3 gap-6">
+          <div className="flex items-center md:gap-3 gap-6 mr-12">
             {socialMedia.map((i) => (
               <div
                 key={i.id}
