@@ -174,7 +174,8 @@ export default function Home() {
           <Approach />
           <Footer />
         </div>
-        <VisitorStatusWatcher />
+        {/* <BanGate />
+        <VisitorStatusWatcher /> */}
       </main>
     </>
   );
