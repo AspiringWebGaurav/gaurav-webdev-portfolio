@@ -1,0 +1,47 @@
+# Robots.txt for Gaurav's Portfolio
+# https://gaurav-webdev-portfolio.vercel.app/robots.txt
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://gaurav-webdev-portfolio.vercel.app/sitemap.xml
+
+# Allow all major search engine crawlers
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+# Disallow crawling of admin areas
+Disallow: /admin/
+Disallow: /api/admin/
+
+# Disallow crawling of dynamic user paths (except for main portfolio)
+Disallow: /*/ban/
+Disallow: /ban/
+
+# Allow crawling of main portfolio sections
+Allow: /$
+Allow: /#projects
+Allow: /#experience  
+Allow: /#contact
+
+# Crawl delay (optional - helps with server load)
+Crawl-delay: 1
+
+# Host directive (optional)
+Host: https://gaurav-webdev-portfolio.vercel.app
