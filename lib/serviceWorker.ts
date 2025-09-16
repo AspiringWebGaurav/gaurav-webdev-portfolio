@@ -97,7 +97,7 @@ class ServiceWorkerManager {
   }
 
   /**
-   * Setup PWA install prompt
+   * Setup PWA install prompt detection (no UI shown)
    */
   setupInstallPrompt(): void {
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -106,109 +106,22 @@ class ServiceWorkerManager {
       // Prevent Chrome 67 and earlier from automatically showing the prompt
       e.preventDefault();
       
-      // Stash the event so it can be triggered later
+      // Stash the event so it can be triggered later if needed
       this.installPrompt = e as any;
       
-      // Show custom install button/banner
-      this.showInstallPrompt();
+      // Log availability but don't show custom UI
+      console.log('[PWA] Install prompt ready (no custom UI will be shown)');
     });
 
     // Listen for app installed event
     window.addEventListener('appinstalled', () => {
       console.log('[PWA] App was successfully installed');
       this.installPrompt = null;
-      this.hideInstallPrompt();
     });
   }
 
   /**
-   * Show custom install prompt UI
-   */
-  private showInstallPrompt(): void {
-    // You can customize this to show your own install UI
-    console.log('[PWA] Showing install prompt');
-    
-    // Example: Create a simple install banner
-    const installBanner = document.createElement('div');
-    installBanner.id = 'pwa-install-banner';
-    installBanner.innerHTML = `
-      <div style="
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background: linear-gradient(135deg, #3b82f6, #1e40af);
-        color: white;
-        padding: 16px 20px;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        z-index: 1000;
-        font-family: system-ui, -apple-system, sans-serif;
-        font-size: 14px;
-        max-width: 300px;
-        animation: slideIn 0.3s ease-out;
-      ">
-        <div style="margin-bottom: 8px; font-weight: 600;">
-          📱 Install Gaurav's Portfolio
-        </div>
-        <div style="margin-bottom: 12px; opacity: 0.9;">
-          Get quick access to the portfolio on your device!
-        </div>
-        <div style="display: flex; gap: 8px;">
-          <button id="pwa-install-btn" style="
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 500;
-          ">Install</button>
-          <button id="pwa-dismiss-btn" style="
-            background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 500;
-          ">Not now</button>
-        </div>
-      </div>
-      <style>
-        @keyframes slideIn {
-          from { transform: translateX(100%); opacity: 0; }
-          to { transform: translateX(0); opacity: 1; }
-        }
-      </style>
-    `;
-
-    document.body.appendChild(installBanner);
-
-    // Add event listeners
-    document.getElementById('pwa-install-btn')?.addEventListener('click', () => {
-      this.triggerInstall();
-    });
-
-    document.getElementById('pwa-dismiss-btn')?.addEventListener('click', () => {
-      this.hideInstallPrompt();
-    });
-  }
-
-  /**
-   * Hide install prompt UI
-   */
-  private hideInstallPrompt(): void {
-    const banner = document.getElementById('pwa-install-banner');
-    if (banner) {
-      banner.style.animation = 'slideOut 0.3s ease-in forwards';
-      setTimeout(() => banner.remove(), 300);
-    }
-  }
-
-  /**
-   * Trigger PWA installation
+   * Trigger PWA installation (programmatically if needed)
    */
   async triggerInstall(): Promise<boolean> {
     if (!this.installPrompt) {
@@ -217,7 +130,7 @@ class ServiceWorkerManager {
     }
 
     try {
-      // Show the install prompt
+      // Show the browser's native install prompt
       await this.installPrompt.prompt();
       
       // Wait for the user's response
@@ -225,12 +138,7 @@ class ServiceWorkerManager {
       
       console.log(`[PWA] User ${outcome} the install prompt`);
       
-      if (outcome === 'accepted') {
-        this.hideInstallPrompt();
-        return true;
-      }
-      
-      return false;
+      return outcome === 'accepted';
       
     } catch (error) {
       console.error('[PWA] Install prompt failed:', error);
@@ -316,11 +224,9 @@ if (typeof window !== 'undefined') {
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
       serviceWorkerManager.registerServiceWorker();
-      serviceWorkerManager.setupInstallPrompt();
     });
   } else {
     serviceWorkerManager.registerServiceWorker();
-    serviceWorkerManager.setupInstallPrompt();
   }
 }
 

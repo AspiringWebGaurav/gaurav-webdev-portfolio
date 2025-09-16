@@ -20,9 +20,6 @@ export default function PWAInitializer() {
       // Register service worker
       await serviceWorkerManager.registerServiceWorker();
       
-      // Setup install prompt
-      serviceWorkerManager.setupInstallPrompt();
-      
       // Request notification permission if in PWA mode
       if (serviceWorkerManager.isPWA()) {
         await serviceWorkerManager.requestNotificationPermission();
