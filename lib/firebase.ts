@@ -3,7 +3,7 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getFirestore, type Firestore } from "firebase/firestore";
 import { getStorage, type FirebaseStorage } from "firebase/storage";
-import { logger } from "@/utils/secureLogger";
+import { smartLogger } from "@/utils/smartLogger";
 
 // Load Firebase config from environment variables
 const firebaseConfig = {
@@ -15,8 +15,8 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// 🔍 Secure logging of Firebase config (hides sensitive data)
-logger.firebaseInfo("🔥 Firebase client config loaded", firebaseConfig);
+// Firebase config loaded - browser-only detailed logging
+smartLogger.firebase.init("🔥 Firebase client config loaded", firebaseConfig);
 
 // 🚨 Check for missing critical fields
 const missingKeys = Object.entries(firebaseConfig)
@@ -24,7 +24,7 @@ const missingKeys = Object.entries(firebaseConfig)
   .map(([key]) => key);
 
 if (missingKeys.length > 0) {
-  logger.error("❌ Firebase config is missing required keys", { missingKeys });
+  smartLogger.firebase.error("❌ Firebase config is missing required keys", { missingKeys });
   throw new Error(
     `🔥 Firebase initialization failed: Missing env vars -> ${missingKeys.join(
       ", "
@@ -36,9 +36,9 @@ if (missingKeys.length > 0) {
 let app: FirebaseApp;
 try {
   app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-  logger.info("✅ Firebase app initialized");
+  smartLogger.firebase.init("✅ Firebase app initialized");
 } catch (err) {
-  logger.error("❌ Firebase initialization error", err);
+  smartLogger.firebase.error("❌ Firebase initialization error", err);
   throw err;
 }
 
@@ -46,9 +46,9 @@ try {
 let db: Firestore;
 try {
   db = getFirestore(app);
-  logger.info("✅ Firestore initialized");
+  smartLogger.firebase.init("✅ Firestore initialized");
 } catch (err) {
-  logger.error("❌ Firestore initialization failed", err);
+  smartLogger.firebase.error("❌ Firestore initialization failed", err);
   throw err;
 }
 
@@ -56,9 +56,9 @@ try {
 let storage: FirebaseStorage;
 try {
   storage = getStorage(app);
-  logger.info("✅ Firebase Storage initialized");
+  smartLogger.firebase.init("✅ Firebase Storage initialized");
 } catch (err) {
-  logger.error("❌ Firebase Storage initialization failed", err);
+  smartLogger.firebase.error("❌ Firebase Storage initialization failed", err);
   throw err;
 }
 

@@ -13,7 +13,7 @@ import {
   getDoc
 } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { prodLogger, devLogger } from '@/utils/secureLogger';
+import { smartLogger } from '@/utils/smartLogger';
 
 // Enhanced error handling and retry logic
 const MAX_RETRIES = 3;
@@ -31,18 +31,18 @@ const withRetry = async <T>(
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      devLogger.debug(`${operationName} attempt ${attempt}/${maxRetries}`);
+      smartLogger.browserOnly.debug(`${operationName} attempt ${attempt}/${maxRetries}`);
       const result = await operation();
       
       if (attempt > 1) {
-        devLogger.debug(`${operationName} succeeded on attempt ${attempt}`);
+        smartLogger.browserOnly.debug(`${operationName} succeeded on attempt ${attempt}`);
       }
       
       return result;
     } catch (error) {
       lastError = error instanceof Error ? error : new Error('Unknown error');
       
-      devLogger.warn(`${operationName} attempt ${attempt} failed`, {
+      smartLogger.browserOnly.warn(`${operationName} attempt ${attempt} failed`, {
         error: lastError.message,
         attempt,
         maxRetries
@@ -67,11 +67,11 @@ export async function GET() {
   const startTime = Date.now();
   
   try {
-    devLogger.debug('Fetching AI questions from Firebase');
+    smartLogger.firebase.debug('Fetching AI questions from Firebase');
 
     // Check if Firebase is properly initialized
     if (!db) {
-      prodLogger.error('Firebase database not initialized');
+      smartLogger.firebase.error('Firebase database not initialized');
       return NextResponse.json(
         {
           success: false,
@@ -98,7 +98,7 @@ export async function GET() {
       });
     }, 'Firebase questions fetch');
 
-    devLogger.debug('Successfully fetched questions', {
+    smartLogger.firebase.debug('Successfully fetched questions', {
       count: questions.length,
       duration: Date.now() - startTime
     });
@@ -116,7 +116,7 @@ export async function GET() {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     
-    prodLogger.error('Failed to fetch questions after retries', {
+    smartLogger.firebase.error('Failed to fetch questions after retries', {
       error: errorMessage,
       duration: Date.now() - startTime
     });
@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
     // Handle file upload if present
     if (file && file.size > 0) {
       try {
-        console.log('📁 File upload initiated:', {
+        smartLogger.browserOnly.info('📁 File upload initiated', {
           name: file.name,
           size: file.size,
           type: file.type
@@ -172,7 +172,7 @@ export async function POST(request: NextRequest) {
 
         // Validate file size (10MB limit)
         if (file.size > 10 * 1024 * 1024) {
-          console.error('❌ File size validation failed:', file.size);
+          smartLogger.browserOnly.warn('❌ File size validation failed', { size: file.size });
           return NextResponse.json(
             { success: false, error: 'File size exceeds 10MB limit' },
             { status: 400 }
@@ -191,17 +191,17 @@ export async function POST(request: NextRequest) {
         ];
         
         if (!allowedTypes.includes(file.type)) {
-          console.error('❌ File type validation failed:', file.type);
+          smartLogger.browserOnly.warn('❌ File type validation failed', { fileType: file.type });
           return NextResponse.json(
             { success: false, error: 'File type not supported. Please upload PDF, DOC, DOCX, TXT, JPG, JPEG, or PNG files.' },
             { status: 400 }
           );
         }
 
-        console.log('✅ File validation passed');
+        smartLogger.browserOnly.debug('✅ File validation passed');
 
         // Use the centralized storage instance
-        console.log('📤 Using Firebase Storage instance:', {
+        smartLogger.browserOnly.debug('📤 Using Firebase Storage instance', {
           bucket: storage.app.options.storageBucket
         });
         
@@ -211,7 +211,7 @@ export async function POST(request: NextRequest) {
         const filePath = `ai-assistant-files/${timestamp}-${safeFileName}`;
         const fileRef = ref(storage, filePath);
         
-        console.log('📤 Uploading to Firebase Storage:', {
+        smartLogger.browserOnly.debug('📤 Uploading to Firebase Storage', {
           path: filePath,
           bucket: storage.app.options.storageBucket
         });
@@ -220,7 +220,7 @@ export async function POST(request: NextRequest) {
         const arrayBuffer = await file.arrayBuffer();
         const uint8Array = new Uint8Array(arrayBuffer);
         
-        console.log('🔄 File converted to buffer, uploading...');
+        smartLogger.browserOnly.debug('🔄 File converted to buffer, uploading...');
         
         const snapshot = await uploadBytes(fileRef, uint8Array, {
           contentType: file.type,
@@ -231,22 +231,22 @@ export async function POST(request: NextRequest) {
           }
         });
         
-        console.log('📤 Upload completed, getting download URL...');
+        smartLogger.browserOnly.debug('📤 Upload completed, getting download URL...');
         
         fileUrl = await getDownloadURL(snapshot.ref);
         fileName = file.name;
         
-        console.log('✅ File uploaded successfully:', {
+        smartLogger.browserOnly.info('✅ File uploaded successfully', {
           downloadUrl: fileUrl,
           fileName: fileName,
           size: snapshot.metadata.size
         });
       } catch (fileError) {
-        console.error('❌ File upload error:', fileError);
+        smartLogger.api.error('❌ File upload error', fileError);
         
         // Enhanced error logging
         if (fileError instanceof Error) {
-          console.error('Error details:', {
+          smartLogger.browserOnly.debug('Error details', {
             name: fileError.name,
             message: fileError.message,
             stack: fileError.stack
@@ -289,7 +289,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error creating question:', error);
+    smartLogger.api.error('Error creating question', error);
     return NextResponse.json(
       { success: false, error: 'Failed to create question' },
       { status: 500 }
@@ -340,7 +340,7 @@ export async function PUT(request: NextRequest) {
         fileUrl = '';
         fileName = '';
       } catch (fileError) {
-        console.warn('Failed to delete existing file:', fileError);
+        smartLogger.browserOnly.warn('Failed to delete existing file', fileError);
       }
     }
 
@@ -385,9 +385,9 @@ export async function PUT(request: NextRequest) {
             const filePath = decodeURIComponent(encodedPath);
             const oldFileRef = ref(storage, filePath);
             await deleteObject(oldFileRef);
-            console.log('Old file deleted successfully');
+            smartLogger.browserOnly.debug('Old file deleted successfully');
           } catch (deleteError) {
-            console.warn('Failed to delete old file:', deleteError);
+            smartLogger.browserOnly.warn('Failed to delete old file', deleteError);
           }
         }
 
@@ -396,7 +396,7 @@ export async function PUT(request: NextRequest) {
         const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
         const fileRef = ref(storage, `ai-assistant-files/${timestamp}-${safeFileName}`);
         
-        console.log('Uploading new file to Firebase Storage:', fileRef.fullPath);
+        smartLogger.browserOnly.debug('Uploading new file to Firebase Storage', { path: fileRef.fullPath });
         
         // Convert File to ArrayBuffer for upload
         const arrayBuffer = await file.arrayBuffer();
@@ -413,9 +413,9 @@ export async function PUT(request: NextRequest) {
         fileUrl = await getDownloadURL(snapshot.ref);
         fileName = file.name;
         
-        console.log('New file uploaded successfully:', fileUrl);
+        smartLogger.browserOnly.info('New file uploaded successfully', { fileUrl });
       } catch (fileError) {
-        console.error('File upload error:', fileError);
+        smartLogger.api.error('File upload error', fileError);
         const errorMessage = fileError instanceof Error ? fileError.message : 'Unknown error occurred';
         return NextResponse.json(
           { success: false, error: `Failed to upload file: ${errorMessage}` },
@@ -447,7 +447,7 @@ export async function PUT(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error updating question:', error);
+    smartLogger.api.error('Error updating question', error);
     return NextResponse.json(
       { success: false, error: 'Failed to update question' },
       { status: 500 }
@@ -491,9 +491,9 @@ export async function DELETE(request: NextRequest) {
         const filePath = decodeURIComponent(encodedPath);
         const fileRef = ref(storage, filePath);
         await deleteObject(fileRef);
-        console.log('Associated file deleted successfully');
+        smartLogger.browserOnly.debug('Associated file deleted successfully');
       } catch (fileError) {
-        console.warn('Failed to delete associated file:', fileError);
+        smartLogger.browserOnly.warn('Failed to delete associated file', fileError);
       }
     }
 
@@ -506,7 +506,7 @@ export async function DELETE(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error deleting question:', error);
+    smartLogger.api.error('Error deleting question', error);
     return NextResponse.json(
       { success: false, error: 'Failed to delete question' },
       { status: 500 }

@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/firebase-admin";
+import { requireFirebaseAdmin } from "@/lib/firebase-admin";
 
 export async function GET(req: NextRequest) {
   try {
+    // Ensure Firebase Admin is available
+    const db = requireFirebaseAdmin();
+    
     const { searchParams } = new URL(req.url);
     const limit = parseInt(searchParams.get("limit") || "50");
     const offset = parseInt(searchParams.get("offset") || "0");
@@ -109,6 +112,9 @@ export async function GET(req: NextRequest) {
 // Bulk operations for admin
 export async function POST(req: NextRequest) {
   try {
+    // Ensure Firebase Admin is available
+    const db = requireFirebaseAdmin();
+    
     const body = await req.json();
     const { action, uuids, banReason, adminId } = body;
 
@@ -189,6 +195,9 @@ export async function POST(req: NextRequest) {
 // Delete individual visitor (for admin) - NEW METHOD ADDED
 export async function DELETE(req: NextRequest) {
   try {
+    // Ensure Firebase Admin is available
+    const db = requireFirebaseAdmin();
+    
     const body = await req.json();
     const { uuid, adminId } = body;
 

@@ -17,7 +17,7 @@ import Approach from "@/components/Approach";
 import Footer from "@/components/Footer";
 import EnterpriseAIAssistant from "@/components/ai-assistant/enhanced/EnterpriseAIAssistant";
 import AIErrorBoundary from "@/components/ai-assistant/AIErrorBoundary";
-import { silentLogger, prodLogger } from '@/utils/secureLogger';
+import { smartLogger } from '@/utils/smartLogger';
 
 // Unique Circular Loader Component
 const UniquePortfolioLoader = () => {
@@ -197,11 +197,11 @@ const UUIDPortfolioPage = () => {
     const validateAndSetUUID = () => {
       const urlUUID = params.uuid as string;
       
-      silentLogger.silent("URL UUID received");
+      smartLogger.devOnly.debug("URL UUID received");
 
       // Validate UUID format
       if (!urlUUID || !isValidUUID(urlUUID)) {
-        silentLogger.silent("Invalid UUID in URL, generating new one");
+        smartLogger.devOnly.debug("Invalid UUID in URL, generating new one");
         const newUUID = uuidv4();
         router.replace(`/${newUUID}`);
         return;
@@ -215,11 +215,11 @@ const UUIDPortfolioPage = () => {
         localStorage.setItem('visitor_uuid', urlUUID);
         sessionStorage.setItem('visitor_uuid', urlUUID);
       } catch (error) {
-        silentLogger.silent("Storage not available");
+        smartLogger.devOnly.debug("Storage not available");
       }
 
       setIsValidating(false);
-      silentLogger.silent("UUID validated and set");
+      smartLogger.devOnly.debug("UUID validated and set");
     };
 
     validateAndSetUUID();
@@ -282,15 +282,15 @@ const UUIDPortfolioPage = () => {
         {/* Enhanced AI Assistant with System Isolation and Error Boundary */}
         <AIErrorBoundary
           onError={(error, errorInfo) => {
-            console.error('AI Assistant Error:', error);
-            console.error('Error Info:', errorInfo);
+            smartLogger.error('AI Assistant Error', error);
+            smartLogger.browserOnly.debug('Error Info', errorInfo);
           }}
         >
           <EnterpriseAIAssistant
             isPortfolioLoaded={!isLoading}
             onAssistantStateChange={(state) => {
               // Handle assistant state changes for navbar visibility
-              console.log('Enhanced Assistant state changed:', state);
+              smartLogger.browserOnly.debug('Enhanced Assistant state changed', state);
               setIsAIAssistantOpen(state.isVisible && !state.isMinimized);
             }}
           />

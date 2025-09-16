@@ -1,9 +1,12 @@
 // app/api/update-status/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/firebase-admin";
+import { requireFirebaseAdmin } from "@/lib/firebase-admin";
 
 export async function POST(req: NextRequest) {
   try {
+    // Ensure Firebase Admin is available
+    const db = requireFirebaseAdmin();
+    
     const { uuid, status } = await req.json();
 
     if (!uuid || !["banned", "active"].includes(status)) {

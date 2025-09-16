@@ -1,6 +1,6 @@
 // app/api/log-visit/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/firebase-admin"; // Admin SDK
+import { requireFirebaseAdmin } from "@/lib/firebase-admin"; // Admin SDK
 
 // Handle CORS preflight requests
 export async function OPTIONS(request: NextRequest) {
@@ -24,6 +24,9 @@ export async function POST(req: NextRequest) {
   const origin = req.headers.get('origin') || '*';
 
   try {
+    // Ensure Firebase Admin is available
+    const db = requireFirebaseAdmin();
+    
     const body = await req.json();
     const { uuid, visitId, ip, device, os } = body;
 

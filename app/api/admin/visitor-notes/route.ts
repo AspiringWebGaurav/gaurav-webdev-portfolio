@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/firebase-admin";
+import { requireFirebaseAdmin } from "@/lib/firebase-admin";
 
 // Update visitor admin notes
 export async function POST(req: NextRequest) {
   try {
+    // Ensure Firebase Admin is available
+    const db = requireFirebaseAdmin();
+    
     const body = await req.json();
     const { uuid, notes, adminId } = body;
 
@@ -57,6 +60,9 @@ export async function POST(req: NextRequest) {
 // Get visitor admin notes
 export async function GET(req: NextRequest) {
   try {
+    // Ensure Firebase Admin is available
+    const db = requireFirebaseAdmin();
+    
     const { searchParams } = new URL(req.url);
     const uuid = searchParams.get('uuid');
 
@@ -101,6 +107,9 @@ export async function GET(req: NextRequest) {
 // Delete visitor admin notes
 export async function DELETE(req: NextRequest) {
   try {
+    // Ensure Firebase Admin is available
+    const db = requireFirebaseAdmin();
+    
     const { searchParams } = new URL(req.url);
     const uuid = searchParams.get('uuid');
 

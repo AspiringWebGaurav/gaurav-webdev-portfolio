@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/firebase-admin";
+import { requireFirebaseAdmin } from "@/lib/firebase-admin";
 import { headers } from "next/headers";
+import { smartLogger } from "@/utils/smartLogger";
 
 interface VisitorTrackingData {
   uuid: string;
@@ -32,9 +33,12 @@ export async function OPTIONS(request: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  console.log("🔥 Enhanced visitor tracking route called");
+  smartLogger.browserOnly.debug("🔥 Enhanced visitor tracking route called");
 
   try {
+    // Ensure Firebase Admin is available
+    const db = requireFirebaseAdmin();
+    
     const body: VisitorTrackingData = await req.json();
     const { 
       uuid, 
@@ -55,7 +59,7 @@ export async function POST(req: NextRequest) {
 
     // Validate required fields
     if (!uuid || !fingerprintHash) {
-      console.warn("❌ Missing required fields: uuid or fingerprintHash");
+      smartLogger.api.warn("❌ Missing required fields: uuid or fingerprintHash");
       return NextResponse.json(
         { error: "Missing required fields: uuid or fingerprintHash" },
         { status: 400 }
@@ -88,7 +92,7 @@ export async function POST(req: NextRequest) {
         updatedAt: new Date().toISOString()
       });
 
-      console.log("✅ Existing visitor updated:", uuid, "Visit count:", visitCount);
+      smartLogger.browserOnly.info("✅ Existing visitor updated", { uuid, visitCount });
       
       return NextResponse.json(
         { 
@@ -112,7 +116,7 @@ export async function POST(req: NextRequest) {
       const duplicateDoc = duplicateQuery.docs[0];
       const duplicateData = duplicateDoc.data();
       
-      console.log("⚠️ Potential duplicate visitor detected by fingerprint:", fingerprintHash);
+      smartLogger.browserOnly.warn("⚠️ Potential duplicate visitor detected by fingerprint", { fingerprintHash });
       
       // Update the existing document with new UUID if different
       if (duplicateDoc.id !== uuid) {
@@ -161,7 +165,7 @@ export async function POST(req: NextRequest) {
 
     await visitorRef.set(newVisitorData);
 
-    console.log("✅ New visitor created:", uuid);
+    smartLogger.browserOnly.info("✅ New visitor created", { uuid });
     
     return NextResponse.json(
       { 
@@ -174,10 +178,10 @@ export async function POST(req: NextRequest) {
     );
 
   } catch (error) {
-    console.error("🔥 Enhanced visitor tracking error:", error);
+    smartLogger.api.error("🔥 Enhanced visitor tracking error", error);
     
     return NextResponse.json(
-      { 
+      {
         error: error instanceof Error ? error.message : "Internal server error",
         details: "Failed to track visitor"
       },
@@ -189,6 +193,9 @@ export async function POST(req: NextRequest) {
 // GET method to retrieve visitor data
 export async function GET(req: NextRequest) {
   try {
+    // Ensure Firebase Admin is available
+    const db = requireFirebaseAdmin();
+    
     const { searchParams } = new URL(req.url);
     const uuid = searchParams.get('uuid');
 
@@ -225,7 +232,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(sanitizedData, { status: 200 });
 
   } catch (error) {
-    console.error("🔥 Error retrieving visitor data:", error);
+    smartLogger.api.error("🔥 Error retrieving visitor data", error);
     
     return NextResponse.json(
       { error: "Failed to retrieve visitor data" },

@@ -98,7 +98,7 @@ export async function GET(req: NextRequest) {
     const offset = parseInt(searchParams.get("offset") || "0");
 
     const db = requireFirebaseAdmin();
-    let query = db.collection("ban_appeals");
+    let query: any = db.collection("ban_appeals");
 
     // Filter by status if provided
     if (

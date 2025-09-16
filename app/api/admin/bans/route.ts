@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
     const activeOnly = searchParams.get('activeOnly') === 'true';
 
     const db = requireFirebaseAdmin();
-    let query = db.collection("bans");
+    let query: any = db.collection("bans");
 
     // Filter by UUID if provided
     if (uuid) {

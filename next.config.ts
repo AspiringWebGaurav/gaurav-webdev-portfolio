@@ -20,6 +20,31 @@ const nextConfig: NextConfig = {
     } : false,
   },
 
+  // 🔇 Reduce development logging noise
+  logging: {
+    fetches: {
+      fullUrl: false, // Don't log full URLs in development
+    },
+  },
+
+  // 🔕 Suppress non-critical dev messages
+  ...(process.env.NODE_ENV === 'development' && {
+    experimental: {
+      turbo: {
+        rules: {
+          // Suppress turbo compilation logs
+        }
+      }
+    },
+    // Reduce webpack compilation noise
+    webpack: (config: any) => {
+      config.infrastructureLogging = {
+        level: 'error', // Only show errors
+      };
+      return config;
+    },
+  }),
+
   // 🔒 Security: Disable development features in production
   ...(process.env.NODE_ENV === 'production' && {
     poweredByHeader: false,

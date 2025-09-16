@@ -57,12 +57,7 @@ export const metadata: Metadata = {
   category: "Technology",
   classification: "Portfolio Website",
   
-  // Theme & Branding
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#3b82f6" },
-    { media: "(prefers-color-scheme: dark)", color: "#1e40af" }
-  ],
-  colorScheme: "dark light",
+  // Note: themeColor and colorScheme moved to viewport export per Next.js 15 requirements
   
   // Icons - Production Ready
   icons: {
@@ -132,6 +127,15 @@ export const metadata: Metadata = {
     address: false,
     telephone: false
   }
+};
+
+// Viewport Configuration (Next.js 15+ requirement)
+export const viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#3b82f6" },
+    { media: "(prefers-color-scheme: dark)", color: "#1e40af" }
+  ],
+  colorScheme: "dark light",
 };
 
 // JSON-LD Structured Data Component

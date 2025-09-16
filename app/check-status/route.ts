@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/firebase-admin";
+import { requireFirebaseAdmin } from "@/lib/firebase-admin";
 
 export async function GET(req: NextRequest) {
   const uuid = req.nextUrl.searchParams.get("uuid");
@@ -9,6 +9,9 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    // Ensure Firebase Admin is available
+    const db = requireFirebaseAdmin();
+    
     const docSnap = await db.collection("visitors").doc(uuid).get();
 
     if (!docSnap.exists) {
