@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "./provider";
 import EnhancedToastProvider from "@/components/ToastSystem";
 import PWAInitializer from "@/components/PWAInitializer";
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
