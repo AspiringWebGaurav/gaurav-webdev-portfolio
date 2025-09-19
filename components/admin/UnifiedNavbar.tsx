@@ -11,6 +11,7 @@ interface UnifiedNavbarProps {
   visitorStats?: { total: number; active: number; banned: number };
   appealStats?: { total: number; pending: number };
   aiQuestionCount?: number;
+  directQuestionStats?: { total: number; unanswered: number };
   isRealTimeActive?: boolean;
   onLiveSyncToggle?: (enabled: boolean) => void;
 }
@@ -19,6 +20,7 @@ export default function UnifiedNavbar({
   visitorStats = { total: 0, active: 0, banned: 0 },
   appealStats = { total: 0, pending: 0 },
   aiQuestionCount = 0,
+  directQuestionStats = { total: 0, unanswered: 0 },
   isRealTimeActive = false,
   onLiveSyncToggle,
 }: UnifiedNavbarProps) {
@@ -56,6 +58,11 @@ export default function UnifiedNavbar({
       case "/admin/ai-assistant":
         return {
           title: "AI Assistant Management",
+          subtitle: "Smart Tracking Admin",
+        };
+      case "/admin/direct-questions":
+        return {
+          title: "Direct Questions Management",
           subtitle: "Smart Tracking Admin",
         };
       default:
@@ -129,6 +136,22 @@ export default function UnifiedNavbar({
             />
           </svg>
         );
+      case "/admin/direct-questions":
+        return (
+          <svg
+            className="w-5 h-5 text-white"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v6a2 2 0 01-2 2h-2l-4 4z"
+            />
+          </svg>
+        );
       default:
         return (
           <svg
@@ -158,6 +181,8 @@ export default function UnifiedNavbar({
         return "from-amber-500 to-orange-500";
       case "/admin/ai-assistant":
         return "from-purple-500 to-pink-500";
+      case "/admin/direct-questions":
+        return "from-cyan-500 to-blue-500";
       default:
         return "from-blue-500 to-purple-500";
     }
@@ -250,6 +275,24 @@ export default function UnifiedNavbar({
                   }`}
                 >
                   AI Assistant ({aiQuestionCount})
+                </button>
+
+                <button
+                  onClick={() => router.push("/admin/direct-questions")}
+                  onMouseEnter={() => handleMouseEnter("/admin/direct-questions")}
+                  onMouseLeave={() => handleMouseLeave("/admin/direct-questions")}
+                  className={`px-4 py-2 rounded-lg transition-all duration-200 relative font-medium touch-feedback ${
+                    isActivePage("/admin/direct-questions")
+                      ? "bg-cyan-500 text-white shadow-lg"
+                      : "text-slate-300 hover:text-white hover:bg-slate-700"
+                  }`}
+                >
+                  Direct Q&A ({directQuestionStats.total})
+                  {directQuestionStats.unanswered > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-yellow-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                      {directQuestionStats.unanswered}
+                    </span>
+                  )}
                 </button>
               </nav>
 
@@ -382,6 +425,25 @@ export default function UnifiedNavbar({
               }`}
             >
               AI Assistant ({aiQuestionCount})
+            </button>
+
+            <button
+              onClick={() => {
+                router.push("/admin/direct-questions");
+                setIsMobileMenuOpen(false);
+              }}
+              className={`w-full text-left px-4 py-3 rounded-lg transition-colors relative font-medium ${
+                isActivePage("/admin/direct-questions")
+                  ? "bg-cyan-500 text-white"
+                  : "text-slate-300 hover:text-white hover:bg-slate-700"
+              }`}
+            >
+              Direct Q&A ({directQuestionStats.total})
+              {directQuestionStats.unanswered > 0 && (
+                <span className="absolute top-2 right-2 bg-yellow-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {directQuestionStats.unanswered}
+                </span>
+              )}
             </button>
           </div>
         </div>

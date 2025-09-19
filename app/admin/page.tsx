@@ -175,6 +175,10 @@ export default function AdminDashboard() {
   const [aiQuestions, setAiQuestions] = useState<AIQuestion[]>([]);
   const [aiQuestionsLoading, setAiQuestionsLoading] = useState(false);
 
+  // Direct Questions state
+  const [directQuestions, setDirectQuestions] = useState<any[]>([]);
+  const [directQuestionStats, setDirectQuestionStats] = useState({ total: 0, unanswered: 0 });
+
   // Real-time listeners
   const visitorsUnsubscribeRef = useRef<(() => void) | null>(null);
   const appealsUnsubscribeRef = useRef<(() => void) | null>(null);
@@ -223,6 +227,9 @@ export default function AdminDashboard() {
       } else if (activeTab === "ai-assistant") {
         fetchAIQuestions();
       }
+
+      // Always fetch direct questions for navbar stats
+      fetchDirectQuestions();
     }
 
     // Cleanup listeners on unmount
@@ -386,6 +393,44 @@ export default function AdminDashboard() {
       setAiQuestions([]);
     } finally {
       setAiQuestionsLoading(false);
+    }
+  };
+
+  const fetchDirectQuestions = async () => {
+    try {
+      const response = await fetch('/api/admin/direct-questions', {
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          showErrorToast('Session expired. Please login again.');
+          router.push('/admin/login');
+          return;
+        }
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      if (!data || typeof data !== 'object') {
+        throw new Error('Invalid response format');
+      }
+
+      const questions = Array.isArray(data.data?.questions) ? data.data.questions : [];
+      setDirectQuestions(questions);
+      
+      // Calculate stats
+      const stats = {
+        total: questions.length,
+        unanswered: questions.filter((q: any) => q.status === 'unanswered').length
+      };
+      setDirectQuestionStats(stats);
+    } catch (error) {
+      console.error('Error fetching direct questions:', error);
+      // Fail silently for navbar stats
+      setDirectQuestions([]);
+      setDirectQuestionStats({ total: 0, unanswered: 0 });
     }
   };
 
@@ -979,6 +1024,7 @@ export default function AdminDashboard() {
           visitorStats={visitorStats}
           appealStats={appealStats}
           aiQuestionCount={aiQuestions.length}
+          directQuestionStats={directQuestionStats}
           isRealTimeActive={isRealTimeActive}
           onLiveSyncToggle={handleLiveSyncToggle}
         />
@@ -1054,6 +1100,33 @@ export default function AdminDashboard() {
                     <p className="font-medium text-slate-900">AI Assistant</p>
                     <p className="text-sm text-slate-500">Manage AI questions</p>
                   </div>
+                </button>
+
+                <button
+                  onClick={() => router.push("/admin/direct-questions")}
+                  className="flex items-center space-x-3 p-4 bg-cyan-50 hover:bg-cyan-100 rounded-lg transition-colors group"
+                >
+                  <div className="w-10 h-10 bg-cyan-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v6a2 2 0 01-2 2h-2l-4 4z" />
+                    </svg>
+                  </div>
+                  <div className="text-left">
+                    <p className="font-medium text-slate-900">Direct Q&A</p>
+                    <p className="text-sm text-slate-500">
+                      {directQuestionStats.unanswered > 0
+                        ? `${directQuestionStats.unanswered} pending questions`
+                        : 'Manage visitor questions'
+                      }
+                    </p>
+                  </div>
+                  {directQuestionStats.unanswered > 0 && (
+                    <div className="ml-auto">
+                      <span className="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                        {directQuestionStats.unanswered}
+                      </span>
+                    </div>
+                  )}
                 </button>
 
                 <button

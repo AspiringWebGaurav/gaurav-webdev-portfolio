@@ -51,6 +51,17 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
     shortcut: 'C'
   },
   {
+    id: 'ask-directly',
+    label: 'Ask Me Directly',
+    icon: Icons.MessageCircle,
+    description: 'Ask questions directly to Gaurav',
+    shortcut: 'D',
+    badge: {
+      text: 'Direct',
+      variant: 'success'
+    }
+  },
+  {
     id: 'settings',
     label: 'Settings',
     icon: Icons.Settings,

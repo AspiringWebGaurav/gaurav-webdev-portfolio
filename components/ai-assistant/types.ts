@@ -28,7 +28,7 @@ export interface ChatSession {
 export interface AssistantState {
   isVisible: boolean;
   isMinimized: boolean;
-  activeTab: 'predefined' | 'chat' | 'settings';
+  activeTab: 'predefined' | 'chat' | 'ask-directly' | 'settings';
   isLoading: boolean;
   error?: string;
 }
@@ -140,8 +140,8 @@ export interface AIChatProps {
 }
 
 export interface AssistantInterfaceProps {
-  activeTab: 'predefined' | 'chat' | 'settings';
-  onTabChange: (tab: 'predefined' | 'chat' | 'settings') => void;
+  activeTab: 'predefined' | 'chat' | 'ask-directly' | 'settings';
+  onTabChange: (tab: 'predefined' | 'chat' | 'ask-directly' | 'settings') => void;
   questions: AIQuestion[];
   chatMessages: ChatMessage[];
   onQuestionClick: (question: AIQuestion) => void;

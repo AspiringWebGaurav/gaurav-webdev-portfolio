@@ -10,16 +10,21 @@ import EnhancedAIChat from './EnhancedAIChat';
 import OptimizedJarvisAnimation from './OptimizedJarvisAnimation';
 import OnboardingModal from './OnboardingModal';
 import AnswerModal from './AnswerModal';
+import { QuestionForm, QuestionsList } from '@/components/askDirectly';
 import { openRouterAPI, isAIEnabled, generateContextualPrompts, OpenRouterMessage } from '../utils/openRouterAPI';
+import { useNotifications } from '@/hooks/useNotifications';
+import { NotificationBell } from '@/components/direct-questions/NotificationOverlay';
 
 interface EnterpriseAIAssistantProps {
   isPortfolioLoaded?: boolean;
   onAssistantStateChange?: (state: AssistantState) => void;
+  shouldOpenToAskDirectly?: boolean;
 }
 
 const EnterpriseAIAssistant: React.FC<EnterpriseAIAssistantProps> = ({
   isPortfolioLoaded = false,
-  onAssistantStateChange
+  onAssistantStateChange,
+  shouldOpenToAskDirectly = false
 }) => {
   // Main state management
   const [assistantState, setAssistantState] = useState<AssistantState>({
@@ -54,6 +59,14 @@ const EnterpriseAIAssistant: React.FC<EnterpriseAIAssistantProps> = ({
 
   // Client-side hydration check
   const [isClient, setIsClient] = useState(false);
+
+  // Notification system integration
+  const {
+    unreadCount,
+    hasUnreadNotifications,
+    actions: notificationActions,
+    isInitialized: notificationsInitialized
+  } = useNotifications();
 
   useEffect(() => {
     setIsClient(true);
@@ -176,10 +189,18 @@ const EnterpriseAIAssistant: React.FC<EnterpriseAIAssistantProps> = ({
     
     setAssistantState(prev => ({
       ...prev,
-      activeTab: tabId as 'predefined' | 'chat'
+      activeTab: tabId as 'predefined' | 'chat' | 'ask-directly'
     }));
     setError(undefined);
-  }, []);
+
+    // Clear notifications when opening ask-directly tab
+    if (tabId === 'ask-directly' && hasUnreadNotifications) {
+      setTimeout(async () => {
+        // Use clearAll to remove all notifications when user opens the tab
+        notificationActions.clearAll();
+      }, 1000); // Clear after user has time to see the questions
+    }
+  }, [hasUnreadNotifications, notificationActions]);
 
   const handleQuestionClick = useCallback((question: AIQuestion) => {
     try {
@@ -323,7 +344,37 @@ const EnterpriseAIAssistant: React.FC<EnterpriseAIAssistantProps> = ({
     if (!hasSeenOnboarding) {
       setShowOnboarding(true);
     }
-  }, [hasSeenOnboarding]);
+
+    // If there are unread notifications, automatically go to ask-directly tab
+    if (hasUnreadNotifications) {
+      setAssistantState(prev => ({
+        ...prev,
+        activeTab: 'ask-directly',
+        isVisible: true,
+        isMinimized: false
+      }));
+    }
+  }, [hasSeenOnboarding, hasUnreadNotifications]);
+
+  // Handle external trigger to open to ask-directly tab
+  useEffect(() => {
+    if (shouldOpenToAskDirectly) {
+      setAssistantState(prev => ({
+        ...prev,
+        isVisible: true,
+        isMinimized: false,
+        activeTab: 'ask-directly'
+      }));
+
+      // Clear notifications when opening from notification click
+      if (hasUnreadNotifications) {
+        setTimeout(async () => {
+          // Clear all notifications when user opens from notification
+          notificationActions.clearAll();
+        }, 1500); // Give user time to see the questions
+      }
+    }
+  }, [shouldOpenToAskDirectly, hasUnreadNotifications, notificationActions]);
 
   const handleClose = useCallback(() => {
     setAssistantState(prev => ({
@@ -511,6 +562,81 @@ const EnterpriseAIAssistant: React.FC<EnterpriseAIAssistantProps> = ({
                         />
                       )}
 
+                      {assistantState.activeTab === 'ask-directly' && (
+                        <div className="p-6 h-full overflow-y-auto custom-scrollbar">
+                          <div className="max-w-4xl mx-auto space-y-6">
+                            {/* Header */}
+                            <div className="text-center space-y-2">
+                              <h2 className="text-2xl font-bold text-ai-text-primary">
+                                Ask Me Directly
+                              </h2>
+                              <p className="text-ai-text-secondary">
+                                Send your questions directly to Gaurav and get personal responses
+                              </p>
+                            </div>
+
+                            {/* Two-column layout for Ask and History */}
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                              {/* Question Form */}
+                              <div className="space-y-4">
+                                <h3 className="text-lg font-semibold text-ai-text-primary">
+                                  📝 Ask Your Question
+                                </h3>
+                                <div className="bg-ai-surface-secondary/50 backdrop-blur-sm rounded-xl p-4 border border-ai-border-light/30">
+                                  <QuestionForm
+                                    onSuccess={(questionId) => {
+                                      console.log('Question submitted:', questionId);
+                                      // The real-time listener will automatically update the history
+                                    }}
+                                    placeholder="Ask me anything about my work, projects, or experience..."
+                                    showCharCount={true}
+                                    autoFocus={false}
+                                    className="space-y-3"
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Question History */}
+                              <div className="space-y-4">
+                                <h3 className="text-lg font-semibold text-ai-text-primary">
+                                  💬 Your Questions
+                                </h3>
+                                <div className="bg-ai-surface-secondary/50 backdrop-blur-sm rounded-xl p-4 border border-ai-border-light/30 max-h-96 overflow-y-auto custom-scrollbar">
+                                  <QuestionsList
+                                    enableRealTime={true}
+                                    showEmptyState={true}
+                                    variant="default"
+                                    emptyMessage="No questions yet. Ask your first question above!"
+                                    onQuestionClick={(question) => {
+                                      console.log('Question selected:', question.id);
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Information Panel */}
+                            <div className="bg-ai-primary-blue/10 rounded-xl p-4 border border-ai-primary-blue/30">
+                              <div className="flex items-start space-x-3">
+                                <div className="w-8 h-8 bg-ai-primary-blue/20 rounded-full flex items-center justify-center flex-shrink-0">
+                                  <span className="text-ai-primary-blue text-sm">💡</span>
+                                </div>
+                                <div className="space-y-2">
+                                  <h4 className="font-medium text-ai-text-primary">How it works:</h4>
+                                  <ul className="text-sm text-ai-text-secondary space-y-1">
+                                    <li>• Ask any question about Gaurav's work or experience</li>
+                                    <li>• Your questions are sent directly to Gaurav</li>
+                                    <li>• Get notified with a toast when Gaurav replies</li>
+                                    <li>• View your complete Q&A history in real-time</li>
+                                    <li>• Questions are rate-limited to one every 10 seconds</li>
+                                  </ul>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       {assistantState.activeTab === 'settings' && (
                         <div className="p-6 h-full overflow-y-auto custom-scrollbar">
                           <h2 className="text-lg font-semibold text-ai-text-primary mb-6">
@@ -597,19 +723,34 @@ const EnterpriseAIAssistant: React.FC<EnterpriseAIAssistantProps> = ({
         <button
           onClick={handleShow}
           className="fixed top-1/2 right-6 -translate-y-1/2 z-40 group"
-          title="Gaurav's Personal Assistant (Ctrl+Shift+A)"
+          title={`Gaurav's Personal Assistant${hasUnreadNotifications ? ` (${unreadCount} unread)` : ''} (Ctrl+Shift+A)`}
           aria-label="Open AI Assistant"
         >
           {/* Outer glow effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-ai-primary-blue/30 via-ai-primary-blue-light/30 to-ai-primary-blue/30 rounded-full blur-xl group-hover:blur-2xl transition-all duration-300 animate-pulse"></div>
+          <div className={cn(
+            "absolute inset-0 rounded-full blur-xl group-hover:blur-2xl transition-all duration-300",
+            hasUnreadNotifications
+              ? "bg-gradient-to-r from-green-400/40 via-blue-400/40 to-purple-400/40 animate-pulse"
+              : "bg-gradient-to-r from-ai-primary-blue/30 via-ai-primary-blue-light/30 to-ai-primary-blue/30 animate-pulse"
+          )}></div>
 
           {/* Main button with enhanced glass effect */}
           <div className="relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-lg">
             {/* Glass morphism background */}
-            <div className="absolute inset-0 bg-ai-surface-primary/20 backdrop-blur-md border border-ai-primary-blue/50 rounded-full group-hover:bg-ai-surface-primary/30 group-hover:border-ai-primary-blue/70 transition-all duration-300"></div>
+            <div className={cn(
+              "absolute inset-0 backdrop-blur-md rounded-full transition-all duration-300",
+              hasUnreadNotifications
+                ? "bg-green-500/20 border border-green-400/50 group-hover:bg-green-500/30 group-hover:border-green-400/70"
+                : "bg-ai-surface-primary/20 border border-ai-primary-blue/50 group-hover:bg-ai-surface-primary/30 group-hover:border-ai-primary-blue/70"
+            )}></div>
             
             {/* Inner glow */}
-            <div className="absolute inset-1 bg-gradient-to-br from-ai-primary-blue/20 to-transparent rounded-full"></div>
+            <div className={cn(
+              "absolute inset-1 rounded-full",
+              hasUnreadNotifications
+                ? "bg-gradient-to-br from-green-400/20 to-transparent"
+                : "bg-gradient-to-br from-ai-primary-blue/20 to-transparent"
+            )}></div>
             
             {/* Content */}
             <div className="relative z-10">
@@ -617,13 +758,23 @@ const EnterpriseAIAssistant: React.FC<EnterpriseAIAssistantProps> = ({
                 <OptimizedJarvisAnimation
                   isActive={true}
                   size="small"
-                  color="blue"
-                  intensity="medium"
+                  color={hasUnreadNotifications ? "cyan" : "blue"}
+                  intensity={hasUnreadNotifications ? "high" : "medium"}
                 />
               ) : (
-                <Icons.Chat className="w-6 h-6 text-ai-primary-blue" />
+                <Icons.Chat className={cn(
+                  "w-6 h-6",
+                  hasUnreadNotifications ? "text-green-400" : "text-ai-primary-blue"
+                )} />
               )}
             </div>
+
+            {/* Notification Badge */}
+            {hasUnreadNotifications && (
+              <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center animate-bounce shadow-lg border-2 border-white">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </div>
+            )}
           </div>
         </button>
       )}

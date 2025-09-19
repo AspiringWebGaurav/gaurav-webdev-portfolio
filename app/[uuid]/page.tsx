@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { v4 as uuidv4 } from 'uuid';
 import EnhancedBanGate from "@/components/EnhancedBanGate";
@@ -17,6 +17,9 @@ import Approach from "@/components/Approach";
 import Footer from "@/components/Footer";
 import EnterpriseAIAssistant from "@/components/ai-assistant/enhanced/EnterpriseAIAssistant";
 import AIErrorBoundary from "@/components/ai-assistant/AIErrorBoundary";
+import NotificationSystem from "@/components/direct-questions/NotificationSystem";
+import NotificationProvider from "@/components/direct-questions/NotificationProvider";
+import { initializeVisitorEventListener, cleanupVisitorEventListener } from "@/lib/visitorEventListener";
 import { smartLogger } from '@/utils/smartLogger';
 
 // Unique Circular Loader Component
@@ -192,6 +195,12 @@ const UUIDPortfolioPage = () => {
   
   // AI Assistant state tracking
   const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
+  const [shouldOpenToAskDirectly, setShouldOpenToAskDirectly] = useState(false);
+
+  // Handle notification click to open AI assistant
+  const handleOpenAssistantFromNotification = () => {
+    setShouldOpenToAskDirectly(true);
+  };
 
   useEffect(() => {
     const validateAndSetUUID = () => {
@@ -236,6 +245,31 @@ const UUIDPortfolioPage = () => {
     }
   }, [isValidating]);
 
+  // Initialize visitor event listener for admin action cleanup
+  useEffect(() => {
+    if (!isValidating && currentUUID) {
+      let mounted = true;
+
+      const initializeEventListener = async () => {
+        try {
+          await initializeVisitorEventListener(currentUUID);
+          if (mounted) {
+            console.log('✅ Visitor event listener initialized for admin action cleanup');
+          }
+        } catch (error) {
+          console.error('❌ Failed to initialize visitor event listener:', error);
+        }
+      };
+
+      initializeEventListener();
+
+      return () => {
+        mounted = false;
+        cleanupVisitorEventListener();
+      };
+    }
+  }, [isValidating, currentUUID]);
+
   // Show loading while validating UUID
   if (isValidating) {
     return (
@@ -250,52 +284,67 @@ const UUIDPortfolioPage = () => {
 
   return (
     <EnhancedBanGate uuid={currentUUID}>
-      <main className="relative bg-black-100 flex justify-center items-center flex-col overflow-hidden mx-auto sm:px-10 px-5">
-        {/* Enhanced Visitor Tracking System with UUID */}
-        <VisitorTracker uuid={currentUUID} />
-        <EnhancedVisitorStatusWatcher uuid={currentUUID} />
-        <VisitorTrackingNotice />
-        
-        {isLoading && <UniquePortfolioLoader />}
+      <NotificationProvider visitorUuid={currentUUID}>
+        <main className="relative bg-black-100 flex justify-center items-center flex-col overflow-hidden mx-auto sm:px-10 px-5">
+          {/* Enhanced Visitor Tracking System with UUID */}
+          <VisitorTracker uuid={currentUUID} />
+          <EnhancedVisitorStatusWatcher uuid={currentUUID} />
+          <VisitorTrackingNotice />
+          
+          {isLoading && <UniquePortfolioLoader />}
 
-        <div
-          className={`max-w-7xl w-full transition-all duration-1000 ${
-            isLoading ? "opacity-0" : "opacity-100"
-          }`}
-        >
-          <FloatingNav
-            navItems={navItems}
-            hideWhenAIOpen={isAIAssistantOpen}
-          />
-          <Hero />
-          <Grid />
-          <RecentProjects />
-          <Clients />
-          <Experience />
-          <Approach />
-          <Footer />
-        </div>
+          <div
+            className={`max-w-7xl w-full transition-all duration-1000 ${
+              isLoading ? "opacity-0" : "opacity-100"
+            }`}
+          >
+            <FloatingNav
+              navItems={navItems}
+              hideWhenAIOpen={isAIAssistantOpen}
+            />
+            <Hero />
+            <Grid />
+            <RecentProjects />
+            <Clients />
+            <Experience />
+            <Approach />
+            <Footer />
+          </div>
 
-        {/* Go to Top Button */}
-        {!isLoading && <GoToTopButton hideWhenAIOpen={isAIAssistantOpen} />}
+          {/* Go to Top Button */}
+          {!isLoading && <GoToTopButton hideWhenAIOpen={isAIAssistantOpen} />}
 
-        {/* Enhanced AI Assistant with System Isolation and Error Boundary */}
-        <AIErrorBoundary
-          onError={(error, errorInfo) => {
-            smartLogger.error('AI Assistant Error', error);
-            smartLogger.browserOnly.debug('Error Info', errorInfo);
-          }}
-        >
-          <EnterpriseAIAssistant
-            isPortfolioLoaded={!isLoading}
-            onAssistantStateChange={(state) => {
-              // Handle assistant state changes for navbar visibility
-              smartLogger.browserOnly.debug('Enhanced Assistant state changed', state);
-              setIsAIAssistantOpen(state.isVisible && !state.isMinimized);
+          {/* Direct Questions Notification System */}
+          {!isLoading && (
+            <NotificationSystem
+              onOpenAssistant={handleOpenAssistantFromNotification}
+            />
+          )}
+
+          {/* Enhanced AI Assistant with System Isolation and Error Boundary */}
+          <AIErrorBoundary
+            onError={(error, errorInfo) => {
+              smartLogger.error('AI Assistant Error', error);
+              smartLogger.browserOnly.debug('Error Info', errorInfo);
             }}
-          />
-        </AIErrorBoundary>
-      </main>
+          >
+            <EnterpriseAIAssistant
+              isPortfolioLoaded={!isLoading}
+              shouldOpenToAskDirectly={shouldOpenToAskDirectly}
+              onAssistantStateChange={(state) => {
+                // Handle assistant state changes for navbar visibility
+                smartLogger.browserOnly.debug('Enhanced Assistant state changed', state);
+                setIsAIAssistantOpen(state.isVisible && !state.isMinimized);
+                
+                // Reset the open trigger once assistant is opened
+                if (state.isVisible && shouldOpenToAskDirectly) {
+                  setShouldOpenToAskDirectly(false);
+                }
+              }}
+            />
+          </AIErrorBoundary>
+        </main>
+      </NotificationProvider>
     </EnhancedBanGate>
   );
 };
