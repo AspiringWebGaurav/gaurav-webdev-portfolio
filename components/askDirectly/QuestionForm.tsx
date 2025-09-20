@@ -183,9 +183,9 @@ export default function QuestionForm({
   const isNearLimit = charactersLeft < 50;
 
   return (
-    <form onSubmit={handleSubmit} className={`space-y-4 ${className}`}>
-      {/* Question Input */}
-      <div className="relative">
+    <form onSubmit={handleSubmit} className={`h-full flex flex-col space-y-3 ${className}`}>
+      {/* Question Input - Takes most space */}
+      <div className="flex-1 relative">
         <textarea
           ref={textareaRef}
           value={question}
@@ -193,10 +193,9 @@ export default function QuestionForm({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={isSubmitting || rateLimitInfo?.canSend === false}
-          rows={4}
           className={`
-            w-full px-4 py-3 rounded-xl border-2 bg-slate-900/50 backdrop-blur-sm
-            text-white placeholder-slate-400 resize-none transition-all duration-200
+            w-full h-full px-3 sm:px-4 py-3 rounded-xl border-2 bg-slate-900/50 backdrop-blur-sm
+            text-white placeholder-slate-400 resize-none transition-all duration-200 text-sm sm:text-base
             focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50
             disabled:opacity-50 disabled:cursor-not-allowed
             ${validationError ? 'border-red-500/50' : 'border-slate-700/50'}
@@ -216,86 +215,71 @@ export default function QuestionForm({
         )}
       </div>
 
-      {/* Validation Error */}
+      {/* Error Messages - Compact */}
       {validationError && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/20 border border-red-500/30">
-          <span className="text-red-400 text-sm">❌</span>
-          <span className="text-red-400 text-sm">{validationError}</span>
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/20 border border-red-500/30 text-xs">
+          <span className="text-red-400">❌</span>
+          <span className="text-red-400">{validationError}</span>
         </div>
       )}
 
-      {/* Rate Limit Warning */}
       {rateLimitInfo && !rateLimitInfo.canSend && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-yellow-500/20 border border-yellow-500/30">
-          <span className="text-yellow-400 text-sm">⏳</span>
-          <span className="text-yellow-400 text-sm">
-            Please wait {countdown} seconds before sending another question
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-yellow-500/20 border border-yellow-500/30 text-xs">
+          <span className="text-yellow-400">⏳</span>
+          <span className="text-yellow-400">
+            Wait {countdown}s before sending another question
           </span>
         </div>
       )}
 
-      {/* Form Actions */}
-      <div className={`
-        flex items-center gap-3
-        ${inModal ? 'justify-end' : 'justify-between'}
-      `}>
-        {/* Help Text (only when not in modal) */}
-        {!inModal && (
-          <div className="text-xs text-slate-500">
+      {/* Form Actions - Compact */}
+      <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-700/50">
+        {/* Help Text - Mobile friendly */}
+        <div className="text-xs text-slate-500 flex-1">
+          <div className="hidden sm:block">
             Press <kbd className="px-1 py-0.5 bg-slate-800 rounded text-xs">Ctrl+Enter</kbd> to submit
           </div>
-        )}
-        
-        <div className="flex items-center gap-3">
-          {/* Cancel Button (modal only) */}
-          {inModal && onCancel && (
-            <button
-              type="button"
-              onClick={onCancel}
-              disabled={isSubmitting}
-              className="
-                px-4 py-2 rounded-lg border border-slate-600/50 
-                text-slate-400 hover:text-slate-300 hover:border-slate-500/50
-                transition-colors duration-200 disabled:opacity-50
-              "
-            >
-              Cancel
-            </button>
-          )}
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={!canSubmit}
-            className={`
-              px-6 py-2 rounded-lg font-medium transition-all duration-200
-              disabled:opacity-50 disabled:cursor-not-allowed
-              ${canSubmit
-                ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40'
-                : 'bg-slate-700/50 text-slate-400 cursor-not-allowed'
-              }
-              ${isSubmitting ? 'animate-pulse' : ''}
-            `}
-          >
-            {isSubmitting ? (
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span>Sending...</span>
-              </div>
-            ) : rateLimitInfo && !rateLimitInfo.canSend ? (
-              `Wait ${countdown}s`
-            ) : (
-              'Send Question'
-            )}
-          </button>
+          <div className="sm:hidden">Tap to submit</div>
         </div>
+        
+        {/* Submit Button - Mobile optimized */}
+        <button
+          type="submit"
+          disabled={!canSubmit}
+          className={`
+            px-4 sm:px-6 py-2 rounded-lg font-medium transition-all duration-200 text-sm
+            disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0
+            ${canSubmit
+              ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40'
+              : 'bg-slate-700/50 text-slate-400 cursor-not-allowed'
+            }
+            ${isSubmitting ? 'animate-pulse' : ''}
+          `}
+        >
+          {isSubmitting ? (
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <span className="hidden sm:inline">Sending...</span>
+              <span className="sm:hidden">...</span>
+            </div>
+          ) : rateLimitInfo && !rateLimitInfo.canSend ? (
+            `Wait ${countdown}s`
+          ) : (
+            <>
+              <span className="hidden sm:inline">Send Question</span>
+              <span className="sm:hidden">Send</span>
+            </>
+          )}
+        </button>
       </div>
 
-      {/* Usage Tips */}
-      <div className="text-xs text-slate-500 space-y-1">
-        <div>💡 Ask about my projects, experience, or technical skills</div>
-        <div>📝 Questions should be at least {MIN_CHARACTERS} characters long</div>
-        <div>🕒 You can send one question every 10 seconds</div>
+      {/* Usage Tips - Compact for mobile */}
+      <div className="text-xs text-slate-500 space-y-0.5 pt-1 border-t border-slate-700/30">
+        <div className="flex items-center justify-between">
+          <span>💡 Projects, skills, experience</span>
+          <span>📝 Min {MIN_CHARACTERS} chars</span>
+          <span>🕒 10s cooldown</span>
+        </div>
       </div>
     </form>
   );

@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 
 // Production-Ready SEO Metadata
 export const metadata: Metadata = {
-  metadataBase: new URL("https://gaurav-webdev-portfolio.vercel.app"),
+  metadataBase: new URL("https://www.gauravpatil.online"),
   
   // Core SEO
   title: {
@@ -334,6 +334,182 @@ export default function RootLayout({
     <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         <StructuredData />
+        
+        {/* Optimized Cloudflare Turnstile Script Loading */}
+        {/* Preload with resource hints for faster loading */}
+        <link
+          rel="dns-prefetch"
+          href="https://challenges.cloudflare.com"
+        />
+        <link
+          rel="preconnect"
+          href="https://challenges.cloudflare.com"
+          crossOrigin=""
+        />
+        <link
+          rel="preload"
+          href="https://challenges.cloudflare.com/turnstile/v0/api.js"
+          as="script"
+          crossOrigin=""
+        />
+        
+        {/* Enhanced Turnstile script loading with better race condition handling */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                // Global Turnstile state management with development mode support
+                window.turnstileState = {
+                  loaded: false,
+                  loading: false,
+                  error: false,
+                  retryCount: 0,
+                  maxRetries: ${process.env.NODE_ENV === 'development' ? 2 : 3},
+                  widgets: new Map(),
+                  developmentMode: ${process.env.NODE_ENV === 'development'}
+                };
+                
+                // Development mode logging
+                const devLog = function(message, ...args) {
+                  if (window.turnstileState.developmentMode) {
+                    console.log('[Turnstile Dev]', message, ...args);
+                  }
+                };
+
+                // Enhanced script loading with retry mechanism
+                function loadTurnstileScript() {
+                  if (window.turnstileState.loaded || window.turnstileState.loading) {
+                    return;
+                  }
+
+                  window.turnstileState.loading = true;
+                  
+                  var script = document.createElement('script');
+                  script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+                  script.async = true;
+                  script.defer = true;
+                  
+                  script.onload = function() {
+                    devLog('Script loaded successfully');
+                    window.turnstileState.loaded = true;
+                    window.turnstileState.loading = false;
+                    window.turnstileState.error = false;
+                    
+                    // Wait for turnstile object to be available with faster polling in dev
+                    var pollInterval = window.turnstileState.developmentMode ? 25 : 50;
+                    var timeout = window.turnstileState.developmentMode ? 3000 : 5000;
+                    
+                    var checkInterval = setInterval(function() {
+                      if (window.turnstile && typeof window.turnstile.render === 'function') {
+                        clearInterval(checkInterval);
+                        devLog('Turnstile API ready');
+                        window.dispatchEvent(new Event('turnstile-loaded'));
+                      }
+                    }, pollInterval);
+                    
+                    // Safety timeout (shorter in development)
+                    setTimeout(function() {
+                      clearInterval(checkInterval);
+                      if (!window.turnstile) {
+                        console.error('[TurnstileLoader] Turnstile API not available after timeout');
+                        window.dispatchEvent(new Event('turnstile-error'));
+                      }
+                    }, timeout);
+                  };
+                  
+                  script.onerror = function() {
+                    console.error('[TurnstileLoader] Script load failed, attempt:', window.turnstileState.retryCount + 1);
+                    window.turnstileState.loading = false;
+                    window.turnstileState.error = true;
+                    
+                    if (window.turnstileState.retryCount < window.turnstileState.maxRetries) {
+                      window.turnstileState.retryCount++;
+                      var retryDelay = window.turnstileState.developmentMode ? 1000 : 2000 * window.turnstileState.retryCount;
+                      setTimeout(function() {
+                        devLog('Retrying script load...');
+                        loadTurnstileScript();
+                      }, retryDelay);
+                    } else {
+                      console.error('[TurnstileLoader] Max retries reached, giving up');
+                      window.dispatchEvent(new Event('turnstile-error'));
+                    }
+                  };
+                  
+                  document.head.appendChild(script);
+                }
+
+                // Widget management utilities
+                window.turnstileManager = {
+                  register: function(id, widgetId) {
+                    window.turnstileState.widgets.set(id, widgetId);
+                    devLog('Widget registered:', id, widgetId);
+                  },
+                  
+                  unregister: function(id) {
+                    var widgetId = window.turnstileState.widgets.get(id);
+                    if (widgetId && window.turnstile) {
+                      try {
+                        window.turnstile.remove(widgetId);
+                        devLog('Widget removed:', id, widgetId);
+                      } catch (e) {
+                        console.warn('[TurnstileManager] Error removing widget:', e);
+                      }
+                    }
+                    window.turnstileState.widgets.delete(id);
+                  },
+                  
+                  isReady: function() {
+                    return window.turnstileState.loaded && window.turnstile && typeof window.turnstile.render === 'function';
+                  },
+                  
+                  waitForReady: function(callback, timeout) {
+                    timeout = timeout || (window.turnstileState.developmentMode ? 8000 : 10000);
+                    
+                    if (window.turnstileManager.isReady()) {
+                      callback();
+                      return;
+                    }
+                    
+                    var startTime = Date.now();
+                    var pollInterval = window.turnstileState.developmentMode ? 50 : 100;
+                    
+                    var checkReady = function() {
+                      if (window.turnstileManager.isReady()) {
+                        devLog('Turnstile ready after', Date.now() - startTime, 'ms');
+                        callback();
+                      } else if (Date.now() - startTime > timeout) {
+                        console.error('[TurnstileManager] Wait timeout exceeded after', timeout, 'ms');
+                        callback(new Error('Turnstile ready timeout'));
+                      } else {
+                        setTimeout(checkReady, pollInterval);
+                      }
+                    };
+                    checkReady();
+                  },
+                  
+                  // Development utilities
+                  getStats: function() {
+                    return {
+                      widgets: Array.from(window.turnstileState.widgets.entries()),
+                      loaded: window.turnstileState.loaded,
+                      loading: window.turnstileState.loading,
+                      error: window.turnstileState.error,
+                      retryCount: window.turnstileState.retryCount,
+                      developmentMode: window.turnstileState.developmentMode
+                    };
+                  }
+                };
+
+                // Start loading process
+                if (document.readyState === 'loading') {
+                  document.addEventListener('DOMContentLoaded', loadTurnstileScript);
+                } else {
+                  loadTurnstileScript();
+                }
+              })();
+            `
+          }}
+        />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <ThemeProvider

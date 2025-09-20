@@ -1,8 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
-import emailjs from "@emailjs/browser";
-import { FaTimes, FaEnvelope, FaUser, FaPen } from "react-icons/fa";
+import { FaTimes, FaEnvelope, FaUser, FaPen, FaShieldAlt } from "react-icons/fa";
+import TurnstileInline, { TurnstileInlineRef } from "./TurnstileInline";
+import { ContactFormResponse } from "@/lib/types/turnstile";
 
 interface ContactFormData {
   name: string;
@@ -22,6 +23,10 @@ const ContactModal = ({ isOpen, onClose, onSuccess }: ContactModalProps) => {
   const [submitStatus, setSubmitStatus] = useState<
     "idle" | "success" | "error"
   >("idle");
+  const [turnstileError, setTurnstileError] = useState<string>("");
+  
+  // Turnstile ref for accessing widget methods
+  const turnstileRef = useRef<TurnstileInlineRef>(null);
 
   const {
     register,
@@ -33,51 +38,96 @@ const ContactModal = ({ isOpen, onClose, onSuccess }: ContactModalProps) => {
   const onSubmit = async (data: ContactFormData) => {
     setIsSubmitting(true);
     setSubmitStatus("idle");
+    setTurnstileError("");
 
     try {
-      // --- emailjs calls (unchanged) ---
-      await emailjs.send(
-        process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
-        process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!,
-        {
-          from_name: data.name,
-          from_email: data.email,
-          message: data.message,
-          to_email: "your-email@gmail.com",
+      console.log('[ContactModal] Getting Turnstile verification...');
+      
+      // Get Turnstile token first
+      let turnstileToken: string;
+      try {
+        if (!turnstileRef.current) {
+          throw new Error('Turnstile widget not available');
+        }
+        
+        turnstileToken = await turnstileRef.current.getToken();
+        console.log('[ContactModal] Turnstile token obtained');
+      } catch (turnstileErr) {
+        console.error('[ContactModal] Turnstile verification failed:', turnstileErr);
+        setTurnstileError('Security verification failed. Please try again.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      console.log('[ContactModal] Submitting contact form with verification...');
+      
+      // Submit to our API with Turnstile token
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!
-      );
+        body: JSON.stringify({
+          formData: data,
+          token: turnstileToken,
+        }),
+      });
 
-      await emailjs.send(
-        process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
-        process.env.NEXT_PUBLIC_EMAILJS_USER_TEMPLATE_ID!,
-        {
-          to_name: data.name,
-          to_email: data.email,
-          from_name: "Gaurav Patil",
-        },
-        process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!
-      );
+      const result: ContactFormResponse = await response.json();
 
-      setSubmitStatus("success");
-      reset();
+      if (result.success) {
+        console.log('[ContactModal] Contact form submitted successfully');
+        setSubmitStatus("success");
+        reset();
 
-      /* NEW → close modal immediately & delegate nice popup to Footer */
-      if (onSuccess) {
-        onClose();
-        onSuccess(data.name);
-      } else {
-        // fallback to old auto-close
-        setTimeout(() => {
+        // Reset Turnstile widget for potential future use
+        if (turnstileRef.current) {
+          turnstileRef.current.reset();
+        }
+
+        /* Close modal immediately & delegate nice popup to Footer */
+        if (onSuccess) {
           onClose();
-          setSubmitStatus("idle");
-        }, 3000);
+          onSuccess(data.name);
+        } else {
+          // fallback to old auto-close
+          setTimeout(() => {
+            onClose();
+            setSubmitStatus("idle");
+          }, 3000);
+        }
+      } else {
+        console.warn('[ContactModal] Contact form submission failed:', result.errors);
+        setSubmitStatus("error");
+        
+        // Reset Turnstile widget on server error
+        if (turnstileRef.current) {
+          turnstileRef.current.reset();
+        }
       }
     } catch (err) {
-      console.error("Email send failed:", err);
+      console.error("Contact form submission failed:", err);
       setSubmitStatus("error");
+      
+      // Reset Turnstile widget on network error
+      if (turnstileRef.current) {
+        turnstileRef.current.reset();
+      }
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Handle Turnstile verification errors
+  const handleTurnstileError = (error: string) => {
+    console.warn('[ContactModal] Turnstile error:', error);
+    setTurnstileError(error);
+  };
+
+  // Clear Turnstile error when user interacts with form
+  const clearTurnstileError = () => {
+    if (turnstileError) {
+      setTurnstileError("");
     }
   };
 
@@ -206,6 +256,28 @@ const ContactModal = ({ isOpen, onClose, onSuccess }: ContactModalProps) => {
                 </p>
               )}
             </div>
+
+            {/* Turnstile Security Verification */}
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2 text-white/80 text-sm">
+                <FaShieldAlt className="text-cyan-400" />
+                <span>Security Verification</span>
+              </div>
+              <TurnstileInline
+                ref={turnstileRef}
+                onError={handleTurnstileError}
+                onExpire={() => setTurnstileError("Verification expired. Please try again.")}
+                className="w-full"
+                theme="dark"
+                size="normal"
+              />
+              {turnstileError && (
+                <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                  <p className="text-red-400 text-sm text-center">{turnstileError}</p>
+                </div>
+              )}
+            </div>
+
             {/* Error State */}
             {submitStatus === "error" && (
               <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-center">
@@ -219,23 +291,26 @@ const ContactModal = ({ isOpen, onClose, onSuccess }: ContactModalProps) => {
             <button
               type="submit"
               disabled={isSubmitting}
+              onFocus={clearTurnstileError}
               className="w-full bg-gradient-to-r from-purple to-pink-500 text-white py-3 px-6 rounded-lg font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
             >
               {isSubmitting ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-                  <span>Sending&nbsp;Message...</span>
+                  <span>Verifying & Sending...</span>
                 </>
               ) : (
                 <>
+                  <FaShieldAlt className="text-cyan-300" />
                   <FaEnvelope />
                   <span>Send&nbsp;Message</span>
                 </>
               )}
             </button>
             <p className="text-white/40 text-xs text-center mt-4">
-              Your information is secure and will only be used to contact you
-              back.
+              Your information is secure and will only be used to contact you back.
+              <br />
+              <span className="text-cyan-400/60">Protected by security verification.</span>
             </p>
           </form>
         )}

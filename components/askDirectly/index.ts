@@ -17,6 +17,9 @@ export { SimpleAskModal, QuestionsOnlyModal } from './AskDirectlyModal';
 export { default as AskDirectlyButton } from './AskDirectlyButton';
 export { CompactAskButton, LargeAskButton, SimpleAskButton } from './AskDirectlyButton';
 
+export { default as AskDirectlyEmbedded } from './AskDirectlyEmbedded';
+export { SimpleAskDirectlyEmbedded, QuestionsOnlyEmbedded } from './AskDirectlyEmbedded';
+
 // Re-export types for convenience
 export type {
   DirectQuestion,

@@ -65,11 +65,11 @@ const QuestionCard = ({
 
   const cardClasses = useMemo(() => {
     const base = `
-      block p-4 rounded-xl border transition-all duration-200
-      ${onClick ? 'cursor-pointer hover:bg-slate-800/50' : ''}
-      ${question.unreadForVisitor 
-        ? 'border-blue-500/50 bg-blue-500/10 shadow-lg shadow-blue-500/20' 
-        : 'border-slate-700/50 bg-slate-900/30'
+      block rounded-xl border transition-all duration-200 backdrop-blur-sm
+      ${onClick ? 'cursor-pointer hover:bg-slate-800/50 hover:border-blue-500/30' : ''}
+      ${question.unreadForVisitor
+        ? 'border-blue-500/50 bg-blue-500/10 shadow-lg shadow-blue-500/20'
+        : 'border-slate-700/50 bg-slate-900/50'
       }
     `;
     
@@ -77,9 +77,9 @@ const QuestionCard = ({
       case 'compact':
         return base + ' p-3';
       case 'detailed':
-        return base + ' p-5';
+        return base + ' p-4 sm:p-5';
       default:
-        return base;
+        return base + ' p-4';
     }
   }, [variant, question.unreadForVisitor, onClick]);
 
@@ -130,13 +130,16 @@ const QuestionCard = ({
         }
       </div>
 
-      {/* Admin Reply */}
+      {/* Admin Reply - Enhanced Design */}
       {question.adminReply && (
-        <div className="mt-3 pt-3 border-t border-slate-700/50">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs text-green-400 font-medium">✅ Admin Reply:</span>
+        <div className="mt-4 pt-4 border-t border-slate-600/50">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
+              <span className="text-green-400 text-xs">✓</span>
+            </div>
+            <span className="text-sm text-green-400 font-medium">Admin Reply:</span>
             {question.answeredAt && question.answeredAt.toDate && (
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-slate-500 ml-auto">
                 {question.answeredAt.toDate().toLocaleDateString('en-US', {
                   month: 'short',
                   day: 'numeric',
@@ -146,11 +149,13 @@ const QuestionCard = ({
               </span>
             )}
           </div>
-          <div className="text-sm text-slate-300 leading-relaxed pl-3 border-l-2 border-green-500/30">
-            {variant === 'compact'
-              ? formatQuestionPreview(question.adminReply, 100)
-              : question.adminReply
-            }
+          <div className="bg-slate-800/50 rounded-lg p-3 border-l-3 border-green-500/50">
+            <div className="text-sm text-slate-200 leading-relaxed">
+              {variant === 'compact'
+                ? formatQuestionPreview(question.adminReply, 100)
+                : question.adminReply
+              }
+            </div>
           </div>
         </div>
       )}

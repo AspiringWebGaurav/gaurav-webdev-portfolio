@@ -6,6 +6,7 @@ import EnhancedBanGate from "@/components/EnhancedBanGate";
 import VisitorTracker from "@/components/VisitorTracker";
 import EnhancedVisitorStatusWatcher from "@/components/EnhancedVisitorStatusWatcher";
 import { VisitorTrackingNotice } from "@/components/VisitorTracker";
+import EntryGateModal from "@/components/EntryGateModal";
 import Hero from "@/components/Hero";
 import { FloatingNav } from "../../components/ui/FloatingNav";
 import { navItems } from "@/data";
@@ -21,6 +22,7 @@ import NotificationSystem from "@/components/direct-questions/NotificationSystem
 import NotificationProvider from "@/components/direct-questions/NotificationProvider";
 import { initializeVisitorEventListener, cleanupVisitorEventListener } from "@/lib/visitorEventListener";
 import { smartLogger } from '@/utils/smartLogger';
+import { TURNSTILE_COOKIE_CONFIG } from "@/lib/types/turnstile";
 
 // Unique Circular Loader Component
 const UniquePortfolioLoader = () => {
@@ -193,6 +195,10 @@ const UUIDPortfolioPage = () => {
   const [isValidating, setIsValidating] = useState(true);
   const [currentUUID, setCurrentUUID] = useState<string>("");
   
+  // Turnstile verification state
+  const [showEntryGate, setShowEntryGate] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
+  
   // AI Assistant state tracking
   const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
   const [shouldOpenToAskDirectly, setShouldOpenToAskDirectly] = useState(false);
@@ -236,14 +242,81 @@ const UUIDPortfolioPage = () => {
 
   useEffect(() => {
     if (!isValidating) {
-      // Simulate loading time (reduced for testing)
-      const timer = setTimeout(() => {
-        setIsLoading(false);
-      }, 500); // 0.5 seconds loading time
-
-      return () => clearTimeout(timer);
+      // Check Turnstile verification after UUID validation
+      checkTurnstileVerification();
     }
   }, [isValidating]);
+
+  // Check if user has valid Turnstile verification
+  const checkTurnstileVerification = () => {
+    // Check for existing cookie
+    const cookies = document.cookie.split(';');
+    const turnstileCookie = cookies.find(cookie =>
+      cookie.trim().startsWith(`${TURNSTILE_COOKIE_CONFIG.name}=`)
+    );
+
+    if (turnstileCookie) {
+      // Extract cookie value
+      const cookieValue = turnstileCookie.split('=')[1];
+      
+      // Basic client-side validation (server-side is authoritative)
+      if (cookieValue && isValidCookieFormat(cookieValue)) {
+        console.log('[UUIDPortfolio] Valid Turnstile cookie found');
+        setIsVerified(true);
+        
+        // Start portfolio loading
+        const timer = setTimeout(() => {
+          setIsLoading(false);
+        }, 500);
+        return () => clearTimeout(timer);
+      }
+    }
+
+    console.log('[UUIDPortfolio] No valid Turnstile verification - showing entry gate');
+    
+    // No valid cookie - show entry gate after loading animation
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+      setShowEntryGate(true);
+    }, 1000); // Show loading animation first, then security check
+
+    return () => clearTimeout(timer);
+  };
+
+  // Basic cookie format validation (client-side only)
+  const isValidCookieFormat = (cookieValue: string): boolean => {
+    try {
+      const parts = cookieValue.split('-');
+      if (parts.length !== 4) return false;
+      
+      const [timestamp] = parts;
+      const cookieTime = parseInt(timestamp);
+      const now = Date.now();
+      const maxAge = TURNSTILE_COOKIE_CONFIG.maxAge * 1000;
+      
+      return !isNaN(cookieTime) && (now - cookieTime) <= maxAge;
+    } catch {
+      return false;
+    }
+  };
+
+  // Handle successful Turnstile verification
+  const handleTurnstileSuccess = () => {
+    console.log('[UUIDPortfolio] Turnstile verification successful');
+    setIsVerified(true);
+    setShowEntryGate(false);
+    
+    // Small delay for smooth transition
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 300);
+  };
+
+  // Handle Turnstile verification errors
+  const handleTurnstileError = (error: string) => {
+    console.warn('[UUIDPortfolio] Turnstile error:', error);
+    // Keep the entry gate open for retry
+  };
 
   // Initialize visitor event listener for admin action cleanup
   useEffect(() => {
@@ -285,6 +358,13 @@ const UUIDPortfolioPage = () => {
   return (
     <EnhancedBanGate uuid={currentUUID}>
       <NotificationProvider visitorUuid={currentUUID}>
+        {/* Turnstile Entry Gate Modal */}
+        <EntryGateModal
+          isVisible={showEntryGate}
+          onVerificationSuccess={handleTurnstileSuccess}
+          onError={handleTurnstileError}
+        />
+
         <main className="relative bg-black-100 flex justify-center items-center flex-col overflow-hidden mx-auto sm:px-10 px-5">
           {/* Enhanced Visitor Tracking System with UUID */}
           <VisitorTracker uuid={currentUUID} />
@@ -293,56 +373,63 @@ const UUIDPortfolioPage = () => {
           
           {isLoading && <UniquePortfolioLoader />}
 
-          <div
-            className={`max-w-7xl w-full transition-all duration-1000 ${
-              isLoading ? "opacity-0" : "opacity-100"
-            }`}
-          >
-            <FloatingNav
-              navItems={navItems}
-              hideWhenAIOpen={isAIAssistantOpen}
-            />
-            <Hero />
-            <Grid />
-            <RecentProjects />
-            <Clients />
-            <Experience />
-            <Approach />
-            <Footer />
-          </div>
+          {/* Only show portfolio content if verified and not loading */}
+          {isVerified && (
+            <div
+              className={`max-w-7xl w-full transition-all duration-1000 ${
+                isLoading ? "opacity-0" : "opacity-100"
+              }`}
+            >
+              <FloatingNav
+                navItems={navItems}
+                hideWhenAIOpen={isAIAssistantOpen}
+              />
+              <Hero />
+              <Grid />
+              <RecentProjects />
+              <Clients />
+              <Experience />
+              <Approach />
+              <Footer />
+            </div>
+          )}
 
           {/* Go to Top Button */}
-          {!isLoading && <GoToTopButton hideWhenAIOpen={isAIAssistantOpen} />}
+          {!isLoading && isVerified && (
+            <GoToTopButton hideWhenAIOpen={isAIAssistantOpen} />
+          )}
 
           {/* Direct Questions Notification System */}
-          {!isLoading && (
+          {!isLoading && isVerified && (
             <NotificationSystem
               onOpenAssistant={handleOpenAssistantFromNotification}
             />
           )}
 
           {/* Enhanced AI Assistant with System Isolation and Error Boundary */}
-          <AIErrorBoundary
-            onError={(error, errorInfo) => {
-              smartLogger.error('AI Assistant Error', error);
-              smartLogger.browserOnly.debug('Error Info', errorInfo);
-            }}
-          >
-            <EnterpriseAIAssistant
-              isPortfolioLoaded={!isLoading}
-              shouldOpenToAskDirectly={shouldOpenToAskDirectly}
-              onAssistantStateChange={(state) => {
-                // Handle assistant state changes for navbar visibility
-                smartLogger.browserOnly.debug('Enhanced Assistant state changed', state);
-                setIsAIAssistantOpen(state.isVisible && !state.isMinimized);
-                
-                // Reset the open trigger once assistant is opened
-                if (state.isVisible && shouldOpenToAskDirectly) {
-                  setShouldOpenToAskDirectly(false);
-                }
+          {isVerified && (
+            <AIErrorBoundary
+              onError={(error, errorInfo) => {
+                smartLogger.error('AI Assistant Error', error);
+                smartLogger.browserOnly.debug('Error Info', errorInfo);
               }}
-            />
-          </AIErrorBoundary>
+            >
+              <EnterpriseAIAssistant
+                isPortfolioLoaded={!isLoading && isVerified}
+                shouldOpenToAskDirectly={shouldOpenToAskDirectly}
+                onAssistantStateChange={(state) => {
+                  // Handle assistant state changes for navbar visibility
+                  smartLogger.browserOnly.debug('Enhanced Assistant state changed', state);
+                  setIsAIAssistantOpen(state.isVisible && !state.isMinimized);
+                  
+                  // Reset the open trigger once assistant is opened
+                  if (state.isVisible && shouldOpenToAskDirectly) {
+                    setShouldOpenToAskDirectly(false);
+                  }
+                }}
+              />
+            </AIErrorBoundary>
+          )}
         </main>
       </NotificationProvider>
     </EnhancedBanGate>

@@ -460,12 +460,21 @@ const EnterpriseAIAssistant: React.FC<EnterpriseAIAssistantProps> = ({
           {/* Assistant Container */}
           <div
             className={cn(
-              "fixed right-4 z-50 transition-all duration-500 ease-out rounded-2xl shadow-2xl overflow-hidden",
+              "fixed z-50 transition-all duration-500 ease-out rounded-2xl shadow-2xl overflow-hidden",
               "bg-ai-surface-primary/95 backdrop-blur-xl border border-ai-border-light/30",
               "before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/10 before:to-transparent before:pointer-events-none",
               assistantState.isMinimized
-                ? "w-16 h-16 top-1/2 -translate-y-1/2"
-                : "w-[850px] max-w-[95vw] h-[600px] max-h-[85vh] top-[8%]"
+                ? "w-16 h-16 top-1/2 right-4 -translate-y-1/2"
+                : cn(
+                    // Desktop layout
+                    "lg:w-[850px] lg:h-[600px] lg:right-4 lg:top-[8%]",
+                    // Mobile layout - fullscreen on small screens
+                    "inset-4 sm:inset-6 md:inset-8",
+                    "max-w-[95vw] max-h-[90vh]",
+                    // Tablet layout
+                    "md:w-[700px] md:h-[550px] md:right-8 md:top-[10%]",
+                    "md:left-auto md:bottom-auto"
+                  )
             )}
           >
             {assistantState.isMinimized ? (
@@ -484,20 +493,65 @@ const EnterpriseAIAssistant: React.FC<EnterpriseAIAssistantProps> = ({
                 )}
               </div>
             ) : (
-              // Full Interface
-              <div className="flex h-full">
-                {/* Navigation Sidebar */}
-                <EnterpriseNavigation
-                  activeTab={assistantState.activeTab}
-                  onTabChange={handleTabChange}
-                  isCollapsed={isNavCollapsed}
-                  onToggleCollapse={() => setIsNavCollapsed(!isNavCollapsed)}
-                />
+              // Full Interface - Mobile-First Design
+              <div className="flex flex-col lg:flex-row h-full">
+                {/* Mobile Header & Navigation */}
+                <div className="lg:hidden flex items-center justify-between p-3 border-b border-ai-border-light/30 bg-ai-surface-secondary/80 backdrop-blur-sm">
+                  <div className="flex items-center space-x-2">
+                    {jarvisEnabled && (
+                      <OptimizedJarvisAnimation
+                        isActive={true}
+                        size="small"
+                        color="blue"
+                        intensity="medium"
+                      />
+                    )}
+                    <div>
+                      <h1 className="text-base font-semibold text-ai-text-primary">
+                        Gaurav's Assistant
+                      </h1>
+                      <p className="text-xs text-ai-text-secondary">
+                        AI-powered guide
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleMinimize}
+                      className="text-ai-text-tertiary hover:text-ai-text-primary p-1.5"
+                      title="Minimize"
+                    >
+                      <Icons.ChevronRight className="w-4 h-4 rotate-90" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleClose}
+                      className="text-ai-text-tertiary hover:text-ai-text-primary p-1.5"
+                      title="Close"
+                    >
+                      <Icons.Close className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Desktop Navigation Sidebar */}
+                <div className="hidden lg:block">
+                  <EnterpriseNavigation
+                    activeTab={assistantState.activeTab}
+                    onTabChange={handleTabChange}
+                    isCollapsed={isNavCollapsed}
+                    onToggleCollapse={() => setIsNavCollapsed(!isNavCollapsed)}
+                  />
+                </div>
 
                 {/* Main Content Area */}
-                <div className="flex-1 flex flex-col">
-                  {/* Header */}
-                  <div className="flex items-center justify-between p-4 border-b border-ai-border-light/30 bg-ai-surface-secondary/80 backdrop-blur-sm">
+                <div className="flex-1 flex flex-col min-h-0">
+                  {/* Desktop Header */}
+                  <div className="hidden lg:flex items-center justify-between p-4 border-b border-ai-border-light/30 bg-ai-surface-secondary/80 backdrop-blur-sm">
                     <div className="flex items-center space-x-3">
                       {jarvisEnabled && (
                         <OptimizedJarvisAnimation
@@ -539,7 +593,35 @@ const EnterpriseAIAssistant: React.FC<EnterpriseAIAssistantProps> = ({
                     </div>
                   </div>
 
-                  {/* Content Area */}
+                  {/* Mobile Tab Navigation */}
+                  <div className="lg:hidden border-b border-ai-border-light/30 bg-ai-surface-secondary/80">
+                    <div className="flex overflow-x-auto scrollbar-hide">
+                      {[
+                        { id: 'predefined', label: 'Quick Questions', icon: '❓' },
+                        { id: 'chat', label: 'AI Chat', icon: '💬' },
+                        { id: 'ask-directly', label: 'Ask Directly', icon: '📝' },
+                        { id: 'settings', label: 'Settings', icon: '⚙️' }
+                      ].map((tab) => (
+                        <button
+                          key={tab.id}
+                          onClick={() => handleTabChange(tab.id)}
+                          className={cn(
+                            'flex-1 min-w-0 px-3 py-3 text-xs font-medium border-b-2 transition-all duration-200',
+                            assistantState.activeTab === tab.id
+                              ? 'text-ai-primary-blue border-ai-primary-blue bg-ai-primary-blue/10'
+                              : 'text-ai-text-secondary border-transparent hover:text-ai-text-primary hover:border-ai-border-medium'
+                          )}
+                        >
+                          <div className="flex flex-col items-center space-y-1">
+                            <span className="text-sm">{tab.icon}</span>
+                            <span className="truncate">{tab.label}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Content Area - Mobile Optimized */}
                   <div className="flex-1 flex flex-col overflow-hidden">
                     <div className="flex-1 overflow-hidden">
                       {assistantState.activeTab === 'predefined' && (
@@ -563,45 +645,44 @@ const EnterpriseAIAssistant: React.FC<EnterpriseAIAssistantProps> = ({
                       )}
 
                       {assistantState.activeTab === 'ask-directly' && (
-                        <div className="p-6 h-full overflow-y-auto custom-scrollbar">
-                          <div className="max-w-4xl mx-auto space-y-6">
-                            {/* Header */}
+                        <div className="p-3 sm:p-4 lg:p-6 h-full overflow-y-auto custom-scrollbar">
+                          <div className="max-w-4xl mx-auto space-y-4 lg:space-y-6">
+                            {/* Header - Mobile Optimized */}
                             <div className="text-center space-y-2">
-                              <h2 className="text-2xl font-bold text-ai-text-primary">
+                              <h2 className="text-xl sm:text-2xl font-bold text-ai-text-primary">
                                 Ask Me Directly
                               </h2>
-                              <p className="text-ai-text-secondary">
-                                Send your questions directly to Gaurav and get personal responses
+                              <p className="text-sm sm:text-base text-ai-text-secondary">
+                                Send questions directly to Gaurav
                               </p>
                             </div>
 
-                            {/* Two-column layout for Ask and History */}
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {/* Mobile-First Layout */}
+                            <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0">
                               {/* Question Form */}
-                              <div className="space-y-4">
-                                <h3 className="text-lg font-semibold text-ai-text-primary">
+                              <div className="space-y-3 lg:space-y-4">
+                                <h3 className="text-base lg:text-lg font-semibold text-ai-text-primary">
                                   📝 Ask Your Question
                                 </h3>
-                                <div className="bg-ai-surface-secondary/50 backdrop-blur-sm rounded-xl p-4 border border-ai-border-light/30">
+                                <div className="bg-ai-surface-secondary/50 backdrop-blur-sm rounded-xl p-3 lg:p-4 border border-ai-border-light/30">
                                   <QuestionForm
                                     onSuccess={(questionId) => {
                                       console.log('Question submitted:', questionId);
-                                      // The real-time listener will automatically update the history
                                     }}
                                     placeholder="Ask me anything about my work, projects, or experience..."
                                     showCharCount={true}
                                     autoFocus={false}
-                                    className="space-y-3"
+                                    className="space-y-2 lg:space-y-3"
                                   />
                                 </div>
                               </div>
 
                               {/* Question History */}
-                              <div className="space-y-4">
-                                <h3 className="text-lg font-semibold text-ai-text-primary">
+                              <div className="space-y-3 lg:space-y-4">
+                                <h3 className="text-base lg:text-lg font-semibold text-ai-text-primary">
                                   💬 Your Questions
                                 </h3>
-                                <div className="bg-ai-surface-secondary/50 backdrop-blur-sm rounded-xl p-4 border border-ai-border-light/30 max-h-96 overflow-y-auto custom-scrollbar">
+                                <div className="bg-ai-surface-secondary/50 backdrop-blur-sm rounded-xl p-3 lg:p-4 border border-ai-border-light/30 max-h-64 lg:max-h-96 overflow-y-auto custom-scrollbar">
                                   <QuestionsList
                                     enableRealTime={true}
                                     showEmptyState={true}
@@ -615,20 +696,19 @@ const EnterpriseAIAssistant: React.FC<EnterpriseAIAssistantProps> = ({
                               </div>
                             </div>
 
-                            {/* Information Panel */}
-                            <div className="bg-ai-primary-blue/10 rounded-xl p-4 border border-ai-primary-blue/30">
+                            {/* Information Panel - Mobile Optimized */}
+                            <div className="bg-ai-primary-blue/10 rounded-xl p-3 lg:p-4 border border-ai-primary-blue/30">
                               <div className="flex items-start space-x-3">
-                                <div className="w-8 h-8 bg-ai-primary-blue/20 rounded-full flex items-center justify-center flex-shrink-0">
-                                  <span className="text-ai-primary-blue text-sm">💡</span>
+                                <div className="w-6 h-6 lg:w-8 lg:h-8 bg-ai-primary-blue/20 rounded-full flex items-center justify-center flex-shrink-0">
+                                  <span className="text-ai-primary-blue text-xs lg:text-sm">💡</span>
                                 </div>
                                 <div className="space-y-2">
-                                  <h4 className="font-medium text-ai-text-primary">How it works:</h4>
-                                  <ul className="text-sm text-ai-text-secondary space-y-1">
-                                    <li>• Ask any question about Gaurav's work or experience</li>
-                                    <li>• Your questions are sent directly to Gaurav</li>
-                                    <li>• Get notified with a toast when Gaurav replies</li>
-                                    <li>• View your complete Q&A history in real-time</li>
-                                    <li>• Questions are rate-limited to one every 10 seconds</li>
+                                  <h4 className="text-sm lg:text-base font-medium text-ai-text-primary">How it works:</h4>
+                                  <ul className="text-xs lg:text-sm text-ai-text-secondary space-y-1">
+                                    <li>• Ask questions about Gaurav's work</li>
+                                    <li>• Questions sent directly to Gaurav</li>
+                                    <li>• Get notified when Gaurav replies</li>
+                                    <li>• View your Q&A history in real-time</li>
                                   </ul>
                                 </div>
                               </div>
@@ -638,35 +718,36 @@ const EnterpriseAIAssistant: React.FC<EnterpriseAIAssistantProps> = ({
                       )}
 
                       {assistantState.activeTab === 'settings' && (
-                        <div className="p-6 h-full overflow-y-auto custom-scrollbar">
-                          <h2 className="text-lg font-semibold text-ai-text-primary mb-6">
+                        <div className="p-3 sm:p-4 lg:p-6 h-full overflow-y-auto custom-scrollbar">
+                          <h2 className="text-lg font-semibold text-ai-text-primary mb-4 lg:mb-6">
                             Settings
                           </h2>
-                          <div className="space-y-6">
-                            <div className="flex items-center justify-between p-4 rounded-lg bg-ai-surface-secondary/50 border border-ai-border-light/30">
-                              <div>
-                                <h3 className="font-medium text-ai-text-primary">
+                          <div className="space-y-4 lg:space-y-6">
+                            <div className="flex items-center justify-between p-3 lg:p-4 rounded-lg bg-ai-surface-secondary/50 border border-ai-border-light/30">
+                              <div className="flex-1 min-w-0 mr-3">
+                                <h3 className="text-sm lg:text-base font-medium text-ai-text-primary">
                                   Jarvis Animation
                                 </h3>
-                                <p className="text-sm text-ai-text-secondary mt-1">
-                                  Enable or disable the Jarvis animation effects
+                                <p className="text-xs lg:text-sm text-ai-text-secondary mt-1">
+                                  Enable or disable animation effects
                                 </p>
                               </div>
                               <Button
                                 variant={jarvisEnabled ? 'primary' : 'secondary'}
                                 size="sm"
                                 onClick={toggleJarvis}
+                                className="flex-shrink-0"
                               >
-                                {jarvisEnabled ? 'Enabled' : 'Disabled'}
+                                {jarvisEnabled ? 'On' : 'Off'}
                               </Button>
                             </div>
                             
-                            <div className="flex items-center justify-between p-4 rounded-lg bg-ai-surface-secondary/50 border border-ai-border-light/30">
-                              <div>
-                                <h3 className="font-medium text-ai-text-primary">
+                            <div className="flex items-center justify-between p-3 lg:p-4 rounded-lg bg-ai-surface-secondary/50 border border-ai-border-light/30">
+                              <div className="flex-1 min-w-0 mr-3">
+                                <h3 className="text-sm lg:text-base font-medium text-ai-text-primary">
                                   Replay Tour
                                 </h3>
-                                <p className="text-sm text-ai-text-secondary mt-1">
+                                <p className="text-xs lg:text-sm text-ai-text-secondary mt-1">
                                   Show the onboarding tour again
                                 </p>
                               </div>
@@ -674,8 +755,9 @@ const EnterpriseAIAssistant: React.FC<EnterpriseAIAssistantProps> = ({
                                 variant="secondary"
                                 size="sm"
                                 onClick={replayOnboarding}
+                                className="flex-shrink-0"
                               >
-                                Replay Tour
+                                Replay
                               </Button>
                             </div>
                           </div>
@@ -683,10 +765,10 @@ const EnterpriseAIAssistant: React.FC<EnterpriseAIAssistantProps> = ({
                       )}
                     </div>
 
-                    {/* Footer */}
-                    <div className="border-t border-ai-border-light/30 bg-ai-surface-secondary/80 backdrop-blur-sm px-6 py-3">
-                      <div className="flex items-center justify-between text-xs text-ai-text-muted">
-                        <div className="flex items-center space-x-4">
+                    {/* Footer - Mobile Optimized */}
+                    <div className="border-t border-ai-border-light/30 bg-ai-surface-secondary/80 backdrop-blur-sm px-3 lg:px-6 py-2 lg:py-3">
+                      <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-ai-text-muted space-y-1 sm:space-y-0">
+                        <div className="flex items-center space-x-2 sm:space-x-4">
                           <span className="flex items-center space-x-1">
                             <span className={cn(
                               "w-2 h-2 rounded-full",
@@ -695,16 +777,16 @@ const EnterpriseAIAssistant: React.FC<EnterpriseAIAssistantProps> = ({
                                 : "bg-yellow-500"
                             )}></span>
                             <span>
-                              {aiEnabled ? 'AI Assistant Online' : 'Demo Mode'}
+                              {aiEnabled ? 'AI Online' : 'Demo Mode'}
                             </span>
                           </span>
-                          <span>•</span>
-                          <span>
+                          <span className="hidden sm:inline">•</span>
+                          <span className="text-center sm:text-left">
                             {aiEnabled ? 'Powered by OpenRouter AI' : 'Configure API for full AI'}
                           </span>
                         </div>
-                        <div className="flex items-center space-x-4">
-                          <span>Press Ctrl+Shift+A for quick access</span>
+                        <div className="hidden sm:flex items-center space-x-2">
+                          <span>Ctrl+Shift+A</span>
                           <span>•</span>
                           <span>ESC to close</span>
                         </div>

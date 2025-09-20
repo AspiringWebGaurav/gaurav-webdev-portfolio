@@ -106,56 +106,59 @@ const EnhancedPredefinedQuestions: React.FC<EnhancedPredefinedQuestionsProps> = 
 
   return (
     <div className="flex flex-col h-full bg-ai-surface-primary">
-      {/* Header with Search and Filters */}
-      <div className="p-4 border-b border-ai-border-light bg-ai-surface-secondary">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-xl font-semibold text-ai-text-primary">
+      {/* Header with Search and Filters - Mobile Optimized */}
+      <div className="p-3 sm:p-4 border-b border-ai-border-light bg-ai-surface-secondary">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 sm:mb-4">
+          <div className="mb-2 sm:mb-0">
+            <h2 className="text-lg sm:text-xl font-semibold text-ai-text-primary">
               Quick Questions
             </h2>
-            <p className="text-sm text-ai-text-secondary">
+            <p className="text-xs sm:text-sm text-ai-text-secondary">
               Pre-written questions about Gaurav's portfolio
             </p>
           </div>
-          <Badge variant="info" size="md">
+          <Badge variant="info" size="sm" className="self-start sm:self-auto">
             {filteredQuestions.length} questions
           </Badge>
         </div>
 
-        {/* Search Bar */}
-        <div className="mb-4">
+        {/* Search Bar - Mobile Optimized */}
+        <div className="mb-3 sm:mb-4">
           <Input
             placeholder="Search questions..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             leftIcon={<Icons.Question className="w-4 h-4" />}
-            className="w-full"
+            className="w-full text-sm"
           />
         </div>
 
-        {/* Category Filters */}
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant={selectedCategory === 'all' ? 'primary' : 'ghost'}
-            size="sm"
-            onClick={() => setSelectedCategory('all')}
-          >
-            All Questions
-          </Button>
-          {categories.map(({ name, count }) => (
+        {/* Category Filters - Mobile Scrollable */}
+        <div className="overflow-x-auto scrollbar-hide">
+          <div className="flex gap-2 pb-2 min-w-max">
             <Button
-              key={name}
-              variant={selectedCategory === name ? 'primary' : 'ghost'}
+              variant={selectedCategory === 'all' ? 'primary' : 'ghost'}
               size="sm"
-              onClick={() => setSelectedCategory(name)}
-              className="flex items-center space-x-1"
+              onClick={() => setSelectedCategory('all')}
+              className="whitespace-nowrap text-xs sm:text-sm"
             >
-              <span>{name}</span>
-              <Badge variant="default" size="sm">
-                {count}
-              </Badge>
+              All Questions
             </Button>
-          ))}
+            {categories.map(({ name, count }) => (
+              <Button
+                key={name}
+                variant={selectedCategory === name ? 'primary' : 'ghost'}
+                size="sm"
+                onClick={() => setSelectedCategory(name)}
+                className="flex items-center space-x-1 whitespace-nowrap text-xs sm:text-sm"
+              >
+                <span>{name}</span>
+                <Badge variant="default" size="sm" className="text-xs">
+                  {count}
+                </Badge>
+              </Button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -189,78 +192,94 @@ const EnhancedPredefinedQuestions: React.FC<EnhancedPredefinedQuestionsProps> = 
             {filteredQuestions.map((question, index) => (
               <div
                 key={question.id}
-                className="group cursor-pointer hover:bg-ai-surface-secondary/50 transition-all duration-200 border-l-4 border-transparent hover:border-ai-primary-blue/30"
+                className="group cursor-pointer hover:bg-ai-surface-secondary/50 active:bg-ai-surface-secondary/70 transition-all duration-200 border-l-4 border-transparent hover:border-ai-primary-blue/30 touch-manipulation"
                 onClick={() => onQuestionClick(question)}
               >
-                <div className="p-4 sm:p-6">
-                  {/* Question Header */}
-                  <div className="flex items-start justify-between gap-4 mb-3">
-                    <div className="flex items-start gap-3 flex-1 min-w-0">
-                      <div className="w-6 h-6 rounded-full bg-ai-primary-blue/20 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-ai-primary-blue/30 transition-colors">
-                        <Icons.Question className="w-3 h-3 text-ai-primary-blue" />
+                <div className="p-3 sm:p-4 lg:p-6">
+                  {/* Question Header - Mobile Optimized */}
+                  <div className="flex items-start justify-between gap-2 sm:gap-4 mb-2 sm:mb-3">
+                    <div className="flex items-start gap-2 sm:gap-3 flex-1 min-w-0">
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-ai-primary-blue/20 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-ai-primary-blue/30 transition-colors">
+                        <Icons.Question className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-ai-primary-blue" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-ai-text-primary leading-tight group-hover:text-ai-primary-blue transition-colors text-base sm:text-lg break-words">
+                        <h3 className="font-semibold text-ai-text-primary leading-tight group-hover:text-ai-primary-blue transition-colors text-sm sm:text-base lg:text-lg break-words">
                           {question.question}
                         </h3>
                       </div>
                     </div>
                     
-                    {/* Action Badges */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    {/* Action Badges - Mobile Optimized */}
+                    <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                       {question.fileUrl && (
-                        <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">
-                          <Icons.Download className="w-3 h-3" />
+                        <div className="flex items-center gap-1 px-1.5 sm:px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">
+                          <Icons.Download className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                           <span className="hidden sm:inline">File</span>
                         </div>
                       )}
                       {question.anchorLink && (
-                        <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 text-green-700 text-xs font-medium">
-                          <Icons.Link className="w-3 h-3" />
+                        <div className="flex items-center gap-1 px-1.5 sm:px-2 py-1 rounded-full bg-green-50 text-green-700 text-xs font-medium">
+                          <Icons.Link className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                           <span className="hidden sm:inline">Link</span>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  {/* Answer Preview */}
-                  <div className="ml-9 mb-4">
-                    <p className="text-sm text-ai-text-secondary leading-relaxed break-words">
-                      {question.answer.length > 200
-                        ? (
-                          <>
-                            {question.answer.substring(0, 200)}
-                            <span className="text-ai-text-muted">...</span>
-                          </>
-                        )
-                        : question.answer
-                      }
+                  {/* Answer Preview - Mobile Optimized */}
+                  <div className="ml-7 sm:ml-9 mb-3 sm:mb-4">
+                    <p className="text-xs sm:text-sm text-ai-text-secondary leading-relaxed break-words">
+                      <span className="sm:hidden">
+                        {question.answer.length > 150
+                          ? (
+                            <>
+                              {question.answer.substring(0, 150)}
+                              <span className="text-ai-text-muted">...</span>
+                            </>
+                          )
+                          : question.answer
+                        }
+                      </span>
+                      <span className="hidden sm:inline">
+                        {question.answer.length > 200
+                          ? (
+                            <>
+                              {question.answer.substring(0, 200)}
+                              <span className="text-ai-text-muted">...</span>
+                            </>
+                          )
+                          : question.answer
+                        }
+                      </span>
                     </p>
                   </div>
 
-                  {/* Footer Actions */}
-                  <div className="ml-9 flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-xs text-ai-text-muted">
+                  {/* Footer Actions - Mobile Optimized */}
+                  <div className="ml-7 sm:ml-9 flex items-center justify-between">
+                    <div className="flex items-center gap-2 sm:gap-4 text-xs text-ai-text-muted">
                       <span className="flex items-center gap-1">
-                        <Icons.Clock className="w-3 h-3" />
-                        Quick answer
+                        <Icons.Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                        <span className="hidden sm:inline">Quick answer</span>
+                        <span className="sm:hidden">Quick</span>
                       </span>
                       {question.fileUrl && (
-                        <span className="flex items-center gap-1">
+                        <span className="hidden sm:flex items-center gap-1">
                           <Icons.Download className="w-3 h-3" />
                           Downloadable
                         </span>
                       )}
                     </div>
                     
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    {/* Mobile: Always visible, Desktop: Show on hover */}
+                    <div className="sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-xs px-3 py-1 h-auto text-ai-primary-blue hover:text-ai-primary-blue/80 hover:bg-ai-primary-blue/10"
-                        rightIcon={<Icons.ChevronRight className="w-3 h-3" />}
+                        className="text-xs px-2 sm:px-3 py-1 h-auto text-ai-primary-blue hover:text-ai-primary-blue/80 hover:bg-ai-primary-blue/10 touch-manipulation"
+                        rightIcon={<Icons.ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" />}
                       >
-                        View Answer
+                        <span className="hidden sm:inline">View Answer</span>
+                        <span className="sm:hidden">View</span>
                       </Button>
                     </div>
                   </div>
