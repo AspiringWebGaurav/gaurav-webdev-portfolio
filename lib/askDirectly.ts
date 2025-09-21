@@ -8,13 +8,17 @@ import {
   showInfoToast 
 } from "@/components/ToastSystem";
 import { getVisitorUuidWithFallbacks } from "./visitor";
-import { 
-  addDirectQuestion,
-  getVisitorQuestions,
-  markQuestionsAsRead,
-  listenToVisitorQuestions,
-  getVisitorQuestionStats
-} from "./firebase";
+// Dynamic Firebase imports to resolve build-time module resolution issues
+const importFirebaseModule = async () => {
+  const {
+    addDirectQuestion,
+    getVisitorQuestions,
+    markQuestionsAsRead,
+    listenToVisitorQuestions,
+    getVisitorQuestionStats
+  } = await import('./firebase');
+  return { addDirectQuestion, getVisitorQuestions, markQuestionsAsRead, listenToVisitorQuestions, getVisitorQuestionStats };
+};
 import type {
   DirectQuestion,
   CreateDirectQuestionData,
@@ -183,7 +187,8 @@ export async function submitQuestion(question: string): Promise<{
       metadata: getVisitorMetadata()
     };
     
-    // Submit to Firebase
+    // Submit to Firebase using dynamic import
+    const { addDirectQuestion } = await importFirebaseModule();
     const docRef = await addDirectQuestion(visitorUuid, questionData);
     
     // Update rate limit
@@ -218,10 +223,11 @@ export async function getCurrentVisitorQuestions(): Promise<DirectQuestion[]> {
     while (retryCount < maxRetries) {
       try {
         const visitorUuid = getVisitorUuidWithFallbacks();
+        const { getVisitorQuestions } = await importFirebaseModule();
         const questions = await getVisitorQuestions(visitorUuid);
         
         // Filter out any malformed questions that might cause issues
-        const validQuestions = questions.filter(question => {
+        const validQuestions = questions.filter((question: any) => {
           return question &&
                  question.id &&
                  question.question &&
@@ -339,6 +345,7 @@ export async function getCurrentVisitorStats(): Promise<any> {
   while (retryCount < maxRetries) {
     try {
       const visitorUuid = getVisitorUuidWithFallbacks();
+      const { getVisitorQuestionStats } = await importFirebaseModule();
       const stats = await getVisitorQuestionStats(visitorUuid);
       
       // Return successful stats or safe fallback
@@ -544,41 +551,61 @@ export class QuestionListenerManager {
     // Clean up existing listener
     this.cleanup(listenerId);
     
-    const unsubscribe = listenToVisitorQuestions(
-      visitorUuid,
-      (questions) => {
-        callback(questions);
-        
-        // Show toast for new answers if enabled
-        if (options?.showToastOnUpdate) {
-          const unreadAnswers = questions.filter(q => 
-            q.status === 'answered' && q.unreadForVisitor
-          );
-          
-          if (unreadAnswers.length > 0) {
-            showQuestionToast({
-              message: `You have ${unreadAnswers.length} new answer${unreadAnswers.length > 1 ? 's' : ''}!`,
-              type: 'success',
-              onlyWhenVisible: options?.onlyWhenVisible || true,
-              onAction: () => {
-                // Mark as read
-                const questionIds = unreadAnswers.map(q => q.id);
-                markCurrentVisitorQuestionsAsRead(questionIds);
-              }
-            });
-          }
-        }
-      },
-      (error) => {
-        console.error('Question listener error:', error);
-        showErrorToast("Connection error. Some updates may be delayed.");
-      }
-    );
+    // Set up async Firebase listener with dynamic import
+    let actualUnsubscribe: (() => void) | null = null;
     
-    this.listeners.set(listenerId, unsubscribe);
+    const setupListener = async () => {
+      try {
+        const { listenToVisitorQuestions } = await importFirebaseModule();
+        const unsubscribe = listenToVisitorQuestions(
+          visitorUuid,
+          (questions: any[]) => {
+            callback(questions);
+            
+            // Show toast for new answers if enabled
+            if (options?.showToastOnUpdate) {
+              const unreadAnswers = questions.filter((q: any) =>
+                q.status === 'answered' && q.unreadForVisitor
+              );
+              
+              if (unreadAnswers.length > 0) {
+                showQuestionToast({
+                  message: `You have ${unreadAnswers.length} new answer${unreadAnswers.length > 1 ? 's' : ''}!`,
+                  type: 'success',
+                  onlyWhenVisible: options?.onlyWhenVisible || true,
+                  onAction: () => {
+                    // Mark as read
+                    const questionIds = unreadAnswers.map((q: any) => q.id);
+                    markCurrentVisitorQuestionsAsRead(questionIds);
+                  }
+                });
+              }
+            }
+          },
+          (error: any) => {
+            console.error('Question listener error:', error);
+            showErrorToast("Connection error. Some updates may be delayed.");
+          }
+        );
+        
+        actualUnsubscribe = unsubscribe;
+        this.listeners.set(listenerId, unsubscribe);
+      } catch (error) {
+        console.error('Failed to setup Firebase listener:', error);
+        showErrorToast("Failed to establish real-time connection.");
+      }
+    };
+    
+    // Start listener setup (non-blocking)
+    setupListener();
     
     return {
-      unsubscribe: () => this.cleanup(listenerId),
+      unsubscribe: () => {
+        if (actualUnsubscribe) {
+          actualUnsubscribe();
+        }
+        this.cleanup(listenerId);
+      },
       isActive: true
     };
   }
