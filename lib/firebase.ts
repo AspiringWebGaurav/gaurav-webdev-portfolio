@@ -1,94 +1,363 @@
 // lib/firebase.ts
+// Enhanced Firebase initialization with comprehensive error handling for Vercel production
 
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
-import { getFirestore, type Firestore } from "firebase/firestore";
+import { getFirestore, type Firestore, connectFirestoreEmulator } from "firebase/firestore";
 import { getStorage, type FirebaseStorage } from "firebase/storage";
 import { smartLogger } from "@/utils/smartLogger";
 
-// Environment variable validation utility
-function validateEnvironmentVariables() {
+// Enhanced environment variable validation with runtime checks
+function validateEnvironmentVariables(): {
+  isValid: boolean;
+  missing: string[];
+  warnings: string[];
+  hasMinimalConfig: boolean;
+} {
   const requiredVars = [
     'NEXT_PUBLIC_FIREBASE_API_KEY',
-    'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN', 
+    'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN',
     'NEXT_PUBLIC_FIREBASE_PROJECT_ID',
     'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET',
     'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
     'NEXT_PUBLIC_FIREBASE_APP_ID'
   ];
 
+  const criticalVars = [
+    'NEXT_PUBLIC_FIREBASE_API_KEY',
+    'NEXT_PUBLIC_FIREBASE_PROJECT_ID'
+  ];
+
   const missing = requiredVars.filter(varName => !process.env[varName]);
+  const missingCritical = criticalVars.filter(varName => !process.env[varName]);
+  const warnings: string[] = [];
+  
+  // Check for empty values (not just undefined)
+  const emptyVars = requiredVars.filter(varName => {
+    const value = process.env[varName];
+    return !value || value.trim() === '' || value === 'undefined' || value === 'null';
+  });
+
+  if (emptyVars.length > 0) {
+    warnings.push(`Empty Firebase environment variables detected: ${emptyVars.join(', ')}`);
+  }
+
+  const isValid = missing.length === 0 && emptyVars.length === 0;
+  const hasMinimalConfig = missingCritical.length === 0;
   
   if (missing.length > 0) {
-    console.error('❌ [Environment] Missing critical variables:', missing);
-    return { isValid: false, missing };
+    console.error('❌ [Firebase Environment] Missing critical variables:', missing);
   }
   
-  return { isValid: true, missing: [] };
+  if (warnings.length > 0) {
+    console.warn('⚠️ [Firebase Environment] Warnings:', warnings);
+  }
+  
+  return {
+    isValid,
+    missing,
+    warnings,
+    hasMinimalConfig
+  };
 }
 
-// Validate environment variables
+// Runtime Firebase status checker
+class FirebaseHealthMonitor {
+  private static instance: FirebaseHealthMonitor;
+  private healthCheckInterval: NodeJS.Timeout | null = null;
+  private lastHealthCheck: Date | null = null;
+  private consecutiveFailures = 0;
+  private maxFailures = 3;
+
+  static getInstance(): FirebaseHealthMonitor {
+    if (!FirebaseHealthMonitor.instance) {
+      FirebaseHealthMonitor.instance = new FirebaseHealthMonitor();
+    }
+    return FirebaseHealthMonitor.instance;
+  }
+
+  startHealthChecks(db: Firestore | null): void {
+    if (typeof window === 'undefined' || !db) return;
+
+    this.healthCheckInterval = setInterval(async () => {
+      await this.performHealthCheck(db);
+    }, 30000); // Check every 30 seconds
+  }
+
+  private async performHealthCheck(db: Firestore): Promise<void> {
+    try {
+      // Simple connectivity test - just try to get the app instance
+      const app = db.app;
+      if (!app) throw new Error('Firebase app instance not available');
+      
+      this.consecutiveFailures = 0;
+      this.lastHealthCheck = new Date();
+      
+      // Only log success in development
+      if (process.env.NODE_ENV === 'development') {
+        smartLogger.firebase.debug('Firebase health check passed');
+      }
+    } catch (error) {
+      this.consecutiveFailures++;
+      smartLogger.firebase.error(`Firebase health check failed (${this.consecutiveFailures}/${this.maxFailures})`, error);
+      
+      if (this.consecutiveFailures >= this.maxFailures) {
+        this.triggerFallbackMode();
+      }
+    }
+  }
+
+  private triggerFallbackMode(): void {
+    smartLogger.firebase.error('Firebase health checks failing, triggering fallback mode');
+    
+    // Emit custom event for components to switch to API mode
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('firebase-fallback-mode', {
+        detail: {
+          reason: 'health_check_failure',
+          failures: this.consecutiveFailures,
+          timestamp: new Date().toISOString()
+        }
+      }));
+    }
+  }
+
+  cleanup(): void {
+    if (this.healthCheckInterval) {
+      clearInterval(this.healthCheckInterval);
+      this.healthCheckInterval = null;
+    }
+  }
+
+  getHealthStatus(): {
+    isHealthy: boolean;
+    lastCheck: Date | null;
+    consecutiveFailures: number;
+  } {
+    return {
+      isHealthy: this.consecutiveFailures < this.maxFailures,
+      lastCheck: this.lastHealthCheck,
+      consecutiveFailures: this.consecutiveFailures
+    };
+  }
+}
+
+// Validate environment variables with enhanced checks
 const envValidation = validateEnvironmentVariables();
 
-// Load Firebase config from environment variables
+// Load Firebase config from environment variables with fallbacks
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '',
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || '',
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || '',
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || '',
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '',
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '',
 };
 
-// Firebase availability flag
+// Firebase availability flags
 const isFirebaseAvailable = envValidation.isValid;
+const hasMinimalFirebaseConfig = envValidation.hasMinimalConfig;
 
-// Initialize Firebase instances
+// Enhanced Firebase initialization with multiple fallback strategies
 let app: FirebaseApp | null = null;
 let db: Firestore | null = null;
 let storage: FirebaseStorage | null = null;
 let initializationError: Error | null = null;
+let initializationAttempts = 0;
+const maxInitializationAttempts = 3;
 
-if (isFirebaseAvailable) {
-  try {
-    // Firebase config loaded - browser-only detailed logging
-    smartLogger.firebase.init("🔥 Firebase client config loaded", firebaseConfig);
+// Firebase initialization with retry logic
+async function initializeFirebaseWithRetry(): Promise<{
+  success: boolean;
+  app: FirebaseApp | null;
+  db: Firestore | null;
+  storage: FirebaseStorage | null;
+  error: Error | null;
+}> {
+  for (let attempt = 1; attempt <= maxInitializationAttempts; attempt++) {
+    try {
+      initializationAttempts = attempt;
+      
+      smartLogger.firebase.init(`🔥 Firebase initialization attempt ${attempt}/${maxInitializationAttempts}`, {
+        hasConfig: isFirebaseAvailable,
+        hasMinimal: hasMinimalFirebaseConfig,
+        environment: process.env.NODE_ENV
+      });
 
-    // ✅ Initialize app safely
-    app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-    smartLogger.firebase.init("✅ Firebase app initialized");
+      // Initialize app safely with retry logic
+      const currentApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+      smartLogger.firebase.init("✅ Firebase app initialized");
 
-    // ✅ Get Firestore instance
-    db = getFirestore(app);
-    smartLogger.firebase.init("✅ Firestore initialized");
+      // Get Firestore instance with connection retry
+      const firestoreInstance = getFirestore(currentApp);
+      
+      // Connect to emulator in development if specified
+      if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_FIREBASE_EMULATOR === 'true') {
+        try {
+          connectFirestoreEmulator(firestoreInstance, 'localhost', 8080);
+          smartLogger.firebase.init("🧪 Connected to Firestore emulator");
+        } catch (emulatorError) {
+          smartLogger.firebase.debug("Firestore emulator connection failed or already connected");
+        }
+      }
+      
+      smartLogger.firebase.init("✅ Firestore initialized");
 
-    // ✅ Get Storage instance
-    storage = getStorage(app);
-    smartLogger.firebase.init("✅ Firebase Storage initialized");
-    
-  } catch (err) {
-    initializationError = err instanceof Error ? err : new Error(String(err));
-    smartLogger.firebase.error("❌ Firebase initialization error", err);
-    
-    // In production, don't throw - just log and use fallbacks
-    if (process.env.NODE_ENV !== 'production') {
-      throw err;
-    } else {
-      console.warn("⚠️  Firebase initialization failed in production, using API fallbacks");
+      // Get Storage instance
+      const storageInstance = getStorage(currentApp);
+      smartLogger.firebase.init("✅ Firebase Storage initialized");
+
+      // Start health monitoring
+      const healthMonitor = FirebaseHealthMonitor.getInstance();
+      healthMonitor.startHealthChecks(firestoreInstance);
+      
+      return {
+        success: true,
+        app: currentApp,
+        db: firestoreInstance,
+        storage: storageInstance,
+        error: null
+      };
+      
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      initializationError = error;
+      
+      smartLogger.firebase.error(`❌ Firebase initialization attempt ${attempt} failed`, {
+        error: error.message,
+        code: (error as any)?.code,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      });
+      
+      // If this is the last attempt, handle the failure
+      if (attempt === maxInitializationAttempts) {
+        if (process.env.NODE_ENV === 'production') {
+          console.warn("⚠️ Firebase initialization failed in production after all retries. Using API-only fallbacks.");
+          
+          // Return partial success for API fallbacks
+          return {
+            success: false,
+            app: null,
+            db: null,
+            storage: null,
+            error
+          };
+        } else {
+          // In development, throw the error for debugging
+          throw error;
+        }
+      }
+      
+      // Wait before retry (exponential backoff)
+      await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt - 1) * 1000));
     }
   }
-} else {
-  const errorMessage = `🔥 Firebase initialization failed: Missing env vars -> ${envValidation.missing.join(", ")}`;
-  smartLogger.firebase.error("❌ Firebase config is missing required keys", { 
-    missing: envValidation.missing,
-    mode: process.env.NODE_ENV 
-  });
   
-  if (process.env.NODE_ENV === 'production') {
-    console.warn(`⚠️  Firebase client disabled due to missing env vars. API fallbacks will be used.`);
-  } else {
-    throw new Error(errorMessage);
+  return {
+    success: false,
+    app: null,
+    db: null,
+    storage: null,
+    error: initializationError
+  };
+}
+
+// Synchronous Firebase initialization with comprehensive error handling
+function initializeFirebaseSync(): {
+  app: FirebaseApp | null;
+  db: Firestore | null;
+  storage: FirebaseStorage | null;
+  error: Error | null;
+} {
+  if (!isFirebaseAvailable && !hasMinimalFirebaseConfig) {
+    const errorMessage = `🔥 Firebase initialization skipped: Missing env vars -> ${envValidation.missing.join(", ")}`;
+    const error = new Error(errorMessage);
+    
+    smartLogger.firebase.error("❌ Firebase config is missing required keys", {
+      missing: envValidation.missing,
+      warnings: envValidation.warnings,
+      mode: process.env.NODE_ENV
+    });
+    
+    if (process.env.NODE_ENV === 'production') {
+      console.warn(`⚠️ Firebase client disabled due to missing env vars. API fallbacks will be used.`);
+      return { app: null, db: null, storage: null, error };
+    } else {
+      throw error;
+    }
+  }
+
+  try {
+    smartLogger.firebase.init(`🔥 Firebase initialization starting`, {
+      hasConfig: isFirebaseAvailable,
+      hasMinimal: hasMinimalFirebaseConfig,
+      environment: process.env.NODE_ENV
+    });
+
+    // Initialize app safely
+    const currentApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+    smartLogger.firebase.init("✅ Firebase app initialized");
+
+    // Get Firestore instance
+    const firestoreInstance = getFirestore(currentApp);
+    
+    // Connect to emulator in development if specified
+    if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_FIREBASE_EMULATOR === 'true') {
+      try {
+        connectFirestoreEmulator(firestoreInstance, 'localhost', 8080);
+        smartLogger.firebase.init("🧪 Connected to Firestore emulator");
+      } catch (emulatorError) {
+        smartLogger.firebase.debug("Firestore emulator connection failed or already connected");
+      }
+    }
+    
+    smartLogger.firebase.init("✅ Firestore initialized");
+
+    // Get Storage instance
+    const storageInstance = getStorage(currentApp);
+    smartLogger.firebase.init("✅ Firebase Storage initialized");
+
+    // Start health monitoring (async, non-blocking)
+    if (typeof window !== 'undefined') {
+      setTimeout(() => {
+        const healthMonitor = FirebaseHealthMonitor.getInstance();
+        healthMonitor.startHealthChecks(firestoreInstance);
+      }, 1000); // Start health checks after 1 second
+    }
+
+    smartLogger.firebase.init("🎉 Firebase fully initialized and ready");
+    
+    return {
+      app: currentApp,
+      db: firestoreInstance,
+      storage: storageInstance,
+      error: null
+    };
+    
+  } catch (err) {
+    const error = err instanceof Error ? err : new Error(String(err));
+    
+    smartLogger.firebase.error(`❌ Firebase initialization failed`, {
+      error: error.message,
+      code: (error as any)?.code,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+    
+    if (process.env.NODE_ENV === 'production') {
+      console.warn("⚠️ Firebase initialization failed in production. Using API-only fallbacks.");
+      return { app: null, db: null, storage: null, error };
+    } else {
+      throw error;
+    }
   }
 }
+
+// Initialize Firebase synchronously
+const initResult = initializeFirebaseSync();
+app = initResult.app;
+db = initResult.db;
+storage = initResult.storage;
+initializationError = initResult.error;
 
 // Q&A System Collections and Helpers
 import {
@@ -118,16 +387,31 @@ import type {
 } from "./types";
 
 /**
- * Firestore collection references
+ * Safe Firestore collection references with null checks and error handling
  */
-export const directQuestionsCollection = db ? collection(db, "directQuestions") : null;
+export const getDirectQuestionsCollectionSafely = (): CollectionReference | null => {
+  if (!db) {
+    smartLogger.firebase.debug("❌ Database instance not available for directQuestions collection");
+    return null;
+  }
+  
+  try {
+    return collection(db, "directQuestions");
+  } catch (error) {
+    smartLogger.firebase.error("❌ Failed to get directQuestions collection", error);
+    return null;
+  }
+};
 
 /**
- * Get typed collection reference for direct questions
+ * Get typed collection reference for direct questions with null safety
  */
 export function getDirectQuestionsCollection(): CollectionReference | null {
-  return directQuestionsCollection;
+  return getDirectQuestionsCollectionSafely();
 }
+
+// Legacy export for backward compatibility (but always null-safe)
+export const directQuestionsCollection = getDirectQuestionsCollectionSafely();
 
 /**
  * Add a new direct question to Firestore
@@ -136,12 +420,17 @@ export async function addDirectQuestion(
   visitorUuid: string,
   questionData: CreateDirectQuestionData
 ): Promise<DocumentReference> {
-  if (!db || !directQuestionsCollection) {
+  if (!db) {
     throw new Error('Firebase client unavailable - using API fallbacks');
   }
   
+  const questionsCollection = getDirectQuestionsCollectionSafely();
+  if (!questionsCollection) {
+    throw new Error('Firebase collection unavailable - using API fallbacks');
+  }
+  
   try {
-    const docRef = await addDoc(directQuestionsCollection, {
+    const docRef = await addDoc(questionsCollection, {
       visitorUuid,
       question: questionData.question.trim(),
       status: 'unanswered' as QuestionStatus,
@@ -169,8 +458,13 @@ export async function addDirectQuestion(
  * Get all questions for a specific visitor with timeout and enhanced error handling
  */
 export async function getVisitorQuestions(visitorUuid: string): Promise<DirectQuestion[]> {
-  if (!db || !directQuestionsCollection) {
+  if (!db) {
     throw new Error('Firebase client unavailable - using API fallbacks');
+  }
+  
+  const questionsCollection = getDirectQuestionsCollectionSafely();
+  if (!questionsCollection) {
+    throw new Error('Firebase collection unavailable - using API fallbacks');
   }
   
   const timeoutPromise = new Promise<DirectQuestion[]>((_, reject) => {
@@ -185,7 +479,7 @@ export async function getVisitorQuestions(visitorUuid: string): Promise<DirectQu
     while (retryCount < maxRetries) {
       try {
         const q = query(
-          directQuestionsCollection!,
+          questionsCollection,
           where("visitorUuid", "==", visitorUuid),
           orderBy("createdAt", "desc")
         );
@@ -261,12 +555,17 @@ export async function updateQuestionStatus(
   questionId: string,
   updateData: UpdateQuestionData
 ): Promise<void> {
-  if (!db || !directQuestionsCollection) {
+  if (!db) {
     throw new Error('Firebase client unavailable - using API fallbacks');
   }
   
+  const questionsCollection = getDirectQuestionsCollectionSafely();
+  if (!questionsCollection) {
+    throw new Error('Firebase collection unavailable - using API fallbacks');
+  }
+  
   try {
-    const questionRef = doc(directQuestionsCollection, questionId);
+    const questionRef = doc(questionsCollection, questionId);
     const updatePayload: any = {
       ...updateData,
       updatedAt: serverTimestamp()
@@ -294,8 +593,13 @@ export async function updateQuestionStatus(
  * Mark questions as read by visitor
  */
 export async function markQuestionsAsRead(questionIds: string[]): Promise<void> {
-  if (!db || !directQuestionsCollection) {
+  if (!db) {
     throw new Error('Firebase client unavailable - using API fallbacks');
+  }
+  
+  const questionsCollection = getDirectQuestionsCollectionSafely();
+  if (!questionsCollection) {
+    throw new Error('Firebase collection unavailable - using API fallbacks');
   }
   
   if (questionIds.length === 0) return;
@@ -304,7 +608,7 @@ export async function markQuestionsAsRead(questionIds: string[]): Promise<void> 
     const batch = writeBatch(db);
 
     questionIds.forEach(questionId => {
-      const questionRef = doc(directQuestionsCollection!, questionId);
+      const questionRef = doc(questionsCollection, questionId);
       batch.update(questionRef, {
         unreadForVisitor: false,
         updatedAt: serverTimestamp()
@@ -327,7 +631,7 @@ export async function markQuestionsAsRead(questionIds: string[]): Promise<void> 
  * Get visitor question statistics with timeout and error handling
  */
 export async function getVisitorQuestionStats(visitorUuid: string): Promise<VisitorQuestionStats> {
-  if (!db || !directQuestionsCollection) {
+  if (!db) {
     throw new Error('Firebase client unavailable - using API fallbacks');
   }
   
@@ -381,8 +685,29 @@ export function listenToVisitorQuestions(
   callback: (questions: DirectQuestion[]) => void,
   onError?: (error: Error) => void
 ): Unsubscribe {
-  if (!db || !directQuestionsCollection) {
+  if (!db) {
     console.warn('Firebase client unavailable, using polling fallback');
+    
+    // Return polling fallback
+    const pollInterval = setInterval(async () => {
+      try {
+        const questions = await getVisitorQuestions(visitorUuid);
+        callback(questions);
+      } catch (error) {
+        console.warn('Polling fallback error:', error);
+        onError?.(error instanceof Error ? error : new Error(String(error)));
+      }
+    }, 10000);
+    
+    return () => {
+      clearInterval(pollInterval);
+      console.log('Polling fallback unsubscribed');
+    };
+  }
+  
+  const questionsCollection = getDirectQuestionsCollectionSafely();
+  if (!questionsCollection) {
+    console.warn('Firebase collection unavailable, using polling fallback');
     
     // Return polling fallback
     const pollInterval = setInterval(async () => {
@@ -403,7 +728,7 @@ export function listenToVisitorQuestions(
   
   try {
     const q = query(
-      directQuestionsCollection,
+      questionsCollection,
       where("visitorUuid", "==", visitorUuid),
       orderBy("createdAt", "desc")
     );

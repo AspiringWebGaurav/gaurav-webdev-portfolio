@@ -73,6 +73,14 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
+  // Skip API routes that need real-time data to prevent 503 errors
+  if (url.pathname.includes('/api/direct-questions') ||
+      url.pathname.includes('/api/visitors/') ||
+      url.pathname.includes('/.well-known/vercel/jwe')) {
+    console.log('[SW] Skipping caching for API route:', url.pathname);
+    return; // Let the request go directly to network
+  }
+
   // Handle same-origin requests
   if (url.origin === location.origin) {
     event.respondWith(handleSameOriginRequest(request));

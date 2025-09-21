@@ -84,20 +84,56 @@ class NotificationListener {
       return;
     }
 
-    // Create query for visitor's questions (without orderBy to avoid index requirement)
-    const questionsQuery = query(
-      collection(db, 'directQuestions'),
-      where('visitorUuid', '==', this.visitorUuid)
-    );
+    // Check if Firebase is available
+    if (!db) {
+      console.warn('❌ Firebase not available, using polling fallback');
+      this.setupPollingFallback();
+      return;
+    }
 
-    console.log('🔄 Setting up real-time listener for direct questions');
+    try {
+      // Import collection function dynamically to prevent null reference errors
+      const { collection } = require('firebase/firestore');
+      
+      // Create query for visitor's questions (without orderBy to avoid index requirement)
+      const questionsQuery = query(
+        collection(db, 'directQuestions'),
+        where('visitorUuid', '==', this.visitorUuid)
+      );
 
-    // Setup the listener
-    this.unsubscribe = onSnapshot(
-      questionsQuery,
-      this.handleQuestionsUpdate.bind(this),
-      this.handleError.bind(this)
-    );
+      console.log('🔄 Setting up real-time listener for direct questions');
+
+      // Setup the listener with proper callback functions
+      this.unsubscribe = onSnapshot(
+        questionsQuery,
+        (snapshot) => this.handleQuestionsUpdate(snapshot as QuerySnapshot<DocumentData>),
+        (error) => this.handleError(error)
+      );
+    } catch (error) {
+      console.error('❌ Failed to setup Firebase listener, using polling fallback:', error);
+      this.setupPollingFallback();
+    }
+  }
+
+  /**
+   * Setup polling fallback when Firebase real-time listeners fail
+   */
+  private setupPollingFallback(): void {
+    console.log('📡 Setting up polling fallback for direct questions');
+    
+    const pollInterval = setInterval(async () => {
+      try {
+        await this.loadInitialQuestions();
+      } catch (error) {
+        console.warn('⚠️ Polling fallback error:', error);
+      }
+    }, 10000); // Poll every 10 seconds
+
+    // Store cleanup function
+    this.unsubscribe = () => {
+      clearInterval(pollInterval);
+      console.log('🧹 Polling fallback cleaned up');
+    };
   }
 
   /**
