@@ -255,27 +255,50 @@ const EntryGateModal: React.FC<EntryGateModalProps> = ({
     });
   }, []);
 
-  // Cleanup all timers and listeners
+  // Enhanced cleanup all timers and listeners
   const cleanup = useCallback(() => {
     cleanupFunctionsRef.current.forEach(fn => fn());
     cleanupFunctionsRef.current = [];
     
-    // Cleanup widget
-    if (widgetState.widgetId && window.turnstile) {
+    // CRITICAL FIX: Enhanced widget cleanup with container clearing
+    if (widgetState.widgetId || componentId.current) {
       try {
-        // Use manager for proper cleanup
+        // Remove from manager first
         if (typeof window !== 'undefined' && window.turnstileManager) {
           window.turnstileManager.unregister(componentId.current);
-        } else if (typeof window !== 'undefined' && window.turnstile) {
-          // Fallback cleanup
+        }
+        
+        // Remove the actual widget
+        if (widgetState.widgetId && window.turnstile) {
           window.turnstile.remove(widgetState.widgetId);
         }
-        console.log('[EntryGate] Widget cleaned up');
+        
+        // CRITICAL FIX: Clear the container completely
+        const container = getWidgetContainer();
+        if (container) {
+          container.innerHTML = '';
+          container.removeAttribute('data-widget-id');
+          container.removeAttribute('data-component-id');
+        }
+        
+        console.log('[EntryGate] Widget and container cleaned up completely');
       } catch (error) {
         console.warn('[EntryGate] Error during widget cleanup:', error);
+        
+        // CRITICAL FIX: Force clean the container even if widget cleanup fails
+        try {
+          const container = getWidgetContainer();
+          if (container) {
+            container.innerHTML = '';
+            container.removeAttribute('data-widget-id');
+            container.removeAttribute('data-component-id');
+          }
+        } catch (cleanupError) {
+          console.warn('[EntryGate] Error during forced container cleanup:', cleanupError);
+        }
       }
     }
-  }, [widgetState.widgetId]);
+  }, [widgetState.widgetId, getWidgetContainer]);
 
   // Enhanced Turnstile initialization with fast-fail
   const initializeTurnstileWidget = useCallback(async () => {
@@ -454,6 +477,29 @@ const EntryGateModal: React.FC<EntryGateModalProps> = ({
               console.error('[EntryGate] Turnstile API unavailable after ready check');
               resolve(false);
               return;
+            }
+
+            // CRITICAL FIX: Check for existing widgets in container before rendering
+            if (finalContainer.hasChildNodes()) {
+              console.log('[EntryGate] Container already has widgets, cleaning up...');
+              finalContainer.innerHTML = ''; // Clear any existing widgets
+            }
+
+            // CRITICAL FIX: Check if this container already has a widget registered
+            const existingWidget = Array.from(window.turnstileState?.widgets.entries() || [])
+              .find(([id, widgetId]) => {
+                const element = document.querySelector(`[data-widget-id="${widgetId}"]`);
+                return element && finalContainer.contains(element);
+              });
+
+            if (existingWidget) {
+              console.log('[EntryGate] Existing widget found, removing before creating new one');
+              try {
+                window.turnstile.remove(existingWidget[1]);
+                window.turnstileManager?.unregister(existingWidget[0]);
+              } catch (e) {
+                console.warn('[EntryGate] Error removing existing widget:', e);
+              }
             }
 
             try {

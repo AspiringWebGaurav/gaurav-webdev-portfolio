@@ -6,6 +6,7 @@ import EnhancedToastProvider from "@/components/ToastSystem";
 import PWAInitializer from "@/components/PWAInitializer";
 import LoadingProvider from "@/components/loading/LoadingProvider";
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { logEnvironmentStatus } from "@/utils/environmentValidator";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -511,6 +512,43 @@ export default function RootLayout({
             `
           }}
         />
+        
+        {/* CRITICAL FIX: Environment validation on startup */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                // Client-side environment validation for critical variables
+                const requiredEnvVars = [
+                  'NEXT_PUBLIC_TURNSTILE_SITE_KEY',
+                  'NEXT_PUBLIC_FIREBASE_API_KEY',
+                  'NEXT_PUBLIC_FIREBASE_PROJECT_ID',
+                  'NEXT_PUBLIC_OPENROUTER_API_KEY'
+                ];
+                
+                const missing = requiredEnvVars.filter(key => {
+                  const value = typeof process !== 'undefined' && process.env ? process.env[key] :
+                               typeof window !== 'undefined' && window.location ?
+                               new URLSearchParams(window.location.search).get(key) : null;
+                  return !value;
+                });
+                
+                if (missing.length > 0) {
+                  console.warn('[Environment] Missing critical variables:', missing);
+                  
+                  // Store validation status for AI components
+                  if (typeof window !== 'undefined') {
+                    window.__environmentIssues = {
+                      missing,
+                      timestamp: new Date().toISOString(),
+                      severity: 'warning'
+                    };
+                  }
+                }
+              })();
+            `
+          }}
+        />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <ThemeProvider
@@ -525,6 +563,41 @@ export default function RootLayout({
             {children}
           </LoadingProvider>
         </ThemeProvider>
+        
+        {/* CRITICAL FIX: Environment health monitoring */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                if (typeof window !== 'undefined') {
+                  // Initialize environment monitoring
+                  window.__portfolioHealthMonitor = {
+                    environment: {
+                      nodeEnv: '${process.env.NODE_ENV}',
+                      timestamp: new Date().toISOString(),
+                      clientValidated: false
+                    },
+                    turnstile: {
+                      configured: ${!!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY},
+                      siteKey: '${process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ? 'configured' : 'missing'}'
+                    },
+                    firebase: {
+                      configured: ${!!(process.env.NEXT_PUBLIC_FIREBASE_API_KEY && process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID)},
+                      apiKey: '${process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? 'configured' : 'missing'}',
+                      projectId: '${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ? 'configured' : 'missing'}'
+                    },
+                    ai: {
+                      configured: ${!!process.env.NEXT_PUBLIC_OPENROUTER_API_KEY},
+                      apiKey: '${process.env.NEXT_PUBLIC_OPENROUTER_API_KEY ? 'configured' : 'missing'}'
+                    }
+                  };
+                  
+                  console.log('[HealthMonitor] Portfolio health monitor initialized');
+                }
+              })();
+            `
+          }}
+        />
       </body>
     </html>
   );

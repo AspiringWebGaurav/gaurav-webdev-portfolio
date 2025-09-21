@@ -32,14 +32,15 @@ class SecureLogger {
   }
 
   private shouldLog(level: 'debug' | 'info' | 'warn' | 'error' = 'info'): boolean {
-    // In production, only log errors and warnings unless explicitly enabled
+    // CRITICAL FIX: In production, allow warnings and errors for AI components
     if (process.env.NODE_ENV === 'production') {
       if (!this.config.enableInProduction) {
+        // CRITICAL FIX: Always allow errors and warnings in production for debugging
         return level === 'error' || level === 'warn';
       }
       // If enabled in production, respect log level
       const levels = { debug: 0, info: 1, warn: 2, error: 3 };
-      const configLevel = levels[this.config.logLevel || 'error'];
+      const configLevel = levels[this.config.logLevel || 'warn']; // Changed default from 'error' to 'warn'
       const messageLevel = levels[level];
       return messageLevel >= configLevel;
     }
@@ -191,12 +192,12 @@ class SecureLogger {
   }
 }
 
-// Create logger instances with different security levels
+// CRITICAL FIX: Create logger instances with AI component support
 export const logger = new SecureLogger({
   enableInProduction: false,
   enableSensitiveData: false,
   enableUUIDLogging: false,
-  logLevel: 'error'
+  logLevel: 'warn' // Changed from 'error' to 'warn' for better debugging
 });
 
 // Development-only logger
@@ -207,20 +208,28 @@ export const devLogger = new SecureLogger({
   logLevel: 'debug'
 });
 
-// Production-safe logger (only critical errors)
+// CRITICAL FIX: Production logger that allows warnings for AI components
 export const prodLogger = new SecureLogger({
   enableInProduction: true,
   enableSensitiveData: false,
   enableUUIDLogging: false,
-  logLevel: 'error'
+  logLevel: 'warn' // Changed from 'error' to 'warn' for AI component debugging
 });
 
-// Silent logger for production (no logs at all)
+// CRITICAL FIX: Silent logger that still allows errors in production
 export const silentLogger = new SecureLogger({
-  enableInProduction: false,
+  enableInProduction: true, // Changed to true to allow error logging
   enableSensitiveData: false,
   enableUUIDLogging: false,
-  logLevel: 'error'
+  logLevel: 'error' // Only errors for silent mode
+});
+
+// CRITICAL FIX: New AI-specific logger for production debugging
+export const aiLogger = new SecureLogger({
+  enableInProduction: true,
+  enableSensitiveData: false,
+  enableUUIDLogging: false,
+  logLevel: 'warn' // Allow warnings for AI component issues
 });
 
 export default logger;

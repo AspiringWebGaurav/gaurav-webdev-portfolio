@@ -6,7 +6,7 @@
 // 4. Comprehensive logging and monitoring
 
 import { AIQuestion, ChatMessage, APIResponse } from '@/components/ai-assistant/types';
-import { prodLogger, devLogger } from './secureLogger';
+import { prodLogger, devLogger, aiLogger } from './secureLogger';
 
 // Service configuration
 const SERVICE_CONFIG = {
@@ -174,10 +174,23 @@ export class FirebaseQuestionsService {
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      // CRITICAL FIX: Enhanced error logging with AI logger
+      aiLogger.error('Firebase Questions Service failed', {
+        error: errorMessage,
+        endpoint: '/api/ai-assistant/questions',
+        timestamp: new Date().toISOString(),
+        fallbackUsed: true
+      });
+      
       prodLogger.error('Firebase Questions Service failed', { error: errorMessage });
 
       // Return fallback data
       devLogger.warn('Using fallback questions due to Firebase error');
+      aiLogger.warn('Using fallback questions for AI Assistant', {
+        fallbackCount: FALLBACK_QUESTIONS.length,
+        reason: errorMessage
+      });
       
       return {
         success: false,
@@ -251,6 +264,16 @@ export class OpenRouterChatService {
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      // CRITICAL FIX: Enhanced error logging with AI logger
+      aiLogger.error('OpenRouter Chat Service failed', {
+        error: errorMessage,
+        endpoint: '/api/ai-assistant/chat',
+        message: message.substring(0, 100) + '...', // Log first 100 chars of message
+        timestamp: new Date().toISOString(),
+        fallbackUsed: true
+      });
+      
       prodLogger.error('OpenRouter Chat Service failed', { error: errorMessage });
 
       // Return fallback response
@@ -262,6 +285,13 @@ export class OpenRouterChatService {
       };
 
       this.addToHistory(fallbackMessage);
+      
+      // CRITICAL FIX: Log fallback usage
+      aiLogger.warn('Using fallback AI response', {
+        originalMessage: message.substring(0, 50) + '...',
+        fallbackMessageId: fallbackMessage.id,
+        reason: errorMessage
+      });
 
       return {
         success: false,
@@ -339,9 +369,22 @@ export class AIServiceHealthMonitor {
     if (apiKey && apiKey.startsWith('sk-or-v1-')) {
       this.openrouterStatus = 'healthy';
       devLogger.debug('OpenRouter: Healthy (API key configured)');
+      aiLogger.warn('OpenRouter API key validated successfully', {
+        keyLength: apiKey.length,
+        keyPrefix: apiKey.substring(0, 10) + '...',
+        timestamp: new Date().toISOString()
+      });
     } else {
       this.openrouterStatus = 'down';
       devLogger.debug('OpenRouter: Down (No valid API key)');
+      
+      // CRITICAL FIX: Log missing API key issue
+      aiLogger.error('OpenRouter API key missing or invalid', {
+        hasPublicKey: !!process.env.NEXT_PUBLIC_OPENROUTER_API_KEY,
+        hasPrivateKey: !!process.env.OPENROUTER_API_KEY,
+        keyFormat: apiKey ? (apiKey.startsWith('sk-or-v1-') ? 'valid_format' : 'invalid_format') : 'missing',
+        timestamp: new Date().toISOString()
+      });
     }
     
     this.lastOpenRouterCheck = Date.now();
