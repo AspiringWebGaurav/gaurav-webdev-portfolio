@@ -45,7 +45,9 @@ class NotificationListener {
       this.setupRealtimeListener();
       
       this.isInitialized = true;
-      console.log('✅ Notification listener initialized for visitor:', this.visitorUuid);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('✅ Notification listener initialized for visitor:', this.visitorUuid);
+      }
     } catch (error) {
       console.error('❌ Failed to initialize notification listener:', error);
     }
@@ -67,11 +69,15 @@ class NotificationListener {
           data.data.questions.forEach((question: DirectQuestion) => {
             this.lastKnownQuestions.set(question.id, question);
           });
-          console.log(`📋 Loaded ${data.data.questions.length} existing questions as baseline`);
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`📋 Loaded ${data.data.questions.length} existing questions as baseline`);
+          }
         }
       }
     } catch (error) {
-      console.warn('⚠️ Failed to load initial questions:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('⚠️ Failed to load initial questions:', error);
+      }
     }
   }
 
@@ -86,7 +92,9 @@ class NotificationListener {
 
     // Check if Firebase is available
     if (!db) {
-      console.warn('❌ Firebase not available, using polling fallback');
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('❌ Firebase not available, using polling fallback');
+      }
       this.setupPollingFallback();
       return;
     }
@@ -101,7 +109,9 @@ class NotificationListener {
         where('visitorUuid', '==', this.visitorUuid)
       );
 
-      console.log('🔄 Setting up real-time listener for direct questions');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔄 Setting up real-time listener for direct questions');
+      }
 
       // Setup the listener with proper callback functions
       this.unsubscribe = onSnapshot(
@@ -119,20 +129,26 @@ class NotificationListener {
    * Setup polling fallback when Firebase real-time listeners fail
    */
   private setupPollingFallback(): void {
-    console.log('📡 Setting up polling fallback for direct questions');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📡 Setting up polling fallback for direct questions');
+    }
     
     const pollInterval = setInterval(async () => {
       try {
         await this.loadInitialQuestions();
       } catch (error) {
-        console.warn('⚠️ Polling fallback error:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('⚠️ Polling fallback error:', error);
+        }
       }
     }, 10000); // Poll every 10 seconds
 
     // Store cleanup function
     this.unsubscribe = () => {
       clearInterval(pollInterval);
-      console.log('🧹 Polling fallback cleaned up');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🧹 Polling fallback cleaned up');
+      }
     };
   }
 
@@ -171,11 +187,15 @@ class NotificationListener {
 
       // Process new notifications
       if (newNotifications.length > 0) {
-        console.log(`📬 Processing ${newNotifications.length} new notifications`);
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`📬 Processing ${newNotifications.length} new notifications`);
+        }
         this.processNotifications(newNotifications);
       }
 
-      console.log(`🔄 Updated questions: ${questions.length} total, ${newNotifications.length} new notifications`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🔄 Updated questions: ${questions.length} total, ${newNotifications.length} new notifications`);
+      }
     } catch (error) {
       console.error('❌ Error processing questions update:', error);
     }
@@ -196,7 +216,9 @@ class NotificationListener {
     if (question.status === 'answered' && question.adminReply && question.unreadForVisitor) {
       // New answer scenario
       if (!lastKnown || !lastKnown.adminReply) {
-        console.log('🆕 New answer detected for question:', question.id);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🆕 New answer detected for question:', question.id);
+        }
         return createNotificationFromQuestion(
           question.id,
           question.question,
@@ -207,7 +229,9 @@ class NotificationListener {
       
       // Updated answer scenario
       if (lastKnown && lastKnown.adminReply && lastKnown.adminReply !== question.adminReply) {
-        console.log('📝 Updated answer detected for question:', question.id);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('📝 Updated answer detected for question:', question.id);
+        }
         return createNotificationFromQuestion(
           question.id,
           question.question,
@@ -253,7 +277,9 @@ class NotificationListener {
       window.dispatchEvent(storageEvent);
     }
 
-    console.log(`🚀 Processed ${notifications.length} notifications with instant UI update triggers`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🚀 Processed ${notifications.length} notifications with instant UI update triggers`);
+    }
   }
 
   /**
@@ -265,7 +291,9 @@ class NotificationListener {
     // Try to reconnect after a delay
     setTimeout(() => {
       if (this.isInitialized) {
-        console.log('🔄 Attempting to reconnect notification listener...');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🔄 Attempting to reconnect notification listener...');
+        }
         this.setupRealtimeListener();
       }
     }, 5000);
@@ -298,7 +326,9 @@ class NotificationListener {
     this.isInitialized = false;
     this.visitorUuid = null;
     
-    console.log('🧹 Notification listener cleaned up');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🧹 Notification listener cleaned up');
+    }
   }
 
   /**

@@ -3,6 +3,22 @@ const CACHE_NAME = 'gaurav-portfolio-v1.0.0';
 const STATIC_CACHE_NAME = 'gaurav-portfolio-static-v1';
 const DYNAMIC_CACHE_NAME = 'gaurav-portfolio-dynamic-v1';
 
+// Production logging utility - only critical errors
+const log = {
+  error: (message, error) => {
+    // Only log critical errors in production
+    if (error) {
+      console.error(`[SW] CRITICAL: ${message}`, error);
+    }
+  },
+  debug: (message) => {
+    // Silent in production - no debug logs
+  },
+  info: (message) => {
+    // Silent in production - no info logs
+  }
+};
+
 // Assets to cache immediately
 const STATIC_ASSETS = [
   '/',
@@ -24,40 +40,32 @@ const CACHE_STRATEGIES = {
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing service worker...');
-  
   event.waitUntil(
     caches.open(STATIC_CACHE_NAME)
       .then((cache) => {
-        console.log('[SW] Caching static assets');
         return cache.addAll(STATIC_ASSETS);
       })
       .then(() => {
-        console.log('[SW] Static assets cached successfully');
         return self.skipWaiting();
       })
       .catch((error) => {
-        console.error('[SW] Failed to cache static assets:', error);
+        log.error('Failed to cache static assets', error);
       })
   );
 });
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating service worker...');
-  
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== STATIC_CACHE_NAME && cacheName !== DYNAMIC_CACHE_NAME) {
-            console.log('[SW] Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
     }).then(() => {
-      console.log('[SW] Service worker activated');
       return self.clients.claim();
     })
   );
@@ -77,7 +85,6 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.includes('/api/direct-questions') ||
       url.pathname.includes('/api/visitors/') ||
       url.pathname.includes('/.well-known/vercel/jwe')) {
-    console.log('[SW] Skipping caching for API route:', url.pathname);
     return; // Let the request go directly to network
   }
 
@@ -99,19 +106,16 @@ async function handleSameOriginRequest(request) {
     // Check static cache first
     const staticResponse = await caches.match(request, { cacheName: STATIC_CACHE_NAME });
     if (staticResponse) {
-      console.log('[SW] Serving from static cache:', url.pathname);
       return staticResponse;
     }
 
     // Check dynamic cache
     const dynamicResponse = await caches.match(request, { cacheName: DYNAMIC_CACHE_NAME });
     if (dynamicResponse) {
-      console.log('[SW] Serving from dynamic cache:', url.pathname);
       return dynamicResponse;
     }
 
     // Fetch from network
-    console.log('[SW] Fetching from network:', url.pathname);
     const networkResponse = await fetch(request);
     
     // Cache successful responses
@@ -122,7 +126,7 @@ async function handleSameOriginRequest(request) {
     return networkResponse;
     
   } catch (error) {
-    console.error('[SW] Fetch failed:', error);
+    log.error('Fetch failed', error);
     
     // Return offline fallback for navigation requests
     if (request.mode === 'navigate') {
@@ -166,7 +170,6 @@ async function handleCrossOriginRequest(request) {
     // Fallback to cache for external resources
     const cachedResponse = await caches.match(request);
     if (cachedResponse) {
-      console.log('[SW] Serving external asset from cache:', request.url);
       return cachedResponse;
     }
     
@@ -193,11 +196,10 @@ async function cacheResponse(request, response) {
       await cleanupOldestCacheEntries(DYNAMIC_CACHE_NAME, 10);
     }
     
-    console.log('[SW] Caching response:', url.pathname);
     await cache.put(request, response);
     
   } catch (error) {
-    console.error('[SW] Failed to cache response:', error);
+    log.error('Failed to cache response', error);
   }
 }
 
@@ -223,14 +225,10 @@ async function cleanupOldestCacheEntries(cacheName, keepCount) {
   await Promise.all(
     entriesToRemove.map(key => cache.delete(key))
   );
-  
-  console.log(`[SW] Cleaned up ${entriesToRemove.length} old cache entries`);
 }
 
 // Handle messages from main thread
 self.addEventListener('message', (event) => {
-  console.log('[SW] Received message:', event.data);
-  
   if (event.data && event.data.type) {
     switch (event.data.type) {
       case 'SKIP_WAITING':
@@ -244,8 +242,6 @@ self.addEventListener('message', (event) => {
           event.ports[0].postMessage({ success: true });
         });
         break;
-      default:
-        console.log('[SW] Unknown message type:', event.data.type);
     }
   }
 });
@@ -256,14 +252,10 @@ async function clearAllCaches() {
   await Promise.all(
     cacheNames.map(cacheName => caches.delete(cacheName))
   );
-  console.log('[SW] All caches cleared');
 }
 
 // Error handling for unhandled promise rejections
 self.addEventListener('unhandledrejection', (event) => {
-  console.error('[SW] Unhandled promise rejection:', event.reason);
+  log.error('Unhandled promise rejection', event.reason);
   event.preventDefault();
 });
-
-// Log service worker lifecycle
-console.log('[SW] Service Worker script loaded');

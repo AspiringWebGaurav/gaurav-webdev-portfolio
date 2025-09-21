@@ -44,12 +44,15 @@ function validateEnvironmentVariables(): {
   const isValid = missing.length === 0 && emptyVars.length === 0;
   const hasMinimalConfig = missingCritical.length === 0;
   
-  if (missing.length > 0) {
-    console.error('❌ [Firebase Environment] Missing critical variables:', missing);
-  }
-  
-  if (warnings.length > 0) {
-    console.warn('⚠️ [Firebase Environment] Warnings:', warnings);
+  // Only log in development environment
+  if (process.env.NODE_ENV === 'development') {
+    if (missing.length > 0) {
+      console.error('❌ [Firebase Environment] Missing critical variables:', missing);
+    }
+    
+    if (warnings.length > 0) {
+      console.warn('⚠️ [Firebase Environment] Warnings:', warnings);
+    }
   }
   
   return {
@@ -231,21 +234,14 @@ async function initializeFirebaseWithRetry(): Promise<{
       
       // If this is the last attempt, handle the failure
       if (attempt === maxInitializationAttempts) {
-        if (process.env.NODE_ENV === 'production') {
-          console.warn("⚠️ Firebase initialization failed in production after all retries. Using API-only fallbacks.");
-          
-          // Return partial success for API fallbacks
-          return {
-            success: false,
-            app: null,
-            db: null,
-            storage: null,
-            error
-          };
-        } else {
-          // In development, throw the error for debugging
-          throw error;
-        }
+        // Return partial success for API fallbacks without console noise in production
+        return {
+          success: false,
+          app: null,
+          db: null,
+          storage: null,
+          error
+        };
       }
       
       // Wait before retry (exponential backoff)
@@ -279,8 +275,8 @@ function initializeFirebaseSync(): {
       mode: process.env.NODE_ENV
     });
     
+    // In production, silently use API fallbacks
     if (process.env.NODE_ENV === 'production') {
-      console.warn(`⚠️ Firebase client disabled due to missing env vars. API fallbacks will be used.`);
       return { app: null, db: null, storage: null, error };
     } else {
       throw error;
@@ -343,8 +339,8 @@ function initializeFirebaseSync(): {
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
     
+    // In production, silently use API fallbacks
     if (process.env.NODE_ENV === 'production') {
-      console.warn("⚠️ Firebase initialization failed in production. Using API-only fallbacks.");
       return { app: null, db: null, storage: null, error };
     } else {
       throw error;
@@ -686,43 +682,49 @@ export function listenToVisitorQuestions(
   onError?: (error: Error) => void
 ): Unsubscribe {
   if (!db) {
-    console.warn('Firebase client unavailable, using polling fallback');
-    
-    // Return polling fallback
+    // Silently use polling fallback in production
     const pollInterval = setInterval(async () => {
       try {
         const questions = await getVisitorQuestions(visitorUuid);
         callback(questions);
       } catch (error) {
-        console.warn('Polling fallback error:', error);
+        // Only log in development
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Polling fallback error:', error);
+        }
         onError?.(error instanceof Error ? error : new Error(String(error)));
       }
     }, 10000);
     
     return () => {
       clearInterval(pollInterval);
-      console.log('Polling fallback unsubscribed');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Polling fallback unsubscribed');
+      }
     };
   }
   
   const questionsCollection = getDirectQuestionsCollectionSafely();
   if (!questionsCollection) {
-    console.warn('Firebase collection unavailable, using polling fallback');
-    
-    // Return polling fallback
+    // Silently use polling fallback in production
     const pollInterval = setInterval(async () => {
       try {
         const questions = await getVisitorQuestions(visitorUuid);
         callback(questions);
       } catch (error) {
-        console.warn('Polling fallback error:', error);
+        // Only log in development
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Polling fallback error:', error);
+        }
         onError?.(error instanceof Error ? error : new Error(String(error)));
       }
     }, 10000);
     
     return () => {
       clearInterval(pollInterval);
-      console.log('Polling fallback unsubscribed');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Polling fallback unsubscribed');
+      }
     };
   }
   

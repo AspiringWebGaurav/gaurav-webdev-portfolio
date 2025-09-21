@@ -6,7 +6,6 @@ import EnhancedToastProvider from "@/components/ToastSystem";
 import PWAInitializer from "@/components/PWAInitializer";
 import LoadingProvider from "@/components/loading/LoadingProvider";
 import { SpeedInsights } from "@vercel/speed-insights/next"
-import { logEnvironmentStatus } from "@/utils/environmentValidator";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -371,9 +370,9 @@ export default function RootLayout({
                   developmentMode: ${process.env.NODE_ENV === 'development'}
                 };
                 
-                // Development mode logging
+                // Development mode logging (silent in production)
                 const devLog = function(message, ...args) {
-                  if (window.turnstileState.developmentMode) {
+                  if (window.turnstileState.developmentMode && typeof console !== 'undefined') {
                     console.log('[Turnstile Dev]', message, ...args);
                   }
                 };
@@ -413,14 +412,18 @@ export default function RootLayout({
                     setTimeout(function() {
                       clearInterval(checkInterval);
                       if (!window.turnstile) {
-                        console.error('[TurnstileLoader] Turnstile API not available after timeout');
+                        if (window.turnstileState.developmentMode) {
+                          console.error('[TurnstileLoader] Turnstile API not available after timeout');
+                        }
                         window.dispatchEvent(new Event('turnstile-error'));
                       }
                     }, timeout);
                   };
                   
                   script.onerror = function() {
-                    console.error('[TurnstileLoader] Script load failed, attempt:', window.turnstileState.retryCount + 1);
+                    if (window.turnstileState.developmentMode) {
+                      console.error('[TurnstileLoader] Script load failed, attempt:', window.turnstileState.retryCount + 1);
+                    }
                     window.turnstileState.loading = false;
                     window.turnstileState.error = true;
                     
@@ -432,7 +435,9 @@ export default function RootLayout({
                         loadTurnstileScript();
                       }, retryDelay);
                     } else {
-                      console.error('[TurnstileLoader] Max retries reached, giving up');
+                      if (window.turnstileState.developmentMode) {
+                        console.error('[TurnstileLoader] Max retries reached, giving up');
+                      }
                       window.dispatchEvent(new Event('turnstile-error'));
                     }
                   };
@@ -454,7 +459,9 @@ export default function RootLayout({
                         window.turnstile.remove(widgetId);
                         devLog('Widget removed:', id, widgetId);
                       } catch (e) {
-                        console.warn('[TurnstileManager] Error removing widget:', e);
+                        if (window.turnstileState.developmentMode) {
+                          console.warn('[TurnstileManager] Error removing widget:', e);
+                        }
                       }
                     }
                     window.turnstileState.widgets.delete(id);
@@ -480,7 +487,9 @@ export default function RootLayout({
                         devLog('Turnstile ready after', Date.now() - startTime, 'ms');
                         callback();
                       } else if (Date.now() - startTime > timeout) {
-                        console.error('[TurnstileManager] Wait timeout exceeded after', timeout, 'ms');
+                        if (window.turnstileState.developmentMode) {
+                          console.error('[TurnstileManager] Wait timeout exceeded after', timeout, 'ms');
+                        }
                         callback(new Error('Turnstile ready timeout'));
                       } else {
                         setTimeout(checkReady, pollInterval);
@@ -534,7 +543,10 @@ export default function RootLayout({
                 });
                 
                 if (missing.length > 0) {
-                  console.warn('[Environment] Missing critical variables:', missing);
+                  // Only log in development mode
+                  if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') {
+                    console.warn('[Environment] Missing critical variables:', missing);
+                  }
                   
                   // Store validation status for AI components
                   if (typeof window !== 'undefined') {
@@ -592,7 +604,10 @@ export default function RootLayout({
                     }
                   };
                   
-                  console.log('[HealthMonitor] Portfolio health monitor initialized');
+                  // Only log in development mode
+                  if ('${process.env.NODE_ENV}' === 'development') {
+                    console.log('[HealthMonitor] Portfolio health monitor initialized');
+                  }
                 }
               })();
             `

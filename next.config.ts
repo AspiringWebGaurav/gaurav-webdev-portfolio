@@ -16,7 +16,7 @@ const nextConfig: NextConfig = {
   // 🔒 Security: Remove console logs in production
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production' ? {
-      exclude: ['error', 'warn'] // Keep only error and warn logs
+      exclude: ['error'] // Keep only error logs in production
     } : false,
   },
 
