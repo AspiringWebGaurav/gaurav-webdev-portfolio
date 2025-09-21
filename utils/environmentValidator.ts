@@ -1,353 +1,239 @@
-/**
- * Environment Variable Validation Utility
- * Validates critical environment variables for production deployment
- */
+// utils/environmentValidator.ts
+// Comprehensive environment variable validation with graceful fallbacks
 
-import { aiLogger, prodLogger } from './secureLogger';
-
-interface EnvironmentVariable {
-  name: string;
-  required: boolean;
-  category: 'auth' | 'database' | 'ai' | 'security' | 'analytics';
-  description: string;
-  validationRegex?: RegExp;
-  minLength?: number;
-  example?: string;
-}
-
-interface ValidationResult {
+interface EnvironmentValidationResult {
   isValid: boolean;
-  variable: string;
-  status: 'valid' | 'missing' | 'invalid_format' | 'too_short';
-  message: string;
-  category: string;
+  missing: string[];
+  warnings: string[];
+  config: Record<string, string | null>;
 }
 
-interface EnvironmentReport {
-  isHealthy: boolean;
-  totalVariables: number;
-  validVariables: number;
-  criticalIssues: ValidationResult[];
-  warnings: ValidationResult[];
-  recommendations: string[];
+interface ValidationConfig {
+  required?: string[];
+  optional?: string[];
+  validateInProduction?: boolean;
+  logLevel?: 'none' | 'warn' | 'error';
 }
-
-// CRITICAL FIX: Define all required environment variables
-const ENVIRONMENT_VARIABLES: EnvironmentVariable[] = [
-  // AI & OpenRouter
-  {
-    name: 'NEXT_PUBLIC_OPENROUTER_API_KEY',
-    required: true,
-    category: 'ai',
-    description: 'OpenRouter API key for AI chat functionality',
-    validationRegex: /^sk-or-v1-[A-Za-z0-9_-]+$/,
-    minLength: 50,
-    example: 'sk-or-v1-xxxxxxxxxxxxx'
-  },
-  {
-    name: 'OPENROUTER_API_KEY',
-    required: false, // Fallback for server-side
-    category: 'ai',
-    description: 'Server-side OpenRouter API key (fallback)',
-    validationRegex: /^sk-or-v1-[A-Za-z0-9_-]+$/,
-    minLength: 50
-  },
-
-  // Turnstile Security
-  {
-    name: 'NEXT_PUBLIC_TURNSTILE_SITE_KEY',
-    required: true,
-    category: 'security',
-    description: 'Cloudflare Turnstile site key for CAPTCHA verification',
-    validationRegex: /^0x[A-Fa-f0-9]{16}$|^[A-Za-z0-9_-]{40,}$/,
-    minLength: 20,
-    example: '0x4AAAAAAAxxxxxxxxxxxxx or 1x00000000000000000000AA'
-  },
-  {
-    name: 'TURNSTILE_SECRET_KEY',
-    required: true,
-    category: 'security',
-    description: 'Cloudflare Turnstile secret key for server-side verification',
-    validationRegex: /^0x[A-Fa-f0-9]{40}$|^[A-Za-z0-9_-]{40,}$/,
-    minLength: 40,
-    example: '0x4AAAAAAABBBBBBBBCCCCCCCCDDDDDDDDEEEEEEEE'
-  },
-
-  // Firebase Configuration
-  {
-    name: 'NEXT_PUBLIC_FIREBASE_API_KEY',
-    required: true,
-    category: 'database',
-    description: 'Firebase API key for authentication and database access',
-    validationRegex: /^AIza[A-Za-z0-9_-]{35}$/,
-    minLength: 39,
-    example: 'AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
-  },
-  {
-    name: 'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN',
-    required: true,
-    category: 'database',
-    description: 'Firebase authentication domain',
-    validationRegex: /^[a-z0-9-]+\.firebaseapp\.com$/,
-    minLength: 10,
-    example: 'your-project.firebaseapp.com'
-  },
-  {
-    name: 'NEXT_PUBLIC_FIREBASE_PROJECT_ID',
-    required: true,
-    category: 'database',
-    description: 'Firebase project identifier',
-    validationRegex: /^[a-z0-9-]+$/,
-    minLength: 3,
-    example: 'your-project-id'
-  },
-  {
-    name: 'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET',
-    required: true,
-    category: 'database',
-    description: 'Firebase storage bucket URL',
-    validationRegex: /^[a-z0-9-]+\.appspot\.com$/,
-    minLength: 10,
-    example: 'your-project.appspot.com'
-  },
-  {
-    name: 'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
-    required: true,
-    category: 'database',
-    description: 'Firebase messaging sender ID',
-    validationRegex: /^\d{12}$/,
-    minLength: 12,
-    example: '123456789012'
-  },
-  {
-    name: 'NEXT_PUBLIC_FIREBASE_APP_ID',
-    required: true,
-    category: 'database',
-    description: 'Firebase application ID',
-    validationRegex: /^1:[0-9]+:web:[a-f0-9]+$/,
-    minLength: 20,
-    example: '1:123456789012:web:abcdef123456'
-  },
-
-  // Optional but recommended
-  {
-    name: 'NODE_ENV',
-    required: true,
-    category: 'auth',
-    description: 'Node.js environment mode',
-    validationRegex: /^(development|production|test)$/
-  },
-  {
-    name: 'NEXT_PUBLIC_VERCEL_URL',
-    required: false,
-    category: 'auth',
-    description: 'Vercel deployment URL for CORS and redirects'
-  }
-];
 
 /**
- * Validate a single environment variable
+ * Validate environment variables with detailed reporting
  */
-function validateVariable(envVar: EnvironmentVariable): ValidationResult {
-  const value = process.env[envVar.name];
-  
-  if (!value) {
-    return {
-      isValid: false,
-      variable: envVar.name,
-      status: 'missing',
-      message: envVar.required 
-        ? `Critical: ${envVar.description} is required but not set`
-        : `Optional: ${envVar.description} is not set`,
-      category: envVar.category
-    };
-  }
+export function validateEnvironment(config: ValidationConfig = {}): EnvironmentValidationResult {
+  const {
+    required = [],
+    optional = [],
+    validateInProduction = true,
+    logLevel = 'warn'
+  } = config;
 
-  // Check minimum length
-  if (envVar.minLength && value.length < envVar.minLength) {
-    return {
-      isValid: false,
-      variable: envVar.name,
-      status: 'too_short',
-      message: `${envVar.description} is too short (${value.length} chars, minimum ${envVar.minLength})`,
-      category: envVar.category
-    };
-  }
-
-  // Check format with regex
-  if (envVar.validationRegex && !envVar.validationRegex.test(value)) {
-    return {
-      isValid: false,
-      variable: envVar.name,
-      status: 'invalid_format',
-      message: `${envVar.description} has invalid format. Expected format: ${envVar.example || 'see documentation'}`,
-      category: envVar.category
-    };
-  }
-
-  return {
+  const result: EnvironmentValidationResult = {
     isValid: true,
-    variable: envVar.name,
-    status: 'valid',
-    message: `${envVar.description} is properly configured`,
-    category: envVar.category
+    missing: [],
+    warnings: [],
+    config: {}
   };
-}
 
-/**
- * Validate all environment variables and generate report
- */
-export function validateEnvironment(): EnvironmentReport {
-  const results = ENVIRONMENT_VARIABLES.map(validateVariable);
-  
-  const validVariables = results.filter(r => r.isValid).length;
-  const criticalIssues = results.filter(r => !r.isValid && 
-    ENVIRONMENT_VARIABLES.find(env => env.name === r.variable)?.required
-  );
-  const warnings = results.filter(r => !r.isValid && 
-    !ENVIRONMENT_VARIABLES.find(env => env.name === r.variable)?.required
-  );
-
-  const recommendations: string[] = [];
-  
-  // Generate recommendations based on issues
-  if (criticalIssues.some(issue => issue.category === 'ai')) {
-    recommendations.push('Configure OpenRouter API key for AI chat functionality');
-  }
-  
-  if (criticalIssues.some(issue => issue.category === 'security')) {
-    recommendations.push('Configure Cloudflare Turnstile keys for security verification');
-  }
-  
-  if (criticalIssues.some(issue => issue.category === 'database')) {
-    recommendations.push('Configure Firebase credentials for database access');
-  }
-
-  if (process.env.NODE_ENV === 'production' && warnings.length > 0) {
-    recommendations.push('Consider setting optional environment variables for production');
-  }
-
-  const isHealthy = criticalIssues.length === 0;
-
-  return {
-    isHealthy,
-    totalVariables: ENVIRONMENT_VARIABLES.length,
-    validVariables,
-    criticalIssues,
-    warnings,
-    recommendations
-  };
-}
-
-/**
- * Log environment validation results
- */
-export function logEnvironmentStatus(): EnvironmentReport {
-  const report = validateEnvironment();
-  
-  if (report.isHealthy) {
-    aiLogger.warn('Environment validation passed', {
-      validVariables: report.validVariables,
-      totalVariables: report.totalVariables,
-      warnings: report.warnings.length,
-      timestamp: new Date().toISOString()
-    });
+  // Check required variables
+  for (const varName of required) {
+    const value = process.env[varName];
+    result.config[varName] = value || null;
     
-    if (process.env.NODE_ENV === 'development') {
-      console.log('✅ Environment validation passed');
-      if (report.warnings.length > 0) {
-        console.warn(`⚠️  ${report.warnings.length} optional variables missing`);
-      }
-    }
-  } else {
-    aiLogger.error('Environment validation failed', {
-      criticalIssues: report.criticalIssues.length,
-      validVariables: report.validVariables,
-      totalVariables: report.totalVariables,
-      failedVariables: report.criticalIssues.map(issue => ({
-        variable: issue.variable,
-        status: issue.status,
-        category: issue.category
-      })),
-      timestamp: new Date().toISOString()
-    });
-    
-    prodLogger.error('Critical environment variables missing', {
-      issueCount: report.criticalIssues.length,
-      timestamp: new Date().toISOString()
-    });
-    
-    if (process.env.NODE_ENV === 'development') {
-      console.error('❌ Environment validation failed');
-      report.criticalIssues.forEach(issue => {
-        console.error(`   ${issue.variable}: ${issue.message}`);
-      });
-      
-      if (report.recommendations.length > 0) {
-        console.log('\n📋 Recommendations:');
-        report.recommendations.forEach(rec => {
-          console.log(`   - ${rec}`);
-        });
-      }
+    if (!value) {
+      result.missing.push(varName);
+      result.isValid = false;
     }
   }
-  
-  return report;
-}
 
-/**
- * Get environment health status for monitoring
- */
-export function getEnvironmentHealth(): {
-  status: 'healthy' | 'degraded' | 'critical';
-  issues: number;
-  message: string;
-} {
-  const report = validateEnvironment();
-  
-  if (report.isHealthy) {
-    return {
-      status: report.warnings.length === 0 ? 'healthy' : 'degraded',
-      issues: report.warnings.length,
-      message: report.warnings.length === 0 
-        ? 'All environment variables properly configured'
-        : `${report.warnings.length} optional variables missing`
-    };
-  } else {
-    return {
-      status: 'critical',
-      issues: report.criticalIssues.length,
-      message: `${report.criticalIssues.length} critical environment variables missing or invalid`
-    };
+  // Check optional variables
+  for (const varName of optional) {
+    const value = process.env[varName];
+    result.config[varName] = value || null;
+    
+    if (!value) {
+      result.warnings.push(`Optional variable ${varName} is not set`);
+    }
   }
+
+  // Logging based on configuration
+  if (logLevel !== 'none') {
+    if (result.missing.length > 0) {
+      const message = `❌ [Environment] Missing required variables: ${result.missing.join(', ')}`;
+      if (logLevel === 'error') {
+        console.error(message);
+      } else {
+        console.warn(message);
+      }
+    }
+
+    if (result.warnings.length > 0 && logLevel === 'warn') {
+      console.warn(`⚠️  [Environment] Warnings: ${result.warnings.join(', ')}`);
+    }
+
+    if (result.isValid) {
+      console.log(`✅ [Environment] All required variables validated`);
+    }
+  }
+
+  return result;
 }
 
 /**
- * Check specific service availability based on environment
+ * Firebase-specific environment validation
  */
-export function checkServiceAvailability(): {
-  ai: boolean;
-  security: boolean;
-  database: boolean;
-  overall: boolean;
-} {
-  const report = validateEnvironment();
-  
-  const ai = !report.criticalIssues.some(issue => issue.category === 'ai');
-  const security = !report.criticalIssues.some(issue => issue.category === 'security');
-  const database = !report.criticalIssues.some(issue => issue.category === 'database');
-  
-  return {
-    ai,
-    security,
-    database,
-    overall: ai && security && database
+export function validateFirebaseEnvironment(): EnvironmentValidationResult {
+  const requiredVars = [
+    'NEXT_PUBLIC_FIREBASE_API_KEY',
+    'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN',
+    'NEXT_PUBLIC_FIREBASE_PROJECT_ID',
+    'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET',
+    'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
+    'NEXT_PUBLIC_FIREBASE_APP_ID'
+  ];
+
+  const optionalVars = [
+    'FIREBASE_SERVICE_ACCOUNT_KEY',
+    'NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID'
+  ];
+
+  return validateEnvironment({
+    required: requiredVars,
+    optional: optionalVars,
+    validateInProduction: true,
+    logLevel: 'warn'
+  });
+}
+
+/**
+ * Check if we're in a serverless environment where some features might be limited
+ */
+export function getEnvironmentInfo() {
+  const info = {
+    isServerless: !!(process.env.VERCEL || process.env.NETLIFY || process.env.AWS_LAMBDA_FUNCTION_NAME),
+    isProduction: process.env.NODE_ENV === 'production',
+    isDevelopment: process.env.NODE_ENV === 'development',
+    platform: process.env.VERCEL ? 'vercel' : process.env.NETLIFY ? 'netlify' : 'other',
+    hasFirebaseAdmin: !!process.env.FIREBASE_SERVICE_ACCOUNT_KEY,
+    hasFirebaseClient: !!(
+      process.env.NEXT_PUBLIC_FIREBASE_API_KEY && 
+      process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    )
   };
+
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔍 [Environment] Info:', info);
+  }
+
+  return info;
+}
+
+/**
+ * Create fallback configuration when environment variables are missing
+ */
+export function createFallbackConfig(validationResult: EnvironmentValidationResult) {
+  const fallbacks = {
+    useAPIFallbacks: !validationResult.isValid,
+    clientSideFirebase: false,
+    serverSideFirebase: false,
+    features: {
+      realTimeQuestions: false,
+      clientSideQuestions: false,
+      notificationsEnabled: false,
+      adminPanelEnabled: false
+    },
+    degradedExperience: true
+  };
+
+  // Determine what features can work with current config
+  if (validationResult.config['NEXT_PUBLIC_FIREBASE_API_KEY'] && 
+      validationResult.config['NEXT_PUBLIC_FIREBASE_PROJECT_ID']) {
+    fallbacks.clientSideFirebase = true;
+    fallbacks.features.clientSideQuestions = true;
+    fallbacks.features.realTimeQuestions = true;
+  }
+
+  if (validationResult.config['FIREBASE_SERVICE_ACCOUNT_KEY']) {
+    fallbacks.serverSideFirebase = true;
+    fallbacks.features.adminPanelEnabled = true;
+  }
+
+  if (fallbacks.clientSideFirebase) {
+    fallbacks.degradedExperience = false;
+    fallbacks.features.notificationsEnabled = true;
+  }
+
+  return fallbacks;
+}
+
+/**
+ * Throw environment error with helpful debugging information
+ */
+export function throwEnvironmentError(
+  validationResult: EnvironmentValidationResult, 
+  context: string = 'application'
+) {
+  const missing = validationResult.missing;
+  const platform = getEnvironmentInfo().platform;
+  
+  let errorMessage = `🔥 ${context} initialization failed: Missing environment variables -> ${missing.join(', ')}\n\n`;
+  
+  errorMessage += `📋 Required Environment Variables:\n`;
+  missing.forEach(varName => {
+    errorMessage += `  - ${varName}\n`;
+  });
+  
+  errorMessage += `\n🔧 How to fix this:\n`;
+  errorMessage += `  1. Add missing variables to your .env.local file (development)\n`;
+  
+  if (platform === 'vercel') {
+    errorMessage += `  2. Add variables in Vercel dashboard: Settings > Environment Variables\n`;
+  } else if (platform === 'netlify') {
+    errorMessage += `  2. Add variables in Netlify dashboard: Site Settings > Environment Variables\n`;
+  } else {
+    errorMessage += `  2. Set variables in your deployment platform\n`;
+  }
+  
+  errorMessage += `  3. Ensure variables are prefixed with NEXT_PUBLIC_ for client-side access\n`;
+  errorMessage += `  4. Restart your development server after adding variables\n\n`;
+  
+  errorMessage += `🌐 Current Environment: ${process.env.NODE_ENV} on ${platform}\n`;
+  errorMessage += `📱 Platform: ${platform}\n`;
+
+  throw new Error(errorMessage);
+}
+
+/**
+ * Log environment status for debugging
+ */
+export function logEnvironmentStatus() {
+  const firebaseValidation = validateFirebaseEnvironment();
+  const envInfo = getEnvironmentInfo();
+  const fallbackConfig = createFallbackConfig(firebaseValidation);
+
+  console.group('🔍 Environment Status Report');
+  console.log('Platform:', envInfo.platform);
+  console.log('Environment:', process.env.NODE_ENV);
+  console.log('Firebase Client Available:', envInfo.hasFirebaseClient);
+  console.log('Firebase Admin Available:', envInfo.hasFirebaseAdmin);
+  console.log('Using API Fallbacks:', fallbackConfig.useAPIFallbacks);
+  console.log('Degraded Experience:', fallbackConfig.degradedExperience);
+  console.log('Available Features:', fallbackConfig.features);
+  
+  if (firebaseValidation.missing.length > 0) {
+    console.warn('Missing Variables:', firebaseValidation.missing);
+  }
+  
+  if (firebaseValidation.warnings.length > 0) {
+    console.warn('Warnings:', firebaseValidation.warnings);
+  }
+  
+  console.groupEnd();
 }
 
 export default {
   validateEnvironment,
-  logEnvironmentStatus,
-  getEnvironmentHealth,
-  checkServiceAvailability
+  validateFirebaseEnvironment,
+  getEnvironmentInfo,
+  createFallbackConfig,
+  throwEnvironmentError,
+  logEnvironmentStatus
 };

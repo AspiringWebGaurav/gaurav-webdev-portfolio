@@ -8,21 +8,25 @@ import {
   showInfoToast 
 } from "@/components/ToastSystem";
 import { getVisitorUuidWithFallbacks } from "./visitor";
-// Dynamic Firebase imports to resolve build-time module resolution issues
+
+// Production-safe Firebase imports with multiple fallback strategies
 const importFirebaseModule = async () => {
+  // Strategy 1: Try direct import first (works in development and some production builds)
   try {
     const firebaseModule = await import('./firebase');
     
-    // Ensure all required functions exist
+    // Try both default export and named exports
+    const moduleToUse = firebaseModule.default || firebaseModule;
+    
     const requiredFunctions = {
-      addDirectQuestion: firebaseModule.addDirectQuestion,
-      getVisitorQuestions: firebaseModule.getVisitorQuestions,
-      markQuestionsAsRead: firebaseModule.markQuestionsAsRead,
-      listenToVisitorQuestions: firebaseModule.listenToVisitorQuestions,
-      getVisitorQuestionStats: firebaseModule.getVisitorQuestionStats
+      addDirectQuestion: moduleToUse.addDirectQuestion || firebaseModule.addDirectQuestion,
+      getVisitorQuestions: moduleToUse.getVisitorQuestions || firebaseModule.getVisitorQuestions,
+      markQuestionsAsRead: moduleToUse.markQuestionsAsRead || firebaseModule.markQuestionsAsRead,
+      listenToVisitorQuestions: moduleToUse.listenToVisitorQuestions || firebaseModule.listenToVisitorQuestions,
+      getVisitorQuestionStats: moduleToUse.getVisitorQuestionStats || firebaseModule.getVisitorQuestionStats
     };
     
-    // Validate that all functions are actually functions
+    // Validate functions
     for (const [name, func] of Object.entries(requiredFunctions)) {
       if (typeof func !== 'function') {
         console.error(`Firebase function ${name} is not available:`, typeof func);
@@ -30,11 +34,164 @@ const importFirebaseModule = async () => {
       }
     }
     
+    console.log('✅ Firebase module imported successfully via direct import');
     return requiredFunctions;
-  } catch (error) {
-    console.error('Failed to import Firebase module:', error);
-    throw new Error(`Firebase module import failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  } catch (directImportError) {
+    console.warn('Direct Firebase import failed, trying alternative strategies:', directImportError);
+    
+    // Strategy 2: Try static import fallback
+    try {
+      const {
+        addDirectQuestion,
+        getVisitorQuestions,
+        markQuestionsAsRead,
+        listenToVisitorQuestions,
+        getVisitorQuestionStats
+      } = await import('./firebase');
+      
+      const functions = {
+        addDirectQuestion,
+        getVisitorQuestions,
+        markQuestionsAsRead,
+        listenToVisitorQuestions,
+        getVisitorQuestionStats
+      };
+      
+      // Validate functions
+      for (const [name, func] of Object.entries(functions)) {
+        if (typeof func !== 'function') {
+          throw new Error(`Firebase function ${name} is not available via static import`);
+        }
+      }
+      
+      console.log('✅ Firebase module imported successfully via static import');
+      return functions;
+    } catch (staticImportError) {
+      console.error('Static Firebase import also failed:', staticImportError);
+      
+      // Strategy 3: Return API-based fallbacks
+      console.warn('🚨 Firebase client-side imports failed, using API fallbacks');
+      return getAPIFallbacks();
+    }
   }
+};
+
+// API-based fallback functions for when Firebase client fails
+const getAPIFallbacks = () => {
+  return {
+    addDirectQuestion: async (visitorUuid: string, questionData: any) => {
+      console.log('📡 Using API fallback for addDirectQuestion');
+      const response = await fetch('/api/direct-questions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          question: questionData.question,
+          metadata: questionData.metadata
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API fallback failed: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error || 'API fallback error');
+      }
+      
+      // Mock DocumentReference-like object
+      return { id: result.data.questionId };
+    },
+    
+    getVisitorQuestions: async (visitorUuid: string) => {
+      console.log('📡 Using API fallback for getVisitorQuestions');
+      const response = await fetch('/api/direct-questions', {
+        method: 'GET',
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        return []; // Return empty array on error
+      }
+      
+      const result = await response.json();
+      return result.success ? (result.data?.questions || []) : [];
+    },
+    
+    markQuestionsAsRead: async (questionIds: string[]) => {
+      console.log('📡 Using API fallback for markQuestionsAsRead');
+      try {
+        const response = await fetch('/api/direct-questions/mark-read', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({ ids: questionIds })
+        });
+        
+        // Don't throw on error, just log and continue
+        if (!response.ok) {
+          console.warn('Mark as read API fallback failed, but continuing');
+        }
+      } catch (error) {
+        console.warn('Mark as read API fallback error, but continuing:', error);
+      }
+    },
+    
+    listenToVisitorQuestions: (visitorUuid: string, callback: (questions: any[]) => void, onError?: (error: any) => void) => {
+      console.log('📡 Using polling fallback for listenToVisitorQuestions');
+      
+      // Use polling instead of real-time listening
+      const pollInterval = setInterval(async () => {
+        try {
+          const questions = await getAPIFallbacks().getVisitorQuestions(visitorUuid);
+          callback(questions);
+        } catch (error) {
+          console.warn('Polling fallback error:', error);
+          onError?.(error);
+        }
+      }, 10000); // Poll every 10 seconds
+      
+      // Return unsubscribe function
+      return () => {
+        clearInterval(pollInterval);
+        console.log('Polling fallback unsubscribed');
+      };
+    },
+    
+    getVisitorQuestionStats: async (visitorUuid: string) => {
+      console.log('📡 Using API fallback for getVisitorQuestionStats');
+      try {
+        const questions = await getAPIFallbacks().getVisitorQuestions(visitorUuid);
+        
+        // Calculate stats client-side
+        const stats = {
+          totalQuestions: questions.length,
+          unanswered: questions.filter((q: any) => q.status === 'unanswered').length,
+          answered: questions.filter((q: any) => q.status === 'answered').length,
+          archived: questions.filter((q: any) => q.status === 'archived').length,
+          unread: questions.filter((q: any) => q.unreadForVisitor).length,
+          lastQuestionAt: questions.length > 0 ? questions[0].createdAt : null
+        };
+        
+        return stats;
+      } catch (error) {
+        console.warn('Stats API fallback failed, returning empty stats:', error);
+        return {
+          totalQuestions: 0,
+          unanswered: 0,
+          answered: 0,
+          archived: 0,
+          unread: 0,
+          lastQuestionAt: null
+        };
+      }
+    }
+  };
 };
 import type {
   DirectQuestion,
