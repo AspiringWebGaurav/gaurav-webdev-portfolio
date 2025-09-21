@@ -10,14 +10,31 @@ import {
 import { getVisitorUuidWithFallbacks } from "./visitor";
 // Dynamic Firebase imports to resolve build-time module resolution issues
 const importFirebaseModule = async () => {
-  const {
-    addDirectQuestion,
-    getVisitorQuestions,
-    markQuestionsAsRead,
-    listenToVisitorQuestions,
-    getVisitorQuestionStats
-  } = await import('./firebase');
-  return { addDirectQuestion, getVisitorQuestions, markQuestionsAsRead, listenToVisitorQuestions, getVisitorQuestionStats };
+  try {
+    const firebaseModule = await import('./firebase');
+    
+    // Ensure all required functions exist
+    const requiredFunctions = {
+      addDirectQuestion: firebaseModule.addDirectQuestion,
+      getVisitorQuestions: firebaseModule.getVisitorQuestions,
+      markQuestionsAsRead: firebaseModule.markQuestionsAsRead,
+      listenToVisitorQuestions: firebaseModule.listenToVisitorQuestions,
+      getVisitorQuestionStats: firebaseModule.getVisitorQuestionStats
+    };
+    
+    // Validate that all functions are actually functions
+    for (const [name, func] of Object.entries(requiredFunctions)) {
+      if (typeof func !== 'function') {
+        console.error(`Firebase function ${name} is not available:`, typeof func);
+        throw new Error(`Firebase function ${name} is not properly exported`);
+      }
+    }
+    
+    return requiredFunctions;
+  } catch (error) {
+    console.error('Failed to import Firebase module:', error);
+    throw new Error(`Firebase module import failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 };
 import type {
   DirectQuestion,
@@ -556,30 +573,40 @@ export class QuestionListenerManager {
     
     const setupListener = async () => {
       try {
-        const { listenToVisitorQuestions } = await importFirebaseModule();
-        const unsubscribe = listenToVisitorQuestions(
+        const firebaseModule = await importFirebaseModule();
+        
+        // Verify the function exists before calling it
+        if (!firebaseModule.listenToVisitorQuestions) {
+          throw new Error('listenToVisitorQuestions function not available');
+        }
+        
+        const unsubscribe = firebaseModule.listenToVisitorQuestions(
           visitorUuid,
           (questions: any[]) => {
-            callback(questions);
-            
-            // Show toast for new answers if enabled
-            if (options?.showToastOnUpdate) {
-              const unreadAnswers = questions.filter((q: any) =>
-                q.status === 'answered' && q.unreadForVisitor
-              );
+            try {
+              callback(questions);
               
-              if (unreadAnswers.length > 0) {
-                showQuestionToast({
-                  message: `You have ${unreadAnswers.length} new answer${unreadAnswers.length > 1 ? 's' : ''}!`,
-                  type: 'success',
-                  onlyWhenVisible: options?.onlyWhenVisible || true,
-                  onAction: () => {
-                    // Mark as read
-                    const questionIds = unreadAnswers.map((q: any) => q.id);
-                    markCurrentVisitorQuestionsAsRead(questionIds);
-                  }
-                });
+              // Show toast for new answers if enabled
+              if (options?.showToastOnUpdate) {
+                const unreadAnswers = questions.filter((q: any) =>
+                  q.status === 'answered' && q.unreadForVisitor
+                );
+                
+                if (unreadAnswers.length > 0) {
+                  showQuestionToast({
+                    message: `You have ${unreadAnswers.length} new answer${unreadAnswers.length > 1 ? 's' : ''}!`,
+                    type: 'success',
+                    onlyWhenVisible: options?.onlyWhenVisible || true,
+                    onAction: () => {
+                      // Mark as read
+                      const questionIds = unreadAnswers.map((q: any) => q.id);
+                      markCurrentVisitorQuestionsAsRead(questionIds);
+                    }
+                  });
+                }
               }
+            } catch (callbackError) {
+              console.error('Error in Firebase listener callback:', callbackError);
             }
           },
           (error: any) => {
@@ -588,11 +615,39 @@ export class QuestionListenerManager {
           }
         );
         
+        // Verify unsubscribe is a function
+        if (typeof unsubscribe !== 'function') {
+          console.error('Firebase listener did not return a proper unsubscribe function:', typeof unsubscribe);
+          throw new Error('Invalid unsubscribe function returned');
+        }
+        
         actualUnsubscribe = unsubscribe;
         this.listeners.set(listenerId, unsubscribe);
+        
+        console.log('Firebase listener setup successfully');
       } catch (error) {
         console.error('Failed to setup Firebase listener:', error);
-        showErrorToast("Failed to establish real-time connection.");
+        
+        // Fallback: Use polling instead of real-time listener
+        const pollInterval = setInterval(async () => {
+          try {
+            const questions = await getCurrentVisitorQuestions();
+            callback(questions);
+          } catch (pollError) {
+            console.error('Polling fallback failed:', pollError);
+          }
+        }, 10000); // Poll every 10 seconds
+        
+        // Set up cleanup for polling fallback
+        actualUnsubscribe = () => {
+          clearInterval(pollInterval);
+          console.log('Polling fallback cleanup');
+        };
+        
+        this.listeners.set(listenerId, actualUnsubscribe);
+        
+        // Show warning about fallback
+        console.warn('Using polling fallback due to listener setup failure');
       }
     };
     
