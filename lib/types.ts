@@ -52,6 +52,12 @@ export interface DirectQuestion {
   unreadForVisitor: boolean;
   /** Additional context about when/where the question was asked */
   metadata: VisitorMetadata;
+  /** Whether the question has been soft-deleted by admin */
+  isDeleted?: boolean;
+  /** When the question was deleted (for audit trail) */
+  deletedAt?: Timestamp | null;
+  /** Who deleted the question (for audit trail) */
+  deletedBy?: string;
 }
 
 /**

@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { FaTimes, FaEnvelope, FaUser, FaPen, FaShieldAlt } from "react-icons/fa";
 import TurnstileInline, { TurnstileInlineRef } from "./TurnstileInline";
 import { ContactFormResponse } from "@/lib/types/turnstile";
+import { EnhancedSpinners } from "./loading/EnhancedSpinners";
 
 interface ContactFormData {
   name: string;
@@ -296,7 +297,7 @@ const ContactModal = ({ isOpen, onClose, onSuccess }: ContactModalProps) => {
             >
               {isSubmitting ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                  <EnhancedSpinners.Circle size="sm" color="purple" className="text-white" />
                   <span>Verifying & Sending...</span>
                 </>
               ) : (

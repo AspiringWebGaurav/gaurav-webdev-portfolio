@@ -5,6 +5,7 @@ import { AssistantInterfaceProps, AIQuestion, ChatMessage } from './types';
 import PredefinedQuestions from './PredefinedQuestions';
 import AIChat from './AIChat';
 import AskDirectlyEmbedded from '@/components/askDirectly/AskDirectlyEmbedded';
+import DirectQuestionErrorBoundary from './DirectQuestionErrorBoundary';
 
 const AssistantInterface: React.FC<Partial<AssistantInterfaceProps>> = ({
   activeTab: initialActiveTab = 'predefined',
@@ -232,22 +233,24 @@ const AssistantInterface: React.FC<Partial<AssistantInterfaceProps>> = ({
           />
         )}
         {activeTab === 'ask-directly' && (
-          <div className="h-full p-4">
-            <div className="mb-3">
-              <h3 className="text-white font-semibold text-lg mb-2">Ask Gaurav Directly</h3>
-              <p className="text-gray-400 text-sm">
-                Have a specific question? Ask Gaurav directly and get a personal response!
-              </p>
+          <DirectQuestionErrorBoundary>
+            <div className="h-full p-4">
+              <div className="mb-3">
+                <h3 className="text-white font-semibold text-lg mb-2">Ask Gaurav Directly</h3>
+                <p className="text-gray-400 text-sm">
+                  Have a specific question? Ask Gaurav directly and get a personal response!
+                </p>
+              </div>
+              
+              <div className="h-full overflow-hidden">
+                <AskDirectlyEmbedded
+                  initialView="form"
+                  showViewToggle={true}
+                  className="h-full"
+                />
+              </div>
             </div>
-            
-            <div className="h-full overflow-hidden">
-              <AskDirectlyEmbedded
-                initialView="form"
-                showViewToggle={true}
-                className="h-full"
-              />
-            </div>
-          </div>
+          </DirectQuestionErrorBoundary>
         )}
       </div>
 

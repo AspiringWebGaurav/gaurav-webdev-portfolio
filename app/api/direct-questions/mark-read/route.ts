@@ -1,15 +1,14 @@
 // app/api/direct-questions/mark-read/route.ts
-// API route for marking questions as read by visitor
+// API route for marking direct questions as read by visitor
 
 import { NextRequest, NextResponse } from 'next/server';
 import { 
   collection,
-  query,
-  where,
-  writeBatch,
   doc,
+  updateDoc,
   serverTimestamp,
-  getDocs
+  getDoc,
+  writeBatch
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
@@ -23,6 +22,13 @@ function getVisitorUuidFromRequest(request: NextRequest): string | null {
       return uuidMatch[1];
     }
     
+    // Fallback: check URL params or headers
+    const url = new URL(request.url);
+    const urlUuid = url.searchParams.get('visitorUuid');
+    if (urlUuid) {
+      return urlUuid;
+    }
+    
     return null;
   } catch (error) {
     console.error('Error extracting visitor UUID:', error);
@@ -30,133 +36,173 @@ function getVisitorUuidFromRequest(request: NextRequest): string | null {
   }
 }
 
-// POST: Mark questions as read for current visitor
+// POST: Mark questions as read
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { ids } = body;
+  let retryCount = 0;
+  const maxRetries = 2;
+  const retryDelay = 1000; // 1 second
 
-    // Validate request
-    if (!ids || !Array.isArray(ids) || ids.length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'Question IDs required' },
-        { status: 400 }
-      );
-    }
+  while (retryCount < maxRetries) {
+    try {
+      const body = await request.json();
+      const { ids } = body;
 
-    const visitorUuid = getVisitorUuidFromRequest(request);
-    if (!visitorUuid) {
-      return NextResponse.json(
-        { success: false, error: 'Visitor UUID required' },
-        { status: 400 }
-      );
-    }
-
-    // Security: Verify that all questions belong to this visitor
-    const questionsQuery = query(
-      collection(db, 'directQuestions'),
-      where('visitorUuid', '==', visitorUuid)
-    );
-
-    const querySnapshot = await getDocs(questionsQuery);
-    const visitorQuestionIds = new Set(querySnapshot.docs.map(doc => doc.id));
-
-    // Filter out any IDs that don't belong to this visitor
-    const validIds = ids.filter(id => visitorQuestionIds.has(id));
-
-    if (validIds.length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'No valid question IDs found for this visitor' },
-        { status: 403 }
-      );
-    }
-
-    // Use batch write to update multiple documents
-    const batch = writeBatch(db);
-
-    validIds.forEach(questionId => {
-      const questionRef = doc(db, 'directQuestions', questionId);
-      batch.update(questionRef, {
-        unreadForVisitor: false,
-        updatedAt: serverTimestamp(),
-        readAt: serverTimestamp()
-      });
-    });
-
-    // Commit the batch
-    await batch.commit();
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        markedAsRead: validIds.length,
-        skipped: ids.length - validIds.length,
-        message: `${validIds.length} question${validIds.length > 1 ? 's' : ''} marked as read`
+      if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        return NextResponse.json(
+          { success: false, error: 'Question IDs array is required' },
+          { status: 400 }
+        );
       }
-    });
 
-  } catch (error) {
-    console.error('Error marking questions as read:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to mark questions as read',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
+      const visitorUuid = getVisitorUuidFromRequest(request);
+      if (!visitorUuid) {
+        return NextResponse.json(
+          { success: false, error: 'Visitor UUID required' },
+          { status: 400 }
+        );
+      }
+
+      console.log(`📖 Marking ${ids.length} questions as read for visitor ${visitorUuid}`);
+
+      // Use batch for better performance and atomicity
+      const batch = writeBatch(db);
+      let markedAsRead = 0;
+      let notFoundCount = 0;
+      let permissionErrors = 0;
+
+      for (const questionId of ids) {
+        try {
+          const questionRef = doc(db, 'directQuestions', questionId);
+          const questionDoc = await getDoc(questionRef);
+
+          if (!questionDoc.exists()) {
+            console.warn(`❌ Question ${questionId} not found - may have been deleted`);
+            notFoundCount++;
+            continue;
+          }
+
+          const questionData = questionDoc.data();
+          
+          // Verify the question belongs to this visitor
+          if (questionData.visitorUuid !== visitorUuid) {
+            console.error(`🚫 Permission denied: Question ${questionId} doesn't belong to visitor ${visitorUuid}`);
+            permissionErrors++;
+            continue;
+          }
+
+          // Only update if actually unread
+          if (questionData.unreadForVisitor) {
+            batch.update(questionRef, {
+              unreadForVisitor: false,
+              updatedAt: serverTimestamp()
+            });
+            markedAsRead++;
+            console.log(`✅ Marked question ${questionId} as read`);
+          }
+        } catch (docError) {
+          console.error(`❌ Error processing question ${questionId}:`, docError);
+          // Continue with other questions instead of failing the whole batch
+        }
+      }
+
+      // Commit the batch if there are any updates
+      if (markedAsRead > 0) {
+        await batch.commit();
+      }
+
+      // Return success even if some questions weren't found (they might have been deleted)
+      return NextResponse.json({
+        success: true,
+        data: {
+          message: `Marked ${markedAsRead} question${markedAsRead !== 1 ? 's' : ''} as read`,
+          markedAsRead,
+          totalRequested: ids.length,
+          notFound: notFoundCount,
+          permissionErrors,
+          skipped: ids.length - markedAsRead - notFoundCount - permissionErrors
+        }
+      });
+
+    } catch (error) {
+      retryCount++;
+      console.error(`❌ Error marking questions as read (attempt ${retryCount}/${maxRetries}):`, error);
+
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      // Check for specific error types that shouldn't be retried
+      const isPermissionError = errorMessage.includes('permission-denied') || 
+                               errorMessage.includes('unauthorized');
+      const isNotFoundError = errorMessage.includes('not-found');
+      
+      if (isPermissionError) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'Permission denied',
+            details: errorMessage
+          },
+          { status: 403 }
+        );
+      }
+
+      if (isNotFoundError) {
+        // If questions not found, consider it successful (they might have been deleted)
+        return NextResponse.json({
+          success: true,
+          data: {
+            message: 'Questions may have been deleted',
+            markedAsRead: 0,
+            totalRequested: 0,
+            notFound: 0,
+            permissionErrors: 0,
+            skipped: 0
+          }
+        });
+      }
+
+      // If this is the last attempt, return error
+      if (retryCount >= maxRetries) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'Failed to mark questions as read after retries',
+            details: errorMessage,
+            canRetry: true
+          },
+          { status: 503 }
+        );
+      }
+      
+      // Wait before retry
+      await new Promise(resolve => setTimeout(resolve, retryDelay));
+    }
   }
+
+  // Fallback (should never reach here)
+  return NextResponse.json({
+    success: true,
+    data: {
+      message: 'No questions processed',
+      markedAsRead: 0,
+      totalRequested: 0,
+      notFound: 0,
+      permissionErrors: 0,
+      skipped: 0
+    }
+  });
 }
 
-// GET: Get read status for visitor's questions (optional endpoint)
-export async function GET(request: NextRequest) {
-  try {
-    const visitorUuid = getVisitorUuidFromRequest(request);
-    
-    if (!visitorUuid) {
-      return NextResponse.json(
-        { success: false, error: 'Visitor UUID required' },
-        { status: 400 }
-      );
-    }
-
-    // Query questions for this visitor
-    const questionsQuery = query(
-      collection(db, 'directQuestions'),
-      where('visitorUuid', '==', visitorUuid)
-    );
-
-    const querySnapshot = await getDocs(questionsQuery);
-    
-    const readStatus = {
-      total: querySnapshot.docs.length,
-      unread: 0,
-      read: 0
-    };
-
-    querySnapshot.docs.forEach(doc => {
-      const data = doc.data();
-      if (data.unreadForVisitor) {
-        readStatus.unread++;
-      } else {
-        readStatus.read++;
-      }
-    });
-
-    return NextResponse.json({
-      success: true,
-      data: readStatus
-    });
-
-  } catch (error) {
-    console.error('Error getting read status:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to get read status',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
-  }
+// Handle OPTIONS for CORS
+export async function OPTIONS(request: NextRequest) {
+  const origin = request.headers.get('origin') || '*';
+  
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': origin,
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Credentials': 'true',
+    },
+  });
 }

@@ -42,11 +42,34 @@ async function broadcastDeletionToVisitors(deletedQuestions: any[], permanent: b
         questionIds,
         permanent,
         deletedAt: serverTimestamp(),
-        adminAction: true
+        adminAction: true,
+        notificationSent: false
       };
 
       // Store deletion event in a special collection for visitor cleanup
       await addDoc(collection(db, 'visitorEvents'), deletionEvent);
+    }
+
+    // Also broadcast via localStorage for immediate client-side cleanup
+    if (typeof window !== 'undefined') {
+      // This will only work if admin is on same domain as visitors
+      const broadcastData = {
+        type: 'admin_questions_deleted',
+        deletedQuestions: deletedQuestions.map(q => ({
+          id: q.id,
+          visitorUuid: q.visitorUuid
+        })),
+        timestamp: Date.now(),
+        permanent
+      };
+      
+      localStorage.setItem('admin_deletion_broadcast', JSON.stringify(broadcastData));
+      
+      // Dispatch storage event for cross-tab communication
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'admin_deletion_broadcast',
+        newValue: JSON.stringify(broadcastData)
+      }));
     }
 
     console.log(`📢 Broadcasted deletion events to ${Object.keys(visitorGroups).length} visitors`);

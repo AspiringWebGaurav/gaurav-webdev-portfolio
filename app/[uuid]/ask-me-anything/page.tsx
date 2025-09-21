@@ -1,14 +1,16 @@
 "use client";
 
-import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
 import { FaArrowLeft, FaHome, FaQuestionCircle } from 'react-icons/fa';
+import { useSafeRouteNavigation } from '@/components/loading/LoadingProvider';
+import { EnhancedSpinners } from '@/components/loading/EnhancedSpinners';
 
-// Lazy load heavy components to improve initial load performance
-const AskDirectlyEmbedded = lazy(() => import('@/components/askDirectly/AskDirectlyEmbedded'));
-const VisitorTracker = lazy(() => import('@/components/VisitorTracker'));
-const EnhancedVisitorStatusWatcher = lazy(() => import('@/components/EnhancedVisitorStatusWatcher'));
+// Import components directly for faster loading - these are lightweight
+import AskDirectlyEmbedded from '@/components/askDirectly/AskDirectlyEmbedded';
+import VisitorTracker from '@/components/VisitorTracker';
+import EnhancedVisitorStatusWatcher from '@/components/EnhancedVisitorStatusWatcher';
 
 // UUID validation function
 const isValidUUID = (uuid: string): boolean => {
@@ -50,7 +52,7 @@ const Guidelines = () => (
 
 const AskMeAnythingPage = () => {
   const params = useParams();
-  const router = useRouter();
+  const portfolioNav = useSafeRouteNavigation();
   const [currentUUID, setCurrentUUID] = useState<string>("");
   const [isValidating, setIsValidating] = useState(true);
 
@@ -60,7 +62,11 @@ const AskMeAnythingPage = () => {
       
       // Validate UUID format
       if (!urlUUID || !isValidUUID(urlUUID)) {
-        router.replace('/');
+        portfolioNav.navigateWithLoading('/', {
+          loadingType: 'navigation',
+          message: 'Redirecting...',
+          replace: true
+        });
         return;
       }
 
@@ -82,10 +88,13 @@ const AskMeAnythingPage = () => {
 
     // Use immediate execution for faster loading
     validateAndSetUUID();
-  }, [params.uuid, router]);
+  }, [params.uuid, portfolioNav]);
 
   const handleBackToHome = () => {
-    router.push(`/${currentUUID}`);
+    portfolioNav.navigateWithLoading(`/${currentUUID}`, {
+      loadingType: 'navigation',
+      message: 'Returning to portfolio...'
+    });
   };
 
   // Show loading while validating UUID (minimal loading state)
@@ -102,27 +111,34 @@ const AskMeAnythingPage = () => {
 
   return (
     <div className="min-h-screen bg-black-100 flex flex-col">
-      {/* Lazy load tracking components */}
-      <Suspense fallback={null}>
-        <VisitorTracker uuid={currentUUID} />
-        <EnhancedVisitorStatusWatcher uuid={currentUUID} />
-      </Suspense>
+      {/* Direct load tracking components - no lazy loading to improve performance */}
+      <VisitorTracker uuid={currentUUID} />
+      <EnhancedVisitorStatusWatcher uuid={currentUUID} />
       
-      {/* Background Effects */}
-      <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:50px_50px]" />
-      <div className="absolute inset-0 bg-gradient-to-br from-black-100 via-black-100/95 to-black-100" />
+      {/* Background Effects - Lower z-index to prevent conflicts */}
+      <div className="fixed inset-0 bg-grid-white/[0.02] bg-[size:50px_50px] z-0" />
+      <div className="fixed inset-0 bg-gradient-to-br from-black-100 via-black-100/95 to-black-100 z-0" />
 
       {/* Header Navigation - Fixed Height */}
-      <header className="relative z-10 border-b border-white/[0.1] bg-black-100/80 backdrop-blur-md flex-shrink-0">
+      <header className="relative z-20 border-b border-white/[0.1] bg-black-100/80 backdrop-blur-md flex-shrink-0">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-14">
-            {/* Back Button */}
+            {/* Back Button - Enhanced with loading */}
             <button
               onClick={handleBackToHome}
-              className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors duration-200 group text-sm"
+              disabled={portfolioNav.isLoading}
+              className={`flex items-center gap-2 text-slate-400 hover:text-white transition-all duration-200 group text-sm z-10 ${
+                portfolioNav.isLoading ? 'opacity-70 cursor-not-allowed' : ''
+              }`}
             >
-              <FaArrowLeft className="w-3 h-3 group-hover:-translate-x-1 transition-transform duration-200" />
-              <span className="hidden sm:inline">Back</span>
+              {portfolioNav.isLoading && portfolioNav.loadingType === 'navigation' ? (
+                <EnhancedSpinners.Circle size="sm" className="w-3 h-3" />
+              ) : (
+                <FaArrowLeft className="w-3 h-3 group-hover:-translate-x-1 transition-transform duration-200" />
+              )}
+              <span className="hidden sm:inline">
+                {portfolioNav.isLoading ? 'Loading...' : 'Back'}
+              </span>
             </button>
 
             {/* Title */}
@@ -131,20 +147,29 @@ const AskMeAnythingPage = () => {
               <h1 className="text-base font-semibold text-white">Ask Me Anything</h1>
             </div>
 
-            {/* Home Button */}
+            {/* Home Button - Enhanced with loading */}
             <button
               onClick={handleBackToHome}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:text-white hover:bg-blue-500/20 transition-all duration-200 text-sm"
+              disabled={portfolioNav.isLoading}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:text-white hover:bg-blue-500/20 transition-all duration-200 text-sm z-10 ${
+                portfolioNav.isLoading ? 'opacity-70 cursor-not-allowed' : ''
+              }`}
             >
-              <FaHome className="w-3 h-3" />
-              <span className="hidden sm:inline">Home</span>
+              {portfolioNav.isLoading && portfolioNav.loadingType === 'navigation' ? (
+                <EnhancedSpinners.Circle size="sm" className="w-3 h-3" />
+              ) : (
+                <FaHome className="w-3 h-3" />
+              )}
+              <span className="hidden sm:inline">
+                {portfolioNav.isLoading ? 'Loading...' : 'Home'}
+              </span>
             </button>
           </div>
         </div>
       </header>
 
-      {/* Main Content - Flexible Layout that fills remaining space */}
-      <main className="relative z-10 flex-1 flex flex-col max-w-4xl mx-auto w-full px-4 sm:px-6 py-4">
+      {/* Main Content - Fixed height calculation to prevent conflicts */}
+      <main className="relative z-10 flex-1 flex flex-col max-w-4xl mx-auto w-full px-4 sm:px-6 py-4 min-h-0">
         
         {/* Hero Section - Compact */}
         <div className="text-center mb-4 flex-shrink-0">
@@ -167,22 +192,18 @@ const AskMeAnythingPage = () => {
         </div>
 
         {/* Guidelines - Compact */}
-        <Guidelines />
+        <div className="flex-shrink-0">
+          <Guidelines />
+        </div>
 
-        {/* Form Container - Takes remaining space, non-scrollable */}
-        <div className="flex-1 bg-slate-900/50 backdrop-blur-sm rounded-xl border border-slate-700/50 overflow-hidden min-h-0">
-          <div className="h-full">
-            <Suspense fallback={
-              <div className="p-6 h-full flex items-center justify-center">
-                <ComponentLoader height="h-8" />
-              </div>
-            }>
-              <AskDirectlyEmbedded
-                initialView="form"
-                showViewToggle={true}
-                className="h-full"
-              />
-            </Suspense>
+        {/* Form Container - Direct load with instant display */}
+        <div className="flex-1 bg-slate-900/50 backdrop-blur-sm rounded-xl border border-slate-700/50 min-h-0 max-h-full overflow-hidden">
+          <div className="h-full w-full">
+            <AskDirectlyEmbedded
+              initialView="form"
+              showViewToggle={true}
+              className="h-full w-full"
+            />
           </div>
         </div>
 
@@ -195,9 +216,10 @@ const AskMeAnythingPage = () => {
         </div>
       </main>
 
-      {/* Subtle floating elements for visual enhancement */}
-      <div className="fixed top-20 left-4 w-32 h-32 bg-blue-500/3 rounded-full blur-2xl pointer-events-none"></div>
-      <div className="fixed bottom-20 right-4 w-40 h-40 bg-purple-500/3 rounded-full blur-2xl pointer-events-none"></div>
+      {/* Subtle floating elements for visual enhancement - Lower z-index */}
+      <div className="fixed top-20 left-4 w-32 h-32 bg-blue-500/3 rounded-full blur-2xl pointer-events-none z-0"></div>
+      <div className="fixed bottom-20 right-4 w-40 h-40 bg-purple-500/3 rounded-full blur-2xl pointer-events-none z-0"></div>
+
     </div>
   );
 };

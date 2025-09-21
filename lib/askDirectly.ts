@@ -203,61 +203,184 @@ export async function submitQuestion(question: string): Promise<{
 }
 
 /**
- * Get questions for current visitor
+ * Get questions for current visitor with timeout and robust error handling
  */
 export async function getCurrentVisitorQuestions(): Promise<DirectQuestion[]> {
+  const timeoutPromise = new Promise<DirectQuestion[]>((_, reject) => {
+    setTimeout(() => reject(new Error('Questions loading timeout')), 8000); // 8 second timeout
+  });
+
+  const questionsPromise = async (): Promise<DirectQuestion[]> => {
+    let retryCount = 0;
+    const maxRetries = 2; // Reduced retries for faster response
+    const retryDelay = 1000;
+
+    while (retryCount < maxRetries) {
+      try {
+        const visitorUuid = getVisitorUuidWithFallbacks();
+        const questions = await getVisitorQuestions(visitorUuid);
+        
+        // Filter out any malformed questions that might cause issues
+        const validQuestions = questions.filter(question => {
+          return question &&
+                 question.id &&
+                 question.question &&
+                 question.status &&
+                 question.visitorUuid;
+        });
+        
+        if (validQuestions.length !== questions.length) {
+          console.warn(`Filtered out ${questions.length - validQuestions.length} malformed questions`);
+        }
+        
+        return validQuestions;
+      } catch (error) {
+        retryCount++;
+        console.error(`Failed to get visitor questions (attempt ${retryCount}/${maxRetries}):`, error);
+        
+        // Check if this is a permissions or deletion-related error
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const isPermissionError = errorMessage.includes('permission-denied') || errorMessage.includes('unauthorized');
+        const isNotFoundError = errorMessage.includes('not-found') || errorMessage.includes('document does not exist');
+        
+        if (isPermissionError || isNotFoundError) {
+          // Don't retry for these types of errors
+          console.warn("Questions may have been deleted by admin or permissions changed");
+          return [];
+        }
+        
+        // If this is the last attempt, throw to be caught by timeout handler
+        if (retryCount >= maxRetries) {
+          throw error;
+        }
+        
+        // Wait before retry with exponential backoff
+        await new Promise(resolve => setTimeout(resolve, retryDelay * Math.pow(2, retryCount - 1)));
+      }
+    }
+
+    return [];
+  };
+
   try {
-    const visitorUuid = getVisitorUuidWithFallbacks();
-    return await getVisitorQuestions(visitorUuid);
+    return await Promise.race([questionsPromise(), timeoutPromise]);
   } catch (error) {
-    console.error("Failed to get visitor questions:", error);
-    showErrorToast("Failed to load your questions");
+    console.warn('Questions loading timed out or failed, returning empty array:', error);
     return [];
   }
 }
 
 /**
- * Mark visitor questions as read
+ * Mark visitor questions as read with retry logic
  */
 export async function markCurrentVisitorQuestionsAsRead(questionIds: string[]): Promise<boolean> {
-  try {
-    // Use the API route for better error handling and consistency
-    const response = await fetch('/api/direct-questions/mark-read', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify({ ids: questionIds })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-      throw new Error(errorData.error || 'Failed to mark questions as read');
-    }
-
-    const data = await response.json();
-    console.log(`✅ ${data.data?.markedAsRead || questionIds.length} questions marked as read`);
-    
-    return true;
-  } catch (error) {
-    console.error("❌ Failed to mark questions as read:", error);
-    showErrorToast("Failed to update read status");
-    return false;
+  if (!questionIds || questionIds.length === 0) {
+    return true; // Nothing to mark, consider it successful
   }
+
+  let retryCount = 0;
+  const maxRetries = 2; // Fewer retries for this operation
+  const retryDelay = 1000;
+
+  while (retryCount < maxRetries) {
+    try {
+      // Use the API route for better error handling and consistency
+      const response = await fetch('/api/direct-questions/mark-read', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ ids: questionIds })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        
+        // If questions not found, they might have been deleted - consider this successful
+        if (response.status === 404 || errorData.error?.includes('not found')) {
+          console.warn("Questions not found when marking as read - they may have been deleted");
+          return true;
+        }
+        
+        throw new Error(errorData.error || 'Failed to mark questions as read');
+      }
+
+      const data = await response.json();
+      console.log(`✅ ${data.data?.markedAsRead || questionIds.length} questions marked as read`);
+      
+      return true;
+    } catch (error) {
+      retryCount++;
+      console.error(`❌ Failed to mark questions as read (attempt ${retryCount}/${maxRetries}):`, error);
+      
+      if (retryCount >= maxRetries) {
+        // Don't show error toast for this operation as it's not critical
+        console.warn("Failed to mark questions as read after retries - continuing silently");
+        return false;
+      }
+      
+      // Wait before retry
+      await new Promise(resolve => setTimeout(resolve, retryDelay));
+    }
+  }
+
+  return false;
 }
 
 /**
- * Get current visitor question statistics
+ * Get current visitor question statistics with robust error handling
  */
-export async function getCurrentVisitorStats() {
-  try {
-    const visitorUuid = getVisitorUuidWithFallbacks();
-    return await getVisitorQuestionStats(visitorUuid);
-  } catch (error) {
-    console.error("Failed to get visitor stats:", error);
-    return null;
+export async function getCurrentVisitorStats(): Promise<any> {
+  let retryCount = 0;
+  const maxRetries = 3;
+  const retryDelay = 1000; // 1 second
+
+  while (retryCount < maxRetries) {
+    try {
+      const visitorUuid = getVisitorUuidWithFallbacks();
+      const stats = await getVisitorQuestionStats(visitorUuid);
+      
+      // Return successful stats or safe fallback
+      return stats || {
+        totalQuestions: 0,
+        unanswered: 0,
+        answered: 0,
+        archived: 0,
+        unread: 0,
+        lastQuestionAt: null
+      };
+    } catch (error) {
+      retryCount++;
+      console.error(`Failed to get visitor stats (attempt ${retryCount}/${maxRetries}):`, error);
+      
+      // If this is the last attempt, return safe fallback
+      if (retryCount >= maxRetries) {
+        showErrorToast("Unable to load question statistics");
+        return {
+          totalQuestions: 0,
+          unanswered: 0,
+          answered: 0,
+          archived: 0,
+          unread: 0,
+          lastQuestionAt: null
+        };
+      }
+      
+      // Wait before retry with exponential backoff
+      await new Promise(resolve => setTimeout(resolve, retryDelay * Math.pow(2, retryCount - 1)));
+    }
   }
+
+  // Fallback return (should never reach here)
+  return {
+    totalQuestions: 0,
+    unanswered: 0,
+    answered: 0,
+    archived: 0,
+    unread: 0,
+    lastQuestionAt: null
+  };
 }
 
 /**

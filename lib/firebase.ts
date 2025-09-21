@@ -134,35 +134,87 @@ export async function addDirectQuestion(
 }
 
 /**
- * Get all questions for a specific visitor
+ * Get all questions for a specific visitor with timeout and enhanced error handling
  */
 export async function getVisitorQuestions(visitorUuid: string): Promise<DirectQuestion[]> {
+  const timeoutPromise = new Promise<DirectQuestion[]>((_, reject) => {
+    setTimeout(() => reject(new Error('Firebase query timeout')), 10000); // 10 second timeout
+  });
+
+  const fetchPromise = async (): Promise<DirectQuestion[]> => {
+    let retryCount = 0;
+    const maxRetries = 2; // Reduced retries for faster response
+    const retryDelay = 1000;
+
+    while (retryCount < maxRetries) {
+      try {
+        const q = query(
+          directQuestionsCollection,
+          where("visitorUuid", "==", visitorUuid),
+          orderBy("createdAt", "desc")
+        );
+
+        const querySnapshot = await getDocs(q);
+        const rawQuestions: DirectQuestion[] = [];
+
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          rawQuestions.push({
+            id: doc.id,
+            ...data
+          } as DirectQuestion);
+        });
+
+        // Filter out deleted or malformed questions
+        const validQuestions = rawQuestions.filter(question => {
+          const isValid = question &&
+                         question.id &&
+                         question.question &&
+                         question.status &&
+                         question.visitorUuid &&
+                         question.createdAt &&
+                         !question.isDeleted;
+          
+          return isValid;
+        });
+
+        smartLogger.firebase.debug("✅ Visitor questions retrieved", {
+          visitorUuid,
+          count: validQuestions.length
+        });
+
+        return validQuestions;
+      } catch (error) {
+        retryCount++;
+        smartLogger.firebase.error(`❌ Failed to get visitor questions (attempt ${retryCount}/${maxRetries})`, error);
+        
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        
+        // Don't retry certain types of errors
+        const isPermissionError = errorMessage.includes('permission-denied') || errorMessage.includes('unauthorized');
+        const isNotFoundError = errorMessage.includes('not-found') || errorMessage.includes('collection does not exist');
+        
+        if (isPermissionError || isNotFoundError) {
+          return []; // Return empty array instead of throwing
+        }
+        
+        if (retryCount >= maxRetries) {
+          return []; // Return empty array instead of throwing
+        }
+        
+        // Wait before retry with exponential backoff
+        await new Promise(resolve => setTimeout(resolve, retryDelay * Math.pow(2, retryCount - 1)));
+      }
+    }
+
+    return []; // Fallback
+  };
+
   try {
-    const q = query(
-      directQuestionsCollection,
-      where("visitorUuid", "==", visitorUuid),
-      orderBy("createdAt", "desc")
-    );
-
-    const querySnapshot = await getDocs(q);
-    const questions: DirectQuestion[] = [];
-
-    querySnapshot.forEach((doc) => {
-      questions.push({
-        id: doc.id,
-        ...doc.data()
-      } as DirectQuestion);
-    });
-
-    smartLogger.firebase.debug("✅ Visitor questions retrieved", {
-      visitorUuid,
-      count: questions.length
-    });
-
-    return questions;
+    return await Promise.race([fetchPromise(), timeoutPromise]);
   } catch (error) {
-    smartLogger.firebase.error("❌ Failed to get visitor questions", error);
-    throw error;
+    smartLogger.firebase.error("Firebase query timed out or failed", error);
+    return []; // Always return empty array instead of throwing
   }
 }
 
@@ -228,30 +280,53 @@ export async function markQuestionsAsRead(questionIds: string[]): Promise<void> 
 }
 
 /**
- * Get visitor question statistics
+ * Get visitor question statistics with timeout and error handling
  */
 export async function getVisitorQuestionStats(visitorUuid: string): Promise<VisitorQuestionStats> {
-  try {
-    const questions = await getVisitorQuestions(visitorUuid);
-    
-    const stats: VisitorQuestionStats = {
-      totalQuestions: questions.length,
-      unanswered: questions.filter(q => q.status === 'unanswered').length,
-      answered: questions.filter(q => q.status === 'answered').length,
-      archived: questions.filter(q => q.status === 'archived').length,
-      unread: questions.filter(q => q.unreadForVisitor).length,
-      lastQuestionAt: questions.length > 0 ? questions[0].createdAt : null
-    };
+  const timeoutPromise = new Promise<VisitorQuestionStats>((_, reject) => {
+    setTimeout(() => reject(new Error('Stats calculation timeout')), 8000); // 8 second timeout
+  });
 
-    return stats;
+  const statsPromise = async (): Promise<VisitorQuestionStats> => {
+    try {
+      const questions = await getVisitorQuestions(visitorUuid);
+      
+      const stats: VisitorQuestionStats = {
+        totalQuestions: questions.length,
+        unanswered: questions.filter(q => q.status === 'unanswered').length,
+        answered: questions.filter(q => q.status === 'answered').length,
+        archived: questions.filter(q => q.status === 'archived').length,
+        unread: questions.filter(q => q.unreadForVisitor).length,
+        lastQuestionAt: questions.length > 0 ? questions[0].createdAt : null
+      };
+
+      smartLogger.firebase.debug("✅ Visitor stats calculated", { visitorUuid, stats });
+      return stats;
+    } catch (error) {
+      smartLogger.firebase.error("❌ Failed to get visitor question stats", error);
+      throw error;
+    }
+  };
+
+  try {
+    return await Promise.race([statsPromise(), timeoutPromise]);
   } catch (error) {
-    smartLogger.firebase.error("❌ Failed to get visitor question stats", error);
-    throw error;
+    smartLogger.firebase.error("Stats calculation timed out or failed", error);
+    
+    // Always return safe fallback stats instead of throwing
+    return {
+      totalQuestions: 0,
+      unanswered: 0,
+      answered: 0,
+      archived: 0,
+      unread: 0,
+      lastQuestionAt: null
+    };
   }
 }
 
 /**
- * Set up real-time listener for visitor questions
+ * Set up real-time listener for visitor questions with enhanced error handling
  */
 export function listenToVisitorQuestions(
   visitorUuid: string,
@@ -268,18 +343,58 @@ export function listenToVisitorQuestions(
     const unsubscribe = onSnapshot(
       q,
       (querySnapshot) => {
-        const questions: DirectQuestion[] = [];
+        const rawQuestions: DirectQuestion[] = [];
         querySnapshot.forEach((doc) => {
-          questions.push({
+          const data = doc.data();
+          rawQuestions.push({
             id: doc.id,
-            ...doc.data()
+            ...data
           } as DirectQuestion);
         });
-        callback(questions);
+
+        // Filter out deleted or malformed questions in real-time updates
+        const validQuestions = rawQuestions.filter(question => {
+          const isValid = question &&
+                         question.id &&
+                         question.question &&
+                         question.status &&
+                         question.visitorUuid &&
+                         question.createdAt &&
+                         !question.isDeleted; // Filter out soft-deleted questions
+          
+          if (!isValid) {
+            smartLogger.firebase.debug("❌ Filtered out invalid real-time question", {
+              questionId: question?.id,
+              isDeleted: !!question?.isDeleted
+            });
+          }
+          
+          return isValid;
+        });
+
+        if (validQuestions.length !== rawQuestions.length) {
+          smartLogger.firebase.debug("🧹 Filtered real-time questions", {
+            total: rawQuestions.length,
+            valid: validQuestions.length
+          });
+        }
+
+        callback(validQuestions);
       },
       (error) => {
         smartLogger.firebase.error("❌ Real-time listener error", error);
-        onError?.(error);
+        
+        // Don't call onError for permission errors as they might be temporary
+        const errorMessage = error.message || String(error);
+        const isPermissionError = errorMessage.includes('permission-denied');
+        
+        if (!isPermissionError) {
+          onError?.(error);
+        } else {
+          // For permission errors, call callback with empty array
+          smartLogger.firebase.debug("🔒 Permission error in listener, calling callback with empty array");
+          callback([]);
+        }
       }
     );
 
@@ -287,7 +402,11 @@ export function listenToVisitorQuestions(
     return unsubscribe;
   } catch (error) {
     smartLogger.firebase.error("❌ Failed to setup real-time listener", error);
-    throw error;
+    
+    // Return a no-op unsubscribe function instead of throwing
+    return () => {
+      smartLogger.firebase.debug("No-op unsubscribe called due to listener setup failure");
+    };
   }
 }
 

@@ -1,8 +1,11 @@
 import React from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { FaLocationArrow, FaQuestion } from "react-icons/fa6";
 import { FaExternalLinkAlt } from "react-icons/fa";
 import MagicButton from "./MagicButton";
+import EnhancedMagicButton from "./EnhancedMagicButton";
+import { useSafeRouteNavigation } from "@/components/loading/LoadingProvider";
+import { LoadingErrorBoundary } from "@/components/loading/LoadingErrorBoundary";
 
 interface ThreeButtonLayoutProps {
   // onAskDirectlyClick is now optional since we handle navigation internally
@@ -12,8 +15,8 @@ interface ThreeButtonLayoutProps {
 const ThreeButtonLayout: React.FC<ThreeButtonLayoutProps> = ({
   onAskDirectlyClick,
 }) => {
-  const router = useRouter();
   const params = useParams();
+  const portfolioNav = useSafeRouteNavigation();
 
   const handleWorkspaceClick = () => {
     window.open("https://www.gauravworkspace.store", "_blank", "noopener,noreferrer");
@@ -27,10 +30,13 @@ const ThreeButtonLayout: React.FC<ThreeButtonLayoutProps> = ({
   };
 
   const handleAskDirectlyClick = () => {
-    // Navigate to the dedicated Ask Me Anything page using current UUID
+    // Navigate to the dedicated Ask Me Anything page using current UUID with loading
     const currentUUID = params.uuid as string;
     if (currentUUID) {
-      router.push(`/${currentUUID}/ask-me-anything`);
+      portfolioNav.navigateWithLoading(`/${currentUUID}/ask-me-anything`, {
+        loadingType: 'navigation',
+        message: 'Opening Ask Me Anything...'
+      });
     } else {
       // Fallback: call the original callback if provided (for backward compatibility)
       onAskDirectlyClick?.();
@@ -57,16 +63,59 @@ const ThreeButtonLayout: React.FC<ThreeButtonLayoutProps> = ({
         otherClasses="w-full md:w-60"
       />
       
-      {/* Ask me Anything Directly Button */}
-      <MagicButton
+      {/* Ask me Anything Directly Button - Enhanced with loading */}
+      <EnhancedMagicButton
         title="Ask me Anything"
         icon={<FaQuestion />}
         position="right"
         handleClick={handleAskDirectlyClick}
         otherClasses="w-full md:w-60"
+        isLoading={portfolioNav.isLoading && portfolioNav.loadingType === 'navigation'}
+        loadingText="Opening..."
       />
     </div>
   );
 };
 
-export default ThreeButtonLayout;
+// Wrap with error boundary for additional safety
+const ThreeButtonLayoutWithErrorBoundary: React.FC<ThreeButtonLayoutProps> = (props) => (
+  <LoadingErrorBoundary
+    fallback={
+      <div className="flex flex-col md:flex-row gap-3 md:gap-4 w-full md:w-auto items-center justify-center mt-6 md:mt-10">
+        {/* Fallback buttons without loading functionality */}
+        <MagicButton
+          title="Show my work"
+          icon={<FaLocationArrow />}
+          position="right"
+          handleClick={() => {
+            const aboutElement = document.querySelector("#about");
+            if (aboutElement) {
+              aboutElement.scrollIntoView({ behavior: "smooth" });
+            }
+          }}
+          otherClasses="w-full md:w-60"
+        />
+        
+        <MagicButton
+          title="My WorkSpace"
+          icon={<FaExternalLinkAlt />}
+          position="right"
+          handleClick={() => window.open("https://www.gauravworkspace.store", "_blank", "noopener,noreferrer")}
+          otherClasses="w-full md:w-60"
+        />
+        
+        <MagicButton
+          title="Ask me Anything"
+          icon={<FaQuestion />}
+          position="right"
+          handleClick={() => props.onAskDirectlyClick?.()}
+          otherClasses="w-full md:w-60"
+        />
+      </div>
+    }
+  >
+    <ThreeButtonLayout {...props} />
+  </LoadingErrorBoundary>
+);
+
+export default ThreeButtonLayoutWithErrorBoundary;

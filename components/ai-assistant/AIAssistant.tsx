@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { AssistantState, ASSISTANT_CONFIG, PopupSessionState } from './types';
+import { AssistantState } from './types';
 import AssistantPopup from './AssistantPopup';
-import AITooltip from './AITooltip';
-import AIAutoPopup from './AIAutoPopup';
+import AITourModal from './tour/AITourModal';
 import { silentLogger } from '@/utils/secureLogger';
 
 interface AIAssistantProps {
@@ -23,28 +22,10 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
     isLoading: false
   });
 
-  const [hasShownInitialPopup, setHasShownInitialPopup] = useState(false);
-  
-  // Tooltip state management
-  const [showTooltip, setShowTooltip] = useState(false);
+  // Tour state management
+  const [showTour, setShowTour] = useState(false);
   const [hasOpenedAI, setHasOpenedAI] = useState(false);
-  const [tooltipTimer, setTooltipTimer] = useState<NodeJS.Timeout | null>(null);
-
-  // Auto-popup state management
-  const [showAutoPopup, setShowAutoPopup] = useState(false);
-  const [popupSessionState, setPopupSessionState] = useState<PopupSessionState>({
-    hasShownInitialPopup: false,
-    hasOpenedAI: false,
-    lastPopupTime: '',
-    popupCount: 0,
-    sessionStartTime: new Date().toISOString()
-  });
-  const [autoPopupTimer, setAutoPopupTimer] = useState<NodeJS.Timeout | null>(null);
   const [isClient, setIsClient] = useState(false);
-
-  // REMOVED: Auto-opening of AI assistant interface
-  // The AI assistant should only open when user clicks on it
-  // Keep the popup flow: Auto-popup → User clicks → Flash popup → Main interface
 
   // Notify parent of state changes
   useEffect(() => {
@@ -56,7 +37,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
     setIsClient(true);
   }, []);
 
-  // Handle user preferences and auto-popup session state (localStorage) - CLIENT SIDE ONLY
+  // Handle user preferences from localStorage - CLIENT SIDE ONLY
   useEffect(() => {
     if (!isClient) return; // Prevent hydration mismatch
     
@@ -65,140 +46,30 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
       
       if (savedPreferences) {
         const preferences = JSON.parse(savedPreferences);
-        if (preferences.hasClosedBefore) {
-          // If user has closed before, don't auto-show
-          setHasShownInitialPopup(true);
-        }
         if (preferences.hasOpenedAI) {
-          // If user has opened AI in this session, don't show tooltip
           setHasOpenedAI(true);
         }
       }
-
-      // IMPORTANT: Reset popup session state for each new session
-      // This ensures recurring popups work in both dev and production
-      const newSessionState: PopupSessionState = {
-        hasShownInitialPopup: false,
-        hasOpenedAI: false,
-        lastPopupTime: '',
-        popupCount: 0,
-        sessionStartTime: new Date().toISOString()
-      };
       
-      setPopupSessionState(newSessionState);
-      
-      // Only persist user preferences, not session-specific popup state
-      console.log('🔄 AI Assistant: Session reset for consistent popup behavior');
+      silentLogger.silent('🔄 AI Assistant: Preferences loaded from localStorage');
       
     } catch (error) {
       console.warn('Failed to load assistant preferences:', error);
     }
   }, [isClient]);
 
-  // Tooltip management - show after portfolio loads if AI hasn't been opened
+  // Tour management - show after portfolio loads if AI hasn't been opened
   useEffect(() => {
-    if (isPortfolioLoaded && !hasOpenedAI && !assistantState.isVisible) {
-      // Show tooltip after a delay
-      const initialDelay = setTimeout(() => {
-        setShowTooltip(true);
-      }, 3000); // 3 seconds after portfolio loads
+    if (isPortfolioLoaded && !hasOpenedAI && !assistantState.isVisible && isClient) {
+      // Show tour after a delay for new users
+      const tourTimer = setTimeout(() => {
+        setShowTour(true);
+        silentLogger.silent('🎯 AI Tour: Starting tour for new user');
+      }, 2000); // 2 seconds after portfolio loads
 
-      return () => clearTimeout(initialDelay);
+      return () => clearTimeout(tourTimer);
     }
-  }, [isPortfolioLoaded, hasOpenedAI, assistantState.isVisible]);
-
-  // Recurring tooltip timer - every 1 minute if AI hasn't been opened
-  useEffect(() => {
-    if (isPortfolioLoaded && !hasOpenedAI && !assistantState.isVisible && !showTooltip) {
-      const recurringTimer = setInterval(() => {
-        setShowTooltip(true);
-      }, 60000); // 1 minute
-
-      setTooltipTimer(recurringTimer);
-
-      return () => {
-        clearInterval(recurringTimer);
-        setTooltipTimer(null);
-      };
-    } else if (tooltipTimer) {
-      clearInterval(tooltipTimer);
-      setTooltipTimer(null);
-    }
-  }, [isPortfolioLoaded, hasOpenedAI, assistantState.isVisible, showTooltip]);
-
-  // Auto-popup management - show after portfolio loads if AI hasn't been opened
-  useEffect(() => {
-    if (!isClient || !isPortfolioLoaded || popupSessionState.hasOpenedAI || assistantState.isVisible) {
-      return;
-    }
-
-    if (!popupSessionState.hasShownInitialPopup) {
-      // Show initial popup after a delay
-      const initialDelay = setTimeout(() => {
-        silentLogger.silent('AI Assistant: Showing initial popup');
-        setShowAutoPopup(true);
-        setPopupSessionState(prev => ({
-          ...prev,
-          hasShownInitialPopup: true,
-          lastPopupTime: new Date().toISOString(),
-          popupCount: prev.popupCount + 1
-        }));
-      }, 4000); // 4 seconds after portfolio loads
-
-      return () => clearTimeout(initialDelay);
-    }
-  }, [isClient, isPortfolioLoaded, popupSessionState.hasOpenedAI, popupSessionState.hasShownInitialPopup, assistantState.isVisible]);
-
-  // Recurring auto-popup timer - every 9 seconds if AI hasn't been opened
-  useEffect(() => {
-    if (!isClient ||
-        !isPortfolioLoaded ||
-        popupSessionState.hasOpenedAI ||
-        assistantState.isVisible ||
-        !popupSessionState.hasShownInitialPopup) {
-      
-      // Clear any existing timer
-      if (autoPopupTimer) {
-        clearInterval(autoPopupTimer);
-        setAutoPopupTimer(null);
-      }
-      return;
-    }
-      
-    console.log('🔄 AI Assistant: Setting up recurring popup timer (9s interval)');
-    const recurringTimer = setInterval(() => {
-      console.log('🎯 AI Assistant: Showing recurring popup');
-      setShowAutoPopup(true);
-      setPopupSessionState(prev => ({
-        ...prev,
-        lastPopupTime: new Date().toISOString(),
-        popupCount: prev.popupCount + 1
-      }));
-    }, 9000); // 9 seconds
-
-    setAutoPopupTimer(recurringTimer);
-
-    return () => {
-      clearInterval(recurringTimer);
-      setAutoPopupTimer(null);
-    };
-  }, [isClient, isPortfolioLoaded, popupSessionState.hasOpenedAI, assistantState.isVisible, popupSessionState.hasShownInitialPopup]);
-
-  // Clean up timers when component unmounts
-  useEffect(() => {
-    return () => {
-      if (tooltipTimer) {
-        clearInterval(tooltipTimer);
-      }
-      if (autoPopupTimer) {
-        clearInterval(autoPopupTimer);
-      }
-    };
-  }, [tooltipTimer, autoPopupTimer]);
-
-  // REMOVED: Don't save popup session state to localStorage
-  // This was causing the recurring popup issue in production
-  // We only save user preferences (hasOpenedAI, hasClosedBefore) but not session-specific popup state
+  }, [isPortfolioLoaded, hasOpenedAI, assistantState.isVisible, isClient]);
 
   const handleClose = () => {
     setAssistantState(prev => ({
@@ -234,14 +105,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
 
     // Mark that user has opened AI and save to localStorage
     setHasOpenedAI(true);
-    setShowTooltip(false);
-    setShowAutoPopup(false); // Hide auto-popup when AI is opened
-    
-    // Update popup session state to stop all future popups
-    setPopupSessionState(prev => ({
-      ...prev,
-      hasOpenedAI: true
-    }));
+    setShowTour(false); // Hide tour when AI is opened
     
     try {
       const savedPreferences = localStorage.getItem('ai-assistant-preferences');
@@ -255,18 +119,23 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
     }
   };
 
-  const handleTooltipClose = () => {
-    setShowTooltip(false);
+  // Handle tour completion - directly opens AI chat
+  const handleTourComplete = () => {
+    setShowTour(false);
+    handleShow(); // Open AI chat interface
+    silentLogger.silent('🎉 AI Tour: Completed successfully, opening chat');
   };
 
-  const handleTooltipOpenAI = () => {
-    setShowTooltip(false);
-    handleShow();
+  // Handle tour skip
+  const handleTourSkip = () => {
+    setShowTour(false);
+    silentLogger.silent('⏭️ AI Tour: Skipped by user');
   };
 
-  const handleAutoPopupDismiss = () => {
-    silentLogger.silent('AI Assistant: Popup dismissed');
-    setShowAutoPopup(false);
+  // Handle tour close
+  const handleTourClose = () => {
+    setShowTour(false);
+    silentLogger.silent('❌ AI Tour: Closed by user');
   };
 
   // Keyboard shortcuts
@@ -301,24 +170,14 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
         isMinimized={assistantState.isMinimized}
       />
 
-      {/* AI Auto-Popup - Advertisement style popup from AI bubble (Primary popup system) */}
-      {!assistantState.isVisible && !popupSessionState.hasOpenedAI && (
-        <AIAutoPopup
-          isVisible={showAutoPopup}
-          onDismiss={handleAutoPopupDismiss}
-          message="Hi, Gaurav's Personal AI is here."
-          autoHideDelay={4000}
-        />
-      )}
-
-      {/* AI Tooltip - Fallback popup (only show if auto-popup is not active) */}
-      {!assistantState.isVisible && !showAutoPopup && popupSessionState.hasOpenedAI && (
-        <AITooltip
-          isVisible={showTooltip}
-          onClose={handleTooltipClose}
-          onOpenAI={handleTooltipOpenAI}
-        />
-      )}
+      {/* New AI Tour Modal - Replaces old AIAutoPopup and AITooltip */}
+      <AITourModal
+        isVisible={showTour}
+        onComplete={handleTourComplete}
+        onSkip={handleTourSkip}
+        onClose={handleTourClose}
+        autoStart={true}
+      />
 
       {/* Floating Action Button (when assistant is closed) */}
       {!assistantState.isVisible && (
@@ -354,15 +213,29 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
               />
             </svg>
 
-            {/* Notification dot */}
-            <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-bounce opacity-80" />
+            {/* Notification dot - only show if tour is available */}
+            {!hasOpenedAI && (
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-bounce opacity-80" />
+            )}
           </div>
 
           {/* Tooltip */}
           <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-1 bg-black-100/90 backdrop-blur-md border border-white/[0.2] rounded-lg text-white text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-            AI Assistant
+            {!hasOpenedAI ? 'Take AI Tour' : 'AI Assistant'}
             <div className="absolute right-full top-1/2 -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-r-4 border-transparent border-r-white/[0.2]"></div>
           </div>
+        </button>
+      )}
+
+      {/* Restart Tour Button for Returning Users */}
+      {hasOpenedAI && !assistantState.isVisible && !showTour && (
+        <button
+          onClick={() => setShowTour(true)}
+          className="fixed bottom-4 right-4 sm:right-6 z-30 px-3 py-2 bg-black-100/80 backdrop-blur-md border border-white/20 rounded-lg text-white text-xs hover:bg-black-100/90 hover:border-white/40 transition-all duration-200 opacity-70 hover:opacity-100"
+          title="Restart AI Tour"
+          aria-label="Restart AI Tour"
+        >
+          🎯 Tour
         </button>
       )}
 
@@ -398,6 +271,17 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
           .animate-pulse,
           .animate-bounce {
             animation: none;
+          }
+        }
+        
+        /* High contrast support */
+        @media (prefers-contrast: high) {
+          .bg-black-100\/90 {
+            background-color: rgba(0, 0, 0, 0.95);
+          }
+          
+          .border-white\/20 {
+            border-color: rgba(255, 255, 255, 0.4);
           }
         }
       `}</style>

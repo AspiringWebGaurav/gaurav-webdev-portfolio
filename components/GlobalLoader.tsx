@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { EnhancedSpinners } from "./loading/EnhancedSpinners";
 
 interface GlobalLoaderProps {
   isOpen: boolean;
@@ -27,21 +28,23 @@ const GlobalLoader = ({
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm">
       <div className="text-center">
-        {/* Loading Spinner */}
+        {/* Enhanced Loading Spinner */}
         <div className="mb-6">
-          <div className="relative">
-            <div className="w-16 h-16 border-4 border-purple-200 border-t-purple-500 rounded-full animate-spin mx-auto"></div>
-            <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-r-purple-300 rounded-full animate-ping mx-auto"></div>
-          </div>
+          <EnhancedSpinners.DualRing size="xl" color="gradient" />
         </div>
 
-        {/* Loading Text */}
+        {/* Loading Text with dots animation */}
         <div className="text-white">
           <p className="text-xl font-semibold mb-2">
             {message}
             {dots}
           </p>
           <p className="text-purple-300 text-sm">Preparing your contact form</p>
+        </div>
+
+        {/* Additional visual feedback */}
+        <div className="mt-4 flex justify-center">
+          <EnhancedSpinners.Dots size="sm" color="purple" />
         </div>
       </div>
     </div>

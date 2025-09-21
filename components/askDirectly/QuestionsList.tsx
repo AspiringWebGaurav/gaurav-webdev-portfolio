@@ -192,6 +192,8 @@ export default function QuestionsList({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [forceUpdate, setForceUpdate] = useState(0);
+  const [retryCount, setRetryCount] = useState(0);
+  const maxRetries = 3;
 
   // Filter questions based on status
   const filteredQuestions = useMemo(() => {
@@ -210,22 +212,78 @@ export default function QuestionsList({
     });
   }, [questions, statusFilter, maxQuestions]);
 
-  // Load initial questions
-  const loadQuestions = useCallback(async () => {
+  // Load initial questions with enhanced error handling
+  const loadQuestions = useCallback(async (isRetry = false) => {
     try {
       setLoading(true);
-      setError(null);
+      if (!isRetry) {
+        setError(null);
+        setRetryCount(0);
+      }
+      
+      console.log('🔄 Loading questions...', { isRetry, retryCount });
       
       const questionsData = await getCurrentVisitorQuestions();
-      setQuestions(questionsData);
-      onQuestionsLoad?.(questionsData);
+      
+      // Validate and clean question data
+      const validQuestions = questionsData.filter((question: any) => {
+        const isValid = question &&
+                       question.id &&
+                       question.question &&
+                       question.status &&
+                       question.visitorUuid &&
+                       question.createdAt;
+        
+        if (!isValid) {
+          console.warn('❌ Filtered out invalid question:', question);
+        }
+        
+        return isValid;
+      });
+
+      console.log(`✅ Loaded ${validQuestions.length} valid questions (filtered ${questionsData.length - validQuestions.length})`);
+      
+      setQuestions(validQuestions);
+      onQuestionsLoad?.(validQuestions);
+      setError(null);
+      setRetryCount(0);
     } catch (err) {
-      console.error('Failed to load questions:', err);
-      setError('Failed to load your questions');
+      console.error('❌ Failed to load questions:', err);
+      
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      const currentRetry = isRetry ? retryCount : 0;
+      
+      // Check if this is a recoverable error
+      const isRecoverableError = errorMessage.includes('network') ||
+                                errorMessage.includes('timeout') ||
+                                errorMessage.includes('fetch') ||
+                                errorMessage.includes('firebase') ||
+                                errorMessage.includes('unavailable');
+      
+      if (isRecoverableError && currentRetry < maxRetries) {
+        const newRetryCount = currentRetry + 1;
+        setRetryCount(newRetryCount);
+        console.log(`🔄 Retrying questions load (${newRetryCount}/${maxRetries})...`);
+        
+        // Exponential backoff retry
+        setTimeout(() => {
+          loadQuestions(true);
+        }, 1000 * Math.pow(2, newRetryCount - 1));
+      } else {
+        // Set error but don't break the UI
+        setError(currentRetry >= maxRetries ?
+          'Unable to load questions after retries. Please refresh the page.' :
+          'Failed to load questions. They may have been removed.'
+        );
+        
+        // Set empty questions array as fallback
+        setQuestions([]);
+        onQuestionsLoad?.([]);
+      }
     } finally {
       setLoading(false);
     }
-  }, [onQuestionsLoad]);
+  }, [onQuestionsLoad, retryCount, maxRetries]);
 
   // Setup real-time listener with instant update support
   useEffect(() => {
@@ -239,10 +297,33 @@ export default function QuestionsList({
     const listener = listenerManager.setupCurrentVisitorListener(
       (updatedQuestions) => {
         console.log('🔄 Questions updated in real-time:', updatedQuestions.length);
-        setQuestions(updatedQuestions);
-        onQuestionsLoad?.(updatedQuestions);
+        
+        // Validate and clean real-time question data
+        const validQuestions = updatedQuestions.filter((question: any) => {
+          const isValid = question &&
+                         question.id &&
+                         question.question &&
+                         question.status &&
+                         question.visitorUuid &&
+                         question.createdAt &&
+                         !question.isDeleted; // Filter out soft-deleted questions
+          
+          if (!isValid) {
+            console.warn('❌ Filtered out invalid real-time question:', question);
+          }
+          
+          return isValid;
+        });
+
+        if (validQuestions.length !== updatedQuestions.length) {
+          console.warn(`🧹 Cleaned ${updatedQuestions.length - validQuestions.length} invalid questions from real-time update`);
+        }
+
+        setQuestions(validQuestions);
+        onQuestionsLoad?.(validQuestions);
         setLoading(false);
         setError(null);
+        setRetryCount(0); // Reset retry count on successful update
         setForceUpdate(prev => prev + 1); // Force re-render
       },
       {
@@ -333,9 +414,29 @@ export default function QuestionsList({
   if (error) {
     return (
       <div className={`${className}`}>
-        <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-red-500/20 border border-red-500/30">
-          <span className="text-red-400 text-sm">❌</span>
-          <span className="text-red-400 text-sm">{error}</span>
+        <div className="flex flex-col gap-3 px-4 py-4 rounded-lg bg-red-500/20 border border-red-500/30">
+          <div className="flex items-center gap-2">
+            <span className="text-red-400 text-sm">❌</span>
+            <span className="text-red-400 text-sm">{error}</span>
+          </div>
+          
+          {retryCount < maxRetries && (
+            <button
+              onClick={() => loadQuestions(true)}
+              className="self-start px-3 py-1 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-400 text-xs rounded-lg transition-colors duration-200"
+            >
+              Try Again ({maxRetries - retryCount} left)
+            </button>
+          )}
+          
+          {retryCount >= maxRetries && (
+            <button
+              onClick={() => window.location.reload()}
+              className="self-start px-3 py-1 bg-gray-500/20 hover:bg-gray-500/30 border border-gray-500/50 text-gray-400 text-xs rounded-lg transition-colors duration-200"
+            >
+              Refresh Page
+            </button>
+          )}
         </div>
       </div>
     );
