@@ -1,9 +1,9 @@
 // app/api/direct-questions/route.ts
-// Main API route for Direct Questions CRUD operations with production-safe error handling
+// Main API route for Direct Questions CRUD operations
 
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
-import {
+import { 
   collection,
   query,
   where,
@@ -15,59 +15,10 @@ import {
   serverTimestamp,
   getDoc
 } from 'firebase/firestore';
-import { db, firebaseModule } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { getVisitorUuidWithFallbacks } from '@/lib/visitor';
 import { validateQuestion } from '@/lib/askDirectly';
-import { validateFirebaseEnvironment, getEnvironmentInfo } from '@/utils/environmentValidator';
 import type { CreateDirectQuestionData, QuestionStatus } from '@/lib/types';
-
-// Production-safe response helper
-function createResponse(data: any, status: number = 200) {
-  const response = {
-    success: status >= 200 && status < 300,
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV,
-    ...data
-  };
-  
-  return NextResponse.json(response, { status });
-}
-
-// Error response helper with detailed logging
-function createErrorResponse(
-  error: string,
-  status: number = 500,
-  details?: any,
-  context?: string
-) {
-  const errorId = Math.random().toString(36).substring(2, 15);
-  
-  console.error(`❌ [API:${context || 'unknown'}:${errorId}] ${error}`, details);
-  
-  const response = {
-    success: false,
-    error,
-    errorId,
-    timestamp: new Date().toISOString(),
-    canRetry: status >= 500 && status < 600,
-    ...(process.env.NODE_ENV === 'development' && { details })
-  };
-  
-  return NextResponse.json(response, { status });
-}
-
-// Check Firebase availability
-function isFirebaseReady(): { ready: boolean; reason?: string } {
-  if (!db) {
-    return { ready: false, reason: 'Database instance not available' };
-  }
-  
-  if (firebaseModule?.initializationError) {
-    return { ready: false, reason: firebaseModule.initializationError.message };
-  }
-  
-  return { ready: true };
-}
 
 // Helper function to get visitor UUID from request
 function getVisitorUuidFromRequest(request: NextRequest): string | null {
@@ -112,29 +63,20 @@ export async function GET(request: NextRequest) {
   const maxRetries = 3;
   const retryDelay = 1000; // 1 second
 
-  // Check Firebase availability first
-  const firebaseStatus = isFirebaseReady();
-  if (!firebaseStatus.ready) {
-    console.warn('Firebase not available for GET /api/direct-questions:', firebaseStatus.reason);
-    return createErrorResponse(
-      'Database temporarily unavailable',
-      503,
-      { reason: firebaseStatus.reason },
-      'GET-firebase-check'
-    );
-  }
-
   while (retryCount < maxRetries) {
     try {
-      const visitorUuid = getVisitorUuidWithFallbacks();
+      const visitorUuid = getVisitorUuidFromRequest(request);
       
       if (!visitorUuid) {
-        return createErrorResponse('Visitor identification required', 400, null, 'GET-visitor-uuid');
+        return NextResponse.json(
+          { success: false, error: 'Visitor UUID required' },
+          { status: 400 }
+        );
       }
 
-      // Query questions for this visitor (db is guaranteed to be non-null here)
+      // Query questions for this visitor
       const questionsQuery = query(
-        collection(db!, 'directQuestions'),
+        collection(db, 'directQuestions'),
         where('visitorUuid', '==', visitorUuid),
         orderBy('createdAt', 'desc')
       );
@@ -163,12 +105,12 @@ export async function GET(request: NextRequest) {
         console.warn(`Filtered ${rawQuestions.length - validQuestions.length} invalid/deleted questions for visitor ${visitorUuid}`);
       }
 
-      return createResponse({
+      return NextResponse.json({
+        success: true,
         data: {
           questions: validQuestions,
           count: validQuestions.length,
-          filtered: rawQuestions.length - validQuestions.length,
-          visitorUuid: visitorUuid.substring(0, 8) + '...' // Partial UUID for debugging
+          filtered: rawQuestions.length - validQuestions.length
         }
       });
 
@@ -187,7 +129,8 @@ export async function GET(request: NextRequest) {
       if (isPermissionError || isNotFoundError) {
         // Don't retry permission or not found errors
         console.warn(`Non-retryable error: ${errorMessage}`);
-        return createResponse({
+        return NextResponse.json({
+          success: true, // Return success with empty data instead of error
           data: {
             questions: [],
             count: 0,
@@ -198,11 +141,14 @@ export async function GET(request: NextRequest) {
       
       // If this is the last attempt, return error
       if (retryCount >= maxRetries) {
-        return createErrorResponse(
-          'Failed to fetch questions after retries',
-          503,
-          { attempts: retryCount, lastError: errorMessage },
-          'GET-max-retries'
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Failed to fetch questions after retries',
+            details: errorMessage,
+            canRetry: true
+          },
+          { status: 503 } // Service temporarily unavailable
         );
       }
       
@@ -212,11 +158,11 @@ export async function GET(request: NextRequest) {
   }
 
   // Fallback (should never reach here)
-  return createResponse({
+  return NextResponse.json({
+    success: true,
     data: {
       questions: [],
-      count: 0,
-      message: 'Fallback response'
+      count: 0
     }
   });
 }
@@ -224,29 +170,24 @@ export async function GET(request: NextRequest) {
 // POST: Create new question
 export async function POST(request: NextRequest) {
   try {
-    // Check Firebase availability first
-    const firebaseStatus = isFirebaseReady();
-    if (!firebaseStatus.ready) {
-      return createErrorResponse(
-        'Database temporarily unavailable',
-        503,
-        { reason: firebaseStatus.reason },
-        'POST-firebase-check'
-      );
-    }
-
     const body = await request.json();
     const { question, metadata: clientMetadata } = body;
 
     // Validate question
     const validation = validateQuestion(question);
     if (!validation.isValid) {
-      return createErrorResponse(validation.error || 'Invalid question', 400, null, 'POST-validation');
+      return NextResponse.json(
+        { success: false, error: validation.error },
+        { status: 400 }
+      );
     }
 
-    const visitorUuid = getVisitorUuidWithFallbacks();
+    const visitorUuid = getVisitorUuidFromRequest(request);
     if (!visitorUuid) {
-      return createErrorResponse('Visitor identification required', 400, null, 'POST-visitor-uuid');
+      return NextResponse.json(
+        { success: false, error: 'Visitor UUID required' },
+        { status: 400 }
+      );
     }
 
     // Get request metadata
@@ -261,8 +202,7 @@ export async function POST(request: NextRequest) {
       userAgent,
       language: clientMetadata?.language || 'en',
       screenResolution: clientMetadata?.screenResolution || 'unknown',
-      timezone: clientMetadata?.timezone || 'UTC',
-      submittedAt: new Date().toISOString()
+      timezone: clientMetadata?.timezone || 'UTC'
     };
 
     // Create question document
@@ -278,28 +218,25 @@ export async function POST(request: NextRequest) {
       metadata: fullMetadata
     };
 
-    // db is guaranteed to be non-null here due to Firebase check above
-    const docRef = await addDoc(collection(db!, 'directQuestions'), questionData);
+    const docRef = await addDoc(collection(db, 'directQuestions'), questionData);
 
-    console.log(`✅ Question created: ${docRef.id} for visitor ${visitorUuid.substring(0, 8)}...`);
-
-    return createResponse({
+    return NextResponse.json({
+      success: true,
       data: {
         questionId: docRef.id,
-        message: 'Question submitted successfully',
-        visitorUuid: visitorUuid.substring(0, 8) + '...' // Partial for debugging
+        message: 'Question submitted successfully'
       }
     });
 
   } catch (error) {
-    return createErrorResponse(
-      'Failed to submit question',
-      500,
-      {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        type: error?.constructor?.name
+    console.error('Error creating direct question:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: 'Failed to submit question',
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
-      'POST-submission'
+      { status: 500 }
     );
   }
 }
@@ -307,39 +244,37 @@ export async function POST(request: NextRequest) {
 // PUT: Update question (Admin only)
 export async function PUT(request: NextRequest) {
   try {
-    // Check Firebase availability first
-    const firebaseStatus = isFirebaseReady();
-    if (!firebaseStatus.ready) {
-      return createErrorResponse(
-        'Database temporarily unavailable',
-        503,
-        { reason: firebaseStatus.reason },
-        'PUT-firebase-check'
-      );
-    }
-
     // Check admin authentication
     const headersList = await headers();
     const authHeader = headersList.get('authorization');
     
     // Simple admin check - in production, implement proper JWT verification
     if (!authHeader || !authHeader.includes('admin')) {
-      return createErrorResponse('Admin access required', 403, null, 'PUT-auth');
+      return NextResponse.json(
+        { success: false, error: 'Admin access required' },
+        { status: 403 }
+      );
     }
 
     const body = await request.json();
     const { questionId, adminReply, status, reviewNotes } = body;
 
     if (!questionId) {
-      return createErrorResponse('Question ID required', 400, null, 'PUT-validation');
+      return NextResponse.json(
+        { success: false, error: 'Question ID required' },
+        { status: 400 }
+      );
     }
 
-    // Get the question document (db is guaranteed to be non-null here)
-    const questionRef = doc(db!, 'directQuestions', questionId);
+    // Get the question document
+    const questionRef = doc(db, 'directQuestions', questionId);
     const questionDoc = await getDoc(questionRef);
 
     if (!questionDoc.exists()) {
-      return createErrorResponse('Question not found', 404, null, 'PUT-not-found');
+      return NextResponse.json(
+        { success: false, error: 'Question not found' },
+        { status: 404 }
+      );
     }
 
     // Prepare update data
@@ -364,25 +299,22 @@ export async function PUT(request: NextRequest) {
     // Update the document
     await updateDoc(questionRef, updateData);
 
-    console.log(`✅ Question updated: ${questionId} by admin`);
-
-    return createResponse({
+    return NextResponse.json({
+      success: true,
       data: {
-        message: 'Question updated successfully',
-        questionId,
-        updatedFields: Object.keys(updateData).filter(key => key !== 'updatedAt')
+        message: 'Question updated successfully'
       }
     });
 
   } catch (error) {
-    return createErrorResponse(
-      'Failed to update question',
-      500,
-      {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        type: error?.constructor?.name
+    console.error('Error updating direct question:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: 'Failed to update question',
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
-      'PUT-update'
+      { status: 500 }
     );
   }
 }
@@ -390,67 +322,62 @@ export async function PUT(request: NextRequest) {
 // DELETE: Delete question (Admin only)
 export async function DELETE(request: NextRequest) {
   try {
-    // Check Firebase availability first
-    const firebaseStatus = isFirebaseReady();
-    if (!firebaseStatus.ready) {
-      return createErrorResponse(
-        'Database temporarily unavailable',
-        503,
-        { reason: firebaseStatus.reason },
-        'DELETE-firebase-check'
-      );
-    }
-
     // Check admin authentication
     const headersList = await headers();
     const authHeader = headersList.get('authorization');
     
     if (!authHeader || !authHeader.includes('admin')) {
-      return createErrorResponse('Admin access required', 403, null, 'DELETE-auth');
+      return NextResponse.json(
+        { success: false, error: 'Admin access required' },
+        { status: 403 }
+      );
     }
 
     const url = new URL(request.url);
     const questionId = url.searchParams.get('id');
 
     if (!questionId) {
-      return createErrorResponse('Question ID required', 400, null, 'DELETE-validation');
+      return NextResponse.json(
+        { success: false, error: 'Question ID required' },
+        { status: 400 }
+      );
     }
 
-    // Get the question document (db is guaranteed to be non-null here)
-    const questionRef = doc(db!, 'directQuestions', questionId);
+    // Delete the question document
+    const questionRef = doc(db, 'directQuestions', questionId);
     const questionDoc = await getDoc(questionRef);
 
     if (!questionDoc.exists()) {
-      return createErrorResponse('Question not found', 404, null, 'DELETE-not-found');
+      return NextResponse.json(
+        { success: false, error: 'Question not found' },
+        { status: 404 }
+      );
     }
 
-    // Soft delete - mark as archived instead of hard delete
+    // In production, you might want to soft delete instead
+    // For now, we'll do a hard delete
     await updateDoc(questionRef, {
       status: 'archived',
       updatedAt: serverTimestamp(),
-      deletedAt: serverTimestamp(),
-      isDeleted: true // Add soft delete flag
+      deletedAt: serverTimestamp()
     });
 
-    console.log(`✅ Question soft-deleted: ${questionId} by admin`);
-
-    return createResponse({
+    return NextResponse.json({
+      success: true,
       data: {
-        message: 'Question deleted successfully',
-        questionId,
-        method: 'soft-delete' // Indicate it's a soft delete
+        message: 'Question deleted successfully'
       }
     });
 
   } catch (error) {
-    return createErrorResponse(
-      'Failed to delete question',
-      500,
-      {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        type: error?.constructor?.name
+    console.error('Error deleting direct question:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: 'Failed to delete question',
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
-      'DELETE-operation'
+      { status: 500 }
     );
   }
 }

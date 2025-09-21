@@ -1,7 +1,7 @@
 "use client";
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { prodLogger, devLogger, aiLogger } from '@/utils/secureLogger';
+import { prodLogger, devLogger } from '@/utils/secureLogger';
 import JarvisAnimations from './JarvisAnimations';
 
 interface Props {
@@ -40,20 +40,11 @@ class AIErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // CRITICAL FIX: Enhanced error logging with AI-specific logger
-    aiLogger.error('AI Assistant Error Boundary caught an error', {
+    // Log the error
+    prodLogger.error('AI Assistant Error Boundary caught an error', {
       error: error.message,
-      stack: error.stack?.split('\n').slice(0, 3).join('\n'), // Limit stack trace length
-      componentStack: errorInfo.componentStack?.split('\n').slice(0, 5).join('\n'), // Limit component stack
-      timestamp: new Date().toISOString(),
-      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent.substring(0, 100) : 'server',
-      url: typeof window !== 'undefined' ? window.location.href : 'unknown'
-    });
-
-    // CRITICAL FIX: Also use production logger for backup
-    prodLogger.error('AI Assistant Critical Error', {
-      error: error.message,
-      timestamp: new Date().toISOString()
+      stack: error.stack,
+      componentStack: errorInfo.componentStack
     });
 
     devLogger.error('AI Assistant Error Details', {
@@ -66,28 +57,12 @@ class AIErrorBoundary extends Component<Props, State> {
       errorInfo
     });
 
-    // CRITICAL FIX: Enhanced error callback with more context
-    if (this.props.onError) {
-      try {
-        this.props.onError(error, errorInfo);
-      } catch (callbackError) {
-        aiLogger.error('Error in onError callback', {
-          error: callbackError instanceof Error ? callbackError.message : 'Unknown callback error'
-        });
-      }
-    }
+    // Call the onError callback if provided
+    this.props.onError?.(error, errorInfo);
   }
 
   handleRetry = () => {
     if (this.state.retryCount < this.maxRetries) {
-      // CRITICAL FIX: Enhanced retry logging
-      aiLogger.warn(`Retrying AI Assistant (attempt ${this.state.retryCount + 1}/${this.maxRetries})`, {
-        previousError: this.state.error?.message,
-        retryCount: this.state.retryCount + 1,
-        maxRetries: this.maxRetries,
-        timestamp: new Date().toISOString()
-      });
-      
       devLogger.debug(`Retrying AI Assistant (attempt ${this.state.retryCount + 1}/${this.maxRetries})`);
       
       this.setState(prevState => ({
@@ -96,24 +71,10 @@ class AIErrorBoundary extends Component<Props, State> {
         errorInfo: null,
         retryCount: prevState.retryCount + 1
       }));
-    } else {
-      // CRITICAL FIX: Log when max retries reached
-      aiLogger.error('AI Assistant max retries reached', {
-        maxRetries: this.maxRetries,
-        finalError: this.state.error?.message,
-        timestamp: new Date().toISOString()
-      });
     }
   };
 
   handleReset = () => {
-    // CRITICAL FIX: Enhanced reset logging
-    aiLogger.warn('Resetting AI Assistant error boundary', {
-      previousError: this.state.error?.message,
-      previousRetryCount: this.state.retryCount,
-      timestamp: new Date().toISOString()
-    });
-    
     devLogger.debug('Resetting AI Assistant error boundary');
     
     this.setState({

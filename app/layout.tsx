@@ -370,9 +370,9 @@ export default function RootLayout({
                   developmentMode: ${process.env.NODE_ENV === 'development'}
                 };
                 
-                // Development mode logging (silent in production)
+                // Development mode logging
                 const devLog = function(message, ...args) {
-                  if (window.turnstileState.developmentMode && typeof console !== 'undefined') {
+                  if (window.turnstileState.developmentMode) {
                     console.log('[Turnstile Dev]', message, ...args);
                   }
                 };
@@ -412,18 +412,14 @@ export default function RootLayout({
                     setTimeout(function() {
                       clearInterval(checkInterval);
                       if (!window.turnstile) {
-                        if (window.turnstileState.developmentMode) {
-                          console.error('[TurnstileLoader] Turnstile API not available after timeout');
-                        }
+                        console.error('[TurnstileLoader] Turnstile API not available after timeout');
                         window.dispatchEvent(new Event('turnstile-error'));
                       }
                     }, timeout);
                   };
                   
                   script.onerror = function() {
-                    if (window.turnstileState.developmentMode) {
-                      console.error('[TurnstileLoader] Script load failed, attempt:', window.turnstileState.retryCount + 1);
-                    }
+                    console.error('[TurnstileLoader] Script load failed, attempt:', window.turnstileState.retryCount + 1);
                     window.turnstileState.loading = false;
                     window.turnstileState.error = true;
                     
@@ -435,9 +431,7 @@ export default function RootLayout({
                         loadTurnstileScript();
                       }, retryDelay);
                     } else {
-                      if (window.turnstileState.developmentMode) {
-                        console.error('[TurnstileLoader] Max retries reached, giving up');
-                      }
+                      console.error('[TurnstileLoader] Max retries reached, giving up');
                       window.dispatchEvent(new Event('turnstile-error'));
                     }
                   };
@@ -459,9 +453,7 @@ export default function RootLayout({
                         window.turnstile.remove(widgetId);
                         devLog('Widget removed:', id, widgetId);
                       } catch (e) {
-                        if (window.turnstileState.developmentMode) {
-                          console.warn('[TurnstileManager] Error removing widget:', e);
-                        }
+                        console.warn('[TurnstileManager] Error removing widget:', e);
                       }
                     }
                     window.turnstileState.widgets.delete(id);
@@ -487,9 +479,7 @@ export default function RootLayout({
                         devLog('Turnstile ready after', Date.now() - startTime, 'ms');
                         callback();
                       } else if (Date.now() - startTime > timeout) {
-                        if (window.turnstileState.developmentMode) {
-                          console.error('[TurnstileManager] Wait timeout exceeded after', timeout, 'ms');
-                        }
+                        console.error('[TurnstileManager] Wait timeout exceeded after', timeout, 'ms');
                         callback(new Error('Turnstile ready timeout'));
                       } else {
                         setTimeout(checkReady, pollInterval);
@@ -521,46 +511,6 @@ export default function RootLayout({
             `
           }}
         />
-        
-        {/* CRITICAL FIX: Environment validation on startup */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                // Client-side environment validation for critical variables
-                const requiredEnvVars = [
-                  'NEXT_PUBLIC_TURNSTILE_SITE_KEY',
-                  'NEXT_PUBLIC_FIREBASE_API_KEY',
-                  'NEXT_PUBLIC_FIREBASE_PROJECT_ID',
-                  'NEXT_PUBLIC_OPENROUTER_API_KEY'
-                ];
-                
-                const missing = requiredEnvVars.filter(key => {
-                  const value = typeof process !== 'undefined' && process.env ? process.env[key] :
-                               typeof window !== 'undefined' && window.location ?
-                               new URLSearchParams(window.location.search).get(key) : null;
-                  return !value;
-                });
-                
-                if (missing.length > 0) {
-                  // Only log in development mode
-                  if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') {
-                    console.warn('[Environment] Missing critical variables:', missing);
-                  }
-                  
-                  // Store validation status for AI components
-                  if (typeof window !== 'undefined') {
-                    window.__environmentIssues = {
-                      missing,
-                      timestamp: new Date().toISOString(),
-                      severity: 'warning'
-                    };
-                  }
-                }
-              })();
-            `
-          }}
-        />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <ThemeProvider
@@ -575,44 +525,6 @@ export default function RootLayout({
             {children}
           </LoadingProvider>
         </ThemeProvider>
-        
-        {/* CRITICAL FIX: Environment health monitoring */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                if (typeof window !== 'undefined') {
-                  // Initialize environment monitoring
-                  window.__portfolioHealthMonitor = {
-                    environment: {
-                      nodeEnv: '${process.env.NODE_ENV}',
-                      timestamp: new Date().toISOString(),
-                      clientValidated: false
-                    },
-                    turnstile: {
-                      configured: ${!!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY},
-                      siteKey: '${process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ? 'configured' : 'missing'}'
-                    },
-                    firebase: {
-                      configured: ${!!(process.env.NEXT_PUBLIC_FIREBASE_API_KEY && process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID)},
-                      apiKey: '${process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? 'configured' : 'missing'}',
-                      projectId: '${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ? 'configured' : 'missing'}'
-                    },
-                    ai: {
-                      configured: ${!!process.env.NEXT_PUBLIC_OPENROUTER_API_KEY},
-                      apiKey: '${process.env.NEXT_PUBLIC_OPENROUTER_API_KEY ? 'configured' : 'missing'}'
-                    }
-                  };
-                  
-                  // Only log in development mode
-                  if ('${process.env.NODE_ENV}' === 'development') {
-                    console.log('[HealthMonitor] Portfolio health monitor initialized');
-                  }
-                }
-              })();
-            `
-          }}
-        />
       </body>
     </html>
   );

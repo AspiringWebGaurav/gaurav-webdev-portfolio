@@ -49,7 +49,7 @@ const TurnstileInline = forwardRef<TurnstileInlineRef, TurnstileInlineProps>(({
   const initializationRef = useRef<boolean>(false);
   const componentId = useRef(`turnstile-inline-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
 
-  // Enhanced widget initialization with proper manager integration and conflict prevention
+  // Enhanced widget initialization with proper manager integration
   const initializeWidget = useCallback(() => {
     if (initializationRef.current || !widgetContainerRef.current || disabled) {
       return;
@@ -77,29 +77,6 @@ const TurnstileInline = forwardRef<TurnstileInlineRef, TurnstileInlineProps>(({
         }
 
         try {
-          // CRITICAL FIX: Check for existing widgets in container before rendering
-          if (widgetContainerRef.current.hasChildNodes()) {
-            console.log('[TurnstileInline] Container already has widgets, cleaning up...');
-            widgetContainerRef.current.innerHTML = '';
-          }
-
-          // CRITICAL FIX: Check if this container already has a widget registered
-          const existingWidget = Array.from(window.turnstileState?.widgets.entries() || [])
-            .find(([id, widgetId]) => {
-              const element = document.querySelector(`[data-widget-id="${widgetId}"]`);
-              return element && widgetContainerRef.current?.contains(element);
-            });
-
-          if (existingWidget && window.turnstile) {
-            console.log('[TurnstileInline] Existing widget found, removing before creating new one');
-            try {
-              window.turnstile.remove(existingWidget[1]);
-              window.turnstileManager?.unregister(existingWidget[0]);
-            } catch (e) {
-              console.warn('[TurnstileInline] Error removing existing widget:', e);
-            }
-          }
-
           console.log('[TurnstileInline] Initializing widget with site key:', siteKey.substring(0, 10) + '...');
           initializationRef.current = true;
 
@@ -121,13 +98,6 @@ const TurnstileInline = forwardRef<TurnstileInlineRef, TurnstileInlineProps>(({
           console.log('[TurnstileInline] Widget render result:', widgetId);
           
           if (widgetId && window.turnstileManager) {
-            // CRITICAL FIX: Add data attributes for tracking and conflict prevention
-            if (widgetContainerRef.current) {
-              widgetContainerRef.current.setAttribute('data-widget-id', widgetId);
-              widgetContainerRef.current.setAttribute('data-component-id', componentId.current);
-              widgetContainerRef.current.setAttribute('data-widget-type', 'inline');
-            }
-            
             // Register with manager
             window.turnstileManager.register(componentId.current, widgetId);
             
@@ -330,45 +300,21 @@ const TurnstileInline = forwardRef<TurnstileInlineRef, TurnstileInlineProps>(({
     };
   }, [disabled, initializeWidget, widgetState.widgetId]);
 
-  // Enhanced cleanup on unmount with container clearing
+  // Enhanced cleanup on unmount
   useEffect(() => {
     return () => {
-      if (widgetState.widgetId || componentId.current) {
+      if (widgetState.widgetId) {
         try {
-          // CRITICAL FIX: Enhanced cleanup with container clearing
-          // Remove from manager first
+          // Use manager for proper cleanup
           if (typeof window !== 'undefined' && window.turnstileManager) {
             window.turnstileManager.unregister(componentId.current);
-          }
-          
-          // Remove the actual widget
-          if (widgetState.widgetId && window.turnstile) {
+          } else if (typeof window !== 'undefined' && window.turnstile) {
+            // Fallback cleanup
             window.turnstile.remove(widgetState.widgetId);
           }
-          
-          // CRITICAL FIX: Clear the container completely
-          if (widgetContainerRef.current) {
-            widgetContainerRef.current.innerHTML = '';
-            widgetContainerRef.current.removeAttribute('data-widget-id');
-            widgetContainerRef.current.removeAttribute('data-component-id');
-            widgetContainerRef.current.removeAttribute('data-widget-type');
-          }
-          
-          console.log('[TurnstileInline] Widget and container cleaned up completely');
+          console.log('[TurnstileInline] Widget cleaned up');
         } catch (error) {
           console.warn('[TurnstileInline] Error during cleanup:', error);
-          
-          // CRITICAL FIX: Force clean the container even if widget cleanup fails
-          try {
-            if (widgetContainerRef.current) {
-              widgetContainerRef.current.innerHTML = '';
-              widgetContainerRef.current.removeAttribute('data-widget-id');
-              widgetContainerRef.current.removeAttribute('data-component-id');
-              widgetContainerRef.current.removeAttribute('data-widget-type');
-            }
-          } catch (cleanupError) {
-            console.warn('[TurnstileInline] Error during forced container cleanup:', cleanupError);
-          }
         }
       }
     };

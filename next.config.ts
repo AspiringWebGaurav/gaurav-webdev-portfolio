@@ -16,7 +16,7 @@ const nextConfig: NextConfig = {
   // 🔒 Security: Remove console logs in production
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production' ? {
-      exclude: ['error'] // Keep only error logs in production
+      exclude: ['error', 'warn'] // Keep only error and warn logs
     } : false,
   },
 
@@ -27,48 +27,23 @@ const nextConfig: NextConfig = {
     },
   },
 
-  // 🔕 Webpack optimizations and warning suppressions
-  webpack: (config: any, { dev, isServer }: any) => {
-    // Suppress OpenTelemetry/Sentry instrumentation warnings
-    config.ignoreWarnings = [
-      // Suppress critical dependency warnings from OpenTelemetry instrumentation
-      /Critical dependency: the request of a dependency is an expression/,
-      
-      // Specific OpenTelemetry modules that cause warnings
-      /@opentelemetry\/instrumentation-connect/,
-      /@opentelemetry\/instrumentation-express/,
-      /@opentelemetry\/instrumentation-generic-pool/,
-      /@opentelemetry\/instrumentation-hapi/,
-      /@opentelemetry\/instrumentation-ioredis/,
-      /@opentelemetry\/instrumentation-knex/,
-      /@opentelemetry\/instrumentation-lru-memoizer/,
-      /@opentelemetry\/instrumentation-mongoose/,
-      /@opentelemetry\/instrumentation-mysql2/,
-      /@opentelemetry\/instrumentation-redis-4/,
-      /@opentelemetry\/instrumentation-undici/,
-      
-      // Sentry instrumentation warnings
-      /@sentry\/node/,
-      /@sentry\/nextjs/,
-    ];
-
-    // Improve module resolution for Firebase imports
-    if (config.resolve) {
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        '@/lib/firebase$': require('path').resolve('./lib/firebase.ts'),
-      };
-    }
-
-    // Development-specific optimizations
-    if (dev) {
+  // 🔕 Suppress non-critical dev messages
+  ...(process.env.NODE_ENV === 'development' && {
+    experimental: {
+      turbo: {
+        rules: {
+          // Suppress turbo compilation logs
+        }
+      }
+    },
+    // Reduce webpack compilation noise
+    webpack: (config: any) => {
       config.infrastructureLogging = {
-        level: 'error', // Only show errors in development
+        level: 'error', // Only show errors
       };
-    }
-
-    return config;
-  },
+      return config;
+    },
+  }),
 
   // 🔒 Security: Disable development features in production
   ...(process.env.NODE_ENV === 'production' && {
