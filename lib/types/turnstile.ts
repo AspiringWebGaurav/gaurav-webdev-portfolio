@@ -137,16 +137,15 @@ export interface TurnstileCookieConfig {
 
 export const TURNSTILE_COOKIE_CONFIG: TurnstileCookieConfig = {
   name: 'cf_clear',
-  maxAge: 604800, // 7 days (7 * 24 * 60 * 60) - Much longer for better UX
+  maxAge: 0, // Session-only cookie - expires when browser closes
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
   sameSite: 'lax',
   path: '/'
 };
 
-// Additional client-side verification storage configuration
-export const TURNSTILE_STORAGE_CONFIG = {
-  localStorageKey: 'cf_verified',
-  maxAge: 2592000, // 30 days in seconds for localStorage backup
-  refreshThreshold: 86400 // 1 day - refresh verification if older than this
+// Session-based verification storage configuration
+export const TURNSTILE_SESSION_STORAGE_CONFIG = {
+  sessionStorageKey: 'cf_session_verified',
+  // No maxAge needed for session storage - automatically cleared when session ends
 };

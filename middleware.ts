@@ -43,19 +43,19 @@ export function middleware(request: NextRequest) {
       const isValidCookie = verifyCookieValue(turnstileCookie.value);
       
       if (isValidCookie) {
-        // Valid cookie - user has been verified
+        // Valid session cookie - user has been verified for this session
         response.headers.set('x-turnstile-verified', 'true');
-        console.log('[Middleware] Valid Turnstile cookie found');
+        console.log('[Middleware] Valid session Turnstile cookie found');
       } else {
-        // Invalid or expired cookie - clear it and require new verification
+        // Invalid session cookie - clear it and require new verification
         response.headers.set('x-turnstile-verified', 'false');
         response.cookies.delete(TURNSTILE_COOKIE_CONFIG.name);
-        console.log('[Middleware] Invalid Turnstile cookie - cleared');
+        console.log('[Middleware] Invalid session Turnstile cookie - cleared');
       }
     } else {
-      // No cookie - user needs verification
+      // No session cookie - user needs verification
       response.headers.set('x-turnstile-verified', 'false');
-      console.log('[Middleware] No Turnstile cookie - verification required');
+      console.log('[Middleware] No session Turnstile cookie - verification required');
     }
   }
 
@@ -73,12 +73,11 @@ function verifyCookieValue(cookieValue: string): boolean {
     
     const [timestamp, random, environment, checksum] = parts;
     
-    // Check if timestamp is reasonable (not too old)
+    // For session cookies, we only verify format and checksum
+    // No age validation needed since session cookies expire automatically when browser closes
     const cookieTime = parseInt(timestamp);
-    const now = Date.now();
-    const maxAge = TURNSTILE_COOKIE_CONFIG.maxAge * 1000; // Convert to milliseconds
     
-    if (isNaN(cookieTime) || (now - cookieTime) > maxAge) {
+    if (isNaN(cookieTime)) {
       return false;
     }
     
@@ -89,7 +88,7 @@ function verifyCookieValue(cookieValue: string): boolean {
     return checksum === expectedChecksum;
     
   } catch (error) {
-    console.warn('[Middleware] Cookie verification error:', error);
+    console.warn('[Middleware] Session cookie verification error:', error);
     return false;
   }
 }

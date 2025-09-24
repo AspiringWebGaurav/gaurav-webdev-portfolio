@@ -74,20 +74,20 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
 
-    // Set authentication cookie
+    // Set session-only authentication cookie
     const cookieValue = generateSecureCookieValue();
     const cookieOptions = {
       httpOnly: TURNSTILE_COOKIE_CONFIG.httpOnly,
       secure: TURNSTILE_COOKIE_CONFIG.secure,
       sameSite: TURNSTILE_COOKIE_CONFIG.sameSite as 'strict' | 'lax' | 'none',
       path: TURNSTILE_COOKIE_CONFIG.path,
-      maxAge: TURNSTILE_COOKIE_CONFIG.maxAge
+      // No maxAge for session-only cookie - expires when browser closes
     };
 
     response.cookies.set(TURNSTILE_COOKIE_CONFIG.name, cookieValue, cookieOptions);
 
     // Log successful verification (without sensitive data)
-    console.log(`[Turnstile API] Cookie set for IP: ${clientIP}, expires in ${TURNSTILE_COOKIE_CONFIG.maxAge}s`);
+    console.log(`[Turnstile API] Session cookie set for IP: ${clientIP} - expires when browser session ends`);
 
     return response;
 
@@ -159,12 +159,11 @@ export function verifyCookieValue(cookieValue: string): boolean {
     
     const [timestamp, random, environment, checksum] = parts;
     
-    // Check if timestamp is reasonable (not too old)
+    // For session cookies, we only verify format and checksum
+    // No age validation needed since session cookies expire automatically
     const cookieTime = parseInt(timestamp);
-    const now = Date.now();
-    const maxAge = TURNSTILE_COOKIE_CONFIG.maxAge * 1000; // Convert to milliseconds
     
-    if (isNaN(cookieTime) || (now - cookieTime) > maxAge) {
+    if (isNaN(cookieTime)) {
       return false;
     }
     

@@ -22,7 +22,7 @@ import NotificationSystem from "@/components/direct-questions/NotificationSystem
 import NotificationProvider from "@/components/direct-questions/NotificationProvider";
 import { initializeVisitorEventListener, cleanupVisitorEventListener } from "@/lib/visitorEventListener";
 import { smartLogger } from '@/utils/smartLogger';
-import { TURNSTILE_COOKIE_CONFIG, TURNSTILE_STORAGE_CONFIG } from "@/lib/types/turnstile";
+import { TURNSTILE_COOKIE_CONFIG, TURNSTILE_SESSION_STORAGE_CONFIG } from "@/lib/types/turnstile";
 import { MinimalSuspense } from "@/components/loading/EnhancedSuspense";
 
 // Unique Circular Loader Component
@@ -249,12 +249,12 @@ const UUIDPortfolioPage = () => {
     }
   }, [isValidating]);
 
-  // Enhanced verification checking with persistent storage
+  // Session-based verification checking
   const checkTurnstileVerification = () => {
     try {
-      console.log('[UUIDPortfolio] Checking verification status...');
+      console.log('[UUIDPortfolio] Checking session-based verification status...');
       
-      // 1. Check for existing HTTP-only cookie (most secure, shorter duration)
+      // 1. Check for existing session cookie (expires when browser closes)
       const cookies = document.cookie.split(';');
       const turnstileCookie = cookies.find(cookie =>
         cookie.trim().startsWith(`${TURNSTILE_COOKIE_CONFIG.name}=`)
@@ -263,12 +263,12 @@ const UUIDPortfolioPage = () => {
       if (turnstileCookie) {
         const cookieValue = turnstileCookie.split('=')[1];
         
-        if (cookieValue && isValidCookieFormat(cookieValue)) {
-          console.log('[UUIDPortfolio] ✅ Valid Turnstile cookie found - skipping verification');
+        if (cookieValue && isValidSessionCookieFormat(cookieValue)) {
+          console.log('[UUIDPortfolio] ✅ Valid session cookie found - skipping verification');
           setIsVerified(true);
           
-          // Update localStorage as backup
-          updateLocalStorageVerification();
+          // Update sessionStorage as backup for this session
+          updateSessionStorageVerification();
           
           // Start portfolio loading immediately
           setTimeout(() => {
@@ -278,40 +278,24 @@ const UUIDPortfolioPage = () => {
         }
       }
       
-      // 2. Check localStorage backup (longer duration, less secure but better UX)
-      const localVerification = getLocalStorageVerification();
-      if (localVerification.isValid) {
-        console.log('[UUIDPortfolio] ✅ Valid localStorage verification found - skipping Turnstile');
-        
-        // Check if verification is still fresh enough (within refresh threshold)
-        if (localVerification.shouldRefresh) {
-          console.log('[UUIDPortfolio] 🔄 Verification old but valid - refreshing in background');
-          // Allow access but refresh verification silently in background
-          setIsVerified(true);
-          setTimeout(() => {
-            setIsLoading(false);
-          }, 300);
-          
-          // Refresh verification in background without showing modal
-          refreshVerificationInBackground();
-          return;
-        } else {
-          console.log('[UUIDPortfolio] ✅ Fresh localStorage verification - immediate access');
-          setIsVerified(true);
-          setTimeout(() => {
-            setIsLoading(false);
-          }, 300);
-          return;
-        }
+      // 2. Check sessionStorage backup (same session only)
+      const sessionVerification = getSessionStorageVerification();
+      if (sessionVerification.isValid) {
+        console.log('[UUIDPortfolio] ✅ Valid session verification found - skipping Turnstile');
+        setIsVerified(true);
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 300);
+        return;
       }
 
       // 3. No valid verification found - show entry gate
       console.log('[UUIDPortfolio] ❌ No valid verification found - showing entry gate');
       
-      const timer = setTimeout(() => {
+      setTimeout(() => {
         setIsLoading(false);
         setShowEntryGate(true);
-      }, 800); // Slightly faster for first-time users
+      }, 800);
 
     } catch (error) {
       console.error('[UUIDPortfolio] Error checking verification:', error);
@@ -323,109 +307,72 @@ const UUIDPortfolioPage = () => {
     }
   };
 
-  // Enhanced cookie format validation (client-side only)
-  const isValidCookieFormat = (cookieValue: string): boolean => {
+  // Session cookie format validation (client-side only)
+  const isValidSessionCookieFormat = (cookieValue: string): boolean => {
     try {
       const parts = cookieValue.split('-');
       if (parts.length !== 4) return false;
       
       const [timestamp] = parts;
       const cookieTime = parseInt(timestamp);
-      const now = Date.now();
-      const maxAge = TURNSTILE_COOKIE_CONFIG.maxAge * 1000;
       
-      return !isNaN(cookieTime) && (now - cookieTime) <= maxAge;
+      // For session cookies, we only verify basic format
+      // No age validation needed since they expire with browser session
+      return !isNaN(cookieTime);
     } catch {
       return false;
     }
   };
 
-  // Get localStorage verification status
-  const getLocalStorageVerification = (): {
+  // Get sessionStorage verification status
+  const getSessionStorageVerification = (): {
     isValid: boolean;
-    shouldRefresh: boolean;
     verifiedAt?: Date;
   } => {
     try {
-      const stored = localStorage.getItem(TURNSTILE_STORAGE_CONFIG.localStorageKey);
-      if (!stored) return { isValid: false, shouldRefresh: false };
+      const stored = sessionStorage.getItem(TURNSTILE_SESSION_STORAGE_CONFIG.sessionStorageKey);
+      if (!stored) return { isValid: false };
       
       const data = JSON.parse(stored);
       const verifiedAt = new Date(data.verifiedAt);
-      const now = new Date();
-      const ageInSeconds = (now.getTime() - verifiedAt.getTime()) / 1000;
       
-      // Check if verification is still valid (within max age)
-      const isValid = ageInSeconds <= TURNSTILE_STORAGE_CONFIG.maxAge;
-      
-      // Check if verification should be refreshed (older than refresh threshold)
-      const shouldRefresh = ageInSeconds > TURNSTILE_STORAGE_CONFIG.refreshThreshold;
-      
-      return { isValid, shouldRefresh, verifiedAt };
+      // Session storage is always valid if it exists (automatically cleared when session ends)
+      return { isValid: true, verifiedAt };
     } catch (error) {
-      console.warn('[UUIDPortfolio] Error reading localStorage verification:', error);
-      return { isValid: false, shouldRefresh: false };
+      console.warn('[UUIDPortfolio] Error reading sessionStorage verification:', error);
+      return { isValid: false };
     }
   };
 
-  // Update localStorage verification
-  const updateLocalStorageVerification = () => {
+  // Update sessionStorage verification
+  const updateSessionStorageVerification = () => {
     try {
       const verificationData = {
         verifiedAt: new Date().toISOString(),
         userAgent: navigator.userAgent,
-        version: '1.0',
-        method: 'turnstile'
+        version: '2.0',
+        method: 'turnstile_session'
       };
       
-      localStorage.setItem(
-        TURNSTILE_STORAGE_CONFIG.localStorageKey,
+      sessionStorage.setItem(
+        TURNSTILE_SESSION_STORAGE_CONFIG.sessionStorageKey,
         JSON.stringify(verificationData)
       );
       
-      console.log('[UUIDPortfolio] ✅ localStorage verification updated');
+      console.log('[UUIDPortfolio] ✅ sessionStorage verification updated');
     } catch (error) {
-      console.warn('[UUIDPortfolio] Failed to update localStorage verification:', error);
+      console.warn('[UUIDPortfolio] Failed to update sessionStorage verification:', error);
     }
   };
 
-  // Background verification refresh (silent, no modal)
-  const refreshVerificationInBackground = async () => {
-    try {
-      console.log('[UUIDPortfolio] 🔄 Refreshing verification in background...');
-      
-      // Make a simple request to verify endpoint to refresh the cookie
-      const response = await fetch('/api/turnstile/refresh', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          refreshType: 'background',
-          userAgent: navigator.userAgent
-        })
-      });
-      
-      if (response.ok) {
-        console.log('[UUIDPortfolio] ✅ Background verification refresh successful');
-        updateLocalStorageVerification();
-      } else {
-        console.warn('[UUIDPortfolio] Background verification refresh failed - will require re-verification on next visit');
-      }
-    } catch (error) {
-      console.warn('[UUIDPortfolio] Background verification refresh failed:', error);
-      // Silent failure - user experience not affected
-    }
-  };
-
-  // Handle successful Turnstile verification with persistent storage
+  // Handle successful Turnstile verification with session storage
   const handleTurnstileSuccess = () => {
     console.log('[UUIDPortfolio] ✅ Turnstile verification successful');
     setIsVerified(true);
     setShowEntryGate(false);
     
-    // Update localStorage for persistent verification
-    updateLocalStorageVerification();
+    // Update sessionStorage for this session
+    updateSessionStorageVerification();
     
     // Track verification for analytics (optional)
     try {
@@ -434,8 +381,8 @@ const UUIDPortfolioPage = () => {
           event_category: 'security',
           event_label: 'successful',
           custom_parameters: {
-            verification_method: 'turnstile',
-            is_repeat_visitor: !!localStorage.getItem(TURNSTILE_STORAGE_CONFIG.localStorageKey)
+            verification_method: 'turnstile_session',
+            is_repeat_visitor: !!sessionStorage.getItem(TURNSTILE_SESSION_STORAGE_CONFIG.sessionStorageKey)
           }
         });
       }

@@ -8,86 +8,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { TURNSTILE_COOKIE_CONFIG } from '@/lib/types/turnstile';
 
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { refreshType, userAgent } = body;
-
-    // Get client IP for logging
-    const clientIP = request.headers.get('x-forwarded-for') ||
-                    request.headers.get('x-real-ip') ||
-                    '127.0.0.1';
-
-    console.log(`[Turnstile Refresh] Background refresh requested from ${clientIP}`);
-
-    // Check if user has existing verification cookie
-    const existingCookie = request.cookies.get(TURNSTILE_COOKIE_CONFIG.name);
-    
-    if (!existingCookie || !existingCookie.value) {
-      console.warn('[Turnstile Refresh] No existing verification cookie found');
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'No existing verification found',
-          requiresFullVerification: true
-        },
-        { status: 401 }
-      );
-    }
-
-    // Validate existing cookie format
-    const isValidFormat = validateCookieFormat(existingCookie.value);
-    if (!isValidFormat) {
-      console.warn('[Turnstile Refresh] Invalid cookie format');
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Invalid verification format',
-          requiresFullVerification: true
-        },
-        { status: 401 }
-      );
-    }
-
-    // Generate new cookie value for extended verification
-    const newCookieValue = generateRefreshCookieValue(userAgent);
-    
-    const response = NextResponse.json(
-      {
-        success: true,
-        message: 'Verification refreshed successfully',
-        method: 'background_refresh',
-        expiresIn: TURNSTILE_COOKIE_CONFIG.maxAge
-      },
-      { status: 200 }
-    );
-
-    // Set refreshed authentication cookie with extended duration
-    const cookieOptions = {
-      httpOnly: TURNSTILE_COOKIE_CONFIG.httpOnly,
-      secure: TURNSTILE_COOKIE_CONFIG.secure,
-      sameSite: TURNSTILE_COOKIE_CONFIG.sameSite as 'strict' | 'lax' | 'none',
-      path: TURNSTILE_COOKIE_CONFIG.path,
-      maxAge: TURNSTILE_COOKIE_CONFIG.maxAge // Now 7 days
-    };
-
-    response.cookies.set(TURNSTILE_COOKIE_CONFIG.name, newCookieValue, cookieOptions);
-
-    console.log(`[Turnstile Refresh] ✅ Verification refreshed for ${clientIP}, expires in ${TURNSTILE_COOKIE_CONFIG.maxAge}s`);
-
-    return response;
-
-  } catch (error) {
-    console.error('[Turnstile Refresh] Unexpected error:', error);
-    
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'Refresh failed',
-        requiresFullVerification: false // Don't force re-verification on refresh errors
-      },
-      { status: 500 }
-    );
-  }
+  // Background refresh is disabled for session-based verification
+  // Session cookies automatically expire when browser closes, no refresh needed
+  console.log('[Turnstile Refresh] Background refresh disabled - using session-based verification');
+  
+  return NextResponse.json(
+    {
+      success: false,
+      message: 'Background refresh not available for session-based verification',
+      requiresFullVerification: true
+    },
+    { status: 410 } // 410 Gone - feature no longer available
+  );
 }
 
 /**
