@@ -8,7 +8,7 @@ import { useSafeRouteNavigation } from "@/components/loading/LoadingProvider";
 import { LoadingErrorBoundary } from "@/components/loading/LoadingErrorBoundary";
 
 interface ThreeButtonLayoutProps {
-  // onAskDirectlyClick is now optional since we handle navigation internally
+  // Modal handler for instant Ask Me Anything opening
   onAskDirectlyClick?: () => void;
 }
 
@@ -30,16 +30,18 @@ const ThreeButtonLayout: React.FC<ThreeButtonLayoutProps> = ({
   };
 
   const handleAskDirectlyClick = () => {
-    // Navigate to the dedicated Ask Me Anything page using current UUID with loading
-    const currentUUID = params.uuid as string;
-    if (currentUUID) {
-      portfolioNav.navigateWithLoading(`/${currentUUID}/ask-me-anything`, {
-        loadingType: 'navigation',
-        message: 'Opening Ask Me Anything...'
-      });
+    // Use modal for instant opening (no loading delay)
+    if (onAskDirectlyClick) {
+      onAskDirectlyClick();
     } else {
-      // Fallback: call the original callback if provided (for backward compatibility)
-      onAskDirectlyClick?.();
+      // Fallback to page navigation for backwards compatibility
+      const currentUUID = params.uuid as string;
+      if (currentUUID) {
+        portfolioNav.navigateWithLoading(`/${currentUUID}/ask-me-anything`, {
+          loadingType: 'navigation',
+          message: 'Opening Ask Me Anything...'
+        });
+      }
     }
   };
 
@@ -63,15 +65,15 @@ const ThreeButtonLayout: React.FC<ThreeButtonLayoutProps> = ({
         otherClasses="w-full md:w-60"
       />
       
-      {/* Ask me Anything Directly Button - Enhanced with loading */}
+      {/* Ask me Anything Directly Button - Instant modal opening */}
       <EnhancedMagicButton
         title="Ask me Anything"
         icon={<FaQuestion />}
         position="right"
         handleClick={handleAskDirectlyClick}
         otherClasses="w-full md:w-60"
-        isLoading={portfolioNav.isLoading && portfolioNav.loadingType === 'navigation'}
-        loadingText="Opening..."
+        isLoading={false} // No loading needed for modal
+        loadingText=""
       />
     </div>
   );

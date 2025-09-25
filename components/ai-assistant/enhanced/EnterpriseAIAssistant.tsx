@@ -10,21 +10,26 @@ import EnhancedAIChat from './EnhancedAIChat';
 import OptimizedJarvisAnimation from './OptimizedJarvisAnimation';
 import OnboardingModal from './OnboardingModal';
 import AnswerModal from './AnswerModal';
-import { QuestionForm, QuestionsList } from '@/components/askDirectly';
+import QuestionForm from '@/components/askDirectly/QuestionForm';
+import QuestionsList from '@/components/askDirectly/QuestionsList';
 import { openRouterAPI, isAIEnabled, generateContextualPrompts, OpenRouterMessage } from '../utils/openRouterAPI';
 import { useNotifications } from '@/hooks/useNotifications';
 import { NotificationBell } from '@/components/direct-questions/NotificationOverlay';
+import AskDirectlyErrorBoundary from '@/components/askDirectly/AskDirectlyErrorBoundary';
+import { smartLogger } from '@/utils/smartLogger';
 
 interface EnterpriseAIAssistantProps {
   isPortfolioLoaded?: boolean;
   onAssistantStateChange?: (state: AssistantState) => void;
   shouldOpenToAskDirectly?: boolean;
+  onOpenAskModal?: () => void;
 }
 
 const EnterpriseAIAssistant: React.FC<EnterpriseAIAssistantProps> = ({
   isPortfolioLoaded = false,
   onAssistantStateChange,
-  shouldOpenToAskDirectly = false
+  shouldOpenToAskDirectly = false,
+  onOpenAskModal
 }) => {
   // Main state management
   const [assistantState, setAssistantState] = useState<AssistantState>({
@@ -182,7 +187,8 @@ const EnterpriseAIAssistant: React.FC<EnterpriseAIAssistantProps> = ({
 
   const handleTabChange = useCallback((tabId: string) => {
     if (tabId === 'portfolio') {
-      // Close assistant and return to portfolio
+      // Open Ask Me Anything modal and close assistant
+      onOpenAskModal?.();
       handleClose();
       return;
     }
@@ -645,76 +651,113 @@ const EnterpriseAIAssistant: React.FC<EnterpriseAIAssistantProps> = ({
                       )}
 
                       {assistantState.activeTab === 'ask-directly' && (
-                        <div className="p-3 sm:p-4 lg:p-6 h-full overflow-y-auto custom-scrollbar">
-                          <div className="max-w-4xl mx-auto space-y-4 lg:space-y-6">
-                            {/* Header - Mobile Optimized */}
-                            <div className="text-center space-y-2">
-                              <h2 className="text-xl sm:text-2xl font-bold text-ai-text-primary">
-                                Ask Me Directly
-                              </h2>
-                              <p className="text-sm sm:text-base text-ai-text-secondary">
-                                Send questions directly to Gaurav
-                              </p>
-                            </div>
+                        <AskDirectlyErrorBoundary
+                          onError={(error, errorInfo) => {
+                            smartLogger.error('Ask Directly tab error', {
+                              error: error.message,
+                              componentStack: errorInfo.componentStack
+                            });
+                          }}
+                        >
+                          <div className="p-3 sm:p-4 lg:p-6 h-full overflow-y-auto custom-scrollbar">
+                            <div className="max-w-4xl mx-auto space-y-4 lg:space-y-6">
+                              {/* Header - Mobile Optimized */}
+                              <div className="text-center space-y-2">
+                                <h2 className="text-xl sm:text-2xl font-bold text-ai-text-primary">
+                                  Ask Me Directly
+                                </h2>
+                                <p className="text-sm sm:text-base text-ai-text-secondary">
+                                  Send questions directly to Gaurav
+                                </p>
+                              </div>
 
-                            {/* Mobile-First Layout */}
-                            <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0">
-                              {/* Question Form */}
-                              <div className="space-y-3 lg:space-y-4">
-                                <h3 className="text-base lg:text-lg font-semibold text-ai-text-primary">
-                                  📝 Ask Your Question
-                                </h3>
-                                <div className="bg-ai-surface-secondary/50 backdrop-blur-sm rounded-xl p-3 lg:p-4 border border-ai-border-light/30">
-                                  <QuestionForm
-                                    onSuccess={(questionId) => {
-                                      console.log('Question submitted:', questionId);
-                                    }}
-                                    placeholder="Ask me anything about my work, projects, or experience..."
-                                    showCharCount={true}
-                                    autoFocus={false}
-                                    className="space-y-2 lg:space-y-3"
-                                  />
+                              {/* Mobile-First Layout */}
+                              <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0">
+                                {/* Question Form */}
+                                <div className="space-y-3 lg:space-y-4">
+                                  <h3 className="text-base lg:text-lg font-semibold text-ai-text-primary">
+                                    📝 Ask Your Question
+                                  </h3>
+                                  <div className="bg-ai-surface-secondary/50 backdrop-blur-sm rounded-xl p-3 lg:p-4 border border-ai-border-light/30">
+                                    <AskDirectlyErrorBoundary
+                                      fallback={
+                                        <div className="flex items-center justify-center p-4 text-gray-400">
+                                          <span>Question form temporarily unavailable</span>
+                                        </div>
+                                      }
+                                    >
+                                      <React.Suspense fallback={
+                                        <div className="flex items-center justify-center p-4">
+                                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                                        </div>
+                                      }>
+                                        <QuestionForm
+                                          onSuccess={(questionId) => {
+                                            console.log('Question submitted:', questionId);
+                                          }}
+                                          placeholder="Ask me anything about my work, projects, or experience..."
+                                          showCharCount={true}
+                                          autoFocus={false}
+                                          className="space-y-2 lg:space-y-3"
+                                        />
+                                      </React.Suspense>
+                                    </AskDirectlyErrorBoundary>
+                                  </div>
+                                </div>
+
+                                {/* Question History */}
+                                <div className="space-y-3 lg:space-y-4">
+                                  <h3 className="text-base lg:text-lg font-semibold text-ai-text-primary">
+                                    💬 Your Questions
+                                  </h3>
+                                  <div className="bg-ai-surface-secondary/50 backdrop-blur-sm rounded-xl p-3 lg:p-4 border border-ai-border-light/30 max-h-64 lg:max-h-96 overflow-y-auto custom-scrollbar">
+                                    <AskDirectlyErrorBoundary
+                                      fallback={
+                                        <div className="flex items-center justify-center p-4 text-gray-400">
+                                          <span>Questions list temporarily unavailable</span>
+                                        </div>
+                                      }
+                                    >
+                                      <React.Suspense fallback={
+                                        <div className="flex items-center justify-center p-4">
+                                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                                        </div>
+                                      }>
+                                        <QuestionsList
+                                          enableRealTime={true}
+                                          showEmptyState={true}
+                                          variant="default"
+                                          emptyMessage="No questions yet. Ask your first question above!"
+                                          onQuestionClick={(question) => {
+                                            console.log('Question selected:', question.id);
+                                          }}
+                                        />
+                                      </React.Suspense>
+                                    </AskDirectlyErrorBoundary>
+                                  </div>
                                 </div>
                               </div>
 
-                              {/* Question History */}
-                              <div className="space-y-3 lg:space-y-4">
-                                <h3 className="text-base lg:text-lg font-semibold text-ai-text-primary">
-                                  💬 Your Questions
-                                </h3>
-                                <div className="bg-ai-surface-secondary/50 backdrop-blur-sm rounded-xl p-3 lg:p-4 border border-ai-border-light/30 max-h-64 lg:max-h-96 overflow-y-auto custom-scrollbar">
-                                  <QuestionsList
-                                    enableRealTime={true}
-                                    showEmptyState={true}
-                                    variant="default"
-                                    emptyMessage="No questions yet. Ask your first question above!"
-                                    onQuestionClick={(question) => {
-                                      console.log('Question selected:', question.id);
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Information Panel - Mobile Optimized */}
-                            <div className="bg-ai-primary-blue/10 rounded-xl p-3 lg:p-4 border border-ai-primary-blue/30">
-                              <div className="flex items-start space-x-3">
-                                <div className="w-6 h-6 lg:w-8 lg:h-8 bg-ai-primary-blue/20 rounded-full flex items-center justify-center flex-shrink-0">
-                                  <span className="text-ai-primary-blue text-xs lg:text-sm">💡</span>
-                                </div>
-                                <div className="space-y-2">
-                                  <h4 className="text-sm lg:text-base font-medium text-ai-text-primary">How it works:</h4>
-                                  <ul className="text-xs lg:text-sm text-ai-text-secondary space-y-1">
-                                    <li>• Ask questions about Gaurav's work</li>
-                                    <li>• Questions sent directly to Gaurav</li>
-                                    <li>• Get notified when Gaurav replies</li>
-                                    <li>• View your Q&A history in real-time</li>
-                                  </ul>
+                              {/* Information Panel - Mobile Optimized */}
+                              <div className="bg-ai-primary-blue/10 rounded-xl p-3 lg:p-4 border border-ai-primary-blue/30">
+                                <div className="flex items-start space-x-3">
+                                  <div className="w-6 h-6 lg:w-8 lg:h-8 bg-ai-primary-blue/20 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <span className="text-ai-primary-blue text-xs lg:text-sm">💡</span>
+                                  </div>
+                                  <div className="space-y-2">
+                                    <h4 className="text-sm lg:text-base font-medium text-ai-text-primary">How it works:</h4>
+                                    <ul className="text-xs lg:text-sm text-ai-text-secondary space-y-1">
+                                      <li>• Ask questions about Gaurav's work</li>
+                                      <li>• Questions sent directly to Gaurav</li>
+                                      <li>• Get notified when Gaurav replies</li>
+                                      <li>• View your Q&A history in real-time</li>
+                                    </ul>
+                                  </div>
                                 </div>
                               </div>
                             </div>
                           </div>
-                        </div>
+                        </AskDirectlyErrorBoundary>
                       )}
 
                       {assistantState.activeTab === 'settings' && (

@@ -24,6 +24,7 @@ import { initializeVisitorEventListener, cleanupVisitorEventListener } from "@/l
 import { smartLogger } from '@/utils/smartLogger';
 import { TURNSTILE_COOKIE_CONFIG, TURNSTILE_SESSION_STORAGE_CONFIG } from "@/lib/types/turnstile";
 import { MinimalSuspense } from "@/components/loading/EnhancedSuspense";
+import AskMeAnythingModal from "@/components/askDirectly/AskMeAnythingModal";
 
 // Unique Circular Loader Component
 const UniquePortfolioLoader = () => {
@@ -198,12 +199,45 @@ const UUIDPortfolioPage = () => {
   // AI Assistant state tracking
   const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
   const [shouldOpenToAskDirectly, setShouldOpenToAskDirectly] = useState(false);
-
+  
+  // Ask Me Anything modal state
+  const [isAskModalOpen, setIsAskModalOpen] = useState(false);
 
   // Handle notification click to open AI assistant
   const handleOpenAssistantFromNotification = () => {
     setShouldOpenToAskDirectly(true);
   };
+
+  // Handle Ask Me Anything modal
+  const handleOpenAskModal = () => {
+    setIsAskModalOpen(true);
+  };
+
+  const handleCloseAskModal = () => {
+    setIsAskModalOpen(false);
+    // Clear the auto-open flag when modal is closed
+    try {
+      sessionStorage.removeItem('openAskModalOnLoad');
+    } catch (error) {
+      // Silent failure for storage access
+    }
+  };
+
+  // Check for auto-open modal flag (for direct URL access backwards compatibility)
+  useEffect(() => {
+    if (isVerified && !isLoading) {
+      try {
+        const shouldAutoOpen = sessionStorage.getItem('openAskModalOnLoad');
+        if (shouldAutoOpen === 'true') {
+          // Auto-open modal for direct URL access
+          setIsAskModalOpen(true);
+          sessionStorage.removeItem('openAskModalOnLoad'); // Clean up flag
+        }
+      } catch (error) {
+        // Silent failure for storage access
+      }
+    }
+  }, [isVerified, isLoading]);
 
   useEffect(() => {
     const initializeSecureSession = async () => {
@@ -562,7 +596,7 @@ const UUIDPortfolioPage = () => {
                 navItems={navItems}
                 hideWhenAIOpen={isAIAssistantOpen}
               />
-              <Hero />
+              <Hero onAskDirectlyClick={handleOpenAskModal} />
               <Grid />
               <RecentProjects />
               <Clients />
@@ -595,6 +629,7 @@ const UUIDPortfolioPage = () => {
               <EnterpriseAIAssistant
                 isPortfolioLoaded={!isLoading && isVerified}
                 shouldOpenToAskDirectly={shouldOpenToAskDirectly}
+                onOpenAskModal={handleOpenAskModal}
                 onAssistantStateChange={(state) => {
                   // Handle assistant state changes for navbar visibility
                   smartLogger.browserOnly.debug('Enhanced Assistant state changed', state);
@@ -608,6 +643,13 @@ const UUIDPortfolioPage = () => {
               />
             </AIErrorBoundary>
           )}
+
+          {/* Ask Me Anything Modal */}
+          <AskMeAnythingModal
+            isOpen={isAskModalOpen}
+            onClose={handleCloseAskModal}
+            currentUUID={currentUUID}
+          />
 
         </main>
       </NotificationProvider>

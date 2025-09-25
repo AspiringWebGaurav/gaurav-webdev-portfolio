@@ -57,7 +57,7 @@ const AskMeAnythingPage = () => {
   const [isValidating, setIsValidating] = useState(true);
 
   useEffect(() => {
-    const validateAndSetUUID = () => {
+    const validateAndRedirectToModal = () => {
       const urlUUID = params.uuid as string;
       
       // Validate UUID format
@@ -78,16 +78,25 @@ const AskMeAnythingPage = () => {
         try {
           localStorage.setItem('visitor_uuid', urlUUID);
           sessionStorage.setItem('visitor_uuid', urlUUID);
+          // Store modal state to auto-open when portfolio loads
+          sessionStorage.setItem('openAskModalOnLoad', 'true');
         } catch (error) {
           console.warn('Storage not available');
         }
       });
 
-      setIsValidating(false);
+      // Redirect to portfolio with modal auto-open signal
+      setTimeout(() => {
+        portfolioNav.navigateWithLoading(`/${urlUUID}`, {
+          loadingType: 'navigation',
+          message: 'Opening Ask Me Anything...',
+          replace: true
+        });
+      }, 100); // Small delay to ensure storage is set
     };
 
-    // Use immediate execution for faster loading
-    validateAndSetUUID();
+    // Immediate redirect to portfolio with modal
+    validateAndRedirectToModal();
   }, [params.uuid, portfolioNav]);
 
   const handleBackToHome = () => {

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { prodLogger, devLogger } from '@/utils/secureLogger';
+import { smartLogger } from '@/utils/smartLogger';
 import JarvisAnimations from './JarvisAnimations';
 
 interface Props {
@@ -40,16 +40,12 @@ class AIErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log the error
-    prodLogger.error('AI Assistant Error Boundary caught an error', {
+    // Log the error using consistent logger
+    smartLogger.error('AI Assistant Error Boundary caught an error', {
       error: error.message,
       stack: error.stack,
-      componentStack: errorInfo.componentStack
-    });
-
-    devLogger.error('AI Assistant Error Details', {
-      error,
-      errorInfo
+      componentStack: errorInfo.componentStack,
+      retryCount: this.state.retryCount
     });
 
     this.setState({
@@ -63,7 +59,7 @@ class AIErrorBoundary extends Component<Props, State> {
 
   handleRetry = () => {
     if (this.state.retryCount < this.maxRetries) {
-      devLogger.debug(`Retrying AI Assistant (attempt ${this.state.retryCount + 1}/${this.maxRetries})`);
+      smartLogger.browserOnly.debug(`Retrying AI Assistant (attempt ${this.state.retryCount + 1}/${this.maxRetries})`);
       
       this.setState(prevState => ({
         hasError: false,
@@ -75,7 +71,7 @@ class AIErrorBoundary extends Component<Props, State> {
   };
 
   handleReset = () => {
-    devLogger.debug('Resetting AI Assistant error boundary');
+    smartLogger.browserOnly.debug('Resetting AI Assistant error boundary');
     
     this.setState({
       hasError: false,

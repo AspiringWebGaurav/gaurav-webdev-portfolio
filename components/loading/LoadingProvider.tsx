@@ -66,12 +66,16 @@ export const LoadingProvider: React.FC<LoadingProviderProps> = ({ children }) =>
   const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const minTimeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Route loading configuration
-  const minLoadingTime = 500;
-  const maxLoadingTime = 10000;
+  // Route loading configuration - Optimized for modal navigation
+  const minLoadingTime = 100; // Reduced from 500ms for faster modal transitions
+  const maxLoadingTime = 5000; // Reduced from 10000ms for better UX
 
   // Helper function to generate contextual loading messages
   const getLoadingMessage = useCallback((url: string): string => {
+    // Skip loading messages for modal-based navigation
+    if (url.includes('ask-me-anything-modal') || url.includes('#modal')) {
+      return '';
+    }
     if (url.includes('/ask-me-anything')) {
       return 'Opening Ask Me Anything...';
     }
@@ -84,20 +88,32 @@ export const LoadingProvider: React.FC<LoadingProviderProps> = ({ children }) =>
     return 'Navigating...';
   }, []);
 
-  // Route loading methods
+  // Route loading methods with modal optimization
   const navigateWithLoading = useCallback((
     url: string,
     options: {
       loadingType?: RouteLoadingState['loadingType'];
       message?: string;
       replace?: boolean;
+      skipLoading?: boolean; // New option for modal navigation
     } = {}
   ) => {
     const {
       loadingType = 'navigation',
       message = getLoadingMessage(url),
-      replace = false
+      replace = false,
+      skipLoading = false
     } = options;
+
+    // Skip loading entirely for modal-based navigation
+    if (skipLoading || url.includes('ask-me-anything-modal') || url.includes('#modal')) {
+      if (replace) {
+        router.replace(url);
+      } else {
+        router.push(url);
+      }
+      return;
+    }
 
     // Clear any existing timeouts
     if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
@@ -152,14 +168,14 @@ export const LoadingProvider: React.FC<LoadingProviderProps> = ({ children }) =>
     setRouteLoadingState(prev => ({ ...prev, message }));
   }, []);
 
-  // Listen for route changes to auto-stop loading
+  // Listen for route changes to auto-stop loading (optimized)
   useEffect(() => {
-    // Small delay to ensure page is rendered
+    // Reduced delay for faster transitions
     const timeout = setTimeout(() => {
       if (routeLoadingState.isLoading && routeLoadingState.loadingType === 'navigation') {
         stopRouteLoading();
       }
-    }, 100);
+    }, 50); // Reduced from 100ms to 50ms
 
     return () => clearTimeout(timeout);
   }, [pathname, stopRouteLoading, routeLoadingState]);
