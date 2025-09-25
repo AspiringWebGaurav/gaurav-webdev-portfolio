@@ -6,7 +6,7 @@ import {
   showBanToast,
   showUnbanToast,
   showProcessingToast,
-} from "@/utils/toastUtils";
+} from "@/components/ToastSystem";
 import { useRouter } from "next/navigation";
 
 export default function VisitorStatusWatcher() {

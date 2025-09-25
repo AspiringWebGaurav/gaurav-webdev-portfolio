@@ -84,20 +84,20 @@ export const showBanToast = (onComplete?: () => void) => {
   
   toast.error(
     <CountdownToast
-      message="🚫 You are being banned by ADMIN due to abuse policy"
+      message="You are being banned by ADMIN due to abuse policy"
       countdown={3}
       onComplete={onComplete}
       type="error"
     />,
     {
-      position: "top-center",
+      position: "top-right",
       autoClose: 3000,
       hideProgressBar: true,
       closeOnClick: false,
       pauseOnHover: false,
       draggable: false,
       closeButton: false,
-      className: "bg-red-50 border-l-4 border-red-500",
+      className: "toast-enhanced-slide-in toast-error-enhanced",
       toastId: "ban-toast", // Prevent duplicate toasts with same ID
     }
   );
@@ -106,41 +106,41 @@ export const showBanToast = (onComplete?: () => void) => {
 export const showUnbanToast = (onComplete?: () => void) => {
   toast.success(
     <CountdownToast
-      message="🎉 You have been unbanned. Welcome back!"
+      message="You have been unbanned. Welcome back!"
       countdown={3}
       onComplete={onComplete}
       type="success"
     />,
     {
-      position: "top-center",
+      position: "top-right",
       autoClose: 3000,
       hideProgressBar: true,
       closeOnClick: false,
       pauseOnHover: false,
       draggable: false,
       closeButton: false,
-      className: "bg-green-50 border-l-4 border-green-500",
+      className: "toast-enhanced-slide-in toast-success-enhanced",
       toastId: "unban-toast", // Prevent duplicate toasts with same ID
     }
   );
 };
 
-export const showProcessingToast = (message: string = "⏳ Processing...", duration: number = 2000) => {
+export const showProcessingToast = (message: string = "Processing...", duration: number = 2000) => {
   toast.info(message, {
-    position: "top-center",
+    position: "top-right",
     autoClose: duration,
     hideProgressBar: false,
     closeOnClick: false,
     pauseOnHover: false,
     draggable: false,
-    className: "bg-blue-50 border-l-4 border-blue-500",
+    className: "toast-enhanced-slide-in toast-info-enhanced",
   });
 };
 
 export const showAdminActionToast = (action: 'ban' | 'unban', targetCount: number, onComplete?: () => void) => {
   const message = action === 'ban'
-    ? `🔨 Banning ${targetCount} visitor${targetCount > 1 ? 's' : ''}...`
-    : `🔓 Unbanning ${targetCount} visitor${targetCount > 1 ? 's' : ''}...`;
+    ? `Banning ${targetCount} visitor${targetCount > 1 ? 's' : ''}...`
+    : `Unbanning ${targetCount} visitor${targetCount > 1 ? 's' : ''}...`;
 
   toast.warning(
     <CountdownToast
@@ -150,68 +150,75 @@ export const showAdminActionToast = (action: 'ban' | 'unban', targetCount: numbe
       type="warning"
     />,
     {
-      position: "top-center",
+      position: "top-right",
       autoClose: 3000,
       hideProgressBar: true,
       closeOnClick: false,
       pauseOnHover: false,
       draggable: false,
       closeButton: false,
-      className: "bg-yellow-50 border-l-4 border-yellow-500",
+      className: "toast-enhanced-slide-in toast-warning-enhanced",
       toastId: `admin-${action}-toast`, // Prevent duplicate toasts with same ID
     }
   );
 };
 
-export const showSuccessToast = (message: string) => {
-  toast.success(`✅ ${message}`, {
-    position: "top-right",
+// Base toast configuration for consistent behavior
+const defaultToastConfig: Partial<ToastOptions> = {
+  position: "top-right",
+  hideProgressBar: false,
+  closeOnClick: true,
+  pauseOnHover: true,
+  draggable: true,
+  className: "toast-enhanced-slide-in",
+};
+
+export const showSuccessToast = (message: string, options?: Partial<ToastOptions>) => {
+  toast.success(message, {
+    ...defaultToastConfig,
     autoClose: 3000,
-    hideProgressBar: false,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
-    className: "bg-green-50 border-l-4 border-green-500",
+    className: "toast-enhanced-slide-in toast-success-enhanced",
+    ...options
   });
 };
 
-export const showErrorToast = (message: string) => {
-  toast.error(`❌ ${message}`, {
-    position: "top-right",
+export const showErrorToast = (message: string, options?: Partial<ToastOptions>) => {
+  toast.error(message, {
+    ...defaultToastConfig,
     autoClose: 5000,
-    hideProgressBar: false,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
-    className: "bg-red-50 border-l-4 border-red-500",
+    className: "toast-enhanced-slide-in toast-error-enhanced",
+    ...options
   });
 };
 
-export const showWarningToast = (message: string) => {
-  toast.warning(`⚠️ ${message}`, {
-    position: "top-right",
+export const showWarningToast = (message: string, options?: Partial<ToastOptions>) => {
+  toast.warning(message, {
+    ...defaultToastConfig,
     autoClose: 4000,
-    hideProgressBar: false,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
-    className: "bg-yellow-50 border-l-4 border-yellow-500",
+    className: "toast-enhanced-slide-in toast-warning-enhanced",
+    ...options
   });
 };
 
-export const showInfoToast = (message: string) => {
-  toast.info(`ℹ️ ${message}`, {
-    position: "top-right",
+export const showInfoToast = (message: string, options?: Partial<ToastOptions>) => {
+  toast.info(message, {
+    ...defaultToastConfig,
     autoClose: 3000,
-    hideProgressBar: false,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
-    className: "bg-blue-50 border-l-4 border-blue-500",
+    className: "toast-enhanced-slide-in toast-info-enhanced",
+    ...options
   });
 };
 
-// Enhanced Toast Provider with custom styling
+// Legacy compatibility functions (migrated from utils/toastUtils.js)
+export const showGenericSuccess = (message: string, options?: Partial<ToastOptions>) => {
+  showSuccessToast(message, options);
+};
+
+export const showGenericError = (message: string, options?: Partial<ToastOptions>) => {
+  showErrorToast(message, options);
+};
+
+// Enhanced Toast Provider with unified configuration
 export default function EnhancedToastProvider() {
   return (
     <ToastContainer
@@ -225,7 +232,7 @@ export default function EnhancedToastProvider() {
       draggable={true}
       pauseOnHover={true}
       theme="light"
-      className="toast-container"
+      className="toast-container-enhanced"
       style={{
         fontSize: '14px',
         fontFamily: 'var(--font-geist-sans), system-ui, sans-serif'
@@ -234,55 +241,5 @@ export default function EnhancedToastProvider() {
   );
 }
 
-// Custom CSS for enhanced styling (to be added to globals.css)
-export const toastStyles = `
-.toast-container {
-  z-index: 9999;
-}
-
-.toast-item {
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.toast-body {
-  padding: 16px;
-  font-weight: 500;
-}
-
-.toast-progress {
-  height: 3px;
-  border-radius: 0 0 12px 12px;
-}
-
-.Toastify__toast--success {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
-}
-
-.Toastify__toast--error {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  color: white;
-}
-
-.Toastify__toast--warning {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  color: white;
-}
-
-.Toastify__toast--info {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  color: white;
-}
-
-.Toastify__close-button {
-  color: rgba(255, 255, 255, 0.8);
-  opacity: 0.8;
-}
-
-.Toastify__close-button:hover {
-  opacity: 1;
-}
-`;
+// Enhanced toast system with unified styling
+// All custom styles are now in globals.css for better performance and consistency

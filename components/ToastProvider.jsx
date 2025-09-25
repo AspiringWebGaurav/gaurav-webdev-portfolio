@@ -7,15 +7,20 @@ export default function ToastProvider() {
   return (
     <ToastContainer
       position="top-right"
-      autoClose={2000}
+      autoClose={3000}
       hideProgressBar={false}
       newestOnTop={true}
-      closeOnClick={false}
+      closeOnClick={true}
       rtl={false}
       pauseOnFocusLoss={false}
-      draggable={false}
-      pauseOnHover={false}
-      theme="light" // ✅ Light mode
+      draggable={true}
+      pauseOnHover={true}
+      theme="light"
+      className="toast-container-enhanced"
+      style={{
+        fontSize: '14px',
+        fontFamily: 'var(--font-geist-sans), system-ui, sans-serif'
+      }}
     />
   );
 }

@@ -5,12 +5,14 @@ import { useRouter } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { getOrCreateVisitorUUID } from '@/utils/visitorTracking';
-import { 
-  showBanToast, 
-  showUnbanToast, 
+import {
+  showBanToast,
+  showUnbanToast,
   showProcessingToast,
-  showErrorToast 
+  showErrorToast
 } from '@/components/ToastSystem';
+import { enterpriseRedirect, RedirectStrategy } from '@/utils/enterpriseRedirect';
+import { getSessionManager, setBanState } from '@/utils/enterpriseSessionManager';
 
 interface VisitorStatus {
   status: 'active' | 'banned';
@@ -70,8 +72,8 @@ export default function EnhancedVisitorStatusWatcher({ uuid: propUUID }: Enhance
     
     const unsubscribe = onSnapshot(
       docRef,
-      (snapshot) => {
-        handleStatusUpdate(snapshot);
+      async (snapshot) => {
+        await handleStatusUpdate(snapshot);
       },
       (error) => {
         console.error("❌ Firestore listener error:", error);
@@ -90,7 +92,7 @@ export default function EnhancedVisitorStatusWatcher({ uuid: propUUID }: Enhance
     setIsListening(true);
   };
 
-  const handleStatusUpdate = (snapshot: any) => {
+  const handleStatusUpdate = async (snapshot: any) => {
     if (!snapshot.exists()) {
       console.log("⏳ Visitor document not found yet - waiting for VisitorTracker to create it...");
       // Don't treat this as an error - the document will be created by VisitorTracker
@@ -120,46 +122,155 @@ export default function EnhancedVisitorStatusWatcher({ uuid: propUUID }: Enhance
       console.log(`🔄 Status changed: ${lastStatus.current} → ${newStatus.status}`);
       
       setCurrentStatus(newStatus);
-      handleStatusChange(newStatus);
+      await handleStatusChange(newStatus);
       lastStatus.current = newStatus.status;
     }
   };
 
-  const handleStatusChange = (status: VisitorStatus) => {
+  const handleStatusChange = async (status: VisitorStatus) => {
     if (status.status === 'banned') {
-      handleBanAction(status);
+      await handleBanAction(status);
     } else if (status.status === 'active') {
-      handleUnbanAction(status);
+      await handleUnbanAction(status);
     }
   };
 
-  const handleBanAction = (status: VisitorStatus) => {
+  const handleBanAction = async (status: VisitorStatus) => {
     console.log("🚫 User has been banned:", status.banReason);
+    const sessionManager = getSessionManager();
+    
+    // Store ban state first
+    if (uuid.current) {
+      await setBanState(uuid.current, 'banned');
+    }
     
     showBanToast(() => {
-      showProcessingToast("🔁 Redirecting to ban page...", 1500);
+      showProcessingToast("🔁 Redirecting to ban page...", 2000);
       
-      setTimeout(() => {
-        // Use Next.js router for dynamic redirection (works in both dev and production)
-        router.push(`/${uuid.current}/ban?reason=${encodeURIComponent(status.banReason || 'Policy violation')}`);
-      }, 1500);
+      setTimeout(async () => {
+        if (!uuid.current) return;
+        
+        try {
+          const banUrl = `/${uuid.current}/ban?reason=${encodeURIComponent(status.banReason || 'Policy violation')}`;
+          
+          // Store redirect state
+          await sessionManager.setRedirectState(uuid.current, banUrl, 'ban');
+          
+          // Use enterprise redirect with mobile-optimized fallbacks
+          const redirectResult = await enterpriseRedirect(banUrl, {
+            maxRetries: 3,
+            retryDelay: 800,
+            timeout: 10000,
+            preserveHistory: false,
+            validateRedirect: true,
+            fallbackStrategies: [
+              RedirectStrategy.NEXT_ROUTER,
+              RedirectStrategy.WINDOW_LOCATION,
+              RedirectStrategy.META_REFRESH,
+              RedirectStrategy.FORM_SUBMIT,
+              RedirectStrategy.WINDOW_REPLACE,
+              RedirectStrategy.FORCE_RELOAD
+            ]
+          }, router, uuid.current);
+          
+          if (!redirectResult.success) {
+            console.error("Enterprise redirect failed for ban", redirectResult);
+            // Last resort fallback
+            try {
+              window.location.href = banUrl;
+            } catch (fallbackError) {
+              showErrorToast("Redirect failed. Please refresh the page.");
+            }
+          }
+        } catch (error) {
+          console.error("Error during ban redirect process:", error);
+          // Ultimate fallback
+          try {
+            const banUrl = `/${uuid.current}/ban?reason=${encodeURIComponent(status.banReason || 'Policy violation')}`;
+            window.location.href = banUrl;
+          } catch (fallbackError) {
+            showErrorToast("Redirect failed. Please refresh the page.");
+          }
+        }
+      }, 2000);
     });
   };
 
-  const handleUnbanAction = (status: VisitorStatus) => {
+  const handleUnbanAction = async (status: VisitorStatus) => {
     console.log("🎉 User has been unbanned");
+    const sessionManager = getSessionManager();
+    
+    // Store unban completion state first
+    if (uuid.current) {
+      await sessionManager.setUnbanCompletionState(uuid.current);
+      await setBanState(uuid.current, 'unbanned');
+    }
     
     showUnbanToast(() => {
-      showProcessingToast("🔄 Redirecting to homepage...", 1500);
+      showProcessingToast("🔄 Redirecting to portfolio...", 3000);
       
-      setTimeout(() => {
-        // Set session storage to indicate user was just unbanned (don't clear it)
-        sessionStorage.setItem('banCheckDone', 'true');
-        sessionStorage.setItem('justUnbanned', 'true');
+      setTimeout(async () => {
+        if (!uuid.current) return;
         
-        // Use Next.js router for dynamic redirection (works in both dev and production)
-        router.push(`/${uuid.current}`);
-      }, 1500);
+        try {
+          // Set session storage for backward compatibility
+          sessionStorage.setItem('banCheckDone', 'true');
+          sessionStorage.setItem('justUnbanned', 'true');
+          
+          const portfolioUrl = `/${uuid.current}`;
+          
+          // Store redirect state for mobile reliability
+          await sessionManager.setRedirectState(uuid.current, portfolioUrl, 'unban');
+          
+          // Use enterprise redirect with Samsung S9 Plus optimized strategy
+          const redirectResult = await enterpriseRedirect(portfolioUrl, {
+            maxRetries: 5,
+            retryDelay: 1000,
+            timeout: 15000,
+            preserveHistory: false,
+            validateRedirect: true,
+            fallbackStrategies: [
+              RedirectStrategy.WINDOW_LOCATION, // Best for Samsung browsers
+              RedirectStrategy.META_REFRESH,    // Reliable fallback
+              RedirectStrategy.FORM_SUBMIT,     // Mobile-friendly
+              RedirectStrategy.NEXT_ROUTER,     // Standard approach
+              RedirectStrategy.WINDOW_REPLACE,  // Alternative
+              RedirectStrategy.FORCE_RELOAD     // Last resort
+            ]
+          }, router, uuid.current);
+          
+          if (!redirectResult.success) {
+            console.error("Enterprise redirect failed for unban", redirectResult);
+            
+            // Last resort: show manual redirect instruction
+            showErrorToast("Please manually refresh the page or click your browser's back button to return to the portfolio.");
+            
+            // Try simple fallback after a delay
+            setTimeout(() => {
+              try {
+                window.location.href = portfolioUrl;
+              } catch (fallbackError) {
+                console.error("Final fallback redirect also failed:", fallbackError);
+              }
+            }, 2000);
+          } else {
+            console.log("🎉 Unban redirect successful via VisitorStatusWatcher:", {
+              method: redirectResult.method,
+              attempts: redirectResult.attempts,
+              duration: redirectResult.duration
+            });
+          }
+        } catch (error) {
+          console.error("Error during unban redirect process in VisitorStatusWatcher:", error);
+          
+          // Fallback: try simple window location
+          try {
+            window.location.href = `/${uuid.current}`;
+          } catch (fallbackError) {
+            showErrorToast("Redirect failed. Please manually navigate to your portfolio.");
+          }
+        }
+      }, 3000); // Increased delay for mobile stability
     });
   };
 

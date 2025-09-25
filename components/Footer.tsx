@@ -6,13 +6,11 @@ import { socialMedia } from "@/data";
 import MagicButton from "./ui/MagicButton";
 import ContactModal from "./ContactModal";
 import GlobalLoader from "./GlobalLoader";
-import SuccessNotification from "./SuccessNotification";
+import { showSuccessToast } from "./ToastSystem";
 
 const Footer = () => {
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [successName, setSuccessName] = useState("");
   const [savedScrollY, setSavedScrollY] = useState(0);
 
   const openContactWithLoader = () => {
@@ -32,14 +30,11 @@ const Footer = () => {
   };
 
   const handleFormSuccess = (name: string) => {
-    setSuccessName(name);
-    setShowSuccess(true);
-  };
-
-  const closeSuccess = () => {
-    setShowSuccess(false);
-    document.body.style.overflow = "unset";
-    window.scrollTo(0, savedScrollY);
+    showSuccessToast(
+      `Thank you, ${name}! Your message has been sent successfully. I'll reply within 2-4 hours. Check your inbox for a confirmation email.`,
+      { autoClose: 8000 }
+    );
+    closeModal();
   };
 
   useEffect(() => {
@@ -106,11 +101,6 @@ const Footer = () => {
         onSuccess={handleFormSuccess}
       />
 
-      <SuccessNotification
-        isOpen={showSuccess}
-        onClose={closeSuccess}
-        userName={successName}
-      />
     </>
   );
 };

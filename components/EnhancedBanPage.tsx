@@ -12,6 +12,8 @@ import {
 import AppealModal from '@/components/AppealModal';
 import { silentLogger, prodLogger } from '@/utils/secureLogger';
 import { formatPolicyReferenceForDisplay } from '@/utils/policyReference';
+import { enterpriseRedirect, RedirectStrategy } from '@/utils/enterpriseRedirect';
+import { getSessionManager, setBanState } from '@/utils/enterpriseSessionManager';
 
 export default function EnhancedBanPage() {
   const searchParams = useSearchParams();
@@ -61,7 +63,7 @@ export default function EnhancedBanPage() {
       
       const unsubscribe = onSnapshot(
         docRef,
-        (snapshot) => {
+        async (snapshot) => {
           if (snapshot.exists()) {
             const data = snapshot.data();
             const currentStatus = data.status;
@@ -71,7 +73,7 @@ export default function EnhancedBanPage() {
             // If user is unbanned, redirect to portfolio
             if (currentStatus === 'active') {
               silentLogger.silent("User unbanned! Redirecting to portfolio");
-              handleUnbanRedirect(userUUID);
+              await handleUnbanRedirect(userUUID);
             }
           }
         },
@@ -89,18 +91,73 @@ export default function EnhancedBanPage() {
     }
   };
 
-  const handleUnbanRedirect = (userUUID: string) => {
+  const handleUnbanRedirect = async (userUUID: string) => {
+    const sessionManager = getSessionManager();
+    
+    // Store unban completion state first
+    await sessionManager.setUnbanCompletionState(userUUID);
+    await setBanState(userUUID, 'unbanned');
+    
     showUnbanToast(() => {
-      showProcessingToast("🔄 Redirecting to your portfolio...", 2000);
+      showProcessingToast("🔄 Redirecting to your portfolio...", 3000);
       
-      setTimeout(() => {
-        // Clear any ban-related session data
-        sessionStorage.setItem('banCheckDone', 'true');
-        sessionStorage.setItem('justUnbanned', 'true');
-        
-        // Use Next.js router for dynamic redirection (works in both dev and production)
-        router.push(`/${userUUID}`);
-      }, 2000);
+      setTimeout(async () => {
+        try {
+          // Clear any ban-related session data (legacy compatibility)
+          sessionStorage.setItem('banCheckDone', 'true');
+          sessionStorage.setItem('justUnbanned', 'true');
+          
+          // Store redirect state for mobile reliability
+          await sessionManager.setRedirectState(userUUID, `/${userUUID}`, 'unban');
+          
+          // Use enterprise redirect with mobile-optimized fallbacks for Samsung S9 Plus
+          const redirectResult = await enterpriseRedirect(`/${userUUID}`, {
+            maxRetries: 5,
+            retryDelay: 1000,
+            timeout: 15000,
+            preserveHistory: false,
+            validateRedirect: true,
+            fallbackStrategies: [
+              RedirectStrategy.WINDOW_LOCATION,
+              RedirectStrategy.META_REFRESH,
+              RedirectStrategy.FORM_SUBMIT,
+              RedirectStrategy.NEXT_ROUTER,
+              RedirectStrategy.WINDOW_REPLACE,
+              RedirectStrategy.FORCE_RELOAD
+            ]
+          }, router, userUUID);
+          
+          if (!redirectResult.success) {
+            prodLogger.error("Enterprise redirect failed for unban", {
+              uuid: userUUID,
+              method: redirectResult.method,
+              attempts: redirectResult.attempts,
+              error: redirectResult.error
+            });
+            
+            // Last resort: show manual redirect instruction
+            showErrorToast("Please manually refresh the page or click your browser's back button to return to the portfolio.");
+          } else {
+            silentLogger.silent("Unban redirect successful via EnhancedBanPage", {
+              method: redirectResult.method,
+              attempts: redirectResult.attempts,
+              duration: redirectResult.duration
+            });
+          }
+        } catch (error) {
+          prodLogger.error("Error during unban redirect process in EnhancedBanPage", {
+            uuid: userUUID,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
+          
+          // Fallback: try simple window location
+          try {
+            window.location.href = `/${userUUID}`;
+          } catch (fallbackError) {
+            showErrorToast("Redirect failed. Please manually navigate to your portfolio.");
+          }
+        }
+      }, 3000); // Increased delay for mobile stability
     });
   };
 

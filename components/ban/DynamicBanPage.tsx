@@ -13,6 +13,9 @@ import { silentLogger, prodLogger } from '@/utils/secureLogger';
 import { PolicyReferenceSync } from '@/utils/policyReferenceSync';
 import { db } from '@/lib/firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
+import { enterpriseRedirect, RedirectStrategy } from '@/utils/enterpriseRedirect';
+import { getSessionManager, setBanState } from '@/utils/enterpriseSessionManager';
+import { createBanStatusListener, removeBanStatusListener } from '@/utils/enterpriseFirebaseManager';
 
 interface DynamicBanPageProps {
   uuid?: string;
@@ -44,7 +47,7 @@ export default function DynamicBanPage({
   const [isLoadingPolicyRef, setIsLoadingPolicyRef] = useState(false);
 
   // Refs for cleanup
-  const categoryUnsubscribeRef = useRef<(() => void) | null>(null);
+  const categoryListenerIdRef = useRef<string | null>(null);
   const designUnsubscribeRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
@@ -107,20 +110,22 @@ export default function DynamicBanPage({
   };
 
   const startCategoryListener = (visitorUuid: string) => {
-    if (categoryUnsubscribeRef.current) {
-      categoryUnsubscribeRef.current();
+    // Clean up existing listener
+    if (categoryListenerIdRef.current) {
+      removeBanStatusListener(categoryListenerIdRef.current);
+      categoryListenerIdRef.current = null;
     }
 
     try {
-      const docRef = doc(db, 'visitors', visitorUuid);
+      silentLogger.silent("Starting enterprise category listener for visitor", { uuid: visitorUuid });
       
-      silentLogger.silent("Starting category listener for visitor", { uuid: visitorUuid });
-      
-      const unsubscribe = onSnapshot(
-        docRef,
-        async (snapshot) => {
-          if (snapshot.exists()) {
-            const data = snapshot.data();
+      // Create enterprise Firebase listener with automatic reconnection
+      const listenerId = createBanStatusListener(
+        visitorUuid,
+        async (status: string, data: any) => {
+          silentLogger.silent("Enterprise listener received status update", { status });
+          
+          if (data) {
             const newCategory = data.banCategory as BanCategory;
             const visitorStatus = data.status;
             const newPolicyReference = data.policyReference;
@@ -128,7 +133,7 @@ export default function DynamicBanPage({
             // Check if user was unbanned
             if (visitorStatus === 'active') {
               silentLogger.silent("User unbanned! Redirecting to portfolio");
-              handleUnbanRedirect(visitorUuid);
+              await handleUnbanRedirect(visitorUuid);
               return;
             }
             
@@ -158,19 +163,22 @@ export default function DynamicBanPage({
           } else {
             // Visitor document doesn't exist, might be unbanned
             silentLogger.silent("Visitor document not found, redirecting to portfolio");
-            handleUnbanRedirect(visitorUuid);
+            await handleUnbanRedirect(visitorUuid);
           }
         },
-        (error) => {
-          prodLogger.error("Category listener error", { error: error.message });
-          showErrorToast("Connection lost. Please refresh the page.");
+        (error: Error) => {
+          prodLogger.error("Enterprise category listener error", { error: error.message });
+          showErrorToast("Connection lost. Attempting to reconnect...");
         }
       );
 
-      categoryUnsubscribeRef.current = unsubscribe;
+      categoryListenerIdRef.current = listenerId;
       setIsListening(true);
+      
+      silentLogger.silent("Enterprise category listener started", { listenerId });
     } catch (error) {
-      prodLogger.error("Failed to start category listener", { error });
+      prodLogger.error("Failed to start enterprise category listener", { error });
+      showErrorToast("Failed to start real-time monitoring. Please refresh the page.");
     }
   };
 
@@ -224,15 +232,73 @@ export default function DynamicBanPage({
     }
   };
 
-  const handleUnbanRedirect = (userUUID: string) => {
+  const handleUnbanRedirect = async (userUUID: string) => {
+    const sessionManager = getSessionManager();
+    
+    // Store unban completion state first
+    await sessionManager.setUnbanCompletionState(userUUID);
+    await setBanState(userUUID, 'unbanned');
+    
     showUnbanToast(() => {
-      showProcessingToast("🔄 Redirecting to your portfolio...", 2000);
+      showProcessingToast("🔄 Redirecting to your portfolio...", 3000);
       
-      setTimeout(() => {
-        sessionStorage.setItem('banCheckDone', 'true');
-        sessionStorage.setItem('justUnbanned', 'true');
-        router.push(`/${userUUID}`);
-      }, 2000);
+      setTimeout(async () => {
+        try {
+          // Set legacy session storage for backward compatibility
+          sessionStorage.setItem('banCheckDone', 'true');
+          sessionStorage.setItem('justUnbanned', 'true');
+          
+          // Store redirect state for mobile reliability
+          await sessionManager.setRedirectState(userUUID, `/${userUUID}`, 'unban');
+          
+          // Use enterprise redirect with mobile-optimized fallbacks
+          const redirectResult = await enterpriseRedirect(`/${userUUID}`, {
+            maxRetries: 5,
+            retryDelay: 1000,
+            timeout: 15000,
+            preserveHistory: false,
+            validateRedirect: true,
+            fallbackStrategies: [
+              RedirectStrategy.WINDOW_LOCATION,
+              RedirectStrategy.META_REFRESH,
+              RedirectStrategy.FORM_SUBMIT,
+              RedirectStrategy.NEXT_ROUTER,
+              RedirectStrategy.WINDOW_REPLACE,
+              RedirectStrategy.FORCE_RELOAD
+            ]
+          }, router, userUUID);
+          
+          if (!redirectResult.success) {
+            prodLogger.error("Enterprise redirect failed for unban", {
+              uuid: userUUID,
+              method: redirectResult.method,
+              attempts: redirectResult.attempts,
+              error: redirectResult.error
+            });
+            
+            // Last resort: show manual redirect instruction
+            showErrorToast("Please manually refresh the page or click your browser's back button to return to the portfolio.");
+          } else {
+            silentLogger.silent("Unban redirect successful", {
+              method: redirectResult.method,
+              attempts: redirectResult.attempts,
+              duration: redirectResult.duration
+            });
+          }
+        } catch (error) {
+          prodLogger.error("Error during unban redirect process", {
+            uuid: userUUID,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
+          
+          // Fallback: try simple window location
+          try {
+            window.location.href = `/${userUUID}`;
+          } catch (fallbackError) {
+            showErrorToast("Redirect failed. Please manually navigate to your portfolio.");
+          }
+        }
+      }, 3000); // Increased delay for mobile stability
     });
   };
 
@@ -275,18 +341,20 @@ export default function DynamicBanPage({
   };
 
   const cleanup = () => {
-    if (categoryUnsubscribeRef.current) {
-      categoryUnsubscribeRef.current();
-      categoryUnsubscribeRef.current = null;
+    // Clean up enterprise Firebase listener
+    if (categoryListenerIdRef.current) {
+      removeBanStatusListener(categoryListenerIdRef.current);
+      categoryListenerIdRef.current = null;
     }
     
+    // Clean up design listener
     if (designUnsubscribeRef.current) {
       designUnsubscribeRef.current();
       designUnsubscribeRef.current = null;
     }
     
     setIsListening(false);
-    silentLogger.silent("Dynamic ban page cleanup completed");
+    silentLogger.silent("Dynamic ban page cleanup completed with enterprise listeners");
   };
 
   if (isLoading || !design) {

@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { v4 as uuidv4 } from 'uuid';
+import { secureSessionClient } from "@/lib/secureSessionClient";
 import EnhancedBanGate from "@/components/EnhancedBanGate";
 import VisitorTracker from "@/components/VisitorTracker";
 import EnhancedVisitorStatusWatcher from "@/components/EnhancedVisitorStatusWatcher";
@@ -183,18 +183,13 @@ const GoToTopButton = ({ hideWhenAIOpen }: { hideWhenAIOpen: boolean }) => {
   );
 };
 
-// UUID validation function
-const isValidUUID = (uuid: string): boolean => {
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-  return uuidRegex.test(uuid);
-};
-
 const UUIDPortfolioPage = () => {
   const params = useParams();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [isValidating, setIsValidating] = useState(true);
   const [currentUUID, setCurrentUUID] = useState<string>("");
+  const [sessionError, setSessionError] = useState<string | null>(null);
   
   // Turnstile verification state
   const [showEntryGate, setShowEntryGate] = useState(false);
@@ -211,35 +206,100 @@ const UUIDPortfolioPage = () => {
   };
 
   useEffect(() => {
-    const validateAndSetUUID = () => {
-      const urlUUID = params.uuid as string;
-      
-      smartLogger.devOnly.debug("URL UUID received");
-
-      // Validate UUID format
-      if (!urlUUID || !isValidUUID(urlUUID)) {
-        smartLogger.devOnly.debug("Invalid UUID in URL, generating new one");
-        const newUUID = uuidv4();
-        router.replace(`/${newUUID}`);
-        return;
-      }
-
-      // Set the UUID for the session
-      setCurrentUUID(urlUUID);
-      
-      // Store in localStorage for persistence (fallback)
+    const initializeSecureSession = async () => {
       try {
-        localStorage.setItem('visitor_uuid', urlUUID);
-        sessionStorage.setItem('visitor_uuid', urlUUID);
-      } catch (error) {
-        smartLogger.devOnly.debug("Storage not available");
-      }
+        const urlUUID = params.uuid as string;
+        smartLogger.devOnly.debug("Initializing secure session", { urlUUID });
 
-      setIsValidating(false);
-      smartLogger.devOnly.debug("UUID validated and set");
+        // Enhanced session handling - preserves UUID for ban system
+        const validUUID = await secureSessionClient.getValidUUID(urlUUID);
+        
+        if (!validUUID) {
+          // No valid session - could be first time or network issue
+          smartLogger.devOnly.debug("No valid session available, requesting new session");
+          
+          // For ban system compatibility, try to preserve the URL UUID
+          if (urlUUID) {
+            // Try to generate session with the URL UUID (server will validate/reject if needed)
+            const newSessionSuccess = await secureSessionClient.requestNewSession(urlUUID);
+            if (newSessionSuccess) {
+              const newValidUUID = await secureSessionClient.getValidUUID();
+              if (newValidUUID) {
+                setCurrentUUID(newValidUUID);
+                setIsValidating(false);
+                
+                // If UUID changed, redirect to the new UUID
+                if (newValidUUID !== urlUUID) {
+                  router.replace(`/${newValidUUID}`);
+                }
+                return;
+              }
+            }
+          }
+          
+          // Fallback - redirect to entry point for new session
+          smartLogger.devOnly.debug("Unable to establish session, redirecting to entry point");
+          router.replace('/');
+          return;
+        }
+
+        // Check if URL UUID matches the server-issued UUID
+        if (urlUUID && urlUUID !== validUUID) {
+          // UUID mismatch - check if this is tampering or legitimate redirect needed
+          smartLogger.devOnly.debug("URL UUID mismatch with session", {
+            urlUUID,
+            validUUID
+          });
+          
+          // For ban system compatibility, redirect to the valid UUID
+          router.replace(`/${validUUID}`);
+          return;
+        }
+
+        // If no UUID in URL, redirect to the correct UUID
+        if (!urlUUID) {
+          smartLogger.devOnly.debug("No UUID in URL, redirecting to session UUID");
+          router.replace(`/${validUUID}`);
+          return;
+        }
+
+        // Success - valid session with matching UUID
+        setCurrentUUID(validUUID);
+        setIsValidating(false);
+        smartLogger.devOnly.debug("Secure session validated", { uuid: validUUID });
+
+      } catch (error) {
+        smartLogger.api.error("Secure session initialization failed", { error });
+        
+        // More lenient error handling - don't immediately fail
+        const urlUUID = params.uuid as string;
+        if (urlUUID) {
+          // Try one more time with a delay for network issues
+          setTimeout(async () => {
+            try {
+              const retryUUID = await secureSessionClient.getValidUUID(urlUUID);
+              if (retryUUID) {
+                setCurrentUUID(retryUUID);
+                setIsValidating(false);
+                if (retryUUID !== urlUUID) {
+                  router.replace(`/${retryUUID}`);
+                }
+                return;
+              }
+            } catch (retryError) {
+              smartLogger.devOnly.debug("Retry also failed", retryError);
+            }
+            
+            // Final fallback - redirect to entry point
+            router.replace('/');
+          }, 2000); // 2 second delay
+        } else {
+          router.replace('/');
+        }
+      }
     };
 
-    validateAndSetUUID();
+    initializeSecureSession();
   }, [params.uuid, router]);
 
   useEffect(() => {
@@ -427,13 +487,47 @@ const UUIDPortfolioPage = () => {
     }
   }, [isValidating, currentUUID]);
 
-  // Show loading while validating UUID
+  // Show loading while validating session
   if (isValidating) {
     return (
       <div className="min-h-screen bg-black-100 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-gray-700 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white text-lg">Validating access...</p>
+          <p className="text-white text-lg">Validating secure session...</p>
+          <p className="text-gray-400 text-sm mt-2">Verifying cryptographic signatures</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show security error if session validation failed
+  if (sessionError) {
+    return (
+      <div className="min-h-screen bg-black-100 flex items-center justify-center">
+        <div className="max-w-md mx-auto text-center p-6">
+          <div className="w-20 h-20 mx-auto mb-6 bg-red-500/10 rounded-full flex items-center justify-center">
+            <svg className="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.664-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          
+          <h1 className="text-2xl font-bold text-white mb-3">Access Denied</h1>
+          <p className="text-gray-300 mb-6">{sessionError}</p>
+          
+          <div className="bg-gray-800/50 rounded-lg p-4 mb-6 border border-gray-700">
+            <h2 className="text-sm font-semibold text-gray-200 mb-2">Security Notice</h2>
+            <p className="text-xs text-gray-400 leading-relaxed">
+              This application uses enterprise-grade security with cryptographically signed session tokens.
+              Invalid or tampered sessions are automatically rejected to protect against unauthorized access.
+            </p>
+          </div>
+          
+          <button
+            onClick={() => window.location.href = '/'}
+            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
+          >
+            Request New Session
+          </button>
         </div>
       </div>
     );

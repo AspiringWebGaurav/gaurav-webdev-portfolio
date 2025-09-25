@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireFirebaseAdmin, isFirebaseAdminReady, getFirebaseAdminError } from "@/lib/firebase-admin";
-import { logger } from "@/utils/secureLogger";
+import { logger, prodLogger } from "@/utils/secureLogger";
 
 export async function GET(req: NextRequest) {
   try {
@@ -99,20 +99,37 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// Update visitor status (for admin use)
+// Update visitor status (for admin use) - Enhanced with enterprise reliability
 export async function POST(req: NextRequest) {
+  const startTime = Date.now();
+  let transactionAttempts = 0;
+  const maxRetries = 3;
+  
   try {
     const body = await req.json();
     const { uuid, status, banReason, banCategory, policyReference, adminId } = body;
 
+    // Enhanced validation
     if (!uuid || !status) {
+      prodLogger.warn("Invalid request: missing required fields", { uuid: !!uuid, status: !!status });
       return NextResponse.json(
         { error: "UUID and status are required" },
         { status: 400 }
       );
     }
 
+    // UUID format validation
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(uuid)) {
+      prodLogger.warn("Invalid UUID format", { uuid });
+      return NextResponse.json(
+        { error: "Invalid UUID format" },
+        { status: 400 }
+      );
+    }
+
     if (!['active', 'banned'].includes(status)) {
+      prodLogger.warn("Invalid status value", { status });
       return NextResponse.json(
         { error: "Status must be 'active' or 'banned'" },
         { status: 400 }
@@ -122,7 +139,7 @@ export async function POST(req: NextRequest) {
     // Check if Firebase Admin is properly configured
     if (!isFirebaseAdminReady()) {
       const adminError = getFirebaseAdminError();
-      logger.error("Cannot update visitor status - Firebase Admin not configured", {
+      prodLogger.error("Cannot update visitor status - Firebase Admin not configured", {
         uuid,
         status,
         error: adminError?.message
@@ -135,72 +152,172 @@ export async function POST(req: NextRequest) {
     }
 
     const db = requireFirebaseAdmin();
-    const visitorRef = db.collection("visitors").doc(uuid);
-    const visitorDoc = await visitorRef.get();
+    
+    // Retry mechanism for database operations
+    while (transactionAttempts < maxRetries) {
+      transactionAttempts++;
+      
+      try {
+        // Use transaction for atomic updates
+        const result = await db.runTransaction(async (transaction) => {
+          const visitorRef = db.collection("visitors").doc(uuid);
+          const banRef = db.collection("bans").doc(uuid);
+          
+          const visitorDoc = await transaction.get(visitorRef);
+          
+          if (!visitorDoc.exists) {
+            throw new Error("Visitor not found");
+          }
 
-    if (!visitorDoc.exists) {
+          const currentData = visitorDoc.data();
+          const timestamp = new Date().toISOString();
+
+          const updateData: any = {
+            status,
+            updatedAt: timestamp,
+            lastStatusChange: timestamp,
+            adminId: adminId || 'system',
+            syncVersion: (currentData?.syncVersion || 0) + 1 // Version for sync tracking
+          };
+
+          if (status === 'banned') {
+            updateData.banTimestamp = timestamp;
+            updateData.banReason = banReason || 'Violation of terms';
+            updateData.banCategory = banCategory || 'normal';
+            updateData.policyReference = policyReference || `POL-${Date.now()}`;
+            updateData.unbanTimestamp = null;
+            
+            // Enhanced category history with previous state tracking
+            const previousCategory = currentData?.banCategory || null;
+            updateData.banCategoryHistory = [
+              ...(currentData?.banCategoryHistory || []),
+              {
+                category: banCategory || 'normal',
+                timestamp,
+                adminId: adminId || 'system',
+                reason: banReason || 'Violation of terms',
+                previousCategory,
+                action: 'ban'
+              }
+            ].slice(-10); // Keep last 10 history entries
+
+            // Create/update ban record for audit trail
+            const banData = {
+              uuid,
+              reason: banReason || 'Violation of terms',
+              banCategory: banCategory || 'normal',
+              policyReference: updateData.policyReference,
+              adminId: adminId || 'system',
+              timestamp,
+              isActive: true,
+              createdAt: currentData?.banTimestamp || timestamp,
+              updatedAt: timestamp
+            };
+            
+            transaction.set(banRef, banData, { merge: true });
+            
+          } else if (status === 'active') {
+            updateData.unbanTimestamp = timestamp;
+            updateData.banReason = null;
+            updateData.banCategory = null;
+            updateData.banTimestamp = null;
+            updateData.policyReference = null;
+            
+            // Update category history for unban
+            updateData.banCategoryHistory = [
+              ...(currentData?.banCategoryHistory || []),
+              {
+                category: null,
+                timestamp,
+                adminId: adminId || 'system',
+                reason: 'Unbanned',
+                previousCategory: currentData?.banCategory || null,
+                action: 'unban'
+              }
+            ].slice(-10);
+
+            // Deactivate ban record
+            const banDoc = await transaction.get(banRef);
+            if (banDoc.exists) {
+              transaction.update(banRef, {
+                isActive: false,
+                unbanTimestamp: timestamp,
+                unbanAdminId: adminId || 'system',
+                updatedAt: timestamp
+              });
+            }
+          }
+
+          // Update visitor document
+          transaction.update(visitorRef, updateData);
+          
+          return { updateData, timestamp };
+        });
+
+        const duration = Date.now() - startTime;
+        
+        prodLogger.info("Visitor status updated successfully with transaction", {
+          uuid,
+          status,
+          adminId: adminId || 'system',
+          attempts: transactionAttempts,
+          duration: `${duration}ms`,
+          syncVersion: result.updateData.syncVersion
+        });
+
+        return NextResponse.json(
+          {
+            message: `Visitor status updated to ${status}`,
+            uuid,
+            status,
+            timestamp: result.timestamp,
+            syncVersion: result.updateData.syncVersion,
+            processedIn: `${duration}ms`
+          },
+          { status: 200 }
+        );
+
+      } catch (transactionError) {
+        prodLogger.warn(`Transaction attempt ${transactionAttempts} failed`, {
+          uuid,
+          status,
+          error: transactionError instanceof Error ? transactionError.message : 'Unknown error',
+          attempt: transactionAttempts
+        });
+
+        if (transactionAttempts >= maxRetries) {
+          throw transactionError;
+        }
+        
+        // Wait before retry with exponential backoff
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, transactionAttempts) * 100));
+      }
+    }
+
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    
+    prodLogger.error("Error updating visitor status after all retries", {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      uuid: new URL(req.url).searchParams.get('uuid'),
+      attempts: transactionAttempts,
+      duration: `${duration}ms`
+    });
+    
+    // Return specific error for visitor not found
+    if (error instanceof Error && error.message === "Visitor not found") {
       return NextResponse.json(
         { error: "Visitor not found" },
         { status: 404 }
       );
     }
-
-    const updateData: any = {
-      status,
-      updatedAt: new Date().toISOString(),
-      lastStatusChange: new Date().toISOString(),
-      adminId: adminId || 'system'
-    };
-
-    if (status === 'banned') {
-      updateData.banTimestamp = new Date().toISOString();
-      updateData.banReason = banReason || 'Violation of terms';
-      updateData.banCategory = banCategory || 'normal';
-      updateData.policyReference = policyReference || null;
-      updateData.unbanTimestamp = null;
-      
-      // Add category history
-      updateData.banCategoryHistory = [{
-        category: banCategory || 'normal',
-        timestamp: new Date().toISOString(),
-        adminId: adminId || 'system',
-        reason: banReason || 'Violation of terms',
-        previousCategory: null
-      }];
-    } else if (status === 'active') {
-      updateData.unbanTimestamp = new Date().toISOString();
-      updateData.banReason = null;
-      updateData.banCategory = null;
-      updateData.banTimestamp = null;
-      updateData.policyReference = null;
-      updateData.banCategoryHistory = null;
-    }
-
-    await visitorRef.update(updateData);
-
-    logger.info("Visitor status updated successfully", {
-      uuid,
-      status,
-      adminId: adminId || 'system'
-    });
-
-    return NextResponse.json(
-      {
-        message: `Visitor status updated to ${status}`,
-        uuid,
-        status,
-        timestamp: updateData.lastStatusChange
-      },
-      { status: 200 }
-    );
-
-  } catch (error) {
-    logger.error("Error updating visitor status", {
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
     
     return NextResponse.json(
-      { error: "Failed to update visitor status" },
+      {
+        error: "Failed to update visitor status",
+        retryAfter: 5, // Suggest retry after 5 seconds
+        transient: true // Indicate this might be a temporary error
+      },
       { status: 500 }
     );
   }

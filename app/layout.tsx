@@ -6,6 +6,7 @@ import EnhancedToastProvider from "@/components/ToastSystem";
 import PWAInitializer from "@/components/PWAInitializer";
 import LoadingProvider from "@/components/loading/LoadingProvider";
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { Analytics } from "@vercel/analytics/next"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

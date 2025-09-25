@@ -545,7 +545,7 @@ export default function AdminDashboard() {
             ) {
               const newVisitorsAdded = newVisitorCount - currentVisitorCount;
               showSuccessToast(
-                `🎉 ${newVisitorsAdded} new visitor${
+                `${newVisitorsAdded} new visitor${
                   newVisitorsAdded > 1 ? "s" : ""
                 } detected!`
               );
@@ -572,7 +572,7 @@ export default function AdminDashboard() {
                   visitorData.isOnline
                 ) {
                   showInfoToast(
-                    `👋 Visitor ${visitorId.slice(0, 8)}... is now online`
+                    `Visitor ${visitorId.slice(0, 8)}... is now online`
                   );
                 }
 
@@ -583,7 +583,7 @@ export default function AdminDashboard() {
                   !visitorData.isOnline
                 ) {
                   showInfoToast(
-                    `👋 Visitor ${visitorId.slice(0, 8)}... went offline`
+                    `Visitor ${visitorId.slice(0, 8)}... went offline`
                   );
                 }
               }
@@ -635,7 +635,7 @@ export default function AdminDashboard() {
             ) {
               const newAppealsCount = newPendingCount - currentPendingCount;
               showSuccessToast(
-                `📧 ${newAppealsCount} new ban appeal${
+                `${newAppealsCount} new ban appeal${
                   newAppealsCount > 1 ? "s" : ""
                 } received! (${newPendingCount} pending)`
               );
