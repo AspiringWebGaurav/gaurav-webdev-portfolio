@@ -46,11 +46,9 @@ const SESSION_CLIENT_CONFIG = {
   UUID_STORAGE_KEY: 'visitor_uuid_persistent', // For ban system compatibility
   VALIDATION_INTERVAL_MS: 5 * 60 * 1000, // 5 minutes
   RENEWAL_THRESHOLD_MS: 60 * 60 * 1000, // 1 hour
-  MAX_RETRY_ATTEMPTS: process.env.NODE_ENV === 'development' ? 2 : 5, // Fewer retries in dev
-  RETRY_DELAY_MS: process.env.NODE_ENV === 'development' ? 300 : 500, // Faster retries in dev
+  MAX_RETRY_ATTEMPTS: 5, // More retries for network issues
+  RETRY_DELAY_MS: 500, // Faster retries
   FINGERPRINT_CACHE_MS: 30 * 60 * 1000, // 30 minutes
-  DEV_MODE: process.env.NODE_ENV === 'development',
-  DEV_TIMEOUT_MS: 3000, // 3 second timeout in development
 } as const;
 
 /**
@@ -96,9 +94,7 @@ class SecureSessionClient {
       }
       
       this.isInitialized = true;
-      if (SESSION_CLIENT_CONFIG.DEV_MODE) {
-        console.log('[SecureSession] Client initialized');
-      }
+      console.log('[SecureSession] Client initialized');
     } catch (error) {
       console.error('[SecureSession] Initialization failed:', error);
       this.clearSession();
@@ -131,9 +127,7 @@ class SecureSessionClient {
 
       return fingerprint;
     } catch (error) {
-      if (SESSION_CLIENT_CONFIG.DEV_MODE) {
-        console.error('[SecureSession] Fingerprint generation failed:', error);
-      }
+      console.error('[SecureSession] Fingerprint generation failed:', error);
       throw new Error('Failed to generate client fingerprint');
     }
   }
@@ -152,69 +146,34 @@ class SecureSessionClient {
 
       let response: SessionGenerationResponse;
       
-      // Development mode: try simple endpoint first for faster loading
-      if (SESSION_CLIENT_CONFIG.DEV_MODE) {
-        try {
-          response = await this.makeRequest<SessionGenerationResponse>('/api/session/simple', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              fingerprint: this.sessionState.fingerprint,
-              preferredUUID: existingUUID,
-            }),
-          });
-          
-        } catch (error) {
-          if (SESSION_CLIENT_CONFIG.DEV_MODE) {
-            console.log('[SecureSession] Simple endpoint failed, trying secure endpoint:',
-              error instanceof Error ? error.message : 'Unknown error');
-          }
-          
-          // Fallback to secure endpoint in development
-          response = await this.makeRequest<SessionGenerationResponse>('/api/session/generate', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              fingerprint: this.sessionState.fingerprint,
-              preferredUUID: existingUUID,
-            }),
-          });
-        }
-      } else {
-        // Production mode: try secure endpoint first
-        try {
-          response = await this.makeRequest<SessionGenerationResponse>('/api/session/generate', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              fingerprint: this.sessionState.fingerprint,
-              preferredUUID: existingUUID,
-            }),
-          });
-        } catch (error) {
-          if (SESSION_CLIENT_CONFIG.DEV_MODE) {
-            console.warn('[SecureSession] Secure endpoint failed, trying simple fallback:',
-              error instanceof Error ? error.message : 'Unknown error');
-          }
-          
-          // Fallback to simple endpoint
-          response = await this.makeRequest<SessionGenerationResponse>('/api/session/simple', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              fingerprint: this.sessionState.fingerprint,
-              preferredUUID: existingUUID,
-            }),
-          });
-        }
+      try {
+        // Try secure endpoint first
+        response = await this.makeRequest<SessionGenerationResponse>('/api/session/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            fingerprint: this.sessionState.fingerprint,
+            preferredUUID: existingUUID, // Send preferred UUID for ban system
+          }),
+        });
+      } catch (error) {
+        console.warn('[SecureSession] Secure endpoint failed, trying simple fallback:', error);
+        
+        // Fallback to simple endpoint
+        response = await this.makeRequest<SessionGenerationResponse>('/api/session/simple', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            fingerprint: this.sessionState.fingerprint,
+            preferredUUID: existingUUID, // Send preferred UUID for ban system
+          }),
+        });
+        
+        console.log('[SecureSession] Using simple session fallback (temporarily)');
       }
 
       if (response.success && response.sessionToken && response.uuid) {
@@ -232,27 +191,18 @@ class SecureSessionClient {
         this.storeUUIDPersistently(response.uuid);
         this.startValidationInterval();
 
+        console.log('[SecureSession] Session created/renewed:', response.uuid);
         return true;
       } else {
-        if (SESSION_CLIENT_CONFIG.DEV_MODE) {
-          console.error('[SecureSession] Session generation failed:', response.error);
-        }
+        console.error('[SecureSession] Session generation failed:', response.error);
         return false;
       }
     } catch (error) {
-      if (SESSION_CLIENT_CONFIG.DEV_MODE) {
-        console.error('[SecureSession] Session request failed:', error);
-        
-        // Provide helpful error messages in development
-        if (error instanceof Error) {
-          if (error.message.includes('fetch')) {
-            console.log('[SecureSession] Network error - check if dev server is running');
-          } else if (error.message.includes('429')) {
-            console.log('[SecureSession] Rate limited - will retry automatically');
-          }
-        }
+      console.error('[SecureSession] Session request failed:', error);
+      // Don't fail completely on network errors - allow retry
+      if (error instanceof Error && error.message.includes('429')) {
+        console.log('[SecureSession] Rate limited - will retry with backoff');
       }
-      
       return false;
     }
   }
@@ -287,9 +237,7 @@ class SecureSessionClient {
 
         // Handle token renewal
         if (response.needsRenewal && response.newToken) {
-          if (SESSION_CLIENT_CONFIG.DEV_MODE) {
-            console.log('[SecureSession] Token renewed');
-          }
+          console.log('[SecureSession] Token renewed');
           this.sessionState.sessionToken = response.newToken;
           this.sessionState.expiresAt = Date.now() + (24 * 60 * 60 * 1000); // Assume 24h expiry
           await this.saveSessionToStorage();
@@ -297,9 +245,7 @@ class SecureSessionClient {
 
         return true;
       } else {
-        if (SESSION_CLIENT_CONFIG.DEV_MODE) {
-          console.warn('[SecureSession] Session validation failed:', response.error);
-        }
+        console.warn('[SecureSession] Session validation failed:', response.error);
         this.sessionState.isValid = false;
         
         // Clear invalid session
@@ -312,9 +258,7 @@ class SecureSessionClient {
         return false;
       }
     } catch (error) {
-      if (SESSION_CLIENT_CONFIG.DEV_MODE) {
-        console.error('[SecureSession] Validation request failed:', error);
-      }
+      console.error('[SecureSession] Validation request failed:', error);
       this.sessionState.isValid = false;
       return false;
     }
@@ -411,9 +355,7 @@ class SecureSessionClient {
     this.stopValidationInterval();
     await this.clearStorage();
     
-    if (SESSION_CLIENT_CONFIG.DEV_MODE) {
-      console.log('[SecureSession] Session cleared');
-    }
+    console.log('[SecureSession] Session cleared');
   }
 
   /**
@@ -433,10 +375,9 @@ class SecureSessionClient {
       // Use sessionStorage for security (cleared when browser closes)
       sessionStorage.setItem(SESSION_CLIENT_CONFIG.STORAGE_KEY, JSON.stringify(sessionData));
       
+      console.log('[SecureSession] Session saved to storage');
     } catch (error) {
-      if (SESSION_CLIENT_CONFIG.DEV_MODE) {
-        console.warn('[SecureSession] Failed to save session:', error);
-      }
+      console.warn('[SecureSession] Failed to save session:', error);
     }
   }
 
@@ -474,13 +415,9 @@ class SecureSessionClient {
       this.sessionState.lastValidation = sessionData.lastValidation;
       this.sessionState.isValid = sessionData.expiresAt > now; // Only valid if not expired
 
-      if (SESSION_CLIENT_CONFIG.DEV_MODE) {
-        console.log('[SecureSession] Session loaded from storage:', sessionData.uuid?.substring(0, 8) + '...');
-      }
+      console.log('[SecureSession] Session loaded from storage:', sessionData.uuid);
     } catch (error) {
-      if (SESSION_CLIENT_CONFIG.DEV_MODE) {
-        console.warn('[SecureSession] Failed to load session:', error);
-      }
+      console.warn('[SecureSession] Failed to load session:', error);
       await this.clearStorage();
     }
   }
@@ -494,9 +431,7 @@ class SecureSessionClient {
       // Also store in the old key for compatibility
       localStorage.setItem('visitor_uuid', uuid);
     } catch (error) {
-      if (SESSION_CLIENT_CONFIG.DEV_MODE) {
-        console.warn('[SecureSession] Failed to store persistent UUID:', error);
-      }
+      console.warn('[SecureSession] Failed to store persistent UUID:', error);
     }
   }
 
@@ -510,9 +445,7 @@ class SecureSessionClient {
              localStorage.getItem('visitor_uuid') ||
              null;
     } catch (error) {
-      if (SESSION_CLIENT_CONFIG.DEV_MODE) {
-        console.warn('[SecureSession] Failed to get stored UUID:', error);
-      }
+      console.warn('[SecureSession] Failed to get stored UUID:', error);
       return null;
     }
   }
@@ -528,9 +461,7 @@ class SecureSessionClient {
       localStorage.removeItem('visitor_uuid');
       sessionStorage.removeItem('visitor_uuid');
     } catch (error) {
-      if (SESSION_CLIENT_CONFIG.DEV_MODE) {
-        console.warn('[SecureSession] Failed to clear storage:', error);
-      }
+      console.warn('[SecureSession] Failed to clear storage:', error);
     }
   }
 
@@ -563,26 +494,15 @@ class SecureSessionClient {
   private async makeRequest<T>(url: string, options: RequestInit): Promise<T> {
     let lastError: Error | null = null;
     
-    // Development mode optimizations
-    const requestTimeout = SESSION_CLIENT_CONFIG.DEV_MODE ? SESSION_CLIENT_CONFIG.DEV_TIMEOUT_MS : 10000;
-    const maxRetries = SESSION_CLIENT_CONFIG.MAX_RETRY_ATTEMPTS;
-    
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    for (let attempt = 1; attempt <= SESSION_CLIENT_CONFIG.MAX_RETRY_ATTEMPTS; attempt++) {
       try {
-        // Create abort controller for timeout
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), requestTimeout);
-        
         const response = await fetch(url, {
           ...options,
-          signal: controller.signal,
           headers: {
             ...options.headers,
             'User-Agent': navigator.userAgent,
           },
         });
-        
-        clearTimeout(timeoutId);
 
         if (!response.ok) {
           // Special handling for rate limiting
@@ -590,7 +510,7 @@ class SecureSessionClient {
             const retryAfter = response.headers.get('Retry-After');
             const delay = retryAfter ? parseInt(retryAfter) * 1000 : SESSION_CLIENT_CONFIG.RETRY_DELAY_MS * attempt * 2;
             
-            if (attempt < maxRetries) {
+            if (attempt < SESSION_CLIENT_CONFIG.MAX_RETRY_ATTEMPTS) {
               console.log(`[SecureSession] Rate limited, retrying in ${delay}ms (attempt ${attempt})`);
               await new Promise(resolve => setTimeout(resolve, delay));
               continue;
@@ -604,17 +524,9 @@ class SecureSessionClient {
       } catch (error) {
         lastError = error instanceof Error ? error : new Error('Unknown error');
         
-        // In development, log more details but less verbosely
-        if (SESSION_CLIENT_CONFIG.DEV_MODE && attempt === maxRetries) {
-          console.log(`[SecureSession] All ${maxRetries} attempts failed for ${url}:`, lastError.message);
-        }
-        
-        if (attempt < maxRetries) {
-          // Shorter delays in development
-          const baseDelay = SESSION_CLIENT_CONFIG.RETRY_DELAY_MS;
-          const delay = SESSION_CLIENT_CONFIG.DEV_MODE
-            ? baseDelay * attempt
-            : baseDelay * Math.pow(2, attempt - 1) + Math.random() * 1000;
+        if (attempt < SESSION_CLIENT_CONFIG.MAX_RETRY_ATTEMPTS) {
+          // Exponential backoff with jitter
+          const delay = SESSION_CLIENT_CONFIG.RETRY_DELAY_MS * Math.pow(2, attempt - 1) + Math.random() * 1000;
           await new Promise(resolve => setTimeout(resolve, delay));
         }
       }

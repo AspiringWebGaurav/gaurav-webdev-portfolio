@@ -34,7 +34,6 @@
       {
         "select-name": "off"
       }
-    ],
-    "css-prefix-order": "off"
+    ]
   }
 }

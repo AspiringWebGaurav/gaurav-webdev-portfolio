@@ -191,27 +191,8 @@ export default function SecureEntryPage() {
     setError(null);
 
     try {
-      // Development mode: faster initialization with better error handling
-      const isDevelopment = process.env.NODE_ENV === 'development';
-      
-      // Check if we already have a valid session (with shorter timeout in dev)
-      const sessionCheckPromise = secureSessionClient.getValidUUID();
-      let existingUUID: string | null = null;
-      
-      if (isDevelopment) {
-        // Faster timeout in development
-        const timeoutPromise = new Promise<null>((_, reject) => {
-          setTimeout(() => reject(new Error('Session check timeout')), 2000);
-        });
-        
-        try {
-          existingUUID = await Promise.race([sessionCheckPromise, timeoutPromise]);
-        } catch (timeoutError) {
-          console.log('[SecureEntry] Session check timed out, proceeding with new session generation');
-        }
-      } else {
-        existingUUID = await sessionCheckPromise;
-      }
+      // Check if we already have a valid session
+      const existingUUID = await secureSessionClient.getValidUUID();
       
       if (existingUUID) {
         console.log('[SecureEntry] Using existing valid session:', existingUUID);
@@ -223,30 +204,9 @@ export default function SecureEntryPage() {
       // Try to preserve any existing UUID for ban system
       const storedUUID = localStorage.getItem('visitor_uuid');
       
-      // Generate new secure session with development optimizations
-      console.log('[SecureEntry] Generating new secure session...', {
-        storedUUID,
-        mode: isDevelopment ? 'development' : 'production'
-      });
-      
-      const sessionGenerationPromise = secureSessionClient.requestNewSession(storedUUID || undefined);
-      let success: boolean = false;
-      
-      if (isDevelopment) {
-        // Faster timeout for session generation in development
-        const timeoutPromise = new Promise<boolean>((_, reject) => {
-          setTimeout(() => reject(new Error('Session generation timeout')), 5000);
-        });
-        
-        try {
-          success = await Promise.race([sessionGenerationPromise, timeoutPromise]);
-        } catch (timeoutError) {
-          console.error('[SecureEntry] Session generation timed out in development');
-          throw new Error('Development session generation timed out. Try refreshing the page.');
-        }
-      } else {
-        success = await sessionGenerationPromise;
-      }
+      // Generate new secure session
+      console.log('[SecureEntry] Generating new secure session...', { storedUUID });
+      const success = await secureSessionClient.requestNewSession(storedUUID || undefined);
       
       if (success) {
         const newUUID = await secureSessionClient.getValidUUID();
@@ -263,21 +223,13 @@ export default function SecureEntryPage() {
     } catch (err) {
       console.error('[SecureEntry] Session initialization failed:', err);
       
-      // More user-friendly error messages with development hints
+      // More user-friendly error messages
       let errorMessage = 'Session initialization failed. Please try again.';
-      const isDevelopment = process.env.NODE_ENV === 'development';
-      
       if (err instanceof Error) {
         if (err.message.includes('429')) {
           errorMessage = 'Server is busy. Please wait a moment and try again.';
         } else if (err.message.includes('network') || err.message.includes('fetch')) {
-          errorMessage = isDevelopment
-            ? 'Network connection issue. Make sure your development server is running on the correct port.'
-            : 'Network connection issue. Please check your connection and try again.';
-        } else if (err.message.includes('timeout')) {
-          errorMessage = isDevelopment
-            ? 'Request timed out. This is normal in development mode - try refreshing once.'
-            : 'Request timed out. Please try again.';
+          errorMessage = 'Network connection issue. Please check your connection and try again.';
         }
       }
       
