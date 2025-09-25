@@ -253,8 +253,23 @@ export async function POST(req: NextRequest): Promise<NextResponse<GenerateSessi
   }
 }
 
-// GET method not allowed
+// GET method for development health check
 export async function GET() {
+  // In development, provide a helpful status endpoint
+  if (process.env.NODE_ENV === 'development') {
+    return NextResponse.json(
+      {
+        status: 'ok',
+        service: 'session-generate',
+        method: 'POST',
+        description: 'Session generation endpoint - use POST with fingerprint data',
+        timestamp: new Date().toISOString()
+      },
+      { status: 200, headers: SESSION_CONFIG.SECURITY_HEADERS }
+    );
+  }
+  
+  // Production: method not allowed
   return NextResponse.json(
     { error: 'Method not allowed' },
     { status: 405, headers: SESSION_CONFIG.SECURITY_HEADERS }

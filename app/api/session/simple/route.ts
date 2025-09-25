@@ -19,18 +19,49 @@ interface SimpleSessionResponse {
 
 export async function POST(req: NextRequest): Promise<NextResponse<SimpleSessionResponse>> {
   try {
-    // Parse request
-    const body: SimpleSessionRequest = await req.json();
+    // Validate request method
+    if (req.method !== 'POST') {
+      return NextResponse.json({
+        success: false,
+        error: 'Method not allowed',
+      }, { status: 405 });
+    }
+
+    // Parse request body with proper validation
+    let body: SimpleSessionRequest = {};
+    
+    try {
+      const contentType = req.headers.get('content-type');
+      if (contentType?.includes('application/json')) {
+        const rawBody = await req.text();
+        if (rawBody.trim()) {
+          body = JSON.parse(rawBody);
+        }
+      }
+    } catch (parseError) {
+      // Handle malformed JSON gracefully
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[SimpleSession] JSON parse warning:', parseError);
+      }
+      // Continue with empty body - this is acceptable for session generation
+      body = {};
+    }
     
     // Use preferred UUID or generate new one
-    const uuid = body.preferredUUID && isValidUUID(body.preferredUUID) 
-      ? body.preferredUUID 
+    const uuid = body.preferredUUID && isValidUUID(body.preferredUUID)
+      ? body.preferredUUID
       : uuidv4();
     
     // Create simple session token
     const sessionToken = createSimpleToken(uuid);
     
-    console.log('[SimpleSession] Generated session:', { uuid, hasToken: !!sessionToken });
+    // Only log in development mode
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[SimpleSession] Generated session:', {
+        uuid: uuid.substring(0, 8) + '...', // Truncated for security
+        hasToken: !!sessionToken
+      });
+    }
     
     return NextResponse.json({
       success: true,
@@ -40,7 +71,18 @@ export async function POST(req: NextRequest): Promise<NextResponse<SimpleSession
     });
     
   } catch (error) {
-    console.error('[SimpleSession] Error:', error);
+    // Improved error logging
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[SimpleSession] Error:', {
+        message: errorMessage,
+        stack: error instanceof Error ? error.stack?.split('\n').slice(0, 3) : undefined
+      });
+    } else {
+      // Production: minimal logging
+      console.error('[SimpleSession] Session generation failed');
+    }
     
     return NextResponse.json({
       success: false,
@@ -63,5 +105,20 @@ function createSimpleToken(uuid: string): string {
 }
 
 export async function GET() {
+  // In development, provide a helpful status endpoint
+  if (process.env.NODE_ENV === 'development') {
+    return NextResponse.json(
+      {
+        status: 'ok',
+        service: 'session-simple',
+        method: 'POST',
+        description: 'Simple session generation endpoint for development debugging',
+        timestamp: new Date().toISOString()
+      },
+      { status: 200 }
+    );
+  }
+  
+  // Production: method not allowed
   return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
 }
