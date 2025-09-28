@@ -8,13 +8,44 @@ import {
   showInfoToast 
 } from "@/components/ToastSystem";
 import { getVisitorUuidWithFallbacks } from "./visitor";
-import { 
+import {
   addDirectQuestion,
   getVisitorQuestions,
   markQuestionsAsRead,
   listenToVisitorQuestions,
   getVisitorQuestionStats
 } from "./firebase";
+
+// Fallback functions for production safety
+const createFallbackFunction = (functionName: string, fallbackReturn: any = null) => {
+  return (...args: any[]) => {
+    console.error(`[FALLBACK] ${functionName} not available, returning fallback:`, fallbackReturn);
+    if (typeof fallbackReturn === 'function') {
+      return fallbackReturn(...args);
+    }
+    return fallbackReturn;
+  };
+};
+
+// Safe Firebase function wrappers
+const safeAddDirectQuestion = addDirectQuestion || createFallbackFunction('addDirectQuestion', async () => {
+  throw new Error('Firebase addDirectQuestion not available');
+});
+
+const safeGetVisitorQuestions = getVisitorQuestions || createFallbackFunction('getVisitorQuestions', async () => []);
+
+const safeMarkQuestionsAsRead = markQuestionsAsRead || createFallbackFunction('markQuestionsAsRead', async () => true);
+
+const safeListenToVisitorQuestions = listenToVisitorQuestions || createFallbackFunction('listenToVisitorQuestions', () => () => {});
+
+const safeGetVisitorQuestionStats = getVisitorQuestionStats || createFallbackFunction('getVisitorQuestionStats', async () => ({
+  totalQuestions: 0,
+  unanswered: 0,
+  answered: 0,
+  archived: 0,
+  unread: 0,
+  lastQuestionAt: null
+}));
 import type {
   DirectQuestion,
   CreateDirectQuestionData,
@@ -183,8 +214,8 @@ export async function submitQuestion(question: string): Promise<{
       metadata: getVisitorMetadata()
     };
     
-    // Submit to Firebase
-    const docRef = await addDirectQuestion(visitorUuid, questionData);
+    // Submit to Firebase with fallback handling
+    const docRef = await safeAddDirectQuestion(visitorUuid, questionData);
     
     // Update rate limit
     updateLastSentTime();
@@ -218,7 +249,7 @@ export async function getCurrentVisitorQuestions(): Promise<DirectQuestion[]> {
     while (retryCount < maxRetries) {
       try {
         const visitorUuid = getVisitorUuidWithFallbacks();
-        const questions = await getVisitorQuestions(visitorUuid);
+        const questions = await safeGetVisitorQuestions(visitorUuid);
         
         // Filter out any malformed questions that might cause issues
         const validQuestions = questions.filter(question => {
@@ -339,7 +370,7 @@ export async function getCurrentVisitorStats(): Promise<any> {
   while (retryCount < maxRetries) {
     try {
       const visitorUuid = getVisitorUuidWithFallbacks();
-      const stats = await getVisitorQuestionStats(visitorUuid);
+      const stats = await safeGetVisitorQuestionStats(visitorUuid);
       
       // Return successful stats or safe fallback
       return stats || {
@@ -544,7 +575,7 @@ export class QuestionListenerManager {
     // Clean up existing listener
     this.cleanup(listenerId);
     
-    const unsubscribe = listenToVisitorQuestions(
+    const unsubscribe = safeListenToVisitorQuestions(
       visitorUuid,
       (questions) => {
         callback(questions);
