@@ -7,7 +7,16 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "release": "standard-version"
+    "release": "standard-version",
+    "validate:css": "node scripts/validate-css.js",
+    "validate:console": "node scripts/validate-console.js",
+    "test:css-fix": "node scripts/test-css-fix.js",
+    "pre-deploy": "npm run validate:css && chmod +x scripts/pre-deploy-check.sh && scripts/pre-deploy-check.sh",
+    "deploy:vercel": "npm run pre-deploy && vercel --prod",
+    "deploy:cloudflare": "npm run pre-deploy && npm run build && npx wrangler pages publish .next",
+    "test:first-load": "echo 'Testing first-load reliability...' && curl -I https://www.gauravpatil.online/_next/static/chunks/main.js",
+    "test:css": "curl -I https://www.gauravpatil.online/_next/static/css/ 2>/dev/null | grep -i 'content-type.*text/css' && echo 'CSS MIME type: ✅' || echo 'CSS MIME type: ❌'",
+    "monitor:metrics": "curl -s https://www.gauravpatil.online/api/monitoring/metrics || echo 'Monitoring endpoint not yet deployed'"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",

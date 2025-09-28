@@ -5,6 +5,7 @@ import { ThemeProvider } from "./provider";
 import EnhancedToastProvider from "@/components/ToastSystem";
 import PWAInitializer from "@/components/PWAInitializer";
 import LoadingProvider from "@/components/loading/LoadingProvider";
+import FirstLoadMonitor from "@/components/monitoring/FirstLoadMonitor";
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/next"
 
@@ -337,7 +338,7 @@ export default function RootLayout({
       <head>
         <StructuredData />
         
-        {/* Optimized Cloudflare Turnstile Script Loading */}
+        {/* Fixed Cloudflare Turnstile Script Loading */}
         {/* Preload with resource hints for faster loading */}
         <link
           rel="dns-prefetch"
@@ -346,37 +347,33 @@ export default function RootLayout({
         <link
           rel="preconnect"
           href="https://challenges.cloudflare.com"
-          crossOrigin=""
+          crossOrigin="anonymous"
         />
         <link
           rel="preload"
           href="https://challenges.cloudflare.com/turnstile/v0/api.js"
           as="script"
-          crossOrigin=""
+          crossOrigin="anonymous"
         />
         
-        {/* Enhanced Turnstile script loading with better race condition handling */}
+        {/* Fixed Turnstile script loading with proper CORS handling */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
-                // Global Turnstile state management with development mode support
+                // Global Turnstile state management
                 window.turnstileState = {
                   loaded: false,
                   loading: false,
                   error: false,
                   retryCount: 0,
-                  maxRetries: ${process.env.NODE_ENV === 'development' ? 2 : 3},
-                  widgets: new Map(),
-                  developmentMode: ${process.env.NODE_ENV === 'development'}
+                  maxRetries: 2,
+                  widgets: new Map()
                 };
                 
-                // Development mode logging
-                const devLog = function(message, ...args) {
-                  if (window.turnstileState.developmentMode) {
-                    console.log('[Turnstile Dev]', message, ...args);
-                  }
-                };
+                // Silent mode for production
+                const isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+                const log = isDev ? console.log.bind(console, '[Turnstile]') : () => {};
 
                 // Enhanced script loading with retry mechanism
                 function loadTurnstileScript() {
@@ -389,51 +386,44 @@ export default function RootLayout({
                   var script = document.createElement('script');
                   script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
                   script.async = true;
-                  script.defer = true;
+                  script.crossOrigin = 'anonymous';
                   
                   script.onload = function() {
-                    devLog('Script loaded successfully');
+                    log('Script loaded successfully');
                     window.turnstileState.loaded = true;
                     window.turnstileState.loading = false;
                     window.turnstileState.error = false;
                     
-                    // Wait for turnstile object to be available with faster polling in dev
-                    var pollInterval = window.turnstileState.developmentMode ? 25 : 50;
-                    var timeout = window.turnstileState.developmentMode ? 3000 : 5000;
-                    
+                    // Wait for turnstile object to be available
                     var checkInterval = setInterval(function() {
                       if (window.turnstile && typeof window.turnstile.render === 'function') {
                         clearInterval(checkInterval);
-                        devLog('Turnstile API ready');
-                        window.dispatchEvent(new Event('turnstile-loaded'));
+                        log('Turnstile API ready');
+                        window.dispatchEvent(new Event('turnstile-ready'));
                       }
-                    }, pollInterval);
+                    }, 50);
                     
-                    // Safety timeout (shorter in development)
+                    // Safety timeout
                     setTimeout(function() {
                       clearInterval(checkInterval);
-                      if (!window.turnstile) {
+                      if (!window.turnstile && isDev) {
                         console.error('[TurnstileLoader] Turnstile API not available after timeout');
-                        window.dispatchEvent(new Event('turnstile-error'));
                       }
-                    }, timeout);
+                    }, 5000);
                   };
                   
                   script.onerror = function() {
-                    console.error('[TurnstileLoader] Script load failed, attempt:', window.turnstileState.retryCount + 1);
                     window.turnstileState.loading = false;
                     window.turnstileState.error = true;
                     
                     if (window.turnstileState.retryCount < window.turnstileState.maxRetries) {
                       window.turnstileState.retryCount++;
-                      var retryDelay = window.turnstileState.developmentMode ? 1000 : 2000 * window.turnstileState.retryCount;
                       setTimeout(function() {
-                        devLog('Retrying script load...');
+                        log('Retrying script load...');
                         loadTurnstileScript();
-                      }, retryDelay);
-                    } else {
-                      console.error('[TurnstileLoader] Max retries reached, giving up');
-                      window.dispatchEvent(new Event('turnstile-error'));
+                      }, 2000 * window.turnstileState.retryCount);
+                    } else if (isDev) {
+                      console.error('[TurnstileLoader] Max retries reached');
                     }
                   };
                   
@@ -444,7 +434,7 @@ export default function RootLayout({
                 window.turnstileManager = {
                   register: function(id, widgetId) {
                     window.turnstileState.widgets.set(id, widgetId);
-                    devLog('Widget registered:', id, widgetId);
+                    log('Widget registered:', id);
                   },
                   
                   unregister: function(id) {
@@ -452,9 +442,9 @@ export default function RootLayout({
                     if (widgetId && window.turnstile) {
                       try {
                         window.turnstile.remove(widgetId);
-                        devLog('Widget removed:', id, widgetId);
+                        log('Widget removed:', id);
                       } catch (e) {
-                        console.warn('[TurnstileManager] Error removing widget:', e);
+                        if (isDev) console.warn('[TurnstileManager] Error removing widget:', e);
                       }
                     }
                     window.turnstileState.widgets.delete(id);
@@ -465,7 +455,7 @@ export default function RootLayout({
                   },
                   
                   waitForReady: function(callback, timeout) {
-                    timeout = timeout || (window.turnstileState.developmentMode ? 8000 : 10000);
+                    timeout = timeout || 8000;
                     
                     if (window.turnstileManager.isReady()) {
                       callback();
@@ -473,40 +463,29 @@ export default function RootLayout({
                     }
                     
                     var startTime = Date.now();
-                    var pollInterval = window.turnstileState.developmentMode ? 50 : 100;
                     
                     var checkReady = function() {
                       if (window.turnstileManager.isReady()) {
-                        devLog('Turnstile ready after', Date.now() - startTime, 'ms');
+                        log('Turnstile ready after', Date.now() - startTime, 'ms');
                         callback();
                       } else if (Date.now() - startTime > timeout) {
-                        console.error('[TurnstileManager] Wait timeout exceeded after', timeout, 'ms');
+                        if (isDev) console.error('[TurnstileManager] Wait timeout exceeded');
                         callback(new Error('Turnstile ready timeout'));
                       } else {
-                        setTimeout(checkReady, pollInterval);
+                        setTimeout(checkReady, 100);
                       }
                     };
                     checkReady();
-                  },
-                  
-                  // Development utilities
-                  getStats: function() {
-                    return {
-                      widgets: Array.from(window.turnstileState.widgets.entries()),
-                      loaded: window.turnstileState.loaded,
-                      loading: window.turnstileState.loading,
-                      error: window.turnstileState.error,
-                      retryCount: window.turnstileState.retryCount,
-                      developmentMode: window.turnstileState.developmentMode
-                    };
                   }
                 };
 
-                // Start loading process
+                // Start loading process with delay for better first-load performance
                 if (document.readyState === 'loading') {
-                  document.addEventListener('DOMContentLoaded', loadTurnstileScript);
+                  document.addEventListener('DOMContentLoaded', function() {
+                    setTimeout(loadTurnstileScript, 100);
+                  });
                 } else {
-                  loadTurnstileScript();
+                  setTimeout(loadTurnstileScript, 100);
                 }
               })();
             `
@@ -520,12 +499,15 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <FirstLoadMonitor enabled={process.env.NODE_ENV === 'production'} />
           <PWAInitializer />
           <LoadingProvider>
             <EnhancedToastProvider />
             {children}
           </LoadingProvider>
         </ThemeProvider>
+        <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   );
