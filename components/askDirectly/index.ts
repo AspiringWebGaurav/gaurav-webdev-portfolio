@@ -1,7 +1,14 @@
 // components/askDirectly/index.ts
 // Central export file for "Ask Me Directly" Q&A system components
 
-// Main Components
+// Enterprise Components (Production-Ready)
+export { default as EnterpriseQuestionsList } from './EnterpriseQuestionsList';
+export { EnterpriseCompactQuestionsList, EnterpriseDetailedQuestionsList } from './EnterpriseQuestionsList';
+
+export { default as EnterpriseAskDirectlyModal } from './EnterpriseAskDirectlyModal';
+export { EnterpriseSimpleAskModal, EnterpriseQuestionsOnlyModal } from './EnterpriseAskDirectlyModal';
+
+// Legacy Components (Original)
 export { default as QuestionStatus } from './QuestionStatus';
 export { QuestionStatusBadge, QuestionStatusDot } from './QuestionStatus';
 
@@ -19,6 +26,10 @@ export { CompactAskButton, LargeAskButton, SimpleAskButton } from './AskDirectly
 
 export { default as AskDirectlyEmbedded } from './AskDirectlyEmbedded';
 export { SimpleAskDirectlyEmbedded, QuestionsOnlyEmbedded } from './AskDirectlyEmbedded';
+
+// Recommended Enterprise Exports (Use these for production)
+export { default as QuestionsList_V2 } from './EnterpriseQuestionsList';
+export { default as AskDirectlyModal_V2 } from './EnterpriseAskDirectlyModal';
 
 // Re-export types for convenience
 export type {
