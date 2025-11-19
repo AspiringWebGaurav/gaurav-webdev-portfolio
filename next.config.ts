@@ -112,7 +112,7 @@ const nextConfig: NextConfig = {
       ],
     },
     // Optimize bundle analysis
-    optimizeCss: true,
+    optimizeCss: false,
   },
 
   // Server-side external packages (moved from experimental)
