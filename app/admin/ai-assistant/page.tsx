@@ -91,7 +91,7 @@ export default function AIAssistantPage() {
     setEditingQuestion(question);
     setShowModal(true);
   };
-
+// test
   const handleSubmitQuestion = async (data: AdminQuestionFormData) => {
     try {
       setIsSubmitting(true);
