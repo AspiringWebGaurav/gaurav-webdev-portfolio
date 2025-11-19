@@ -2,106 +2,107 @@
 
 import { useState, useEffect } from "react";
 import { FaLocationArrow } from "react-icons/fa6";
+import Image from "next/image";
+
 import { socialMedia } from "@/data";
 import MagicButton from "./ui/MagicButton";
-import ContactModal from "./ContactModal";
-import GlobalLoader from "./GlobalLoader";
-import { showSuccessToast } from "./ToastSystem";
+import ContactFormModal from "./ContactFormModal";
+import { generateDeviceFingerprint } from "@/lib/deviceFingerprint";
 
 const Footer = () => {
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
-  const [isGlobalLoading, setIsGlobalLoading] = useState(false);
-  const [savedScrollY, setSavedScrollY] = useState(0);
-
-  const openContactWithLoader = () => {
-    setSavedScrollY(window.scrollY);
-    document.body.style.overflow = "hidden";
-    setIsGlobalLoading(true);
-    setTimeout(() => {
-      setIsGlobalLoading(false);
-      setIsContactModalOpen(true);
-    }, 2000);
-  };
-
-  const closeModal = () => {
-    setIsContactModalOpen(false);
-    document.body.style.overflow = "unset";
-    window.scrollTo(0, savedScrollY);
-  };
-
-  const handleFormSuccess = (name: string) => {
-    showSuccessToast(
-      `Thank you, ${name}! Your message has been sent successfully. I'll reply within 2-4 hours. Check your inbox for a confirmation email.`,
-      { autoClose: 8000 }
-    );
-    closeModal();
-  };
+  const [patchId, setPatchId] = useState<string>("...");
 
   useEffect(() => {
-    return () => {
-      document.body.style.overflow = "unset";
+    // Fetch UUID once - it never changes so no need to poll
+    const fetchUUID = async () => {
+      try {
+        const res = await fetch('/api/my-uuid');
+        const data = await res.json();
+        setPatchId(data.visitorId);
+      } catch {
+        setPatchId("offline");
+      }
     };
+
+    fetchUUID();
+    // REMOVED: Polling interval (UUID is static, no need to refetch)
   }, []);
 
+  const handleAdminClick = () => {
+    window.open("/admin/dashboard", "_blank");
+  };
+
+  const handleContactClick = () => {
+    setIsContactModalOpen(true);
+  };
+
   return (
-    <>
-      <footer className="w-full pt-20 pb-10" id="contact">
-        {/* your existing gradient / decorations here */}
+    <footer className="w-full pt-20 pb-0" id="contact">
+      {/* background grid */}
 
-        <div className="flex flex-col items-center">
-          <h1 className="heading lg:max-w-[45vw]">
-            Ready to take <span className="text-purple">your</span> digital
-            presence to the next level?
-          </h1>
-          <p className="text-white/60 md:mt-10 my-5 text-center">
-            Reach out today and let&apos;s discuss how I can help you achieve
-            your goals.
-          </p>
+      <div className="flex flex-col items-center">
+        <h1 className="heading lg:max-w-[45vw]">
+          Ready to take <span className="text-purple">your</span> digital
+          presence to the next level?
+        </h1>
+        <p className="text-white-200 md:mt-10 my-5 text-center">
+          Reach out to me today and let&apos;s discuss how I can help you
+          achieve your goals.
+        </p>
+        <MagicButton
+          title="Let's get in touch"
+          icon={<FaLocationArrow />}
+          position="right"
+          handleClick={handleContactClick}
+        />
+      </div>
 
-          <MagicButton
-            title="Let's get in touch"
-            icon={<FaLocationArrow />}
-            position="right"
-            handleClick={openContactWithLoader}
-          />
-        </div>
-
-        {/* Bottom row */}
-        <div className="flex mt-16 md:flex-row flex-col justify-between items-center">
-          <div className="flex items-center gap-2">
-            <p className="md:text-base text-sm font-light">© 2025 Gaurav Patil</p>
-            <span className="text-gray-500">•</span>
-            <button
-              onClick={() => window.open('/admin', '_blank')}
-              className="md:text-base text-sm font-light text-gray-400 hover:text-blue-400 transition-colors duration-200 cursor-pointer"
-              title="Admin Login"
-            >
-              admin?
-            </button>
-          </div>
-          <div className="flex items-center md:gap-3 gap-6 mr-12">
-            {socialMedia.map((i) => (
-              <div
-                key={i.id}
-                className="w-10 h-10 flex justify-center items-center bg-black/60 rounded-lg border border-white/20"
-              >
-                <img src={i.img} alt="icon" width={20} height={20} />
-              </div>
-            ))}
-          </div>
-        </div>
-      </footer>
-
-      {/* UI layers */}
-      <GlobalLoader isOpen={isGlobalLoading} />
-
-      <ContactModal
+      {/* Contact Form Modal */}
+      <ContactFormModal
         isOpen={isContactModalOpen}
-        onClose={closeModal}
-        onSuccess={handleFormSuccess}
+        onClose={() => setIsContactModalOpen(false)}
       />
+      <div className="flex mt-16 md:flex-row flex-col justify-between items-center py-6 gap-4">
+        <div className="md:text-base text-sm md:font-normal font-light flex flex-wrap items-center justify-center md:justify-start gap-2">
+          <span>Copyright © 2025 Gaurav Patil</span>
+          <span className="text-white-200">•</span>
+          <button
+            onClick={handleAdminClick}
+            className="text-purple hover:text-purple/80 transition-colors font-normal"
+            aria-label="Open Admin Panel"
+            title="Open Admin Panel"
+          >
+            admin?
+          </button>
+          <span className="text-white-200">•</span>
+          <span 
+            className="text-gray-500 font-mono text-xs hover:text-gray-400 transition-colors cursor-pointer"
+            title="Click to copy UUID"
+            onClick={() => navigator.clipboard.writeText(patchId)}
+          >
+            {patchId}
+          </span>
+        </div>
 
-    </>
+        <div className="flex items-center md:gap-3 gap-6 lg:mr-14">
+          {socialMedia.map((info) => (
+            <div
+              key={info.id}
+              className="w-10 h-10 cursor-pointer flex justify-center items-center backdrop-filter backdrop-blur-lg saturate-180 bg-opacity-75 bg-black-200 rounded-lg border border-black-300 hover:bg-opacity-100 hover:border-purple/50 transition-all"
+            >
+              <Image
+                src={info.img}
+                alt="social media icon"
+                width={20}
+                height={20}
+                loading="lazy"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    </footer>
   );
 };
 

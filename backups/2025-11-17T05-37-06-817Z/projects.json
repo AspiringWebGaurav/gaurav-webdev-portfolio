@@ -1,0 +1,111 @@
+[
+  {
+    "id": "EAwd0nSotda6Jv6zj1kG",
+    "data": {
+      "des": "Explore the wonders of our solar system with this captivating 3D simulation of the planets using Three.js.",
+      "img": "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/images/p1.svg",
+      "iconLists": [
+        "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/icons/re.svg",
+        "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/icons/tail.svg",
+        "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/icons/ts.svg",
+        "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/icons/three.svg",
+        "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/icons/fm.svg"
+      ],
+      "link": "https://github.com/adrianhajdin?tab=repositories",
+      "order": 1,
+      "isActive": true,
+      "createdAt": {
+        "_seconds": 1762509961,
+        "_nanoseconds": 61000000
+      },
+      "title": "3D Solar System Planets to Explore",
+      "updatedAt": {
+        "_seconds": 1762510433,
+        "_nanoseconds": 951000000
+      }
+    }
+  },
+  {
+    "id": "ZB0mfRQPgJP0Tny0F6WR",
+    "data": {
+      "title": "Yoom - Video Conferencing App",
+      "des": "Simplify your video conferencing experience with Yoom. Seamlessly connect with colleagues and friends.",
+      "link": "https://github.com/adrianhajdin/zoom-clone",
+      "order": 2,
+      "isActive": true,
+      "createdAt": {
+        "_seconds": 1762509970,
+        "_nanoseconds": 818000000
+      },
+      "iconLists": [
+        "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/icons/next.svg",
+        "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/icons/tail.svg",
+        "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/icons/ts.svg",
+        "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/icons/stream.svg",
+        "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/icons/8c07e9fb-7b86-4060-bd24-ec999d3d5494.png"
+      ],
+      "images": [
+        "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/images/10a79e74-34dc-4c76-9de8-8d220ef7c8dc.png",
+        "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/images/0944474b-9e93-43c4-bd30-48aaed0aeffc.png",
+        "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/images/702dec07-9550-4258-9e60-5a8ac615f553.png"
+      ],
+      "img": "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/images/c31df216-dc52-4769-b152-d0dcbef70d00.png",
+      "updatedAt": {
+        "_seconds": 1762519403,
+        "_nanoseconds": 254000000
+      }
+    }
+  },
+  {
+    "id": "esPFULoCRWfSWTpRI1Xx",
+    "data": {
+      "title": "Animated Apple Iphone 3D Website",
+      "des": "Recreated the Apple iPhone 15 Pro website, combining GSAP animations and Three.js 3D effects.",
+      "img": "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/images/p4.svg",
+      "iconLists": [
+        "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/icons/next.svg",
+        "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/icons/tail.svg",
+        "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/icons/ts.svg",
+        "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/icons/three.svg",
+        "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/icons/gsap.svg"
+      ],
+      "link": "https://github.com/adrianhajdin/iphone",
+      "order": 4,
+      "isActive": true,
+      "createdAt": {
+        "_seconds": 1762509988,
+        "_nanoseconds": 498000000
+      },
+      "updatedAt": {
+        "_seconds": 1762509988,
+        "_nanoseconds": 498000000
+      }
+    }
+  },
+  {
+    "id": "iWA9O59RVoHie0IqUx4I",
+    "data": {
+      "title": "AI Image SaaS - Canva Application",
+      "des": "A REAL Software-as-a-Service app with AI features and a payments and credits system using the latest tech stack.",
+      "img": "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/images/p3.svg",
+      "iconLists": [
+        "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/icons/re.svg",
+        "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/icons/tail.svg",
+        "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/icons/ts.svg",
+        "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/icons/three.svg",
+        "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/icons/c.svg"
+      ],
+      "link": "https://github.com/adrianhajdin/ai_saas_app",
+      "order": 3,
+      "isActive": true,
+      "createdAt": {
+        "_seconds": 1762509980,
+        "_nanoseconds": 283000000
+      },
+      "updatedAt": {
+        "_seconds": 1762509980,
+        "_nanoseconds": 283000000
+      }
+    }
+  }
+]

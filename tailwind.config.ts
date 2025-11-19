@@ -7,9 +7,6 @@ const {
   default: flattenColorPalette,
 } = require("tailwindcss/lib/util/flattenColorPalette");
 
-// Import enterprise AI assistant design tokens
-const enterpriseConfig = require("./components/ai-assistant/design-system/tailwind-config.js");
-
 const config = {
   darkMode: ["class"],
   content: [
@@ -30,9 +27,6 @@ const config = {
     },
     extend: {
       colors: {
-        // Enterprise AI Assistant Colors - MUST come first to avoid override
-        ...enterpriseConfig.theme.extend.colors,
-        // Portfolio colors
         black: {
           DEFAULT: "#000",
           100: "#000319",
@@ -82,10 +76,6 @@ const config = {
           foreground: "hsl(var(--card-foreground))",
         },
       },
-      // Merge other enterprise AI assistant tokens
-      ...Object.fromEntries(
-        Object.entries(enterpriseConfig.theme.extend).filter(([key]) => key !== 'colors')
-      ),
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",

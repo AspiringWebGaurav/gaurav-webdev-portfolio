@@ -12,7 +12,6 @@ import { cn } from "@/lib/utils";
 export const FloatingNav = ({
   navItems,
   className,
-  hideWhenAIOpen = false,
 }: {
   navItems: {
     name: string;
@@ -20,7 +19,6 @@ export const FloatingNav = ({
     icon?: JSX.Element;
   }[];
   className?: string;
-  hideWhenAIOpen?: boolean;
 }) => {
   const { scrollYProgress } = useScroll();
 
@@ -53,8 +51,8 @@ export const FloatingNav = ({
           y: -100,
         }}
         animate={{
-          y: (visible && !hideWhenAIOpen) ? 0 : -100,
-          opacity: (visible && !hideWhenAIOpen) ? 1 : 0,
+          y: visible ? 0 : -100,
+          opacity: visible ? 1 : 0,
         }}
         transition={{
           duration: 0.2,

@@ -1,0 +1,20 @@
+[
+  {
+    "id": "3neDEo05PHNyvNmuPm8Y",
+    "data": {
+      "userId": "cgwqNNfMfPNmsAHJfgWGcRSsIRG2",
+      "type": "logout",
+      "title": "Logged Out",
+      "message": "Gaurav patil logged out at Nov 17, 2025, 11:05 AM",
+      "read": false,
+      "createdAt": {
+        "_seconds": 1763357747,
+        "_nanoseconds": 414000000
+      },
+      "data": {
+        "userId": "cgwqNNfMfPNmsAHJfgWGcRSsIRG2",
+        "email": "gauravpatil9262@gmail.com"
+      }
+    }
+  }
+]

@@ -1,0 +1,102 @@
+[
+  {
+    "id": "6dQ80fU2ysgvHVBMa1jB",
+    "data": {
+      "quote": "Collaborating with Adrian was an absolute pleasure. His professionalism, promptness, and dedication to delivering exceptional results were evident throughout our project. Adrian's enthusiasm for every facet of development truly stands out. If you're seeking to elevate your website and elevate your brand, Adrian is the ideal partner.",
+      "name": "Michael Johnson",
+      "title": "Director of AlphaStream Technologies",
+      "isActive": true,
+      "createdAt": {
+        "_seconds": 1762520729,
+        "_nanoseconds": 576000000
+      },
+      "img": "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/testimonials/avatars/3b67bec2-1690-477a-a0b9-110d821d3ec5.svg",
+      "companyLogo": "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/testimonials/logos/b2ec56a8-d2e5-4d72-b1dd-79f9dcde4187.svg",
+      "order": 1,
+      "updatedAt": {
+        "_seconds": 1762523607,
+        "_nanoseconds": 767000000
+      }
+    }
+  },
+  {
+    "id": "HzZtAzdmHBxZSthLUZjC",
+    "data": {
+      "quote": "Collaborating with Adrian was an absolute pleasure. His professionalism, promptness, and dedication to delivering exceptional results were evident throughout our project. Adrian's enthusiasm for every facet of development truly stands out. If you're seeking to elevate your website and elevate your brand, Adrian is the ideal partner.",
+      "name": "Michael Johnson",
+      "title": "Director of AlphaStream Technologies",
+      "order": 3,
+      "isActive": true,
+      "createdAt": {
+        "_seconds": 1762520729,
+        "_nanoseconds": 925000000
+      },
+      "img": "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/testimonials/avatars/3b67bec2-1690-477a-a0b9-110d821d3ec5.svg",
+      "companyLogo": "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/testimonials/logos/b2ec56a8-d2e5-4d72-b1dd-79f9dcde4187.svg",
+      "updatedAt": {
+        "_seconds": 1762522010,
+        "_nanoseconds": 985000000
+      }
+    }
+  },
+  {
+    "id": "K7VyXGjWWDiL6x04fyJq",
+    "data": {
+      "quote": "Collaborating with Adrian was an absolute pleasure. His professionalism, promptness, and dedication to delivering exceptional results were evident throughout our project. Adrian's enthusiasm for every facet of development truly stands out. If you're seeking to elevate your website and elevate your brand, Adrian is the ideal partner.",
+      "name": "Michael Johnson",
+      "title": "Director of AlphaStream Technologies",
+      "order": 4,
+      "isActive": true,
+      "createdAt": {
+        "_seconds": 1762520730,
+        "_nanoseconds": 22000000
+      },
+      "img": "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/testimonials/avatars/3b67bec2-1690-477a-a0b9-110d821d3ec5.svg",
+      "companyLogo": "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/testimonials/logos/b2ec56a8-d2e5-4d72-b1dd-79f9dcde4187.svg",
+      "updatedAt": {
+        "_seconds": 1762522011,
+        "_nanoseconds": 464000000
+      }
+    }
+  },
+  {
+    "id": "pnxzhhYda4xZ3kIyVjOD",
+    "data": {
+      "quote": "Collaborating with Adrian was an absolute pleasure. His professionalism, promptness, and dedication to delivering exceptional results were evident throughout our project. Adrian's enthusiasm for every facet of development truly stands out. If you're seeking to elevate your website and elevate your brand, Adrian is the ideal partner.",
+      "name": "Michael Johnson",
+      "title": "Director of AlphaStream Technologies",
+      "order": 5,
+      "isActive": true,
+      "createdAt": {
+        "_seconds": 1762520730,
+        "_nanoseconds": 127000000
+      },
+      "img": "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/testimonials/avatars/3b67bec2-1690-477a-a0b9-110d821d3ec5.svg",
+      "companyLogo": "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/testimonials/logos/b2ec56a8-d2e5-4d72-b1dd-79f9dcde4187.svg",
+      "updatedAt": {
+        "_seconds": 1762522011,
+        "_nanoseconds": 932000000
+      }
+    }
+  },
+  {
+    "id": "u4r6ZfVwvnQLUYRaGvEJ",
+    "data": {
+      "quote": "Collaborating with Adrian was an absolute pleasure. His professionalism, promptness, and dedication to delivering exceptional results were evident throughout our project. Adrian's enthusiasm for every facet of development truly stands out. If you're seeking to elevate your website and elevate your brand, Adrian is the ideal partner.",
+      "name": "Michael Johnson",
+      "title": "Director of AlphaStream Technologies",
+      "isActive": true,
+      "createdAt": {
+        "_seconds": 1762520729,
+        "_nanoseconds": 802000000
+      },
+      "img": "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/testimonials/avatars/3b67bec2-1690-477a-a0b9-110d821d3ec5.svg",
+      "companyLogo": "https://storage.googleapis.com/gaurav-portfolio-improved.firebasestorage.app/projects/testimonials/logos/b2ec56a8-d2e5-4d72-b1dd-79f9dcde4187.svg",
+      "order": 2,
+      "updatedAt": {
+        "_seconds": 1762523607,
+        "_nanoseconds": 616000000
+      }
+    }
+  }
+]

@@ -1,0 +1,16 @@
+{
+  "timestamp": "2025-11-17T05-37-06-817Z",
+  "date": "2025-11-17T05:37:07.633Z",
+  "totalCollections": 7,
+  "totalDocuments": 29,
+  "collections": [
+    "bubblePredefinedQuestions",
+    "currentlyWorking",
+    "notifications",
+    "projects",
+    "techStacks",
+    "testimonials",
+    "workExperience"
+  ],
+  "backupDuration": 936
+}

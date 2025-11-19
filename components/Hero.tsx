@@ -1,13 +1,10 @@
+import { FaLocationArrow } from "react-icons/fa6";
+
+import MagicButton from "../components/ui/MagicButton";
 import { Spotlight } from "./ui/Spotlight";
 import { TextGenerateEffect } from "./ui/TextGenerateEffect";
-import ThreeButtonLayout from "./ui/ThreeButtonLayout";
 
-interface HeroProps {
-  // onAskDirectlyClick is now optional since navigation is handled internally
-  onAskDirectlyClick?: () => void;
-}
-
-const Hero: React.FC<HeroProps> = ({ onAskDirectlyClick }) => {
+const Hero = () => {
   return (
     <div className="pb-20 pt-36">
       {/**
@@ -63,9 +60,13 @@ const Hero: React.FC<HeroProps> = ({ onAskDirectlyClick }) => {
             Hi! I&apos;m Gaurav, a Front-End Developer based in India.
           </p>
 
-          <ThreeButtonLayout
-            onAskDirectlyClick={onAskDirectlyClick || (() => {})}
-          />
+          <a href="#about">
+            <MagicButton
+              title="Show my work"
+              icon={<FaLocationArrow />}
+              position="right"
+            />
+          </a>
         </div>
       </div>
     </div>
@@ -73,5 +74,3 @@ const Hero: React.FC<HeroProps> = ({ onAskDirectlyClick }) => {
 };
 
 export default Hero;
-
-// test
