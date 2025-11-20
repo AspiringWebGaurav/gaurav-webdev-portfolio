@@ -53,32 +53,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update visitor with ban info
-    await visitorRef.update({
-      banned: true,
-      banReason: customReason || reason,
-      banCategory: category,
-      banTimestamp: now,
-      bannedBy: decodedToken.email || decodedToken.uid,
-      updatedAt: now,
-    });
-
-    // Create ban log entry
-    await adminDb.collection(BAN_LOGS_COLLECTION).add({
-      visitorId,
-      action: "ban",
-      reason: customReason || reason,
-      category,
-      bannedBy: decodedToken.email || decodedToken.uid,
-      bannedByUid: decodedToken.uid,
-      timestamp: now,
-      visitorData: {
-        firstVisit: visitorDoc.data()?.firstVisit,
-        lastVisit: visitorDoc.data()?.lastVisit,
-        totalVisits: visitorDoc.data()?.totalVisits,
-        deviceString: visitorDoc.data()?.deviceString,
-      },
-    });
+    // Update visitor and create log entry in parallel for faster response
+    await Promise.all([
+      visitorRef.update({
+        banned: true,
+        banReason: customReason || reason,
+        banCategory: category,
+        banTimestamp: now,
+        bannedBy: decodedToken.email || decodedToken.uid,
+        updatedAt: now,
+      }),
+      adminDb.collection(BAN_LOGS_COLLECTION).add({
+        visitorId,
+        action: "ban",
+        reason: customReason || reason,
+        category,
+        bannedBy: decodedToken.email || decodedToken.uid,
+        bannedByUid: decodedToken.uid,
+        timestamp: now,
+        visitorData: {
+          firstVisit: visitorDoc.data()?.firstVisit,
+          lastVisit: visitorDoc.data()?.lastVisit,
+          totalVisits: visitorDoc.data()?.totalVisits,
+          deviceString: visitorDoc.data()?.deviceString,
+        },
+      })
+    ]);
 
     return NextResponse.json({
       success: true,

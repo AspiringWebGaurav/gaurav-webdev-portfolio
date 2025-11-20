@@ -25,10 +25,6 @@ import { useBubbleManagement } from "@/contexts/BubbleManagementContext";
 import { useBanAppeals } from "@/contexts/BanAppealsContext";
 import { useUnreadCountNotification } from "@/hooks/useLiveUpdateNotification";
 import { auth } from "@/lib/firebase";
-import dynamic from "next/dynamic";
-
-// Dynamic import for Login Abuse page to avoid SSR issues
-const LoginAbusePage = dynamic(() => import("@/app/admin/login-abuse/page"), { ssr: false });
 
 // Panel option interface
 export interface PanelOption {
@@ -83,7 +79,6 @@ function DashboardContent() {
     { id: "visitor-analytics", label: "Visitor Analytics", icon: "📊", badge: activeVisitorCount > 0 ? activeVisitorCount : undefined },
     { id: "ban-appeals", label: "Ban Appeals", icon: "🛡️", badge: pendingAppealsCount > 0 ? pendingAppealsCount : undefined },
     { id: "bug-hunt", label: "Bug Hunt", icon: "🐛", badge: newBugReportsCount > 0 ? newBugReportsCount : undefined },
-    { id: "login-abuse", label: "Login Abuse", icon: "🔐" },
   ];
 
   // Get active section from URL params, default to "tech-stacks"
@@ -295,7 +290,6 @@ function DashboardContent() {
           {activeSection === "visitor-analytics" && <VisitorAnalyticsManager visitorIdParam={visitorIdParam} />}
           {activeSection === "ban-appeals" && <BanAppealsManager />}
           {activeSection === "bug-hunt" && <BugHuntManager />}
-          {activeSection === "login-abuse" && <LoginAbusePage />}
         </div>
       </main>
 

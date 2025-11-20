@@ -17,8 +17,6 @@ const Footer = () => {
   const [isBugIntroOpen, setIsBugIntroOpen] = useState(false);
   const [isBugFormOpen, setIsBugFormOpen] = useState(false);
   const [patchId, setPatchId] = useState<string>("...");
-  const [adminInput, setAdminInput] = useState("");
-  const [showAdminInput, setShowAdminInput] = useState(false);
 
   useEffect(() => {
     // Fetch UUID once - it never changes so no need to poll
@@ -36,21 +34,11 @@ const Footer = () => {
     // REMOVED: Polling interval (UUID is static, no need to refetch)
   }, []);
 
-  const handleAdminLogin = () => {
-    if (adminInput.trim().toLowerCase() === "gaurav-here") {
-      // Get the current host (works for both localhost and production)
-      const protocol = window.location.protocol;
-      const host = window.location.host;
-      window.open(`${protocol}//${host}/admin/login`, "_blank");
-      setAdminInput("");
-      setShowAdminInput(false);
-    }
-  };
-
-  const handleAdminKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleAdminLogin();
-    }
+  const handleAdminClick = () => {
+    // Get the current host (works for both localhost and production)
+    const protocol = window.location.protocol;
+    const host = window.location.host;
+    window.open(`${protocol}//${host}/admin/login`, "_blank");
   };
 
   const handleContactClick = () => {
@@ -123,46 +111,17 @@ const Footer = () => {
           <span className="text-white-200/40">•</span>
           
           {/* Admin Access */}
-          {!showAdminInput ? (
-            <button
-              onClick={() => setShowAdminInput(true)}
-              className="group relative px-3 py-1 rounded-lg bg-purple/5 hover:bg-purple/10 border border-purple/20 hover:border-purple/40 transition-all duration-300 flex items-center gap-1.5"
-              aria-label="Admin Access"
-              title="Admin Login"
-            >
-              <Shield className="w-3.5 h-3.5 text-purple/60 group-hover:text-purple transition-colors" />
-              <span className="text-purple/60 group-hover:text-purple text-xs font-medium transition-colors">
-                Admin
-              </span>
-            </button>
-          ) : (
-            <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2 duration-300">
-              <input
-                type="text"
-                value={adminInput}
-                onChange={(e) => setAdminInput(e.target.value)}
-                onKeyPress={handleAdminKeyPress}
-                placeholder="Enter code..."
-                className="px-3 py-1 w-32 text-xs bg-black-100 border border-purple/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple focus:ring-1 focus:ring-purple/50 transition-all"
-                autoFocus
-              />
-              <button
-                onClick={handleAdminLogin}
-                className="px-3 py-1 bg-purple hover:bg-purple/80 text-white text-xs font-medium rounded-lg transition-colors"
-              >
-                Go
-              </button>
-              <button
-                onClick={() => {
-                  setShowAdminInput(false);
-                  setAdminInput("");
-                }}
-                className="px-2 py-1 text-gray-400 hover:text-white text-xs transition-colors"
-              >
-                ✕
-              </button>
-            </div>
-          )}
+          <button
+            onClick={handleAdminClick}
+            className="group relative px-3 py-1 rounded-lg bg-purple/5 hover:bg-purple/10 border border-purple/20 hover:border-purple/40 transition-all duration-300 flex items-center gap-1.5"
+            aria-label="Admin Access"
+            title="Admin Login"
+          >
+            <Shield className="w-3.5 h-3.5 text-purple/60 group-hover:text-purple transition-colors" />
+            <span className="text-purple/60 group-hover:text-purple text-xs font-medium transition-colors">
+              Admin
+            </span>
+          </button>
           
           <span className="text-white-200/40">•</span>
           

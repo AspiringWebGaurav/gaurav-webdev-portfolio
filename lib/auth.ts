@@ -144,31 +144,11 @@ export async function signOut(): Promise<void> {
     console.error("Failed to destroy server session:", error);
   }
 
-  // Clear code gate clearance
-  try {
-    const { generateVisitorId } = await import('./deviceFingerprint');
-    const visitorId = generateVisitorId();
-    await fetch("/api/code-gate/clear-session", { 
-      method: "POST",
-      headers: {
-        'x-visitor-id': visitorId
-      }
-    });
-    
-    // Clear sessionStorage
-    if (typeof window !== 'undefined') {
-      sessionStorage.removeItem('code_gate_cleared');
-      sessionStorage.removeItem('code_gate_timestamp');
-    }
-  } catch (error) {
-    console.error("Failed to clear code gate session:", error);
-  }
-
   await fbSignOut(auth);
   
-  // Redirect to code gate page after logout
+  // Redirect to login page after logout
   if (typeof window !== 'undefined') {
-    window.location.href = '/admin/code-gate';
+    window.location.href = '/admin/login';
   }
 }
 

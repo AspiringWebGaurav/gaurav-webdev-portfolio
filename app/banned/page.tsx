@@ -6,20 +6,12 @@ import { showToast } from '@/lib/toast';
 import MobileScreen from './screens/MobileScreen';
 import TabletScreen from './screens/TabletScreen';
 import DesktopScreen from './screens/DesktopScreen';
-import { generateVisitorId } from '@/lib/deviceFingerprint';
 
 interface BanInfo {
   reason: string;
   category: string;
   timestamp: string;
   reviewTime: string;
-}
-
-interface CodeGateBanInfo {
-  isCodeGateBan: boolean;
-  hint?: string;
-  expiresAt?: string;
-  attemptCount?: number;
 }
 
 const UNBAN_CHECK_INTERVAL = 5000; // Check every 5 seconds for unban
@@ -51,47 +43,6 @@ function BannedPageContent() {
     reviewTime: '72-96 hours',
     category: 'normal',
   });
-  const [codeGateBan, setCodeGateBan] = useState<CodeGateBanInfo>({
-    isCodeGateBan: false
-  });
-
-  // Check if this is a code-gate ban
-  useEffect(() => {
-    const checkCodeGateBan = async () => {
-      try {
-        const visitorId = await generateVisitorId();
-        const response = await fetch('/api/code-gate/check-ban', {
-          method: 'POST',
-          headers: {
-            'x-visitor-id': visitorId,
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.isCodeGateBan) {
-            console.log('[Banned Page] Code gate ban detected:', data);
-            setCodeGateBan({
-              isCodeGateBan: true,
-              hint: data.hint,
-              expiresAt: data.expiresAt,
-              attemptCount: data.attemptCount
-            });
-            setBanInfo({
-              reason: data.reason,
-              timestamp: new Date().toISOString(),
-              reviewTime: new Date(data.expiresAt).toLocaleString(),
-              category: 'danger',
-            });
-          }
-        }
-      } catch (error) {
-        console.error('[Banned Page] Error checking code gate ban:', error);
-      }
-    };
-
-    checkCodeGateBan();
-  }, []);
 
   // Load ban info from URL params (server-side passed via proxy.ts)
   useEffect(() => {
@@ -178,14 +129,14 @@ function BannedPageContent() {
 
   // Render appropriate screen based on size
   if (screenSize === 'mobile') {
-    return <MobileScreen banInfo={banInfo} codeGateBan={codeGateBan} />;
+    return <MobileScreen banInfo={banInfo} />;
   }
 
   if (screenSize === 'tablet') {
-    return <TabletScreen banInfo={banInfo} codeGateBan={codeGateBan} />;
+    return <TabletScreen banInfo={banInfo} />;
   }
 
-  return <DesktopScreen banInfo={banInfo} codeGateBan={codeGateBan} />;
+  return <DesktopScreen banInfo={banInfo} />;
 }
 
 // Wrap with Suspense for useSearchParams
