@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface BanInfo {
   reason: string;
@@ -9,8 +10,16 @@ interface BanInfo {
   reviewTime: string;
 }
 
+interface CodeGateBanInfo {
+  isCodeGateBan: boolean;
+  hint?: string;
+  expiresAt?: string;
+  attemptCount?: number;
+}
+
 interface DesktopScreenProps {
   banInfo: BanInfo;
+  codeGateBan: CodeGateBanInfo;
 }
 
 interface AppealStatus {
@@ -22,7 +31,8 @@ interface AppealStatus {
   reviewedAt?: string;
 }
 
-export default function DesktopScreen({ banInfo }: DesktopScreenProps) {
+export default function DesktopScreen({ banInfo, codeGateBan }: DesktopScreenProps) {
+  const router = useRouter();
   const [showAppealForm, setShowAppealForm] = useState(false);
   const [appealText, setAppealText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -206,6 +216,32 @@ export default function DesktopScreen({ banInfo }: DesktopScreenProps) {
                 <p className="text-sm text-red-200/70 leading-relaxed">Access restricted due to critical security violations to protect service integrity.</p>
               </div>
             </div>
+
+            {/* Code Gate Hint - Only shown if this is a code gate ban */}
+            {codeGateBan.isCodeGateBan && codeGateBan.hint && (
+              <div className="bg-slate-800/50 rounded-xl p-5 border border-slate-700/50 backdrop-blur-sm flex-shrink-0">
+                <div className="flex items-start gap-3 mb-3">
+                  <svg className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                  <h3 className="text-base font-medium text-amber-300">Hint for Admin</h3>
+                </div>
+                <div className="bg-gradient-to-r from-amber-900/20 to-yellow-900/20 rounded-lg p-4 border border-amber-700/40 mb-3">
+                  <p className="text-base text-amber-100 leading-relaxed italic">
+                    {codeGateBan.hint}
+                  </p>
+                </div>
+                <button
+                  onClick={() => router.push('/admin/code-gate')}
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white px-4 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-lg"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                  Go Back to Code Gate
+                </button>
+              </div>
+            )}
 
             {/* What happens next */}
             <div className="flex-1 bg-slate-800/50 rounded-xl p-5 border border-slate-700/50 backdrop-blur-sm flex flex-col min-h-0">

@@ -14,7 +14,8 @@ export type RecycleBinItemSource =
   | "bubblePredefinedQuestion"
   | "bubbleResume"
   | "visitor-analytics"
-  | "banAppeal";
+  | "banAppeal"
+  | "bugReport";
 
 export interface RecycleBinItem {
   id: string; // Unique ID for the recycle bin entry
@@ -44,6 +45,7 @@ export interface RecycleBinStats {
   bubblePredefinedQuestions: number;
   bubbleResumes: number;
   banAppeals: number;
+  bugReports: number;
   expiringWithin24Hours: number;
 }
 

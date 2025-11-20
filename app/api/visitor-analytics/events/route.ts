@@ -126,7 +126,8 @@ export async function POST(request: NextRequest) {
     let sessionId = extractSessionIdFromCookie(cookieHeader);
     
     if (!sessionId) {
-      sessionId = generateSessionId();
+      // Use same fingerprint for session ID to maintain consistency
+      sessionId = generateSessionId(fingerprint);
     }
     
     // Extract device and browser info

@@ -2,10 +2,12 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import smartPolling from '@/lib/smartPolling';
+import { showToast } from '@/lib/toast';
+import { auth } from '@/lib/firebase';
 
 interface BubbleSession {
   id: string;
-  deviceFingerprint: string;
+  visitorId: string;
   visitorEmail: string | null;
   startedAt: Date;
   lastActive: Date;
@@ -24,6 +26,8 @@ interface BubbleManagementContextType {
   getUnreadSessionsCount: () => number;
   getUnreadMessagesCount: () => number;
   refreshSessions: () => Promise<void>;
+  deleteSession: (sessionId: string, silent?: boolean) => Promise<{ success: boolean; error?: string }>;
+  batchDeleteSessions: (sessionIds: string[]) => Promise<{ success: boolean; error?: string }>;
 }
 
 const BubbleManagementContext = createContext<BubbleManagementContextType | undefined>(undefined);
@@ -47,12 +51,16 @@ export function BubbleManagementProvider({ children }: { children: React.ReactNo
       }
 
       const sessions: BubbleSession[] = data.sessions.map((s: any) => ({
-        ...s,
+        id: s.id,
+        visitorId: s.visitorId || s.deviceFingerprint || s.id, // Use the central visitorId from API
+        visitorEmail: s.visitorEmail,
         startedAt: new Date(s.startedAt),
         lastActive: new Date(s.lastActive),
+        messageCount: s.messageCount || 0,
+        unreadAdminReplies: s.unreadAdminReplies || 0,
+        unreadVisitorMessages: s.unreadVisitorMessages || 0,
         deletedAt: s.deletedAt ? new Date(s.deletedAt) : null,
         hasUnreadMessages: (s.unreadVisitorMessages || 0) > 0,
-        unreadVisitorMessages: s.unreadVisitorMessages || 0,
         visitorOnline: s.visitorOnline || false,
         adminOnline: s.adminOnline || false,
       }));
@@ -90,6 +98,97 @@ export function BubbleManagementProvider({ children }: { children: React.ReactNo
     await fetchSessions();
   }, [fetchSessions]);
 
+  /**
+   * Delete a single session (moves to recycle bin first, then deletes from active)
+   */
+  const deleteSession = useCallback(async (sessionId: string, silent = false): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) {
+        const error = 'Not authenticated';
+        if (!silent) showToast.error(error, 'Delete Failed');
+        return { success: false, error };
+      }
+
+      const response = await fetch('/api/bubble/sessions/delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ sessionId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        const error = data.error || 'Failed to delete session';
+        if (!silent) showToast.error(error, 'Delete Failed');
+        return { success: false, error };
+      }
+
+      // Remove from local state
+      setSessions(prev => prev.filter(s => s.id !== sessionId));
+
+      if (!silent) {
+        showToast.success('Session moved to recycle bin', 'Deleted');
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error deleting session:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Failed to delete session';
+      if (!silent) showToast.error(errorMsg, 'Delete Failed');
+      return { success: false, error: errorMsg };
+    }
+  }, []);
+
+  /**
+   * Batch delete multiple sessions (moves to recycle bin first)
+   */
+  const batchDeleteSessions = useCallback(async (sessionIds: string[]): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) {
+        const error = 'Not authenticated';
+        showToast.error(error, 'Delete Failed');
+        return { success: false, error };
+      }
+
+      const response = await fetch('/api/bubble/sessions/batch-delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ sessionIds }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        const error = data.error || 'Failed to batch delete sessions';
+        showToast.error(error, 'Delete Failed');
+        return { success: false, error };
+      }
+
+      // Remove from local state
+      setSessions(prev => prev.filter(s => !sessionIds.includes(s.id)));
+
+      showToast.success(
+        `${data.deleted} session${data.deleted > 1 ? 's' : ''} moved to recycle bin`,
+        'Deleted'
+      );
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error batch deleting sessions:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Failed to batch delete sessions';
+      showToast.error(errorMsg, 'Delete Failed');
+      return { success: false, error: errorMsg };
+    }
+  }, []);
+
   // Setup ultra-optimized smart polling
   useEffect(() => {
     smartPolling.register(
@@ -125,6 +224,8 @@ export function BubbleManagementProvider({ children }: { children: React.ReactNo
         getUnreadSessionsCount,
         getUnreadMessagesCount,
         refreshSessions,
+        deleteSession,
+        batchDeleteSessions,
       }}
     >
       {children}

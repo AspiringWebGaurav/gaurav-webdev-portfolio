@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { Send, Trash2, Mail, Clock, User, Check, CheckCheck, Eye, Loader2, Circle, Wifi, WifiOff, ArrowRight } from 'lucide-react';
+import { Send, Trash2, Mail, Clock, User, Check, CheckCheck, Eye, Loader2, Circle, Wifi, WifiOff, ArrowRight, CheckSquare, Square, X } from 'lucide-react';
 import { showToast } from "@/lib/toast";
 import { useRouter } from 'next/navigation';
+import { useBubbleManagement } from '@/contexts/BubbleManagementContext';
+import { useRecycleBin } from '@/contexts/RecycleBinContext';
 
 import { BubbleMessage, BubbleSession } from '@/types/bubble';
 import smartPolling from '@/lib/smartPolling';
@@ -11,6 +13,9 @@ import networkManager from '@/lib/networkManager';
 
 export default function EnhancedBubbleChat() {
   const router = useRouter();
+  const { deleteSession, batchDeleteSessions } = useBubbleManagement();
+  const { moveToRecycleBin } = useRecycleBin();
+  
   const [sessions, setSessions] = useState<BubbleSession[]>([]);
   const [selectedSession, setSelectedSession] = useState<BubbleSession | null>(null);
   const [messages, setMessages] = useState<BubbleMessage[]>([]);
@@ -21,6 +26,13 @@ export default function EnhancedBubbleChat() {
   const [visitorTyping, setVisitorTyping] = useState(false);
   const [visitorOnline, setVisitorOnline] = useState(false);
   const [unreadCounts, setUnreadCounts] = useState<Map<string, number>>(new Map());
+  
+  // Selection mode state
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showBatchDeleteConfirm, setShowBatchDeleteConfirm] = useState(false);
+  const [deletingSession, setDeletingSession] = useState<BubbleSession | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -263,6 +275,213 @@ export default function EnhancedBubbleChat() {
     smartPolling.setMode('admin-chat-messages', 'realtime');
   }, [fetchMessages]);
 
+  /**
+   * Toggle selection mode
+   */
+  const toggleSelectionMode = () => {
+    setIsSelectionMode(!isSelectionMode);
+    setSelectedIds(new Set());
+  };
+
+  /**
+   * Toggle item selection
+   */
+  const toggleSelection = (id: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  /**
+   * Select all filtered sessions
+   */
+  const selectAll = () => {
+    if (selectedIds.size === sessions.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(sessions.map(s => s.id)));
+    }
+  };
+
+  /**
+   * Handle delete single session
+   */
+  const handleDelete = (session: BubbleSession) => {
+    setDeletingSession(session);
+    setShowDeleteConfirm(true);
+  };
+
+  /**
+   * Confirm delete single session
+   */
+  const confirmDelete = async () => {
+    if (!deletingSession) return;
+
+    const sessionToDelete = deletingSession;
+    setShowDeleteConfirm(false);
+    setDeletingSession(null);
+
+    showToast.info('Processing deletion...', 'Deleting...');
+
+    try {
+      // Move to recycle bin first
+      const recycleBinResult = await moveToRecycleBin(
+        'bubbleSession',
+        sessionToDelete,
+        sessionToDelete.id,
+        true
+      );
+
+      if (!recycleBinResult.success) {
+        showToast.error(
+          recycleBinResult.error || 'Failed to move to recycle bin',
+          'Delete Failed'
+        );
+        return;
+      }
+
+      // Then delete from active sessions
+      const deleteResult = await deleteSession(sessionToDelete.id, true);
+
+      if (selectedSession?.id === sessionToDelete.id) {
+        setSelectedSession(null);
+        setMessages([]);
+      }
+
+      // Remove from local state
+      setSessions(prev => prev.filter(s => s.id !== sessionToDelete.id));
+
+      if (deleteResult.success) {
+        showToast.success(
+          'Session and all messages moved to recycle bin',
+          'Moved to Recycle Bin'
+        );
+      } else {
+        showToast.error(
+          deleteResult.error || 'Failed to delete session',
+          'Delete Failed'
+        );
+      }
+    } catch (error) {
+      console.error('Error deleting session:', error);
+      showToast.error(
+        error instanceof Error ? error.message : 'Failed to delete session',
+        'Delete Failed'
+      );
+    }
+  };
+
+  /**
+   * Handle batch delete
+   */
+  const handleBatchDelete = () => {
+    if (selectedIds.size === 0) {
+      showToast.warning('Please select sessions to delete', 'No Selection');
+      return;
+    }
+    setShowBatchDeleteConfirm(true);
+  };
+
+  /**
+   * Confirm batch delete
+   */
+  const confirmBatchDelete = async () => {
+    if (selectedIds.size === 0) return;
+
+    const selectedSessions = sessions.filter(s => selectedIds.has(s.id));
+    
+    if (selectedSessions.length === 0) {
+      showToast.warning('Selected sessions not found', 'No Items Found');
+      setSelectedIds(new Set());
+      setIsSelectionMode(false);
+      setShowBatchDeleteConfirm(false);
+      return;
+    }
+
+    setShowBatchDeleteConfirm(false);
+
+    const totalItems = selectedSessions.length;
+    showToast.info(
+      `Processing ${totalItems} session${totalItems > 1 ? 's' : ''}...`,
+      'Deleting...'
+    );
+
+    try {
+      let successCount = 0;
+      let failCount = 0;
+
+      // Move each session to recycle bin and delete
+      for (const session of selectedSessions) {
+        try {
+          // Move to recycle bin
+          const recycleBinResult = await moveToRecycleBin(
+            'bubbleSession',
+            session,
+            session.id,
+            true
+          );
+
+          if (!recycleBinResult.success) {
+            failCount++;
+            continue;
+          }
+
+          // Delete from active
+          const deleteResult = await deleteSession(session.id, true);
+          
+          if (deleteResult.success) {
+            successCount++;
+          } else {
+            failCount++;
+          }
+        } catch (error) {
+          console.error(`Failed to delete session ${session.id}:`, error);
+          failCount++;
+        }
+      }
+
+      // Remove from local state
+      setSessions(prev => prev.filter(s => !selectedIds.has(s.id)));
+      
+      if (selectedSession && selectedIds.has(selectedSession.id)) {
+        setSelectedSession(null);
+        setMessages([]);
+      }
+
+      // Reset selection
+      setSelectedIds(new Set());
+      setIsSelectionMode(false);
+
+      // Show summary notification
+      if (successCount > 0 && failCount === 0) {
+        showToast.success(
+          `Successfully moved ${successCount} session${successCount > 1 ? 's' : ''} to recycle bin`,
+          'Batch Delete Complete'
+        );
+      } else if (successCount > 0 && failCount > 0) {
+        showToast.warning(
+          `Moved ${successCount} session${successCount > 1 ? 's' : ''}, ${failCount} failed`,
+          'Batch Delete Partial'
+        );
+      } else {
+        showToast.error(
+          `Failed to delete ${failCount} session${failCount > 1 ? 's' : ''}`,
+          'Batch Delete Failed'
+        );
+      }
+    } catch (error) {
+      console.error('Error in batch delete:', error);
+      showToast.error(
+        error instanceof Error ? error.message : 'Failed to batch delete sessions',
+        'Batch Delete Failed'
+      );
+    }
+  };
+
   // Setup smart polling for sessions list
   useEffect(() => {
     smartPolling.register(
@@ -390,20 +609,72 @@ export default function EnhancedBubbleChat() {
   return (
     <div className="p-6 h-full">
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-900">Visitor Chat</h2>
-        <p className="text-gray-600 text-sm mt-1">
-          Real-time messaging with visitors • Live sync enabled
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">Visitor Chat</h2>
+            <p className="text-gray-600 text-sm mt-1">
+              Real-time messaging with visitors • Live sync enabled
+            </p>
+          </div>
+          
+          {/* Selection Mode Controls */}
+          <div className="flex items-center gap-2">
+            {isSelectionMode && selectedIds.size > 0 && (
+              <>
+                <span className="text-sm text-gray-600">
+                  {selectedIds.size} selected
+                </span>
+                <button
+                  onClick={handleBatchDelete}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 text-sm font-medium"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete Selected
+                </button>
+              </>
+            )}
+            <button
+              onClick={toggleSelectionMode}
+              className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium ${
+                isSelectionMode
+                  ? 'bg-gray-600 text-white hover:bg-gray-700'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+            >
+              {isSelectionMode ? (
+                <>
+                  <X className="w-4 h-4" />
+                  Cancel
+                </>
+              ) : (
+                <>
+                  <CheckSquare className="w-4 h-4" />
+                  Select
+                </>
+              )}
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-6" style={{ height: 'calc(100vh - 300px)', minHeight: '600px' }}>
         {/* Sessions List */}
         <div className="col-span-1 bg-white border border-gray-200 rounded-lg overflow-hidden flex flex-col">
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3 border-b border-blue-800">
-            <h3 className="font-semibold text-white flex items-center gap-2">
-              <User className="w-4 h-4" />
-              Active Visitors ({sessions.length})
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-white flex items-center gap-2">
+                <User className="w-4 h-4" />
+                Active Visitors ({sessions.length})
+              </h3>
+              {isSelectionMode && sessions.length > 0 && (
+                <button
+                  onClick={selectAll}
+                  className="text-xs text-blue-100 hover:text-white underline"
+                >
+                  {selectedIds.size === sessions.length ? 'Deselect All' : 'Select All'}
+                </button>
+              )}
+            </div>
           </div>
           
           <div className="flex-1 overflow-y-auto">
@@ -420,73 +691,98 @@ export default function EnhancedBubbleChat() {
               </div>
             ) : (
               sessions.map((session) => {
-                const displayName = session.visitorEmail || `Visitor ${session.id}`;
+                const displayName = session.visitorEmail || `Visitor`;
                 const unreadCount = unreadCounts.get(session.id) || 0;
                 const isActive = selectedSession?.id === session.id;
+                const isSelected = selectedIds.has(session.id);
+                
+                // Display the central UUID - prioritize visitorId, fallback to session.id
+                const displayUUID = session.visitorId || session.id || 'Unknown';
                 
                 return (
                   <div
                     key={session.id}
-                    onClick={() => handleSelectSession(session)}
-                    className={`w-full p-4 border-b border-gray-100 hover:bg-gray-50 transition-all text-left cursor-pointer ${
+                    className={`w-full p-4 border-b border-gray-100 hover:bg-gray-50 transition-all text-left relative ${
                       isActive ? 'bg-blue-50 border-l-4 border-l-blue-600' : ''
                     }`}
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className={`font-medium text-sm truncate ${
-                            unreadCount > 0 ? 'text-blue-700 font-semibold' : 'text-gray-900'
-                          }`}>
-                            {displayName}
-                          </span>
-                          {session.visitorOnline && (
-                            <Circle className="w-2 h-2 fill-green-500 text-green-500 flex-shrink-0" />
-                          )}
-                        </div>
-                        
-                        <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {formatTime(session.lastActive)}
-                        </p>
-                        
-                        {/* UUID Display */}
-                        <p className="text-xs text-gray-400 mt-1 font-mono truncate" title={`device_${session.id}`}>
-                          device_{session.id.slice(0, 12)}...
-                        </p>
-                        
-                        {/* See Analytics Link */}
+                    <div className="flex items-start gap-3">
+                      {/* Selection Checkbox */}
+                      {isSelectionMode && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            router.push(`/admin/dashboard?tab=visitor-analytics&visitorId=${session.id}`);
+                            toggleSelection(session.id);
                           }}
-                          className="text-xs text-blue-600 hover:text-blue-800 font-medium mt-1 flex items-center gap-1 hover:underline"
+                          className="flex-shrink-0 mt-1"
                         >
-                          See Analytics
-                          <ArrowRight className="w-3 h-3" />
+                          {isSelected ? (
+                            <CheckSquare className="w-5 h-5 text-blue-600" />
+                          ) : (
+                            <Square className="w-5 h-5 text-gray-400" />
+                          )}
                         </button>
+                      )}
+                      
+                      {/* Session Content */}
+                      <div
+                        onClick={() => !isSelectionMode && handleSelectSession(session)}
+                        className="flex-1 min-w-0 cursor-pointer"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className={`font-medium text-sm ${
+                                unreadCount > 0 ? 'text-blue-700 font-semibold' : 'text-gray-900'
+                              }`}>
+                                {displayUUID}
+                              </span>
+                              {session.visitorOnline && (
+                                <Circle className="w-2 h-2 fill-green-500 text-green-500 flex-shrink-0" />
+                              )}
+                            </div>
+                            
+                            <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {formatTime(session.lastActive)}
+                            </p>
+                          </div>
+                          
+                          {unreadCount > 0 && (
+                            <span className="px-2 py-1 bg-blue-600 text-white text-xs font-bold rounded-full flex-shrink-0 animate-pulse">
+                              {unreadCount}
+                            </span>
+                          )}
+                        </div>
+                        
+                        <div className="mt-2 text-xs text-gray-600 flex items-center gap-3">
+                          <span>💬 {session.messageCount} msgs</span>
+                          {session.visitorOnline ? (
+                            <span className="text-green-600 font-medium flex items-center gap-1">
+                              <Wifi className="w-3 h-3" />
+                              Online
+                            </span>
+                          ) : (
+                            <span className="text-gray-400 flex items-center gap-1">
+                              <WifiOff className="w-3 h-3" />
+                              Offline
+                            </span>
+                          )}
+                        </div>
                       </div>
                       
-                      {unreadCount > 0 && (
-                        <span className="px-2 py-1 bg-blue-600 text-white text-xs font-bold rounded-full flex-shrink-0 animate-pulse">
-                          {unreadCount}
-                        </span>
-                      )}
-                    </div>
-                    
-                    <div className="mt-2 text-xs text-gray-600 flex items-center gap-3">
-                      <span>💬 {session.messageCount} msgs</span>
-                      {session.visitorOnline ? (
-                        <span className="text-green-600 font-medium flex items-center gap-1">
-                          <Wifi className="w-3 h-3" />
-                          Online
-                        </span>
-                      ) : (
-                        <span className="text-gray-400 flex items-center gap-1">
-                          <WifiOff className="w-3 h-3" />
-                          Offline
-                        </span>
+                      {/* Delete Button (visible when not in selection mode) */}
+                      {!isSelectionMode && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(session);
+                          }}
+                          className="flex-shrink-0 p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete session"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       )}
                     </div>
                   </div>
@@ -503,9 +799,9 @@ export default function EnhancedBubbleChat() {
               {/* Chat Header */}
               <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3 border-b border-blue-800">
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-white flex items-center gap-2">
-                      {selectedSession.visitorEmail || selectedSession.id}
+                      {selectedSession.visitorId || selectedSession.id || 'Visitor'}
                       {visitorOnline && (
                         <Circle className="w-2 h-2 fill-green-400 text-green-400" />
                       )}
@@ -517,9 +813,6 @@ export default function EnhancedBubbleChat() {
                   
                   <div className="text-xs text-blue-100 flex items-center gap-3">
                     <span>💬 {messages.length} messages</span>
-                    <span className="px-2 py-1 bg-blue-800 rounded-md font-mono text-xs">
-                      {selectedSession.id}
-                    </span>
                   </div>
                 </div>
               </div>
@@ -653,6 +946,93 @@ export default function EnhancedBubbleChat() {
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && deletingSession && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Delete Chat Session?
+            </h3>
+            <p className="text-gray-600 mb-4">
+              Are you sure you want to delete this chat session? This will move the session and all its messages to the recycle bin. You can restore it within 30 days.
+            </p>
+            <div className="bg-gray-50 rounded-lg p-3 mb-4">
+              <p className="text-sm text-gray-700">
+                <span className="font-medium">Session:</span> {deletingSession.visitorEmail || 'Visitor'}
+              </p>
+              <p className="text-xs text-gray-500 mt-1 font-mono">
+                {deletingSession.visitorId}
+              </p>
+              <p className="text-sm text-gray-700 mt-1">
+                <span className="font-medium">Messages:</span> {deletingSession.messageCount}
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setDeletingSession(null);
+                }}
+                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center justify-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Batch Delete Confirmation Modal */}
+      {showBatchDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Delete Multiple Sessions?
+            </h3>
+            <p className="text-gray-600 mb-4">
+              Are you sure you want to delete {selectedIds.size} chat session{selectedIds.size > 1 ? 's' : ''}? This will move all selected sessions and their messages to the recycle bin. You can restore them within 30 days.
+            </p>
+            <div className="bg-gray-50 rounded-lg p-3 mb-4">
+              <p className="text-sm font-medium text-gray-900 mb-2">
+                Selected Sessions: {selectedIds.size}
+              </p>
+              <div className="text-xs text-gray-600 space-y-1 max-h-32 overflow-y-auto">
+                {sessions
+                  .filter(s => selectedIds.has(s.id))
+                  .map(s => (
+                    <div key={s.id} className="flex items-center justify-between">
+                      <span className="truncate">{s.visitorEmail || 'Visitor'}</span>
+                      <span className="text-gray-400 ml-2">{s.messageCount} msgs</span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowBatchDeleteConfirm(false)}
+                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmBatchDelete}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center justify-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete All
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -15,6 +15,8 @@ export interface ContactSubmission {
   replyMessage?: string; // admin's reply content
   userAgent?: string; // browser info for abuse tracking
   ipAddress?: string; // IP for abuse protection
+  fingerprint?: string; // Device fingerprint
+  spamScore?: number; // Calculated spam score for admin review
   createdAt: Date;
   updatedAt: Date;
 }
@@ -25,6 +27,11 @@ export interface CreateContactSubmissionDTO {
   message: string;
   userAgent?: string;
   ipAddress?: string;
+  honeypot?: string; // Bot trap field
+  timeSpent?: number; // Time spent filling form (ms)
+  turnstileToken?: string; // Cloudflare Turnstile token
+  fingerprint?: string; // Device fingerprint
+  spamScore?: number; // Calculated spam score
 }
 
 export interface UpdateContactSubmissionDTO {
@@ -101,6 +108,98 @@ export function validateContactSubmission(
       field: "name",
       message: `Name must not exceed ${MAX_NAME_LENGTH} characters`,
     });
+  } else {
+    // Additional name validation
+    const name = data.name.trim();
+    const nameLower = name.toLowerCase().replace(/\s+/g, '');
+    
+    // Check for numbers in name
+    if (/\d/.test(name)) {
+      errors.push({
+        field: "name",
+        message: "Name should not contain numbers",
+      });
+    }
+    
+    // Check for special characters (allow only letters, spaces, hyphens, apostrophes)
+    if (!/^[a-zA-Z\s\-']+$/.test(name)) {
+      errors.push({
+        field: "name",
+        message: "Name should only contain letters, spaces, hyphens, and apostrophes",
+      });
+    }
+    
+    // Check if name has at least one vowel
+    if (!/[aeiouAEIOU]/.test(name)) {
+      errors.push({
+        field: "name",
+        message: "Please enter a valid name",
+      });
+    }
+    
+    // Check for excessive repeated characters (like "aaa", "sss")
+    if (/(.)\1{2,}/.test(name)) {
+      errors.push({
+        field: "name",
+        message: "Name contains invalid repeated characters",
+      });
+    }
+    
+    // Check for keyboard patterns
+    const keyboardPatterns = /qwert|asdf|zxcv|qaz|wsx|edc|rfv|tgb|yhn|ujm/i;
+    if (keyboardPatterns.test(nameLower)) {
+      errors.push({
+        field: "name",
+        message: "Please enter your real name",
+      });
+    }
+    
+    // Check for repeated short sequences (like "asdasd", "adssad")
+    // This catches patterns where 2-4 characters repeat
+    for (let len = 2; len <= 4; len++) {
+      const regex = new RegExp(`([a-z]{${len}})\\1{2,}`, 'i');
+      if (regex.test(nameLower)) {
+        errors.push({
+          field: "name",
+          message: "Please enter a valid name without repeated patterns",
+        });
+        break;
+      }
+    }
+    
+    // Check for common gibberish patterns (alternating 2 chars like "adadad")
+    if (/^([a-z]{1,2})\1{3,}$/i.test(nameLower)) {
+      errors.push({
+        field: "name",
+        message: "Please enter your real name",
+      });
+    }
+    
+    // Check for excessive consonants in a row (5+)
+    if (/[bcdfghjklmnpqrstvwxyz]{5,}/i.test(name)) {
+      errors.push({
+        field: "name",
+        message: "Name contains invalid character combinations",
+      });
+    }
+    
+    // Check each word separately for gibberish
+    const words = name.split(/\s+/);
+    for (const word of words) {
+      const wordLower = word.toLowerCase();
+      
+      // Check if word is too random (low vowel to consonant ratio)
+      const vowels = (wordLower.match(/[aeiou]/g) || []).length;
+      const consonants = (wordLower.match(/[bcdfghjklmnpqrstvwxyz]/g) || []).length;
+      
+      if (word.length >= 5 && consonants > 0 && vowels / consonants < 0.3) {
+        errors.push({
+          field: "name",
+          message: "Please enter a valid name",
+        });
+        break;
+      }
+    }
   }
 
   // Email validation

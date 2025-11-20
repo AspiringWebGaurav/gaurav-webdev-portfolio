@@ -104,7 +104,7 @@ export default function Navbar({
   const handleLogout = async () => {
     try {
       await signOut();
-      router.push("/admin/login");
+      router.push("/admin/code-gate");
     } catch (error) {
       showToast.error("Failed to logout");
     }

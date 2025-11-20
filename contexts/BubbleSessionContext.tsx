@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { BubbleSession } from '@/types/bubble';
-import { generateVisitorId } from '@/lib/deviceFingerprint';
+import { generateDeviceFingerprint } from '@/lib/deviceFingerprint';
 import { logSessionEventSync } from '@/lib/sessionLogger';
 import smartPolling from '@/lib/smartPolling';
 
@@ -55,11 +55,15 @@ export function BubbleSessionProvider({ children }: { children: React.ReactNode 
       setIsInitializing(true);
       setLoading(true);
       
-      // Generate device UUID
-      const deviceId = generateVisitorId(); // device_<fingerprint>
+      // Get fingerprint and fetch the visitor ID from backend
+      const fingerprint = generateDeviceFingerprint();
+      const response = await fetch(`/api/visitor-analytics/current-visitor?fingerprint=${fingerprint}`);
+      const data = await response.json();
+      const deviceId = data.visitorId;
+      
       setVisitorId(deviceId);
 
-      console.log('[BubbleSession] Generated UUID:', deviceId);
+      console.log('[BubbleSession] Fetched visitor UUID:', deviceId);
 
       // Try to fetch existing session
       const getResponse = await fetch(`/api/session?visitorId=${deviceId}`, {

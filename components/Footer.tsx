@@ -2,16 +2,23 @@
 
 import { useState, useEffect } from "react";
 import { FaLocationArrow } from "react-icons/fa6";
+import { Bug, AlertTriangle, Shield } from "lucide-react";
 import Image from "next/image";
 
 import { socialMedia } from "@/data";
 import MagicButton from "./ui/MagicButton";
 import ContactFormModal from "./ContactFormModal";
+import BugReportIntro from "./BugReportIntro";
+import BugReportForm from "./BugReportForm";
 import { generateDeviceFingerprint } from "@/lib/deviceFingerprint";
 
 const Footer = () => {
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [isBugIntroOpen, setIsBugIntroOpen] = useState(false);
+  const [isBugFormOpen, setIsBugFormOpen] = useState(false);
   const [patchId, setPatchId] = useState<string>("...");
+  const [adminInput, setAdminInput] = useState("");
+  const [showAdminInput, setShowAdminInput] = useState(false);
 
   useEffect(() => {
     // Fetch UUID once - it never changes so no need to poll
@@ -29,12 +36,29 @@ const Footer = () => {
     // REMOVED: Polling interval (UUID is static, no need to refetch)
   }, []);
 
-  const handleAdminClick = () => {
-    window.open("/admin/dashboard", "_blank");
+  const handleAdminLogin = () => {
+    if (adminInput.trim().toLowerCase() === "gaurav-here") {
+      // Get the current host (works for both localhost and production)
+      const protocol = window.location.protocol;
+      const host = window.location.host;
+      window.open(`${protocol}//${host}/admin/login`, "_blank");
+      setAdminInput("");
+      setShowAdminInput(false);
+    }
+  };
+
+  const handleAdminKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleAdminLogin();
+    }
   };
 
   const handleContactClick = () => {
     setIsContactModalOpen(true);
+  };
+
+  const handleBugReportClick = () => {
+    setIsBugIntroOpen(true);
   };
 
   return (
@@ -63,29 +87,101 @@ const Footer = () => {
         isOpen={isContactModalOpen}
         onClose={() => setIsContactModalOpen(false)}
       />
-      <div className="flex mt-16 md:flex-row flex-col justify-between items-center py-6 gap-4">
-        <div className="md:text-base text-sm md:font-normal font-light flex flex-wrap items-center justify-center md:justify-start gap-2">
-          <span>Copyright © 2025 Gaurav Patil</span>
-          <span className="text-white-200">•</span>
+      {/* Bug Report Intro Modal */}
+      <BugReportIntro
+        isOpen={isBugIntroOpen}
+        onClose={() => setIsBugIntroOpen(false)}
+        onOpenForm={() => setIsBugFormOpen(true)}
+      />
+      
+      {/* Bug Report Form Modal */}
+      <BugReportForm
+        isOpen={isBugFormOpen}
+        onClose={() => setIsBugFormOpen(false)}
+      />
+      <div className="flex mt-16 md:flex-row flex-col justify-between items-center py-6 gap-6">
+        {/* Left Section - Content */}
+        <div className="md:text-base text-sm md:font-normal font-light flex flex-wrap items-center justify-center md:justify-start gap-3">
+          <span className="text-white-100">Copyright © 2025 Gaurav Patil</span>
+          
+          <span className="text-white-200/40">•</span>
+          
+          {/* Enhanced Bug Report Button */}
           <button
-            onClick={handleAdminClick}
-            className="text-purple hover:text-purple/80 transition-colors font-normal"
-            aria-label="Open Admin Panel"
-            title="Open Admin Panel"
+            onClick={handleBugReportClick}
+            className="group relative px-3 py-1 rounded-lg bg-gradient-to-r from-red-500/10 to-orange-500/10 hover:from-red-500/20 hover:to-orange-500/20 border border-red-500/30 hover:border-red-500/50 transition-all duration-300 flex items-center gap-1.5"
+            aria-label="Report a Bug"
+            title="Found a bug? Let us know!"
           >
-            admin?
+            <Bug className="w-3.5 h-3.5 text-red-400 group-hover:text-red-300 transition-colors" />
+            <span className="text-red-400 group-hover:text-red-300 text-xs font-medium transition-colors">
+              Report a Bug
+            </span>
+            <AlertTriangle className="w-3 h-3 text-orange-400 group-hover:animate-pulse" />
           </button>
-          <span className="text-white-200">•</span>
+          
+          <span className="text-white-200/40">•</span>
+          
+          {/* Admin Access */}
+          {!showAdminInput ? (
+            <button
+              onClick={() => setShowAdminInput(true)}
+              className="group relative px-3 py-1 rounded-lg bg-purple/5 hover:bg-purple/10 border border-purple/20 hover:border-purple/40 transition-all duration-300 flex items-center gap-1.5"
+              aria-label="Admin Access"
+              title="Admin Login"
+            >
+              <Shield className="w-3.5 h-3.5 text-purple/60 group-hover:text-purple transition-colors" />
+              <span className="text-purple/60 group-hover:text-purple text-xs font-medium transition-colors">
+                Admin
+              </span>
+            </button>
+          ) : (
+            <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2 duration-300">
+              <input
+                type="text"
+                value={adminInput}
+                onChange={(e) => setAdminInput(e.target.value)}
+                onKeyPress={handleAdminKeyPress}
+                placeholder="Enter code..."
+                className="px-3 py-1 w-32 text-xs bg-black-100 border border-purple/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple focus:ring-1 focus:ring-purple/50 transition-all"
+                autoFocus
+              />
+              <button
+                onClick={handleAdminLogin}
+                className="px-3 py-1 bg-purple hover:bg-purple/80 text-white text-xs font-medium rounded-lg transition-colors"
+              >
+                Go
+              </button>
+              <button
+                onClick={() => {
+                  setShowAdminInput(false);
+                  setAdminInput("");
+                }}
+                className="px-2 py-1 text-gray-400 hover:text-white text-xs transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+          
+          <span className="text-white-200/40">•</span>
+          
+          {/* Device ID */}
           <span 
-            className="text-gray-500 font-mono text-xs hover:text-gray-400 transition-colors cursor-pointer"
-            title="Click to copy UUID"
-            onClick={() => navigator.clipboard.writeText(patchId)}
+            className="group relative px-3 py-1 rounded-lg bg-black-200/50 border border-white-200/10 hover:border-white-200/30 font-mono text-xs text-gray-400 hover:text-gray-300 transition-all cursor-pointer flex items-center gap-1.5"
+            title="Click to copy Device ID"
+            onClick={() => {
+              navigator.clipboard.writeText(patchId);
+              // Optional: Add a toast notification here
+            }}
           >
+            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
             {patchId}
           </span>
         </div>
 
-        <div className="flex items-center md:gap-3 gap-6 lg:mr-14">
+        {/* Right Section - Social Media Icons */}
+        <div className="flex items-center md:gap-6 gap-4 md:mr-16">
           {socialMedia.map((info) => (
             <div
               key={info.id}

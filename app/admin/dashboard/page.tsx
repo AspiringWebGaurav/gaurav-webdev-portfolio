@@ -15,14 +15,20 @@ import ContactSubmissionManager from "@/components/admin/ContactSubmissionManage
 import BubbleManagementHub from "@/components/admin/BubbleManagementHub";
 import VisitorAnalyticsManager from "@/components/admin/VisitorAnalyticsManager";
 import BanAppealsManager from "@/components/admin/BanAppealsManager";
+import BugHuntManager from "@/components/admin/BugHuntManager";
 import VersionNotesModal from "@/components/admin/VersionNotesModal";
 import { useContactSubmissions } from "@/contexts/ContactSubmissionContext";
+import { useBugReports } from "@/contexts/BugReportContext";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { useVisitorAnalytics } from "@/contexts/VisitorAnalyticsContext";
 import { useBubbleManagement } from "@/contexts/BubbleManagementContext";
 import { useBanAppeals } from "@/contexts/BanAppealsContext";
 import { useUnreadCountNotification } from "@/hooks/useLiveUpdateNotification";
 import { auth } from "@/lib/firebase";
+import dynamic from "next/dynamic";
+
+// Dynamic import for Login Abuse page to avoid SSR issues
+const LoginAbusePage = dynamic(() => import("@/app/admin/login-abuse/page"), { ssr: false });
 
 // Panel option interface
 export interface PanelOption {
@@ -61,6 +67,10 @@ function DashboardContent() {
   const { getPendingCount } = useBanAppeals();
   const pendingAppealsCount = getPendingCount();
 
+  // Get new bug reports count for badge
+  const { getNewBugReportsCount } = useBugReports();
+  const newBugReportsCount = getNewBugReportsCount();
+
   // Panel options configuration with dynamic badges (excluding recycle bin - it's in navbar)
   const panelOptions: PanelOption[] = [
     { id: "tech-stacks", label: "My Tech Stacks", icon: "⚡" },
@@ -72,6 +82,8 @@ function DashboardContent() {
     { id: "bubble-management", label: "Bubble Management", icon: "💬", badge: unreadBubbleCount > 0 ? unreadBubbleCount : undefined },
     { id: "visitor-analytics", label: "Visitor Analytics", icon: "📊", badge: activeVisitorCount > 0 ? activeVisitorCount : undefined },
     { id: "ban-appeals", label: "Ban Appeals", icon: "🛡️", badge: pendingAppealsCount > 0 ? pendingAppealsCount : undefined },
+    { id: "bug-hunt", label: "Bug Hunt", icon: "🐛", badge: newBugReportsCount > 0 ? newBugReportsCount : undefined },
+    { id: "login-abuse", label: "Login Abuse", icon: "🔐" },
   ];
 
   // Get active section from URL params, default to "tech-stacks"
@@ -91,10 +103,11 @@ function DashboardContent() {
       bubbleMessages: unreadBubbleCount,
       activeVisitors: activeVisitorCount,
       banAppeals: pendingAppealsCount,
+      bugReports: newBugReportsCount,
       currentTab: activeSection,
       timestamp: new Date().toISOString()
     });
-  }, [unreadCount, unreadBubbleCount, activeVisitorCount, pendingAppealsCount, activeSection]);
+  }, [unreadCount, unreadBubbleCount, activeVisitorCount, pendingAppealsCount, newBugReportsCount, activeSection]);
 
   // Live notifications when new items arrive (only show if not already viewing that section)
   useUnreadCountNotification(unreadCount, 'unread contact submission(s)', { 
@@ -115,6 +128,11 @@ function DashboardContent() {
   useUnreadCountNotification(pendingAppealsCount, 'pending ban appeal(s)', { 
     enabled: activeSection !== 'ban-appeals',
     soundEnabled: true, // Enable sound for new ban appeals
+  });
+
+  useUnreadCountNotification(newBugReportsCount, 'new bug report(s)', { 
+    enabled: activeSection !== 'bug-hunt',
+    soundEnabled: true, // Enable sound for new bug reports
   });
 
   // Detect mobile screen size
@@ -276,6 +294,8 @@ function DashboardContent() {
           {activeSection === "bubble-management" && <BubbleManagementHub />}
           {activeSection === "visitor-analytics" && <VisitorAnalyticsManager visitorIdParam={visitorIdParam} />}
           {activeSection === "ban-appeals" && <BanAppealsManager />}
+          {activeSection === "bug-hunt" && <BugHuntManager />}
+          {activeSection === "login-abuse" && <LoginAbusePage />}
         </div>
       </main>
 

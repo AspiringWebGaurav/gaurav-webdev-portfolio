@@ -28,6 +28,10 @@ import {
   MAX_SUBMISSIONS_PER_IP_PER_HOUR,
 } from "@/types/contactSubmission";
 import { rateLimitMiddleware } from "@/lib/rateLimit";
+import {
+  validateContactFormSubmission,
+  calculateSpamScore,
+} from "@/lib/spamDetection";
 
 const COLLECTION_NAME = "contactSubmissions";
 
@@ -186,14 +190,49 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Rate limiting - strict for contact form (with Turnstile support)
+    // Get client IP address
+    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0] || 
+                     request.headers.get('x-real-ip') || 
+                     'unknown';
+
+    // === LAYER 1: Advanced Spam Detection ===
+    const spamValidation = await validateContactFormSubmission({
+      name: body.name,
+      email: body.email,
+      message: body.message,
+      honeypot: body.honeypot,
+      timeSpent: body.timeSpent,
+      turnstileToken: body.turnstileToken,
+      turnstileSecretKey: process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY,
+      remoteIp: clientIp,
+    });
+
+    if (!spamValidation.valid) {
+      console.warn('[Security] Spam detected:', {
+        errors: spamValidation.errors,
+        spamScore: spamValidation.spamScore,
+        email: body.email,
+        ip: clientIp,
+      });
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Your submission could not be processed. Please ensure all fields contain valid information.",
+          validationErrors: spamValidation.errors,
+        },
+        { status: 400 }
+      );
+    }
+
+    // === LAYER 2: Rate Limiting ===
     const { response: rateLimitResponse, headers: rateLimitHeaders } = await rateLimitMiddleware(request, 'contactForm', {
       fingerprint: body.fingerprint,
       turnstileToken: body.turnstileToken,
     });
     if (rateLimitResponse) return rateLimitResponse;
 
-    // Validate input
+    // === LAYER 3: Basic Field Validation ===
     const validationErrors = validateContactSubmission(body);
     if (validationErrors.length > 0) {
       return NextResponse.json(
@@ -209,10 +248,10 @@ export async function POST(request: NextRequest) {
     // Sanitize data
     const sanitized = sanitizeContactSubmission(body);
 
-    // Check rate limits
+    // === LAYER 4: Email/IP Rate Limits ===
     const rateLimitCheck = await checkRateLimits(
       sanitized.email,
-      sanitized.ipAddress
+      clientIp
     );
     if (!rateLimitCheck.allowed) {
       return NextResponse.json(
@@ -224,7 +263,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create submission
+    // Calculate spam score for admin review
+    const spamCheck = calculateSpamScore({
+      name: sanitized.name,
+      email: sanitized.email,
+      message: sanitized.message,
+    });
+
+    // Create submission with all security metadata
     const now = Timestamp.now();
     const data = {
       name: sanitized.name,
@@ -233,10 +279,20 @@ export async function POST(request: NextRequest) {
       status: "new",
       isReplied: false,
       userAgent: sanitized.userAgent || "",
-      ipAddress: sanitized.ipAddress || "",
+      ipAddress: clientIp,
+      fingerprint: body.fingerprint || "",
+      spamScore: spamCheck.score,
       createdAt: now,
       updatedAt: now,
     };
+
+    console.log('[Contact] New submission:', {
+      email: sanitized.email,
+      spamScore: spamCheck.score,
+      ip: clientIp,
+      hasFingerprint: !!body.fingerprint,
+      hasTurnstile: !!body.turnstileToken,
+    });
 
     const submissionsRef = collection(db, COLLECTION_NAME);
     const docRef = await addDoc(submissionsRef, data);

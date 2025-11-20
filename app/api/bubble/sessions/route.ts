@@ -17,12 +17,15 @@ export async function GET(request: NextRequest) {
     const allSessions = searchParams.get('allSessions') === 'true';
     const fingerprint = searchParams.get('fingerprint');
 
-    // Rate limiting
-    const { response: rateLimitResponse, headers: rateLimitHeaders } = await rateLimitMiddleware(request, 'general', { 
-      sessionId: sessionId || undefined, 
-      fingerprint: fingerprint || undefined 
-    });
-    if (rateLimitResponse) return rateLimitResponse;
+    // Skip rate limiting for admin endpoints (allSessions)
+    if (!allSessions) {
+      // Rate limiting only for visitor endpoints
+      const { response: rateLimitResponse, headers: rateLimitHeaders } = await rateLimitMiddleware(request, 'general', { 
+        sessionId: sessionId || undefined, 
+        fingerprint: fingerprint || undefined 
+      });
+      if (rateLimitResponse) return rateLimitResponse;
+    }
 
     // Admin endpoint: List all sessions (only those with messages)
     if (allSessions) {
@@ -35,28 +38,74 @@ export async function GET(request: NextRequest) {
       );
       const querySnapshot = await getDocs(q);
 
-      const sessions = querySnapshot.docs
-        .map(docSnapshot => {
-          const data = docSnapshot.data();
-          return {
-            id: data.id,
-            deviceFingerprint: data.deviceFingerprint || null,
-            visitorEmail: data.visitorEmail || null,
-            startedAt: data.startedAt?.toDate() || new Date(),
-            lastActive: data.lastActive?.toDate() || new Date(),
-            messageCount: data.messageCount || 0,
-            unreadAdminReplies: data.unreadAdminReplies || 0,
-            unreadVisitorMessages: data.unreadVisitorMessages || 0,
-            hasUnreadTooltip: data.hasUnreadTooltip || false,
-            visitorOnline: data.visitorOnline || false,
-            adminOnline: data.adminOnline || false,
-            visitorLastSeen: data.visitorLastSeen?.toDate() || null,
-            adminLastSeen: data.adminLastSeen?.toDate() || null,
-            status: data.status || 'pending',
-            deletedAt: data.deletedAt || null,
-          };
-        })
-        .filter(session => !session.deletedAt && session.messageCount > 0); // Filter soft-deleted and empty sessions
+      // Fetch all sessions first
+      const sessionsData = querySnapshot.docs.map(docSnapshot => {
+        const data = docSnapshot.data();
+        return {
+          firestoreId: docSnapshot.id,
+          sessionId: data.id,
+          deviceFingerprint: data.deviceFingerprint,
+          visitorEmail: data.visitorEmail,
+          startedAt: data.startedAt?.toDate() || new Date(),
+          lastActive: data.lastActive?.toDate() || new Date(),
+          messageCount: data.messageCount || 0,
+          unreadAdminReplies: data.unreadAdminReplies || 0,
+          unreadVisitorMessages: data.unreadVisitorMessages || 0,
+          hasUnreadTooltip: data.hasUnreadTooltip || false,
+          visitorOnline: data.visitorOnline || false,
+          adminOnline: data.adminOnline || false,
+          visitorLastSeen: data.visitorLastSeen?.toDate() || null,
+          adminLastSeen: data.adminLastSeen?.toDate() || null,
+          status: data.status || 'pending',
+          deletedAt: data.deletedAt || null,
+        };
+      });
+
+      // Fetch visitor profiles to get the central UUID
+      const visitorProfilesRef = collection(db, 'visitorProfiles');
+      const visitorIds = [...new Set(sessionsData.map(s => s.sessionId))];
+      
+      // Fetch all visitor profiles in parallel
+      const visitorProfilesPromises = visitorIds.map(async (visitorId) => {
+        try {
+          const visitorDoc = await getDoc(doc(db, 'visitorProfiles', visitorId));
+          if (visitorDoc.exists()) {
+            return { id: visitorId, data: visitorDoc.data() };
+          }
+        } catch (e) {
+          console.log(`[Sessions] No visitor profile for ${visitorId}`);
+        }
+        return null;
+      });
+      
+      const visitorProfiles = (await Promise.all(visitorProfilesPromises)).filter(Boolean);
+      const visitorMap = new Map(visitorProfiles.map(v => [v!.id, v!.data]));
+
+      // Map sessions with visitor profile data
+      const sessions = sessionsData.map(data => {
+        const visitorProfile = visitorMap.get(data.sessionId);
+        // Use the visitor profile ID (which is device_xxx) or fall back to session ID
+        const visitorId = visitorProfile ? data.sessionId : (data.deviceFingerprint || data.sessionId);
+        
+        return {
+          id: data.sessionId,
+          visitorId: visitorId, // This is the central visitor UUID from visitor analytics
+          deviceFingerprint: data.deviceFingerprint || null,
+          visitorEmail: data.visitorEmail || null,
+          startedAt: data.startedAt,
+          lastActive: data.lastActive,
+          messageCount: data.messageCount,
+          unreadAdminReplies: data.unreadAdminReplies,
+          unreadVisitorMessages: data.unreadVisitorMessages,
+          hasUnreadTooltip: data.hasUnreadTooltip,
+          visitorOnline: data.visitorOnline,
+          adminOnline: data.adminOnline,
+          visitorLastSeen: data.visitorLastSeen,
+          adminLastSeen: data.adminLastSeen,
+          status: data.status,
+          deletedAt: data.deletedAt,
+        };
+      }).filter(session => !session.deletedAt && session.messageCount > 0); // Filter soft-deleted and empty sessions
 
       // Check for unread visitor messages in each session
       const messagesRef = collection(db, COLLECTIONS.MESSAGES);
@@ -82,14 +131,7 @@ export async function GET(request: NextRequest) {
       // Sort by lastActive after fetching
       sessionsWithUnreadStatus.sort((a, b) => b.lastActive.getTime() - a.lastActive.getTime());
 
-      const response = NextResponse.json({ sessions: sessionsWithUnreadStatus, success: true });
-      
-      // Add rate limit headers
-      Object.entries(rateLimitHeaders).forEach(([key, value]) => {
-        response.headers.set(key, value);
-      });
-      
-      return response;
+      return NextResponse.json({ sessions: sessionsWithUnreadStatus, success: true });
     }
 
     if (!sessionId) {
@@ -117,7 +159,7 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('[Sessions API] Session retrieved successfully:', sessionId);
-    const response = NextResponse.json({
+    return NextResponse.json({
       id: sessionData.id,
       sessionId: sessionData.id,
       role: sessionData.role || 'visitor',
@@ -133,13 +175,6 @@ export async function GET(request: NextRequest) {
       visitorOnline: sessionData.visitorOnline || false,
       adminOnline: sessionData.adminOnline || false,
     });
-    
-    // Add rate limit headers
-    Object.entries(rateLimitHeaders).forEach(([key, value]) => {
-      response.headers.set(key, value);
-    });
-    
-    return response;
   } catch (error) {
     console.error('Error in sessions GET:', error);
     return NextResponse.json({ error: 'Failed to fetch session' }, { status: 500 });

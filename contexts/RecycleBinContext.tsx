@@ -16,6 +16,105 @@ import {
   RecycleBinFilters,
 } from "@/types/recycleBin";
 
+/**
+ * Mapping configuration for data source operations
+ * Maps each RecycleBinItemSource to its corresponding API endpoints
+ */
+const DATA_SOURCE_CONFIG: Record<
+  RecycleBinItemSource,
+  {
+    deleteEndpoint: string;
+    restoreEndpoint: string;
+    getIdFromData: (data: any) => string;
+    requiresCustomRestore?: boolean;
+  }
+> = {
+  bugReport: {
+    deleteEndpoint: "/api/bug-reports",
+    restoreEndpoint: "/api/bug-reports/restore",
+    getIdFromData: (data) => data.id,
+    requiresCustomRestore: true,
+  },
+  contactSubmission: {
+    deleteEndpoint: "/api/contact-submissions",
+    restoreEndpoint: "/api/contact-submissions/restore",
+    getIdFromData: (data) => data.id,
+    requiresCustomRestore: true,
+  },
+  banAppeal: {
+    deleteEndpoint: "/api/ban-appeals",
+    restoreEndpoint: "/api/ban-appeals/restore",
+    getIdFromData: (data) => data.id,
+    requiresCustomRestore: true,
+  },
+  bubbleSession: {
+    deleteEndpoint: "/api/bubble/sessions",
+    restoreEndpoint: "/api/bubble/sessions/restore",
+    getIdFromData: (data) => data.id,
+    requiresCustomRestore: true,
+  },
+  bubbleMessage: {
+    deleteEndpoint: "/api/bubble/messages",
+    restoreEndpoint: "/api/bubble/messages/restore",
+    getIdFromData: (data) => data.id,
+  },
+  bubblePredefinedQuestion: {
+    deleteEndpoint: "/api/bubble/questions",
+    restoreEndpoint: "/api/bubble/questions/restore",
+    getIdFromData: (data) => data.id,
+  },
+  bubbleResume: {
+    deleteEndpoint: "/api/bubble/resume",
+    restoreEndpoint: "/api/bubble/resume/restore",
+    getIdFromData: (data) => data.id,
+  },
+  project: {
+    deleteEndpoint: "/api/projects",
+    restoreEndpoint: "/api/projects/restore",
+    getIdFromData: (data) => data.id,
+  },
+  testimonial: {
+    deleteEndpoint: "/api/testimonials",
+    restoreEndpoint: "/api/testimonials/restore",
+    getIdFromData: (data) => data.id,
+  },
+  workExperience: {
+    deleteEndpoint: "/api/work-experience",
+    restoreEndpoint: "/api/work-experience/restore",
+    getIdFromData: (data) => data.id,
+  },
+  currentlyWorking: {
+    deleteEndpoint: "/api/currently-working",
+    restoreEndpoint: "/api/currently-working/restore",
+    getIdFromData: (data) => data.id,
+  },
+  notification: {
+    deleteEndpoint: "/api/notifications",
+    restoreEndpoint: "/api/notifications/restore",
+    getIdFromData: (data) => data.id,
+  },
+  "visitor-analytics": {
+    deleteEndpoint: "/api/visitor-analytics",
+    restoreEndpoint: "/api/visitor-analytics/restore",
+    getIdFromData: (data) => data.uuid || data.id,
+  },
+  todo: {
+    deleteEndpoint: "/api/todos",
+    restoreEndpoint: "/api/todos/restore",
+    getIdFromData: (data) => data.id,
+  },
+  timesheet: {
+    deleteEndpoint: "/api/timesheets",
+    restoreEndpoint: "/api/timesheets/restore",
+    getIdFromData: (data) => data.id,
+  },
+  "time-tracker": {
+    deleteEndpoint: "/api/time-tracker",
+    restoreEndpoint: "/api/time-tracker/restore",
+    getIdFromData: (data) => data.id,
+  },
+};
+
 interface RecycleBinContextType {
   items: RecycleBinItem[];
   loading: boolean;
@@ -74,6 +173,7 @@ export const RecycleBinProvider: React.FC<RecycleBinProviderProps> = ({
     bubblePredefinedQuestions: 0,
     bubbleResumes: 0,
     banAppeals: 0,
+    bugReports: 0,
     expiringWithin24Hours: 0,
   });
 
@@ -140,6 +240,7 @@ export const RecycleBinProvider: React.FC<RecycleBinProviderProps> = ({
       bubblePredefinedQuestions: items.filter((item) => item.source === "bubblePredefinedQuestion").length,
       bubbleResumes: items.filter((item) => item.source === "bubbleResume").length,
       banAppeals: items.filter((item) => item.source === "banAppeal").length,
+      bugReports: items.filter((item) => item.source === "bugReport").length,
       expiringWithin24Hours: items.filter(
         (item) => new Date(item.expiryDate).getTime() <= oneDayFromNow
       ).length,
@@ -212,36 +313,28 @@ export const RecycleBinProvider: React.FC<RecycleBinProviderProps> = ({
       }
 
       try {
-        // Special handling for bubble sessions
-        if (item.source === 'bubbleSession') {
-          // Call the bubble session restore endpoint
-          const restoreResponse = await fetch('/api/bubble/sessions/restore', {
+        // Get configuration for this data source
+        const config = DATA_SOURCE_CONFIG[item.source];
+
+        if (config && item.data) {
+          // Call the restore endpoint for this data type
+          const restoreResponse = await fetch(config.restoreEndpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ sessionId: item.data.id }),
+            body: JSON.stringify(
+              config.requiresCustomRestore && item.source === 'bubbleSession'
+                ? { sessionId: item.data.id }
+                : item.data
+            ),
           });
 
           const restoreResult = await restoreResponse.json();
 
           if (!restoreResult.success) {
-            showToast.error(restoreResult.error || "Failed to restore bubble session", "Restore Failed");
-            return null;
-          }
-        }
-
-        // Special handling for ban appeals
-        if (item.source === 'banAppeal') {
-          // Call the ban appeal restore endpoint
-          const restoreResponse = await fetch('/api/ban-appeals/restore', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(item.data),
-          });
-
-          const restoreResult = await restoreResponse.json();
-
-          if (!restoreResult.success) {
-            showToast.error(restoreResult.error || "Failed to restore ban appeal", "Restore Failed");
+            showToast.error(
+              restoreResult.error || `Failed to restore ${item.source}`,
+              "Restore Failed"
+            );
             return null;
           }
         }
@@ -255,14 +348,26 @@ export const RecycleBinProvider: React.FC<RecycleBinProviderProps> = ({
 
         if (result.success) {
           await refreshItems();
+          
+          // Show appropriate success message
+          const sourceLabels: Record<string, string> = {
+            bubbleSession: "Bubble session",
+            banAppeal: "Ban appeal",
+            bugReport: "Bug report",
+            contactSubmission: "Contact submission",
+            project: "Project",
+            testimonial: "Testimonial",
+            workExperience: "Work experience",
+            currentlyWorking: "Currently working",
+            notification: "Notification",
+          };
+          
+          const label = sourceLabels[item.source] || "Item";
           showToast.success(
-            item.source === 'bubbleSession' 
-              ? "Bubble session restored successfully"
-              : item.source === 'banAppeal'
-              ? "Ban appeal restored successfully"
-              : "Item removed from recycle bin",
+            `${label} restored successfully`,
             "Item Restored"
           );
+          
           return result.item.data;
         } else {
           showToast.error(result.error || "Failed to restore item", "Restore Failed");
@@ -280,6 +385,44 @@ export const RecycleBinProvider: React.FC<RecycleBinProviderProps> = ({
   const permanentlyDelete = useCallback(
     async (recycleBinId: string): Promise<void> => {
       try {
+        // Get the item first to know what type it is
+        const item = items.find((i) => i.id === recycleBinId);
+        
+        if (!item) {
+          showToast.error("Item not found in recycle bin", "Not Found");
+          return;
+        }
+
+        // Get configuration for this data source
+        const config = DATA_SOURCE_CONFIG[item.source];
+
+        if (config && item.data) {
+          try {
+            const itemId = config.getIdFromData(item.data);
+            
+            if (itemId) {
+              // Delete from original database
+              const deleteResponse = await fetch(`${config.deleteEndpoint}?id=${itemId}`, {
+                method: "DELETE",
+              });
+
+              const deleteResult = await deleteResponse.json();
+
+              if (!deleteResult.success) {
+                console.warn(
+                  `Failed to delete ${item.source} from database:`,
+                  deleteResult.error
+                );
+                // Continue with recycle bin deletion even if database deletion fails
+              }
+            }
+          } catch (error) {
+            console.error(`Error deleting ${item.source} from database:`, error);
+            // Continue with recycle bin deletion
+          }
+        }
+
+        // Delete from recycle bin
         const response = await fetch(`/api/recycle-bin?id=${recycleBinId}`, {
           method: "DELETE",
         });
@@ -297,7 +440,7 @@ export const RecycleBinProvider: React.FC<RecycleBinProviderProps> = ({
         showToast.error("Failed to delete item", "Delete Failed");
       }
     },
-    [refreshItems]
+    [items, refreshItems]
   );
 
   const permanentlyDeleteAll = useCallback(async (): Promise<void> => {
@@ -307,6 +450,58 @@ export const RecycleBinProvider: React.FC<RecycleBinProviderProps> = ({
     }
 
     try {
+      // Group items by source type
+      const itemsBySource = items.reduce((acc, item) => {
+        if (!acc[item.source]) {
+          acc[item.source] = [];
+        }
+        acc[item.source].push(item);
+        return acc;
+      }, {} as Record<RecycleBinItemSource, RecycleBinItem[]>);
+
+      // Calculate total items to delete
+      const totalItems = items.length;
+      
+      if (totalItems > 0) {
+        showToast.info(
+          `Deleting ${totalItems} item${totalItems > 1 ? 's' : ''} from database...`,
+          "Processing"
+        );
+
+        // Delete items from their original databases
+        const deletePromises: Promise<any>[] = [];
+
+        for (const [source, sourceItems] of Object.entries(itemsBySource)) {
+          const config = DATA_SOURCE_CONFIG[source as RecycleBinItemSource];
+          
+          if (config && sourceItems.length > 0) {
+            // Delete each item from its original database
+            for (const item of sourceItems) {
+              try {
+                const itemId = config.getIdFromData(item.data);
+                
+                if (itemId) {
+                  const deletePromise = fetch(`${config.deleteEndpoint}?id=${itemId}`, {
+                    method: "DELETE",
+                  }).catch(err => {
+                    console.error(`Failed to delete ${source} ${itemId}:`, err);
+                    return null;
+                  });
+                  
+                  deletePromises.push(deletePromise);
+                }
+              } catch (error) {
+                console.error(`Error processing ${source}:`, error);
+              }
+            }
+          }
+        }
+
+        // Wait for all database deletions to complete
+        await Promise.all(deletePromises);
+      }
+
+      // Then delete all from recycle bin
       const response = await fetch("/api/recycle-bin?deleteAll=true", {
         method: "DELETE",
       });

@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "./provider";
 import { ChunkErrorBoundary } from "@/components/ChunkErrorBoundary";
 import { ContactSubmissionProvider } from "@/contexts/ContactSubmissionContext";
+import { BugReportProvider } from "@/contexts/BugReportContext";
 import { BubbleSessionProvider } from "@/contexts/BubbleSessionContext";
 import { BubbleMessageProvider } from "@/contexts/BubbleMessageContext";
 import { ChatBubbleControlProvider } from "@/contexts/ChatBubbleControlContext";
@@ -44,18 +45,20 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <ContactSubmissionProvider>
-              <BubbleSessionProvider>
-                <BubbleMessageProvider>
-                  <ChatBubbleControlProvider>
-                    <BanChecker />
-                    <VisitorTracker />
-                    {children}
-                    <ConditionalChatBubble />
-                    <BubbleSessionDeletedNotification />
-                    <ToastProvider />
-                  </ChatBubbleControlProvider>
-                </BubbleMessageProvider>
-              </BubbleSessionProvider>
+              <BugReportProvider>
+                <BubbleSessionProvider>
+                  <BubbleMessageProvider>
+                    <ChatBubbleControlProvider>
+                      <BanChecker />
+                      <VisitorTracker />
+                      {children}
+                      <ConditionalChatBubble />
+                      <BubbleSessionDeletedNotification />
+                      <ToastProvider />
+                    </ChatBubbleControlProvider>
+                  </BubbleMessageProvider>
+                </BubbleSessionProvider>
+              </BugReportProvider>
             </ContactSubmissionProvider>
           </ThemeProvider>
         </ChunkErrorBoundary>

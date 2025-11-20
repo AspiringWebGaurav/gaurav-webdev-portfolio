@@ -16,6 +16,7 @@ import { BanAppealsProvider } from "@/contexts/BanAppealsContext";
 import AppLoader from "@/components/admin/AppLoader";
 import { SessionMonitor } from "@/components/SessionMonitor";
 import ConnectionStatusIndicator from "@/components/admin/ConnectionStatusIndicator";
+import CodeGateGuard from "@/components/admin/CodeGateGuard";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,33 +45,35 @@ export default function AdminLayout({
     <div
       className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-gray-900 min-h-screen`}
     >
-      <LoadingProvider>
-        <NotificationProvider>
-          <RecycleBinProvider>
-            <TechStackProvider>
-              <CurrentlyWorkingProvider>
-                <ProjectProvider>
-                  <TestimonialProvider>
-                    <WorkExperienceProvider>
-                      <VisitorAnalyticsProvider>
-                        <BubbleManagementProvider>
-                          <BanAppealsProvider>
-                            <ToastProvider />
-                            <AppLoader />
-                            <SessionMonitor />
-                            <ConnectionStatusIndicator />
-                            {children}
-                          </BanAppealsProvider>
-                        </BubbleManagementProvider>
-                      </VisitorAnalyticsProvider>
-                    </WorkExperienceProvider>
-                  </TestimonialProvider>
-                </ProjectProvider>
-              </CurrentlyWorkingProvider>
-            </TechStackProvider>
-          </RecycleBinProvider>
-        </NotificationProvider>
-      </LoadingProvider>
+      <CodeGateGuard>
+        <LoadingProvider>
+          <NotificationProvider>
+            <RecycleBinProvider>
+              <TechStackProvider>
+                <CurrentlyWorkingProvider>
+                  <ProjectProvider>
+                    <TestimonialProvider>
+                      <WorkExperienceProvider>
+                        <VisitorAnalyticsProvider>
+                          <BubbleManagementProvider>
+                            <BanAppealsProvider>
+                              <ToastProvider />
+                              <AppLoader />
+                              <SessionMonitor />
+                              <ConnectionStatusIndicator />
+                              {children}
+                            </BanAppealsProvider>
+                          </BubbleManagementProvider>
+                        </VisitorAnalyticsProvider>
+                      </WorkExperienceProvider>
+                    </TestimonialProvider>
+                  </ProjectProvider>
+                </CurrentlyWorkingProvider>
+              </TechStackProvider>
+            </RecycleBinProvider>
+          </NotificationProvider>
+        </LoadingProvider>
+      </CodeGateGuard>
     </div>
   );
 }

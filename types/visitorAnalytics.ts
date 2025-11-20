@@ -354,9 +354,11 @@ export function generateVisitorId(fingerprint: string): string {
   return 'device_' + hashValue.toString(36);
 }
 
-// Session ID generation
-export function generateSessionId(): string {
-  return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+// Session ID generation - now uses same device fingerprint for consistency
+export function generateSessionId(fingerprint: string): string {
+  // Use same fingerprint-based ID as visitor ID for consistency
+  // This ensures all IDs (visitor, session, bubble) use device_<fingerprint> format
+  return generateVisitorId(fingerprint);
 }
 
 // Device class detection helper

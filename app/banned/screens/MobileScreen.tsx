@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface BanInfo {
   reason: string;
@@ -9,11 +10,20 @@ interface BanInfo {
   reviewTime: string;
 }
 
-interface MobileScreenProps {
-  banInfo: BanInfo;
+interface CodeGateBanInfo {
+  isCodeGateBan: boolean;
+  hint?: string;
+  expiresAt?: string;
+  attemptCount?: number;
 }
 
-export default function MobileScreen({ banInfo }: MobileScreenProps) {
+interface MobileScreenProps {
+  banInfo: BanInfo;
+  codeGateBan: CodeGateBanInfo;
+}
+
+export default function MobileScreen({ banInfo, codeGateBan }: MobileScreenProps) {
+  const router = useRouter();
   const [showAppealForm, setShowAppealForm] = useState(false);
   const [appealText, setAppealText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -148,6 +158,32 @@ export default function MobileScreen({ banInfo }: MobileScreenProps) {
               <p className="text-[10px] text-red-200/70 mt-1">Restricted for service integrity</p>
             </div>
           </div>
+
+          {/* Code Gate Hint - Only shown if this is a code gate ban */}
+          {codeGateBan.isCodeGateBan && codeGateBan.hint && (
+            <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/50 flex-shrink-0">
+              <div className="flex items-center gap-2 mb-2">
+                <svg className="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <h3 className="text-xs font-medium text-amber-300">Hint for Admin</h3>
+              </div>
+              <div className="bg-gradient-to-r from-amber-900/20 to-yellow-900/20 rounded-md p-2.5 border border-amber-700/40 mb-2">
+                <p className="text-xs text-amber-100 leading-relaxed italic">
+                  {codeGateBan.hint}
+                </p>
+              </div>
+              <button
+                onClick={() => router.push('/admin/code-gate')}
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 py-2 rounded-md text-xs font-medium flex items-center justify-center gap-1.5"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Go Back to Code Gate
+              </button>
+            </div>
+          )}
 
           {/* What happens next */}
           <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/50 flex-shrink-0">
