@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { collection, query, where, getDocs, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { updateDoc, doc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { rateLimitMiddleware } from '@/lib/rateLimit';
 
 const COLLECTIONS = {
-  SESSIONS: 'bubbleSessions',
+  SESSIONS: 'og_uuid_sessions',
 };
 
 // POST: Set typing indicator
@@ -28,16 +28,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid role. Must be "visitor" or "admin"' }, { status: 400 });
     }
 
-    // Find the session
-    const sessionsRef = collection(db, COLLECTIONS.SESSIONS);
-    const q = query(sessionsRef, where('id', '==', sessionId));
-    const querySnapshot = await getDocs(q);
+    // Get session using UUID as doc ID
+    const sessionDocRef = doc(db, COLLECTIONS.SESSIONS, sessionId);
+    const sessionDoc = await getDoc(sessionDocRef);
 
-    if (querySnapshot.empty) {
+    if (!sessionDoc.exists()) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     }
 
-    const sessionDoc = querySnapshot.docs[0];
     const updateData: any = {};
 
     // Update typing indicator based on role
@@ -49,7 +47,7 @@ export async function POST(request: NextRequest) {
       updateData.adminTypingAt = typing ? serverTimestamp() : null;
     }
 
-    await updateDoc(doc(db, COLLECTIONS.SESSIONS, sessionDoc.id), updateData);
+    await updateDoc(sessionDocRef, updateData);
 
     const response = NextResponse.json({ 
       success: true, 
@@ -88,15 +86,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Session ID required' }, { status: 400 });
     }
 
-    const sessionsRef = collection(db, COLLECTIONS.SESSIONS);
-    const q = query(sessionsRef, where('id', '==', sessionId));
-    const querySnapshot = await getDocs(q);
+    // Get session using UUID as doc ID
+    const sessionDocRef = doc(db, COLLECTIONS.SESSIONS, sessionId);
+    const sessionDoc = await getDoc(sessionDocRef);
 
-    if (querySnapshot.empty) {
+    if (!sessionDoc.exists()) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     }
 
-    const sessionData = querySnapshot.docs[0].data();
+    const sessionData = sessionDoc.data();
 
     const response = NextResponse.json({
       sessionId,

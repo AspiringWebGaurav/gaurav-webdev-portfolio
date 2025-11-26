@@ -24,7 +24,7 @@ import {
   ACTIVE_VISITOR_THRESHOLD_MINUTES,
 } from "@/types/visitorAnalytics";
 
-const VISITORS_COLLECTION = "visitorProfiles";
+const VISITORS_COLLECTION = "og_uuid";
 const SESSIONS_COLLECTION = "visitorSessions";
 
 /**
@@ -84,14 +84,20 @@ export async function GET(request: NextRequest) {
     
     const returningVisitors = allVisitors.length - newVisitors;
 
-    // Calculate totals
+    // Calculate totals - include NEW event fields
     const totalUniqueVisitors = allVisitors.length;
     const totalSessions = allVisitors.reduce((sum, v) => sum + v.totalSessions, 0);
     const totalPageViews = allVisitors.reduce((sum, v) => sum + v.totalPageViews, 0);
     const totalInteractions = allVisitors.reduce((sum, v) => sum + v.totalInteractions, 0);
+    
+    // NEW: 4 critical analytics events
     const totalResumeViews = allVisitors.reduce((sum, v) => sum + (v.resumeViews || 0), 0);
-    const totalResumeDownloads = allVisitors.reduce((sum, v) => sum + v.resumeDownloads, 0);
-    const visitorsWhoDownloaded = allVisitors.filter(v => v.resumeDownloads > 0).length;
+    const totalResumeDownloads = allVisitors.reduce((sum, v) => sum + (v.resumeDownloads || 0), 0);
+    const totalFormSubmissions = allVisitors.reduce((sum, v) => sum + (v.formSubmissions || 0), 0);
+    
+    // Calculate derived metrics
+    const visitorsWhoDownloaded = allVisitors.filter(v => (v.resumeDownloads || 0) > 0).length;
+    const visitorsWhoSubmitted = allVisitors.filter(v => (v.formSubmissions || 0) > 0).length;
     
     // Calculate average session duration
     const totalDuration = allVisitors.reduce((sum, v) => sum + v.totalActiveTime, 0);
@@ -155,7 +161,7 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
 
-    // Assemble aggregates
+    // Assemble aggregates with ALL 4 event types
     const aggregates: AnalyticsAggregates = {
       totalUniqueVisitors,
       newVisitors,
@@ -164,9 +170,12 @@ export async function GET(request: NextRequest) {
       totalSessions,
       totalPageViews,
       totalInteractions,
+      // NEW: All 4 critical analytics events
       totalResumeViews,
       totalResumeDownloads,
+      totalFormSubmissions,
       visitorsWhoDownloaded,
+      visitorsWhoSubmitted,
       activeVisitors,
       topRegions,
       topDevices,
@@ -176,8 +185,25 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        aggregates,
-        timeRange: timeRange || undefined,
+        data: {
+          totalVisitors: totalUniqueVisitors,
+          totalEvents: totalResumeViews + totalResumeDownloads + totalFormSubmissions,
+          activeVisitors: activeVisitors,
+          newVisitors,
+          returningVisitors,
+          totalSessions,
+          totalPageViews,
+          totalInteractions,
+          totalResumeViews,
+          totalResumeDownloads,
+          totalFormSubmissions,
+          visitorsWhoDownloaded,
+          visitorsWhoSubmitted,
+          averageSessionDuration,
+          topRegions,
+          topDevices,
+          topBrowsers,
+        },
       },
       { status: 200 }
     );

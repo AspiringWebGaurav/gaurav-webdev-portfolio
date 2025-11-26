@@ -1,5 +1,5 @@
 /**
- * Batch Delete Bubble Sessions API Route
+ * Batch Delete Bubble Sessions API Route (UUID-sync compatible)
  * DELETE /api/bubble/sessions/batch-delete
  * Handles multiple session deletions with cascade to messages and recycle bin integration
  */
@@ -18,7 +18,7 @@ export async function DELETE(request: NextRequest) {
     const token = authHeader.substring(7);
     await adminAuth.verifyIdToken(token);
 
-    // Get session IDs from request body
+    // Get session IDs (UUIDs) from request body
     const { sessionIds } = await request.json();
 
     if (!sessionIds || !Array.isArray(sessionIds) || sessionIds.length === 0) {
@@ -28,7 +28,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    console.log(`[BATCH DELETE SESSIONS] Starting cascade delete for ${sessionIds.length} sessions`);
+    console.log(`[BATCH DELETE SESSIONS] Starting cascade delete for ${sessionIds.length} UUIDs`);
     
     let totalMessages = 0;
     let deletedSessions = 0;
@@ -36,7 +36,7 @@ export async function DELETE(request: NextRequest) {
     // Process each session
     for (const sessionId of sessionIds) {
       try {
-        // Delete all messages for this session
+        // Delete all messages for this session (messages use UUID as sessionId)
         const messagesQuery = adminDb.collection('bubbleMessages').where('sessionId', '==', sessionId);
         const messagesSnapshot = await messagesQuery.get();
         
@@ -61,12 +61,12 @@ export async function DELETE(request: NextRequest) {
         
         totalMessages += messagesSnapshot.size;
 
-        // Delete the session itself
-        const sessionsQuery = adminDb.collection('bubbleSessions').where('id', '==', sessionId);
-        const sessionsSnapshot = await sessionsQuery.get();
+        // Delete the session using UUID as document ID
+        const sessionDocRef = adminDb.collection('og_uuid_sessions').doc(sessionId);
+        const sessionDoc = await sessionDocRef.get();
         
-        if (!sessionsSnapshot.empty) {
-          await sessionsSnapshot.docs[0].ref.delete();
+        if (sessionDoc.exists) {
+          await sessionDocRef.delete();
           deletedSessions++;
         }
       } catch (error) {
@@ -75,7 +75,7 @@ export async function DELETE(request: NextRequest) {
       }
     }
 
-    console.log(`[BATCH DELETE SESSIONS] Successfully deleted ${deletedSessions} sessions with ${totalMessages} messages`);
+    console.log(`[BATCH DELETE SESSIONS] ✓ Deleted ${deletedSessions} sessions with ${totalMessages} messages`);
 
     return NextResponse.json({
       success: true,

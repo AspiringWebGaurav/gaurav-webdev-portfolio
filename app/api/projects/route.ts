@@ -255,9 +255,17 @@ export async function PUT(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
-    const body = await request.json();
+    // Support both query params and body
+    const { searchParams } = new URL(request.url);
+    let id = searchParams.get("id");
+    const soft = searchParams.get("soft") === "true";
+    
+    if (!id) {
+      const body = await request.json();
+      id = body.id;
+    }
 
-    if (!body.id) {
+    if (!id) {
       return NextResponse.json(
         {
           success: false,
@@ -268,7 +276,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Check if project exists
-    const projectRef = doc(db, COLLECTION_NAME, body.id);
+    const projectRef = doc(db, COLLECTION_NAME, id);
     const projectSnapshot = await getDoc(projectRef);
 
     if (!projectSnapshot.exists()) {
@@ -281,7 +289,37 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Delete document
+    if (soft) {
+      // Soft delete - move to recycle bin
+      const projectData = projectSnapshot.data();
+      const now = Timestamp.now();
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + 15);
+
+      await addDoc(collection(db, "recycleBin"), {
+        originalId: id,
+        userId: "portfolio-user",
+        source: "project",
+        data: projectData,
+        deletedAt: now,
+        expiryDate: Timestamp.fromDate(expiryDate),
+        expiryDays: 15,
+        deletedBy: "admin",
+      });
+
+      // Delete from original collection
+      await deleteDoc(projectRef);
+
+      return NextResponse.json(
+        {
+          success: true,
+          message: "Project moved to recycle bin",
+        },
+        { status: 200 }
+      );
+    }
+
+    // Hard delete
     await deleteDoc(projectRef);
 
     return NextResponse.json(

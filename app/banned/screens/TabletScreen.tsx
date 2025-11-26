@@ -42,15 +42,19 @@ export default function TabletScreen({ banInfo }: TabletScreenProps) {
     setSubmitError(null);
 
     try {
+      // Get visitor mask for proper identity linking
+      const visitorMask = banStatusManager.getVisitorId();
+      
       const response = await fetch('/api/ban-appeals', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          mask: visitorMask, // Send mask to link appeal to correct visitor
           appealReason: appealText.trim(),
           banReason: banInfo.reason,
-          banCategory: banInfo.category || 'normal',
+          banCategory: banInfo.category,
         }),
       });
 

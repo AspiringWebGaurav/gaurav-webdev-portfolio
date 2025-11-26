@@ -26,30 +26,49 @@ export async function GET() {
         bubblePosition: 'bottom-right' as const,
         enableTooltip: true,
         chatPlaceholder: 'Type your message...',
+        bubbleIcon: 'message-circle',
+        bubbleSize: 'medium',
+        showBubbleText: false,
+        panelWidth: 400,
+        panelHeight: 600,
+        theme: 'light',
+        soundEnabled: false,
+        showBranding: true,
         updatedAt: new Date(),
       };
-      return NextResponse.json(defaultSettings);
+      return NextResponse.json({ success: true, settings: defaultSettings });
     }
 
     const settingsDoc = querySnapshot.docs[0];
     const data = settingsDoc.data() as any;
 
     return NextResponse.json({
-      id: data.id || 'default',
-      bubbleText: data.bubbleText || 'Chat with me!',
-      welcomeMessage: data.welcomeMessage || 'Hi there! How can I help you today?',
-      quickActionsTitle: data.quickActionsTitle || 'Quick Actions',
-      predefinedQuestionsTitle: data.predefinedQuestionsTitle || 'Common Questions',
-      tooltipDelay: data.tooltipDelay || 500,
-      bubbleColor: data.bubbleColor || '#2563eb',
-      bubblePosition: data.bubblePosition || 'bottom-right',
-      enableTooltip: data.enableTooltip !== undefined ? data.enableTooltip : true,
-      chatPlaceholder: data.chatPlaceholder || 'Type your message...',
-      updatedAt: data.updatedAt?.toDate() || new Date(),
+      success: true,
+      settings: {
+        id: data.id || 'default',
+        bubbleText: data.bubbleText || 'Chat with me!',
+        welcomeMessage: data.welcomeMessage || 'Hi there! How can I help you today?',
+        quickActionsTitle: data.quickActionsTitle || 'Quick Actions',
+        predefinedQuestionsTitle: data.predefinedQuestionsTitle || 'Common Questions',
+        tooltipDelay: data.tooltipDelay || 500,
+        bubbleColor: data.bubbleColor || '#2563eb',
+        bubblePosition: data.bubblePosition || 'bottom-right',
+        enableTooltip: data.enableTooltip !== undefined ? data.enableTooltip : true,
+        chatPlaceholder: data.chatPlaceholder || 'Type your message...',
+        bubbleIcon: data.bubbleIcon || 'message-circle',
+        bubbleSize: data.bubbleSize || 'medium',
+        showBubbleText: data.showBubbleText !== undefined ? data.showBubbleText : false,
+        panelWidth: data.panelWidth || 400,
+        panelHeight: data.panelHeight || 600,
+        theme: data.theme || 'light',
+        soundEnabled: data.soundEnabled !== undefined ? data.soundEnabled : false,
+        showBranding: data.showBranding !== undefined ? data.showBranding : true,
+        updatedAt: data.updatedAt?.toDate() || new Date(),
+      },
     });
   } catch (error) {
     console.error('Error in settings GET:', error);
-    return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to fetch settings' }, { status: 500 });
   }
 }
 
@@ -67,6 +86,14 @@ export async function PUT(request: NextRequest) {
       bubblePosition,
       enableTooltip,
       chatPlaceholder,
+      bubbleIcon,
+      bubbleSize,
+      showBubbleText,
+      panelWidth,
+      panelHeight,
+      theme,
+      soundEnabled,
+      showBranding,
     } = body;
 
     const settingsRef = collection(db, COLLECTIONS.SETTINGS);
@@ -85,6 +112,14 @@ export async function PUT(request: NextRequest) {
     if (bubblePosition !== undefined) updateData.bubblePosition = bubblePosition;
     if (enableTooltip !== undefined) updateData.enableTooltip = enableTooltip;
     if (chatPlaceholder !== undefined) updateData.chatPlaceholder = chatPlaceholder;
+    if (bubbleIcon !== undefined) updateData.bubbleIcon = bubbleIcon;
+    if (bubbleSize !== undefined) updateData.bubbleSize = bubbleSize;
+    if (showBubbleText !== undefined) updateData.showBubbleText = showBubbleText;
+    if (panelWidth !== undefined) updateData.panelWidth = panelWidth;
+    if (panelHeight !== undefined) updateData.panelHeight = panelHeight;
+    if (theme !== undefined) updateData.theme = theme;
+    if (soundEnabled !== undefined) updateData.soundEnabled = soundEnabled;
+    if (showBranding !== undefined) updateData.showBranding = showBranding;
 
     if (querySnapshot.empty) {
       // Create new settings document

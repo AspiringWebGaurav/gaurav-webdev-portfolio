@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { identifyVisitor } from "@/lib/uuid-sync/server";
 
 /**
- * Get current visitor's UUID without saving to database
- * Returns the same UUID that backend uses for tracking/banning
- * This is a lightweight endpoint that just echoes back the client-generated fingerprint
+ * Get current visitor's mask from UUID-sync system
+ * Returns the public mask (device_**********) for the visitor
+ * Lightweight endpoint for client-side identification
  */
 export async function POST(request: NextRequest) {
   try {
@@ -17,16 +18,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Return the fingerprint as-is (client already generated enhanced fingerprint)
+    // Use UUID-sync system to get mask
+    const mask = await identifyVisitor(fingerprint);
+    
     return NextResponse.json({
       success: true,
-      visitorId: fingerprint,
-      fingerprint: fingerprint,
+      mask,
+      fingerprint,
     });
   } catch (error) {
-    console.error("Error processing visitor UUID:", error);
+    console.error("Error processing visitor identification:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to process UUID" },
+      { success: false, error: "Failed to identify visitor" },
       { status: 500 }
     );
   }

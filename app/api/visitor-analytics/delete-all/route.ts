@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAuth, adminDb } from "@/lib/firebaseAdmin";
 
-const VISITORS_COLLECTION = "visitorProfiles";
+const VISITORS_COLLECTION = "og_uuid";
 const SESSIONS_COLLECTION = "visitorSessions";
 const EVENTS_COLLECTION = "visitorEvents";
 const AUDIT_LOG_COLLECTION = "analyticsAuditLogs";

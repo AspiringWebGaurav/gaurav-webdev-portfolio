@@ -245,6 +245,7 @@ export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
+    const soft = searchParams.get("soft") === "true";
 
     if (!id) {
       return NextResponse.json(
@@ -264,7 +265,37 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Delete the item
+    if (soft) {
+      // Soft delete - move to recycle bin
+      const itemData = itemDoc.data();
+      const now = Timestamp.now();
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + 15);
+
+      await addDoc(collection(db, "recycleBin"), {
+        originalId: id,
+        userId: "portfolio-user",
+        source: "currently-working",
+        data: itemData,
+        deletedAt: now,
+        expiryDate: Timestamp.fromDate(expiryDate),
+        expiryDays: 15,
+        deletedBy: "admin",
+      });
+
+      // Delete from original collection
+      await deleteDoc(itemRef);
+
+      return NextResponse.json(
+        {
+          success: true,
+          message: "Currently working item moved to recycle bin",
+        },
+        { status: 200 }
+      );
+    }
+
+    // Hard delete
     await deleteDoc(itemRef);
 
     return NextResponse.json(

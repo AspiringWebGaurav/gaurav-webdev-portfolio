@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { collection, query, where, getDocs, updateDoc, doc, serverTimestamp, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, updateDoc, doc, serverTimestamp, getDoc, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 const COLLECTIONS = {
   TOOLTIP_EVENTS: 'bubbleTooltipEvents',
-  SESSIONS: 'bubbleSessions',
+  SESSIONS: 'og_uuid_sessions',
 };
 
 // GET: Fetch tooltip events
@@ -80,13 +80,11 @@ export async function PUT(request: NextRequest) {
 
     // Also update the session to clear the hasUnreadTooltip flag
     if (updateCount > 0) {
-      const sessionsRef = collection(db, COLLECTIONS.SESSIONS);
-      const sessionQuery = query(sessionsRef, where('id', '==', sessionId));
-      const sessionSnapshot = await getDocs(sessionQuery);
+      const sessionDocRef = doc(db, COLLECTIONS.SESSIONS, sessionId);
+      const sessionDoc = await getDoc(sessionDocRef);
       
-      if (!sessionSnapshot.empty) {
-        const sessionDoc = sessionSnapshot.docs[0];
-        await updateDoc(doc(db, COLLECTIONS.SESSIONS, sessionDoc.id), {
+      if (sessionDoc.exists()) {
+        await updateDoc(sessionDocRef, {
           hasUnreadTooltip: false,
         });
       }

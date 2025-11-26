@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
         updatedAt: Timestamp.fromDate(lastVisit),
       };
 
-      await adminDb.collection("visitorProfiles").doc(visitorId).set(visitorData);
+      await adminDb.collection("og_uuid").doc(visitorId).set(visitorData);
       visitors.push(visitorId);
 
       // Create 1-2 sessions per visitor

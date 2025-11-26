@@ -14,6 +14,7 @@ import WorkExperienceManager from "@/components/admin/WorkExperienceManager";
 import ContactSubmissionManager from "@/components/admin/ContactSubmissionManager";
 import BubbleManagementHub from "@/components/admin/BubbleManagementHub";
 import VisitorAnalyticsManager from "@/components/admin/VisitorAnalyticsManager";
+import VisitorAnalyticsErrorBoundary from "@/components/admin/VisitorAnalyticsErrorBoundary";
 import BanAppealsManager from "@/components/admin/BanAppealsManager";
 import BugHuntManager from "@/components/admin/BugHuntManager";
 import VersionNotesModal from "@/components/admin/VersionNotesModal";
@@ -287,7 +288,11 @@ function DashboardContent() {
           {activeSection === "work-experience" && <WorkExperienceManager />}
           {activeSection === "contact-submissions" && <ContactSubmissionManager />}
           {activeSection === "bubble-management" && <BubbleManagementHub />}
-          {activeSection === "visitor-analytics" && <VisitorAnalyticsManager visitorIdParam={visitorIdParam} />}
+          {activeSection === "visitor-analytics" && (
+            <VisitorAnalyticsErrorBoundary>
+              <VisitorAnalyticsManager visitorIdParam={visitorIdParam} />
+            </VisitorAnalyticsErrorBoundary>
+          )}
           {activeSection === "ban-appeals" && <BanAppealsManager />}
           {activeSection === "bug-hunt" && <BugHuntManager />}
         </div>

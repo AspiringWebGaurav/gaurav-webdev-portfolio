@@ -6,8 +6,8 @@ import { showToast } from '@/lib/toast';
 import { auth } from '@/lib/firebase';
 
 interface BubbleSession {
-  id: string;
-  visitorId: string;
+  id: string;  // UUID from UUID-sync system
+  mask: string;  // Public mask (device_**********)
   visitorEmail: string | null;
   startedAt: Date;
   lastActive: Date;
@@ -42,7 +42,19 @@ export function BubbleManagementProvider({ children }: { children: React.ReactNo
         setLoading(true);
       }
 
-      const response = await fetch('/api/bubble/sessions?allSessions=true');
+      // Get authentication token
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) {
+        console.warn('[BubbleManagement] Not authenticated, skipping fetch');
+        if (showLoading) setLoading(false);
+        return;
+      }
+
+      const response = await fetch('/api/bubble/sessions?allSessions=true', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       const data = await response.json();
 
       if (!response.ok || !data.success) {
@@ -52,7 +64,7 @@ export function BubbleManagementProvider({ children }: { children: React.ReactNo
 
       const sessions: BubbleSession[] = data.sessions.map((s: any) => ({
         id: s.id,
-        visitorId: s.visitorId || s.deviceFingerprint || s.id, // Use the central visitorId from API
+        mask: s.mask || s.id,  // Use mask from UUID-sync system
         visitorEmail: s.visitorEmail,
         startedAt: new Date(s.startedAt),
         lastActive: new Date(s.lastActive),

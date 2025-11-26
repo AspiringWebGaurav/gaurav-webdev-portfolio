@@ -1,6 +1,7 @@
 /**
  * Visitor Analytics Detail API
  * Admin-only endpoint for retrieving detailed visitor data
+ * NEW: Accepts mask, translates to UUID, returns mask in responses
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -24,8 +25,28 @@ import {
   InteractionTimelineItem,
   DeviceSnapshot,
 } from "@/types/visitorAnalytics";
+import { translateMaskToUUID, translateUUIDToMask } from "@/lib/uuid-sync/services/maskTranslator";
+import { isValidMask } from "@/lib/uuid-sync/core/generator";
 
-const VISITORS_COLLECTION = "visitorProfiles";
+/**
+ * Resolve visitor identifier to UUID
+ * If it's a mask, translate it. If it's already a UUID, return as-is.
+ */
+async function resolveToUUID(identifier: string): Promise<string> {
+  if (isValidMask(identifier)) {
+    return await translateMaskToUUID(identifier);
+  }
+  return identifier; // Assume it's already a UUID
+}
+
+/**
+ * Resolve UUID to mask for response
+ */
+async function resolveToMask(uuid: string): Promise<string> {
+  return await translateUUIDToMask(uuid);
+}
+
+const VISITORS_COLLECTION = "og_uuid";
 const SESSIONS_COLLECTION = "visitorSessions";
 const EVENTS_COLLECTION = "visitorEvents";
 
@@ -38,12 +59,24 @@ export async function GET(
 ) {
   try {
     // Await params in Next.js 15+
-    const { id: visitorId } = await params;
+    const { id: visitorIdentifier } = await params;
     
     // Validate params
-    if (!visitorId) {
+    if (!visitorIdentifier) {
       return NextResponse.json(
         { success: false, error: "Visitor ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // Translate to UUID if it's a mask
+    let uuid: string;
+    try {
+      uuid = await resolveToUUID(visitorIdentifier);
+      console.log('[Visitor Detail] Resolved identifier to UUID:', uuid.substring(0, 13));
+    } catch (error: any) {
+      return NextResponse.json(
+        { success: false, error: `Invalid visitor identifier: ${error.message}` },
         { status: 400 }
       );
     }
@@ -68,7 +101,7 @@ export async function GET(
     }
 
     // Fetch visitor profile
-    const visitorRef = doc(db, VISITORS_COLLECTION, visitorId);
+    const visitorRef = doc(db, VISITORS_COLLECTION, uuid);
     const visitorDoc = await getDoc(visitorRef);
 
     if (!visitorDoc.exists()) {
@@ -83,7 +116,7 @@ export async function GET(
     // Fetch all sessions for this visitor (without orderBy to avoid index requirement)
     const sessionsQuery = query(
       collection(db, SESSIONS_COLLECTION),
-      where("visitorId", "==", visitorId)
+      where("visitorId", "==", uuid)
     );
     const sessionsSnapshot = await getDocs(sessionsQuery);
     const sessions = sessionsSnapshot.docs
@@ -93,7 +126,7 @@ export async function GET(
     // Fetch recent events (without orderBy to avoid index requirement)
     const eventsQuery = query(
       collection(db, EVENTS_COLLECTION),
-      where("visitorId", "==", visitorId),
+      where("visitorId", "==", uuid),
       limit(100)
     );
     const eventsSnapshot = await getDocs(eventsQuery);
@@ -145,7 +178,7 @@ export async function GET(
     console.log("[AUDIT] Admin viewed visitor detail:", {
       adminId: decodedToken.uid,
       adminEmail: decodedToken.email,
-      visitorId,
+      visitorId: uuid,
       timestamp: new Date(),
     });
 
@@ -194,34 +227,47 @@ export async function GET(
  * Helper: Format event description for timeline
  */
 function formatEventDescription(event: any): string {
+  // Only handle new optimized event types (4 total)
   switch (event.eventType) {
-    case "page_view":
-      return `Viewed ${event.metadata?.page || "a page"}`;
-    case "bubble_open":
-      return "Opened chat bubble";
-    case "bubble_close":
-      return "Closed chat bubble";
-    case "bubble_interaction":
-      return `Interacted with bubble: ${event.metadata?.interactionType || "unknown"}`;
     case "resume_view":
       return "Viewed resume";
     case "resume_download":
       return "Downloaded resume";
+    case "contact_open":
+      return "Opened contact form";
     case "form_submit":
       return "Submitted contact form";
-    case "contact_open":
-      return "Opened contact modal";
+    // Legacy events (for historical data only - no longer tracked)
+    case "page_view":
+      return `Viewed ${event.metadata?.page || "a page"} [LEGACY]`;
+    case "bubble_open":
+      return "Opened chat bubble [LEGACY]";
+    case "bubble_close":
+      return "Closed chat bubble [LEGACY]";
+    case "bubble_interaction":
+      return `Interacted with bubble [LEGACY]`;
     case "session_start":
-      return "Started new session";
+      return "Started session [LEGACY]";
     case "session_end":
-      return "Ended session";
+      return "Ended session [LEGACY]";
     default:
-      return event.eventType;
+      return `${event.eventType} [UNKNOWN]`;
   }
 }
 
 /**
  * DELETE - Delete a visitor and all associated data (admin-only)
+ * Performs CASCADE DELETE across all collections:
+ * - og_uuid (visitor profile)
+ * - og_uuid_sessions (bubble sessions)
+ * - og_uuid_fingerprints (fingerprint lookup)
+ * - og_uuid_masks (mask lookup)
+ * - og_uuid_ban_logs (ban records)
+ * - og_uuid_ban_history (ban history)
+ * - visitorSessions (analytics sessions)
+ * - visitorEvents (analytics events)
+ * - visitorHeartbeats (heartbeats)
+ * - visitorInteractions (interactions)
  */
 export async function DELETE(
   request: NextRequest,
@@ -229,12 +275,26 @@ export async function DELETE(
 ) {
   try {
     // Await params in Next.js 15+
-    const { id: visitorId } = await params;
+    const { id: visitorIdentifier } = await params;
     
     // Validate params
-    if (!visitorId) {
+    if (!visitorIdentifier) {
       return NextResponse.json(
         { success: false, error: "Visitor ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // Translate to UUID if it's a mask
+    let uuid: string;
+    let mask: string | null = null;
+    try {
+      uuid = await resolveToUUID(visitorIdentifier);
+      mask = await resolveToMask(uuid);
+      console.log('[Visitor Delete] Resolved identifier - UUID:', uuid.substring(0, 13), 'Mask:', mask);
+    } catch (error: any) {
+      return NextResponse.json(
+        { success: false, error: `Invalid visitor identifier: ${error.message}` },
         { status: 400 }
       );
     }
@@ -261,13 +321,38 @@ export async function DELETE(
     // Import adminDb for deletion
     const { adminDb } = await import("@/lib/firebaseAdmin");
 
-    console.log(`[DELETE] Starting cascade delete for visitor: ${visitorId}`);
+    console.log(`[DELETE] Starting CASCADE delete for visitor UUID: ${uuid}`);
 
-    // Step 1: Delete all related sessions
-    const sessionsQuery = adminDb.collection('visitorSessions').where('visitorId', '==', visitorId);
+    // Fetch visitor profile first to get fingerprint and mask
+    const visitorDoc = await adminDb.collection(VISITORS_COLLECTION).doc(uuid).get();
+    const visitorData = visitorDoc.exists ? visitorDoc.data() : null;
+    const fingerprint = visitorData?.fingerprint;
+    const visitorMask = mask || visitorData?.mask;
+
+    // Step 1: Delete all bubble sessions (og_uuid_sessions)
+    const bubbleSessionsQuery = adminDb.collection('og_uuid_sessions').where('visitorId', '==', uuid);
+    const bubbleSessionsSnapshot = await bubbleSessionsQuery.get();
+    console.log(`[DELETE] Found ${bubbleSessionsSnapshot.size} bubble sessions to delete`);
+    
+    let bubbleSessionBatch = adminDb.batch();
+    let bubbleSessionCount = 0;
+    for (const doc of bubbleSessionsSnapshot.docs) {
+      bubbleSessionBatch.delete(doc.ref);
+      bubbleSessionCount++;
+      if (bubbleSessionCount % 500 === 0) {
+        await bubbleSessionBatch.commit();
+        bubbleSessionBatch = adminDb.batch();
+      }
+    }
+    if (bubbleSessionCount % 500 !== 0) {
+      await bubbleSessionBatch.commit();
+    }
+
+    // Step 2: Delete all analytics sessions (visitorSessions)
+    const sessionsQuery = adminDb.collection('visitorSessions').where('visitorId', '==', uuid);
     const sessionsSnapshot = await sessionsQuery.get();
     const sessionIds = sessionsSnapshot.docs.map(doc => doc.id);
-    console.log(`[DELETE] Found ${sessionIds.length} sessions to delete`);
+    console.log(`[DELETE] Found ${sessionIds.length} analytics sessions to delete`);
     
     // Delete sessions in batches (Firestore limit: 500 per batch)
     let sessionBatch = adminDb.batch();
@@ -284,8 +369,8 @@ export async function DELETE(
       await sessionBatch.commit();
     }
 
-    // Step 2: Delete all related events
-    const eventsQuery = adminDb.collection('visitorEvents').where('visitorId', '==', visitorId);
+    // Step 3: Delete all related events
+    const eventsQuery = adminDb.collection('visitorEvents').where('visitorId', '==', uuid);
     const eventsSnapshot = await eventsQuery.get();
     console.log(`[DELETE] Found ${eventsSnapshot.size} events to delete`);
     
@@ -303,8 +388,8 @@ export async function DELETE(
       await eventBatch.commit();
     }
 
-    // Step 3: Delete all related heartbeats
-    const heartbeatsQuery = adminDb.collection('visitorHeartbeats').where('visitorId', '==', visitorId);
+    // Step 4: Delete all related heartbeats
+    const heartbeatsQuery = adminDb.collection('visitorHeartbeats').where('visitorId', '==', uuid);
     const heartbeatsSnapshot = await heartbeatsQuery.get();
     console.log(`[DELETE] Found ${heartbeatsSnapshot.size} heartbeats to delete`);
     
@@ -322,8 +407,8 @@ export async function DELETE(
       await heartbeatBatch.commit();
     }
 
-    // Step 4: Delete all related interactions
-    const interactionsQuery = adminDb.collection('visitorInteractions').where('visitorId', '==', visitorId);
+    // Step 5: Delete all related interactions
+    const interactionsQuery = adminDb.collection('visitorInteractions').where('visitorId', '==', uuid);
     const interactionsSnapshot = await interactionsQuery.get();
     console.log(`[DELETE] Found ${interactionsSnapshot.size} interactions to delete`);
     
@@ -341,24 +426,113 @@ export async function DELETE(
       await interactionBatch.commit();
     }
 
-    // Step 5: Finally delete the visitor profile
-    await adminDb.collection(VISITORS_COLLECTION).doc(visitorId).delete();
+    // Step 6: Delete UUID-sync lookup entries
+    // Delete fingerprint mapping (og_uuid_fingerprints)
+    if (fingerprint) {
+      try {
+        // Hash fingerprint same way as in firestoreSync
+        const hashFingerprint = (fp: string) => {
+          let hash = 0;
+          for (let i = 0; i < fp.length; i++) {
+            const char = fp.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+          }
+          return 'fp_' + Math.abs(hash).toString(36);
+        };
+        const fingerprintHash = hashFingerprint(fingerprint);
+        await adminDb.collection('og_uuid_fingerprints').doc(fingerprintHash).delete();
+        console.log(`[DELETE] Deleted fingerprint mapping: ${fingerprintHash}`);
+      } catch (error) {
+        console.error('[DELETE] Error deleting fingerprint mapping:', error);
+      }
+    }
+
+    // Delete mask mapping (og_uuid_masks)
+    if (visitorMask) {
+      try {
+        await adminDb.collection('og_uuid_masks').doc(visitorMask).delete();
+        console.log(`[DELETE] Deleted mask mapping: ${visitorMask}`);
+      } catch (error) {
+        console.error('[DELETE] Error deleting mask mapping:', error);
+      }
+    }
+
+    // Step 7: Delete ban logs and history
+    const banLogsQuery = adminDb.collection('og_uuid_ban_logs').where('visitorId', '==', uuid);
+    const banLogsSnapshot = await banLogsQuery.get();
+    console.log(`[DELETE] Found ${banLogsSnapshot.size} ban logs to delete`);
     
-    console.log(`[DELETE] Successfully deleted visitor ${visitorId} with all related data:`, {
-      sessions: sessionIds.length,
+    let banLogBatch = adminDb.batch();
+    let banLogCount = 0;
+    for (const doc of banLogsSnapshot.docs) {
+      banLogBatch.delete(doc.ref);
+      banLogCount++;
+      if (banLogCount % 500 === 0) {
+        await banLogBatch.commit();
+        banLogBatch = adminDb.batch();
+      }
+    }
+    if (banLogCount % 500 !== 0) {
+      await banLogBatch.commit();
+    }
+
+    const banHistoryQuery = adminDb.collection('og_uuid_ban_history').where('visitorId', '==', uuid);
+    const banHistorySnapshot = await banHistoryQuery.get();
+    console.log(`[DELETE] Found ${banHistorySnapshot.size} ban history records to delete`);
+    
+    let banHistoryBatch = adminDb.batch();
+    let banHistoryCount = 0;
+    for (const doc of banHistorySnapshot.docs) {
+      banHistoryBatch.delete(doc.ref);
+      banHistoryCount++;
+      if (banHistoryCount % 500 === 0) {
+        await banHistoryBatch.commit();
+        banHistoryBatch = adminDb.batch();
+      }
+    }
+    if (banHistoryCount % 500 !== 0) {
+      await banHistoryBatch.commit();
+    }
+
+    // Step 8: Finally delete the visitor profile (og_uuid)
+    await adminDb.collection(VISITORS_COLLECTION).doc(uuid).delete();
+    
+    console.log(`[DELETE] ✅ CASCADE DELETE COMPLETE for visitor ${uuid}:`, {
+      bubbleSessions: bubbleSessionsSnapshot.size,
+      analyticsSessions: sessionIds.length,
       events: eventsSnapshot.size,
       heartbeats: heartbeatsSnapshot.size,
       interactions: interactionsSnapshot.size,
+      banLogs: banLogsSnapshot.size,
+      banHistory: banHistorySnapshot.size,
+      fingerprintMapping: fingerprint ? 1 : 0,
+      maskMapping: visitorMask ? 1 : 0,
+    });
+
+    // Log admin action
+    console.log('[AUDIT] Admin deleted visitor:', {
+      adminId: decodedToken.uid,
+      adminEmail: decodedToken.email,
+      visitorUUID: uuid,
+      visitorMask: visitorMask,
+      timestamp: new Date(),
     });
 
     return NextResponse.json({
       success: true,
-      message: "Visitor and all related data deleted successfully",
+      message: "Visitor and all related data deleted successfully (CASCADE)",
       deleted: {
-        sessions: sessionIds.length,
+        profile: 1,
+        bubbleSessions: bubbleSessionsSnapshot.size,
+        analyticsSessions: sessionIds.length,
         events: eventsSnapshot.size,
         heartbeats: heartbeatsSnapshot.size,
         interactions: interactionsSnapshot.size,
+        banLogs: banLogsSnapshot.size,
+        banHistory: banHistorySnapshot.size,
+        fingerprintMapping: fingerprint ? 1 : 0,
+        maskMapping: visitorMask ? 1 : 0,
       },
     });
   } catch (error) {

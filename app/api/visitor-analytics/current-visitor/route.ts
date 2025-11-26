@@ -1,9 +1,10 @@
 /**
- * Get current visitor's UUID by fingerprint
- * Returns the visitor ID for the current browser
+ * Get current visitor's mask by fingerprint
+ * Returns the visitor mask for the current browser
+ * NEW: Uses UUID-sync system
  */
 import { NextRequest, NextResponse } from "next/server";
-import { generateDeviceFingerprint } from "@/lib/deviceFingerprint";
+import { identifyVisitor } from "@/lib/uuid-sync/server";
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,11 +19,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // The visitor ID is simply device_ + fingerprint
-    const visitorId = `device_${clientFingerprint}`;
+    // Identify visitor using UUID-sync system - returns mask
+    const mask = await identifyVisitor(clientFingerprint);
 
     return NextResponse.json({ 
-      visitorId,
+      mask,
       success: true 
     });
   } catch (error) {

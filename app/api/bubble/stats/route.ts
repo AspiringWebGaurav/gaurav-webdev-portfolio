@@ -3,7 +3,7 @@ import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore
 import { db } from '@/lib/firebase';
 
 const COLLECTIONS = {
-  SESSIONS: 'bubbleSessions',
+  SESSIONS: 'og_uuid_sessions',
   MESSAGES: 'bubbleMessages',
   TOOLTIP_EVENTS: 'bubbleTooltipEvents',
 };

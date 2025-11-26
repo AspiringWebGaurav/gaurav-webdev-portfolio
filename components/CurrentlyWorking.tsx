@@ -65,8 +65,21 @@ const CurrentlyWorking = () => {
     return null;
   }
 
-  const projectImages =
-    item.images && item.images.length > 0 ? item.images : [];
+  // Convert images to array if it's an object with numeric keys (Firestore issue)
+  const projectImages = (() => {
+    if (!item.images) return [];
+    if (Array.isArray(item.images)) return item.images;
+    // Handle object with numeric keys like {0: url, 1: url, 2: url}
+    if (typeof item.images === 'object') {
+      return Object.values(item.images);
+    }
+    return [];
+  })();
+  
+  // Ensure iconLists is always an array
+  const icons = Array.isArray(item.iconLists) 
+    ? item.iconLists 
+    : (typeof item.iconLists === 'object' ? Object.values(item.iconLists) : []);
 
   return (
     <div className="py-10">
@@ -155,7 +168,7 @@ const CurrentlyWorking = () => {
               {/* Tech Icons and Links */}
               <div className="flex items-center justify-between mt-7 mb-3">
                 <div className="flex items-center">
-                  {item.iconLists.map((icon, index) => (
+                  {icons.map((icon, index) => (
                     <div
                       key={index}
                       className="border border-white/[.2] rounded-full bg-black lg:w-10 lg:h-10 w-8 h-8 flex justify-center items-center"

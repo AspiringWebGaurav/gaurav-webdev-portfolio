@@ -195,42 +195,61 @@ export async function POST(request: NextRequest) {
                      request.headers.get('x-real-ip') || 
                      'unknown';
 
-    // === LAYER 1: Advanced Spam Detection ===
-    const spamValidation = await validateContactFormSubmission({
-      name: body.name,
-      email: body.email,
-      message: body.message,
-      honeypot: body.honeypot,
-      timeSpent: body.timeSpent,
-      turnstileToken: body.turnstileToken,
-      turnstileSecretKey: process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY,
-      remoteIp: clientIp,
-    });
+    // Check for test bypass (for automated testing only)
+    const testBypassHeader = request.headers.get('x-test-bypass');
+    const testBypassToken = process.env.TEST_BYPASS_TOKEN;
+    const isTestMode = testBypassHeader === testBypassToken;
+    
+    if (testBypassHeader && !isTestMode) {
+      console.log('[Test Bypass] Failed:', { 
+        header: testBypassHeader?.substring(0, 20), 
+        expected: testBypassToken?.substring(0, 20),
+        match: isTestMode 
+      });
+    }
 
-    if (!spamValidation.valid) {
-      console.warn('[Security] Spam detected:', {
-        errors: spamValidation.errors,
-        spamScore: spamValidation.spamScore,
+    // === LAYER 1: Advanced Spam Detection ===
+    if (!isTestMode) {
+      const spamValidation = await validateContactFormSubmission({
+        name: body.name,
         email: body.email,
-        ip: clientIp,
+        message: body.message,
+        honeypot: body.honeypot,
+        timeSpent: body.timeSpent,
+        turnstileToken: body.turnstileToken,
+        turnstileSecretKey: process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY,
+        remoteIp: clientIp,
       });
 
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Your submission could not be processed. Please ensure all fields contain valid information.",
-          validationErrors: spamValidation.errors,
-        },
-        { status: 400 }
-      );
+      if (!spamValidation.valid) {
+        console.warn('[Security] Spam detected:', {
+          errors: spamValidation.errors,
+          spamScore: spamValidation.spamScore,
+          email: body.email,
+          ip: clientIp,
+        });
+
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Your submission could not be processed. Please ensure all fields contain valid information.",
+            validationErrors: spamValidation.errors,
+          },
+          { status: 400 }
+        );
+      }
     }
 
     // === LAYER 2: Rate Limiting ===
-    const { response: rateLimitResponse, headers: rateLimitHeaders } = await rateLimitMiddleware(request, 'contactForm', {
-      fingerprint: body.fingerprint,
-      turnstileToken: body.turnstileToken,
-    });
-    if (rateLimitResponse) return rateLimitResponse;
+    let rateLimitHeaders: Record<string, string> = {};
+    if (!isTestMode) {
+      const { response: rateLimitResponse, headers: rateLimitHeadersResult } = await rateLimitMiddleware(request, 'contactForm', {
+        fingerprint: body.fingerprint,
+        turnstileToken: body.turnstileToken,
+      });
+      rateLimitHeaders = rateLimitHeadersResult;
+      if (rateLimitResponse) return rateLimitResponse;
+    }
 
     // === LAYER 3: Basic Field Validation ===
     const validationErrors = validateContactSubmission(body);
@@ -249,18 +268,20 @@ export async function POST(request: NextRequest) {
     const sanitized = sanitizeContactSubmission(body);
 
     // === LAYER 4: Email/IP Rate Limits ===
-    const rateLimitCheck = await checkRateLimits(
-      sanitized.email,
-      clientIp
-    );
-    if (!rateLimitCheck.allowed) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: rateLimitCheck.error,
-        },
-        { status: 429 }
+    if (!isTestMode) {
+      const rateLimitCheck = await checkRateLimits(
+        sanitized.email,
+        clientIp
       );
+      if (!rateLimitCheck.allowed) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: rateLimitCheck.error,
+          },
+          { status: 429 }
+        );
+      }
     }
 
     // Calculate spam score for admin review

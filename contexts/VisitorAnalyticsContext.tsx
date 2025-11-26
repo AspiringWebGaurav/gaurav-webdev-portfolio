@@ -27,6 +27,7 @@ import {
 import { auth } from "@/lib/firebase";
 import { useRecycleBin } from "./RecycleBinContext";
 import smartPolling from "@/lib/smartPolling";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 
 interface VisitorAnalyticsContextType {
   visitors: VisitorProfile[];
@@ -92,43 +93,142 @@ export function VisitorAnalyticsProvider({ children }: { children: React.ReactNo
   // Get recycle bin context for delete operations
   const { moveToRecycleBin } = useRecycleBin();
 
+  // Retry configuration constants
+  const RETRY_CONFIG = {
+    MAX_RETRIES: 3,
+    BASE_DELAY: 1000, // 1 second
+    MAX_DELAY: 10000, // 10 seconds
+    TIMEOUT: 15000, // 15 seconds
+  };
+
+  /**
+   * Retry helper with exponential backoff
+   */
+  const retryWithBackoff = useCallback(async <T,>(
+    fn: () => Promise<T>,
+    options: {
+      maxRetries?: number;
+      baseDelay?: number;
+      shouldRetry?: (error: any) => boolean;
+      onRetry?: (attempt: number, error: any) => void;
+    } = {}
+  ): Promise<T> => {
+    const maxRetries = options.maxRetries ?? RETRY_CONFIG.MAX_RETRIES;
+    const baseDelay = options.baseDelay ?? RETRY_CONFIG.BASE_DELAY;
+    const shouldRetry = options.shouldRetry ?? ((error: any) => {
+      // Retry on network errors, 5xx errors, and timeouts
+      return (
+        error instanceof TypeError ||
+        error?.name === 'TimeoutError' ||
+        error?.status >= 500
+      );
+    });
+
+    let lastError: any;
+    
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        return await fn();
+      } catch (error) {
+        lastError = error;
+        
+        if (attempt < maxRetries && shouldRetry(error)) {
+          const delay = Math.min(
+            baseDelay * Math.pow(2, attempt),
+            RETRY_CONFIG.MAX_DELAY
+          );
+          
+          options.onRetry?.(attempt + 1, error);
+          console.log(`🔄 Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms`);
+          
+          await new Promise(resolve => setTimeout(resolve, delay));
+        } else {
+          break;
+        }
+      }
+    }
+    
+    throw lastError;
+  }, []);
+
   /**
    * Get auth token for API requests
    */
   const getAuthToken = useCallback(async (): Promise<string | null> => {
     try {
       const user = auth.currentUser;
-      if (!user) return null;
+      console.log('🔑 getAuthToken called. User:', user?.email || 'Not logged in');
+      
+      if (!user) {
+        console.log('❌ No user found');
+        return null;
+      }
+      
       const token = await user.getIdToken();
+      console.log('✅ Token obtained, length:', token.length);
       return token;
     } catch (err) {
-      console.error("Failed to get auth token:", err);
+      console.error("❌ Failed to get auth token:", err);
       return null;
     }
   }, []);
 
   /**
    * Fetch visitor profiles with filters and pagination
+   * Includes automatic retry logic for production resilience
    */
   const fetchVisitors = useCallback(
-    async (params?: VisitorListParams) => {
-      // Only show loading spinner if we don't have any data yet
-      // This prevents UI flashing during background refreshes
-      if (visitors.length === 0) {
+    async (params?: VisitorListParams, retryCount = 0) => {
+      const MAX_RETRIES = 3;
+      const RETRY_DELAY = 1000; // 1 second base delay
+      
+      console.log('📊 fetchVisitors called with params:', params, 'retry:', retryCount);
+      
+      // Only in admin panel
+      const isAdminPanel = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+      console.log('📍 Location check - isAdminPanel:', isAdminPanel, 'pathname:', window?.location?.pathname);
+      
+      if (!isAdminPanel) {
+        console.log('❌ Not in admin panel, skipping fetch');
+        return;
+      }
+
+      // Get auth token with retry
+      let token: string | null = null;
+      try {
+        token = await getAuthToken();
+      } catch (err) {
+        console.error('❌ Failed to get auth token:', err);
+        if (retryCount < MAX_RETRIES) {
+          console.log(`🔄 Retrying auth token fetch (${retryCount + 1}/${MAX_RETRIES})...`);
+          await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * (retryCount + 1)));
+          return fetchVisitors(params, retryCount + 1);
+        }
+        return;
+      }
+      
+      if (!token) {
+        console.log('❌ No auth token available, cannot fetch');
+        if (retryCount < MAX_RETRIES) {
+          console.log(`🔄 Retrying due to null token (${retryCount + 1}/${MAX_RETRIES})...`);
+          await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * (retryCount + 1)));
+          return fetchVisitors(params, retryCount + 1);
+        }
+        return;
+      }
+      
+      console.log('✅ Auth token obtained, proceeding with fetch');
+      
+      if (!visitors || visitors.length === 0) {
+        console.log('🔄 Setting loading state (no existing data)');
         setLoading(true);
       }
       setError(null);
 
       const queryParams = { ...filters, ...params };
+      console.log('🔍 Query params:', queryParams);
 
       try {
-        const token = await getAuthToken();
-        if (!token) {
-          // Silently fail if not authenticated (not in admin panel)
-          setLoading(false);
-          return;
-        }
-
         const searchParams = new URLSearchParams();
         Object.entries(queryParams).forEach(([key, value]) => {
           if (value !== undefined && value !== null && value !== "all") {
@@ -136,96 +236,193 @@ export function VisitorAnalyticsProvider({ children }: { children: React.ReactNo
           }
         });
 
-        const response = await fetch(`/api/visitor-analytics/visitors?${searchParams}`, {
+        const apiUrl = `/api/visitor-analytics/visitors?${searchParams}`;
+        console.log('🌐 Fetching from:', apiUrl);
+
+        const response = await fetch(apiUrl, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            "Authorization": `Bearer ${token}`,
           },
+          signal: AbortSignal.timeout(15000), // 15s timeout
         });
 
+        console.log('📡 Response status:', response.status, response.statusText);
+
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "Failed to fetch visitors");
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          console.error('❌ API error response:', errorData);
+          
+          // Retry on 5xx errors or network issues
+          if (response.status >= 500 && retryCount < MAX_RETRIES) {
+            console.log(`🔄 Retrying due to server error (${retryCount + 1}/${MAX_RETRIES})...`);
+            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * Math.pow(2, retryCount))); // Exponential backoff
+            return fetchVisitors(params, retryCount + 1);
+          }
+          
+          throw new Error(errorData.error || `Failed to fetch visitors (${response.status})`);
         }
 
-        const data: VisitorListResponse = await response.json();
-
-        setVisitors(data.visitors);
-        setTotalVisitors(data.total);
-        setHasMore(data.hasMore);
-        setCurrentPage(data.page);
+        const apiResponse = await response.json();
+        console.log('✅ Raw API response:', apiResponse);
         
-        // Update active count from current visitors
-        const activeCount = data.visitors.filter(v => v.currentStatus === "active").length;
+        // Safety check - ensure we have a valid response object
+        if (!apiResponse || typeof apiResponse !== 'object') {
+          console.error('❌ Invalid API response:', apiResponse);
+          
+          // Retry on malformed response
+          if (retryCount < MAX_RETRIES) {
+            console.log(`🔄 Retrying due to invalid response (${retryCount + 1}/${MAX_RETRIES})...`);
+            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * (retryCount + 1)));
+            return fetchVisitors(params, retryCount + 1);
+          }
+          
+          throw new Error('Invalid response from server');
+        }
+        
+        // Handle nested data structure: { success: true, data: { visitors, total, ... } }
+        const responseData = apiResponse.data || apiResponse;
+        const visitorsList = Array.isArray(responseData.visitors) ? responseData.visitors : [];
+        const totalCount = typeof responseData.total === 'number' ? responseData.total : visitorsList.length;
+        const hasMorePages = typeof responseData.hasMore === 'boolean' ? responseData.hasMore : false;
+        const currentPageNum = typeof responseData.page === 'number' ? responseData.page : (params?.page ?? 1);
+        
+        console.log('📊 Parsed data:', {
+          visitorsCount: visitorsList.length,
+          total: totalCount,
+          hasMore: hasMorePages,
+          page: currentPageNum
+        });
+
+        setVisitors(visitorsList);
+        setTotalVisitors(totalCount);
+        setHasMore(hasMorePages);
+        setCurrentPage(currentPageNum);
+        
+        // Update active count
+        const activeCount = visitorsList.filter(v => v?.currentStatus === "active").length;
         setActiveVisitorCount(activeCount);
+        console.log('📊 Active visitors:', activeCount);
+        
+        // Show informative message based on data state
+        if (visitorsList.length === 0) {
+          console.log('ℹ️ No visitors found matching current filters');
+          console.log('📋 Current filters:', queryParams);
+          console.log('💡 Tip: Visitors will appear here once someone visits your portfolio');
+        } else {
+          console.log(`✅ Successfully loaded ${visitorsList.length} visitors`);
+        }
+        
+        // Clear retry flag on success
+        if (retryCount > 0) {
+          console.log(`✅ Fetch succeeded after ${retryCount} retries`);
+        }
         
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Unknown error occurred";
+        const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
+        
+        // Handle timeout errors
+        if (err instanceof Error && err.name === 'TimeoutError') {
+          console.error('⏱️ Request timeout');
+          if (retryCount < MAX_RETRIES) {
+            console.log(`🔄 Retrying due to timeout (${retryCount + 1}/${MAX_RETRIES})...`);
+            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * (retryCount + 1)));
+            return fetchVisitors(params, retryCount + 1);
+          }
+        }
+        
+        // Handle network errors
+        if (err instanceof TypeError && err.message.includes('fetch')) {
+          console.error('🌐 Network error');
+          if (retryCount < MAX_RETRIES) {
+            console.log(`🔄 Retrying due to network error (${retryCount + 1}/${MAX_RETRIES})...`);
+            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * (retryCount + 1)));
+            return fetchVisitors(params, retryCount + 1);
+          }
+        }
+        
         setError(errorMessage);
-        console.error("Error fetching visitors:", err);
-        // Only show toast on initial load errors, not on background refresh failures
-        if (visitors.length === 0) {
-          showToast.error(errorMessage);
+        console.error("❌ Error fetching visitors:", err);
+        
+        // Only show toast on final failure
+        if (retryCount >= MAX_RETRIES - 1 && (!visitors || visitors.length === 0)) {
+          showToast.error(`${errorMessage} (after ${retryCount + 1} attempts)`);
         }
       } finally {
         setLoading(false);
+        console.log('✅ Fetch complete');
       }
     },
-    [filters, getAuthToken, visitors.length]
+    [getAuthToken, filters, visitors?.length ?? 0]
   );
 
   /**
-   * Fetch detailed visitor data
+   * Fetch detailed visitor data with retry logic
    */
   const fetchVisitorDetail = useCallback(
     async (id: string): Promise<VisitorDetailData | null> => {
       try {
         const token = await getAuthToken();
         if (!token) {
-          // Silently return null if not authenticated
+          console.warn('[VisitorAnalytics] No auth token, skipping detail fetch');
           return null;
         }
 
         console.log(`[VisitorAnalytics] Fetching detail for visitor: ${id}`);
         
-        const response = await fetch(`/api/visitor-analytics/visitors/${id}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+        const result = await retryWithBackoff(
+          async () => {
+            const response = await fetch(`/api/visitor-analytics/visitors/${id}`, {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              signal: AbortSignal.timeout(RETRY_CONFIG.TIMEOUT),
+            });
+
+            console.log(`[VisitorAnalytics] Detail response status: ${response.status}`);
+
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+              const error: any = new Error(errorData.error || "Failed to fetch visitor detail");
+              error.status = response.status;
+              error.details = errorData.details;
+              throw error;
+            }
+
+            const responseData: VisitorDetailResponse = await response.json();
+            
+            if (!responseData || !responseData.data) {
+              throw new Error('Invalid response structure');
+            }
+            
+            return responseData.data;
           },
-        });
-
-        console.log(`[VisitorAnalytics] Detail response status: ${response.status}`);
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          const errorMsg = errorData.error || "Failed to fetch visitor detail";
-          console.error("[VisitorAnalytics] Visitor detail fetch error:", {
-            status: response.status,
-            error: errorMsg,
-            details: errorData.details,
-            visitorId: id,
-          });
-          showToast.error(`${errorMsg}${errorData.details ? `: ${errorData.details}` : ''}`);
-          return null;
-        }
-
-        const result: VisitorDetailResponse = await response.json();
-        console.log(`[VisitorAnalytics] Successfully fetched detail for visitor ${id}`);
-        return result.data;
+          {
+            onRetry: (attempt, error) => {
+              console.log(`[VisitorAnalytics] Retrying visitor detail fetch (${attempt}/${RETRY_CONFIG.MAX_RETRIES}):`, error?.message);
+            }
+          }
+        );
         
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Unknown error occurred";
-        console.error("Error fetching visitor detail:", err);
-        showToast.error(errorMessage);
+        console.log(`[VisitorAnalytics] ✅ Successfully fetched detail for visitor ${id}`);
+        return result;
+        
+      } catch (err: any) {
+        const errorMessage = err?.message || "Unknown error occurred";
+        console.error("[VisitorAnalytics] ❌ Error fetching visitor detail after retries:", err);
+        
+        // Only show toast for non-404 errors (404 means visitor not found, which is expected)
+        if (err?.status !== 404) {
+          showToast.error(`Failed to load visitor details: ${errorMessage}`);
+        }
+        
         return null;
       }
     },
-    [getAuthToken]
+    [getAuthToken, retryWithBackoff]
   );
 
   /**
@@ -288,7 +485,9 @@ export function VisitorAnalyticsProvider({ children }: { children: React.ReactNo
         });
         
         setAggregates(data.aggregates);
-        setActiveVisitorCount(data.aggregates.activeVisitors);
+        if (data.aggregates?.activeVisitors !== undefined) {
+          setActiveVisitorCount(data.aggregates.activeVisitors);
+        }
         
       } catch (err) {
         const errorMessage =
@@ -334,7 +533,9 @@ export function VisitorAnalyticsProvider({ children }: { children: React.ReactNo
 
       if (response.ok) {
         const data: AggregatesResponse = await response.json();
-        setActiveVisitorCount(data.aggregates.activeVisitors);
+        if (data.aggregates?.activeVisitors !== undefined) {
+          setActiveVisitorCount(data.aggregates.activeVisitors);
+        }
       }
     } catch (err) {
       console.error("Error refreshing active count:", err);
@@ -580,55 +781,46 @@ export function VisitorAnalyticsProvider({ children }: { children: React.ReactNo
     }
   }, [getAuthToken]);
 
-  // Setup smart polling for visitor analytics (ONLY in admin panel)
+  // Network status monitoring with auto-reconnect
+  const handleNetworkReconnect = useCallback(() => {
+    console.log('🔄 Network reconnected, refreshing data...');
+    if (auth.currentUser) {
+      fetchVisitors();
+      fetchAggregatesWithTracking();
+    }
+  }, [fetchVisitors, fetchAggregatesWithTracking]);
+
+  const networkStatus = useNetworkStatus(handleNetworkReconnect);
+
+  // Auth state listener - fetch data when user is authenticated
   useEffect(() => {
-    // ⚠️ CRITICAL: Only run in admin panel to prevent API spam on portfolio
     const isAdminPanel = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
     
-    if (!isAdminPanel) {
-      return;
-    }
+    if (!isAdminPanel) return;
 
-    const unsubscribeAuth = auth.onAuthStateChanged((user) => {
+    // Listen for auth state changes
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
-        // Initial fetch
-        refreshActiveCount();
-        fetchAggregatesWithTracking();
-        
-        // Register smart polling for active count (lightweight check)
-        smartPolling.register(
-          'visitor-active-count',
-          refreshActiveCount,
-          {
-            intervals: {
-              realtime: 10000,  // 10s when viewing analytics
-              active: 30000,    // 30s when admin panel open
-              idle: 60000,      // 60s when idle
-              background: 120000, // 120s when tab hidden
-            },
-            tag: 'VisitorActiveCount (Admin)',
-            stopOnHidden: false,
-          }
-        );
+        console.log('✅ User authenticated, fetching data...');
+        // User is logged in, fetch data
+        await fetchVisitors();
+        await fetchAggregatesWithTracking();
       } else {
-        smartPolling.unregister('visitor-active-count');
+        console.log('❌ No user authenticated');
       }
     });
 
-    return () => {
-      unsubscribeAuth();
-      smartPolling.unregister('visitor-active-count');
-    };
-  }, [refreshActiveCount, fetchAggregatesWithTracking]);
+    return () => unsubscribe();
+  }, [fetchVisitors, fetchAggregatesWithTracking]);
 
-  // Fetch data when filters change (only if authenticated AND in admin panel)
+  // Refetch when filters change (only if we already have data)
   useEffect(() => {
     const isAdminPanel = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
-    const user = auth.currentUser;
-    if (user && isAdminPanel) {
+    
+    if (isAdminPanel && auth.currentUser && (visitors?.length ?? 0) > 0) {
       fetchVisitors(filters);
     }
-  }, [filters, fetchVisitors]);
+  }, [filters, fetchVisitors, visitors?.length]);
 
   const value: VisitorAnalyticsContextType = {
     visitors,

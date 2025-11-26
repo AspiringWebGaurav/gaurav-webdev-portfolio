@@ -284,10 +284,11 @@ export default function BubbleVisitorMessages() {
               <div className="p-4 text-center text-gray-500">No sessions yet</div>
             ) : (
               sessions.map((session) => {
-                // Create a display name for the session
+                // Admin sees UUID + mask for portfolio reference
                 const displayName = session.visitorEmail 
                   ? session.visitorEmail 
-                  : `Visitor ${session.id.slice(0, 8)}`;
+                  : `${session.id.slice(0, 12)}`;
+                const maskRef = session.mask || 'N/A';
                 
                 const isSelected = selectedIds.has(session.id);
                 
@@ -342,7 +343,7 @@ export default function BubbleVisitorMessages() {
                         </div>
                         <div className="flex items-center gap-2 text-xs text-gray-500">
                           <Clock className="w-3 h-3" />
-                          <span>{formatTimestamp(session.lastActive)}</span>
+                          <span>Mask: {maskRef} • {formatTimestamp(session.lastActive)}</span>
                         </div>
                       </button>
                       

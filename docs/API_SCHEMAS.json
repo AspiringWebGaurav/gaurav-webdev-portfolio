@@ -1,0 +1,1204 @@
+{
+  "apiSchemas": {
+    "techStacks": {
+      "endpoint": "/api/tech-stacks",
+      "collection": "portfolio_techStacks",
+      "maxItems": 20,
+      "methods": {
+        "GET": {
+          "queryParams": {
+            "admin": {
+              "type": "string",
+              "enum": ["true", "false"],
+              "optional": true,
+              "description": "Include inactive items"
+            }
+          },
+          "response": {
+            "success": "boolean",
+            "items": "array",
+            "count": "number"
+          }
+        },
+        "POST": {
+          "requiredFields": ["name"],
+          "schema": {
+            "name": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 30,
+              "required": true
+            },
+            "order": {
+              "type": "number",
+              "optional": true,
+              "autoAssigned": true
+            },
+            "isActive": {
+              "type": "boolean",
+              "optional": true,
+              "default": true
+            }
+          },
+          "response": {
+            "success": "boolean",
+            "item": "object",
+            "message": "string"
+          }
+        },
+        "PUT": {
+          "requiredFields": ["id"],
+          "schema": {
+            "id": {
+              "type": "string",
+              "required": true
+            },
+            "name": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 30,
+              "optional": true
+            },
+            "order": {
+              "type": "number",
+              "optional": true
+            },
+            "isActive": {
+              "type": "boolean",
+              "optional": true
+            }
+          },
+          "response": {
+            "success": "boolean",
+            "item": "object",
+            "message": "string"
+          }
+        },
+        "DELETE": {
+          "queryParams": {
+            "id": {
+              "type": "string",
+              "required": true
+            },
+            "soft": {
+              "type": "string",
+              "enum": ["true", "false"],
+              "optional": true
+            }
+          },
+          "response": {
+            "success": "boolean",
+            "message": "string"
+          }
+        }
+      }
+    },
+    "projects": {
+      "endpoint": "/api/projects",
+      "collection": "portfolio_projects",
+      "maxItems": 10,
+      "methods": {
+        "GET": {
+          "response": {
+            "success": "boolean",
+            "projects": "array",
+            "count": "number"
+          }
+        },
+        "POST": {
+          "requiredFields": ["title", "des", "img", "iconLists", "link"],
+          "schema": {
+            "title": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 100,
+              "required": true
+            },
+            "des": {
+              "type": "string",
+              "minLength": 10,
+              "maxLength": 500,
+              "required": true
+            },
+            "img": {
+              "type": "string",
+              "format": "url",
+              "required": true
+            },
+            "images": {
+              "type": "array",
+              "items": "string",
+              "optional": true
+            },
+            "iconLists": {
+              "type": "array",
+              "items": "string",
+              "minItems": 1,
+              "maxItems": 10,
+              "required": true
+            },
+            "link": {
+              "type": "string",
+              "format": "url",
+              "required": true
+            },
+            "order": {
+              "type": "number",
+              "min": 1,
+              "max": 10,
+              "optional": true,
+              "autoAssigned": true
+            },
+            "isActive": {
+              "type": "boolean",
+              "optional": true,
+              "default": true
+            }
+          },
+          "response": {
+            "success": "boolean",
+            "project": "object",
+            "message": "string"
+          }
+        },
+        "PUT": {
+          "requiredFields": ["id"],
+          "schema": {
+            "id": {
+              "type": "string",
+              "required": true
+            },
+            "title": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 100,
+              "optional": true
+            },
+            "des": {
+              "type": "string",
+              "minLength": 10,
+              "maxLength": 500,
+              "optional": true
+            },
+            "img": {
+              "type": "string",
+              "format": "url",
+              "optional": true
+            },
+            "images": {
+              "type": "array",
+              "items": "string",
+              "optional": true
+            },
+            "iconLists": {
+              "type": "array",
+              "items": "string",
+              "minItems": 1,
+              "maxItems": 10,
+              "optional": true
+            },
+            "link": {
+              "type": "string",
+              "format": "url",
+              "optional": true
+            },
+            "order": {
+              "type": "number",
+              "min": 1,
+              "max": 10,
+              "optional": true
+            },
+            "isActive": {
+              "type": "boolean",
+              "optional": true
+            }
+          },
+          "response": {
+            "success": "boolean",
+            "project": "object",
+            "message": "string"
+          }
+        },
+        "DELETE": {
+          "queryParams": {
+            "id": {
+              "type": "string",
+              "required": true,
+              "canBeInBody": true
+            },
+            "soft": {
+              "type": "string",
+              "enum": ["true", "false"],
+              "optional": true
+            }
+          },
+          "response": {
+            "success": "boolean",
+            "message": "string"
+          }
+        }
+      }
+    },
+    "testimonials": {
+      "endpoint": "/api/testimonials",
+      "collection": "portfolio_testimonials",
+      "maxItems": 20,
+      "supportsBatchCreate": true,
+      "methods": {
+        "GET": {
+          "response": {
+            "success": "boolean",
+            "testimonials": "array",
+            "count": "number"
+          }
+        },
+        "POST": {
+          "requiredFields": ["quote", "name", "title"],
+          "acceptsArray": true,
+          "schema": {
+            "quote": {
+              "type": "string",
+              "minLength": 20,
+              "maxLength": 500,
+              "required": true
+            },
+            "name": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 50,
+              "required": true
+            },
+            "title": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 100,
+              "required": true
+            },
+            "img": {
+              "type": "string",
+              "format": "url",
+              "optional": true
+            },
+            "order": {
+              "type": "number",
+              "optional": true,
+              "autoAssigned": true
+            },
+            "isActive": {
+              "type": "boolean",
+              "optional": true,
+              "default": true
+            }
+          },
+          "response": {
+            "success": "boolean",
+            "testimonials": "object or array",
+            "message": "string"
+          }
+        },
+        "PUT": {
+          "requiredFields": ["id"],
+          "schema": {
+            "id": {
+              "type": "string",
+              "required": true
+            },
+            "quote": {
+              "type": "string",
+              "minLength": 20,
+              "maxLength": 500,
+              "optional": true
+            },
+            "name": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 50,
+              "optional": true
+            },
+            "title": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 100,
+              "optional": true
+            },
+            "img": {
+              "type": "string",
+              "format": "url",
+              "optional": true
+            },
+            "order": {
+              "type": "number",
+              "optional": true
+            },
+            "isActive": {
+              "type": "boolean",
+              "optional": true
+            }
+          },
+          "response": {
+            "success": "boolean",
+            "testimonial": "object",
+            "message": "string"
+          }
+        },
+        "DELETE": {
+          "queryParams": {
+            "id": {
+              "type": "string",
+              "required": true
+            },
+            "soft": {
+              "type": "string",
+              "enum": ["true", "false"],
+              "optional": true
+            }
+          },
+          "response": {
+            "success": "boolean",
+            "message": "string"
+          }
+        }
+      }
+    },
+    "workExperience": {
+      "endpoint": "/api/work-experience",
+      "collection": "portfolio_workExperience",
+      "maxItems": 10,
+      "methods": {
+        "GET": {
+          "response": {
+            "success": "boolean",
+            "workExperiences": "array",
+            "count": "number"
+          }
+        },
+        "POST": {
+          "requiredFields": ["title", "desc", "thumbnail"],
+          "schema": {
+            "title": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 150,
+              "required": true
+            },
+            "desc": {
+              "type": "string",
+              "minLength": 10,
+              "maxLength": 500,
+              "required": true
+            },
+            "thumbnail": {
+              "type": "string",
+              "format": "url or data URI",
+              "required": true
+            },
+            "company": {
+              "type": "string",
+              "optional": true
+            },
+            "duration": {
+              "type": "string",
+              "optional": true
+            },
+            "location": {
+              "type": "string",
+              "optional": true
+            },
+            "order": {
+              "type": "number",
+              "min": 1,
+              "max": 10,
+              "optional": true,
+              "autoAssigned": true
+            },
+            "isActive": {
+              "type": "boolean",
+              "optional": true,
+              "default": true
+            }
+          },
+          "response": {
+            "success": "boolean",
+            "workExperience": "object",
+            "message": "string"
+          }
+        },
+        "PUT": {
+          "requiredFields": ["id"],
+          "schema": {
+            "id": {
+              "type": "string",
+              "required": true
+            },
+            "title": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 150,
+              "optional": true
+            },
+            "desc": {
+              "type": "string",
+              "minLength": 10,
+              "maxLength": 500,
+              "optional": true
+            },
+            "thumbnail": {
+              "type": "string",
+              "format": "url or data URI",
+              "optional": true
+            },
+            "company": {
+              "type": "string",
+              "optional": true
+            },
+            "duration": {
+              "type": "string",
+              "optional": true
+            },
+            "location": {
+              "type": "string",
+              "optional": true
+            },
+            "order": {
+              "type": "number",
+              "min": 1,
+              "max": 10,
+              "optional": true
+            },
+            "isActive": {
+              "type": "boolean",
+              "optional": true
+            }
+          },
+          "response": {
+            "success": "boolean",
+            "workExperience": "object",
+            "message": "string"
+          }
+        },
+        "DELETE": {
+          "bodyParams": {
+            "id": {
+              "type": "string",
+              "required": true
+            }
+          },
+          "queryParams": {
+            "soft": {
+              "type": "string",
+              "enum": ["true", "false"],
+              "optional": true
+            }
+          },
+          "response": {
+            "success": "boolean",
+            "message": "string"
+          }
+        }
+      }
+    },
+    "currentlyWorking": {
+      "endpoint": "/api/currently-working",
+      "collection": "portfolio_currentlyWorking",
+      "methods": {
+        "GET": {
+          "queryParams": {
+            "admin": {
+              "type": "string",
+              "enum": ["true", "false"],
+              "optional": true,
+              "description": "Get all items vs. only active item"
+            }
+          },
+          "response": {
+            "success": "boolean",
+            "items or item": "array or object",
+            "count": "number (admin only)"
+          }
+        },
+        "POST": {
+          "requiredFields": ["headingTitle", "title", "description", "iconLists"],
+          "schema": {
+            "headingTitle": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 50,
+              "required": true
+            },
+            "title": {
+              "type": "string",
+              "minLength": 5,
+              "maxLength": 100,
+              "required": true
+            },
+            "description": {
+              "type": "string",
+              "minLength": 10,
+              "maxLength": 300,
+              "required": true
+            },
+            "blogContent": {
+              "type": "string",
+              "maxLength": 10000,
+              "optional": true
+            },
+            "images": {
+              "type": "array",
+              "items": "string",
+              "maxItems": 5,
+              "optional": true
+            },
+            "iconLists": {
+              "type": "array",
+              "items": "string",
+              "minItems": 1,
+              "maxItems": 10,
+              "required": true
+            },
+            "githubLink": {
+              "type": "string",
+              "format": "url",
+              "optional": true
+            },
+            "liveLink": {
+              "type": "string",
+              "format": "url",
+              "optional": true
+            },
+            "isActive": {
+              "type": "boolean",
+              "optional": true,
+              "default": false
+            },
+            "showBlogNotification": {
+              "type": "boolean",
+              "optional": true,
+              "default": false
+            }
+          },
+          "response": {
+            "success": "boolean",
+            "item": "object",
+            "message": "string"
+          }
+        },
+        "PUT": {
+          "requiredFields": ["id"],
+          "schema": {
+            "id": {
+              "type": "string",
+              "required": true
+            },
+            "headingTitle": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 50,
+              "optional": true
+            },
+            "title": {
+              "type": "string",
+              "minLength": 5,
+              "maxLength": 100,
+              "optional": true
+            },
+            "description": {
+              "type": "string",
+              "minLength": 10,
+              "maxLength": 300,
+              "optional": true
+            },
+            "blogContent": {
+              "type": "string",
+              "maxLength": 10000,
+              "optional": true
+            },
+            "images": {
+              "type": "array",
+              "items": "string",
+              "maxItems": 5,
+              "optional": true
+            },
+            "iconLists": {
+              "type": "array",
+              "items": "string",
+              "minItems": 1,
+              "maxItems": 10,
+              "optional": true
+            },
+            "githubLink": {
+              "type": "string",
+              "format": "url",
+              "optional": true
+            },
+            "liveLink": {
+              "type": "string",
+              "format": "url",
+              "optional": true
+            },
+            "isActive": {
+              "type": "boolean",
+              "optional": true
+            },
+            "showBlogNotification": {
+              "type": "boolean",
+              "optional": true
+            }
+          },
+          "response": {
+            "success": "boolean",
+            "item": "object",
+            "message": "string"
+          }
+        },
+        "DELETE": {
+          "queryParams": {
+            "id": {
+              "type": "string",
+              "required": true
+            },
+            "soft": {
+              "type": "string",
+              "enum": ["true", "false"],
+              "optional": true
+            }
+          },
+          "response": {
+            "success": "boolean",
+            "message": "string"
+          }
+        }
+      }
+    },
+    "contactSubmissions": {
+      "endpoint": "/api/contact-submissions",
+      "collection": "contactSubmissions",
+      "readOnlyForAdmin": true,
+      "rateLimits": {
+        "perEmail": "3 per 24 hours",
+        "perIP": "5 per hour"
+      },
+      "methods": {
+        "GET": {
+          "adminOnly": true,
+          "response": {
+            "success": "boolean",
+            "submissions": "array",
+            "count": "number"
+          }
+        },
+        "DELETE": {
+          "adminOnly": true,
+          "queryParams": {
+            "id": {
+              "type": "string",
+              "required": true
+            }
+          },
+          "response": {
+            "success": "boolean",
+            "message": "string"
+          }
+        }
+      }
+    },
+    "bugReports": {
+      "endpoint": "/api/bug-reports",
+      "collection": "bugReports",
+      "rateLimits": {
+        "perEmail": "3 per 24 hours",
+        "perIP": "5 per hour"
+      },
+      "methods": {
+        "GET": {
+          "queryParams": {
+            "id": {
+              "type": "string",
+              "optional": true,
+              "description": "Get single report by ID"
+            }
+          },
+          "response": {
+            "success": "boolean",
+            "bugReports or bugReport": "array or object",
+            "count": "number (when fetching all)"
+          }
+        },
+        "PUT": {
+          "adminOnly": true,
+          "requiredFields": ["id"],
+          "schema": {
+            "id": {
+              "type": "string",
+              "required": true
+            },
+            "status": {
+              "type": "string",
+              "enum": ["new", "in-progress", "resolved", "duplicate", "wont-fix"],
+              "optional": true
+            },
+            "adminNotes": {
+              "type": "array",
+              "items": {
+                "note": "string",
+                "createdBy": "string",
+                "createdAt": "ISO date string"
+              },
+              "optional": true
+            },
+            "assignedTo": {
+              "type": "string",
+              "optional": true
+            },
+            "resolvedBy": {
+              "type": "string",
+              "optional": true
+            },
+            "duplicateOf": {
+              "type": "string",
+              "optional": true
+            }
+          },
+          "response": {
+            "success": "boolean",
+            "bugReport": "object",
+            "message": "string"
+          }
+        },
+        "DELETE": {
+          "adminOnly": true,
+          "queryParams": {
+            "id": {
+              "type": "string",
+              "required": true
+            }
+          },
+          "response": {
+            "success": "boolean",
+            "message": "string"
+          }
+        }
+      }
+    },
+    "bubbleSessions": {
+      "endpoint": "/api/bubble/sessions",
+      "collection": "og_uuid_sessions",
+      "methods": {
+        "GET": {
+          "queryParams": {
+            "allSessions": {
+              "type": "string",
+              "enum": ["true", "false"],
+              "optional": true,
+              "description": "Admin: get all sessions"
+            },
+            "mask": {
+              "type": "string",
+              "optional": true,
+              "description": "Visitor: get session by mask"
+            },
+            "fingerprint": {
+              "type": "string",
+              "optional": true
+            }
+          },
+          "response": {
+            "success": "boolean",
+            "sessions or session": "array or object"
+          }
+        },
+        "POST": {
+          "requiredFields": ["mask"],
+          "schema": {
+            "mask": {
+              "type": "string",
+              "required": true,
+              "description": "Visitor's session mask"
+            },
+            "role": {
+              "type": "string",
+              "enum": ["visitor", "admin"],
+              "optional": true,
+              "default": "visitor"
+            }
+          },
+          "response": {
+            "success": "boolean",
+            "session": "object"
+          }
+        }
+      }
+    },
+    "bubbleMessages": {
+      "endpoint": "/api/bubble/messages",
+      "collection": "bubbleMessages",
+      "rateLimits": {
+        "poll": "60 per minute",
+        "send": "30 per minute"
+      },
+      "methods": {
+        "GET": {
+          "queryParams": {
+            "sessionId": {
+              "type": "string",
+              "required": true,
+              "description": "Session UUID"
+            },
+            "role": {
+              "type": "string",
+              "enum": ["visitor", "admin"],
+              "optional": true
+            },
+            "limit": {
+              "type": "number",
+              "optional": true,
+              "default": 50
+            },
+            "fingerprint": {
+              "type": "string",
+              "optional": true
+            }
+          },
+          "response": {
+            "messages": "array",
+            "hasMore": "boolean",
+            "totalCount": "number",
+            "adminTyping": "boolean",
+            "visitorTyping": "boolean",
+            "adminLastSeen": "ISO date string or null",
+            "visitorLastSeen": "ISO date string or null",
+            "adminOnline": "boolean",
+            "visitorOnline": "boolean",
+            "visitorUnread": "number",
+            "adminUnread": "number"
+          }
+        },
+        "POST": {
+          "requiredFields": ["sessionId", "role", "content"],
+          "schema": {
+            "sessionId": {
+              "type": "string",
+              "required": true,
+              "description": "Session UUID"
+            },
+            "role": {
+              "type": "string",
+              "enum": ["visitor", "admin"],
+              "required": true
+            },
+            "content": {
+              "type": "string",
+              "required": true,
+              "minLength": 1
+            },
+            "visitorEmail": {
+              "type": "string",
+              "optional": true
+            },
+            "fingerprint": {
+              "type": "string",
+              "optional": true
+            },
+            "turnstileToken": {
+              "type": "string",
+              "optional": true
+            }
+          },
+          "response": {
+            "success": "boolean",
+            "message": "object"
+          }
+        },
+        "PUT": {
+          "requiredFields": ["messageId", "role"],
+          "schema": {
+            "messageId": {
+              "type": "string",
+              "required": true,
+              "description": "Message custom UUID"
+            },
+            "role": {
+              "type": "string",
+              "enum": ["visitor", "admin"],
+              "required": true,
+              "description": "Reader role"
+            }
+          },
+          "response": {
+            "success": "boolean",
+            "message": "string"
+          }
+        }
+      }
+    },
+    "bubbleQuestions": {
+      "endpoint": "/api/bubble/questions",
+      "collection": "bubblePredefinedQuestions",
+      "methods": {
+        "GET": {
+          "queryParams": {
+            "includeInactive": {
+              "type": "string",
+              "enum": ["true", "false"],
+              "optional": true
+            }
+          },
+          "response": {
+            "success": "boolean",
+            "questions": "array"
+          }
+        },
+        "POST": {
+          "adminOnly": true,
+          "requiredFields": ["question", "answer"],
+          "schema": {
+            "question": {
+              "type": "string",
+              "required": true
+            },
+            "answer": {
+              "type": "string",
+              "required": true
+            },
+            "order": {
+              "type": "number",
+              "optional": true,
+              "default": 0
+            }
+          },
+          "response": {
+            "success": "boolean",
+            "question": "object"
+          }
+        },
+        "PUT": {
+          "adminOnly": true,
+          "requiredFields": ["id"],
+          "schema": {
+            "id": {
+              "type": "string",
+              "required": true
+            },
+            "question": {
+              "type": "string",
+              "optional": true
+            },
+            "answer": {
+              "type": "string",
+              "optional": true
+            },
+            "order": {
+              "type": "number",
+              "optional": true
+            },
+            "active": {
+              "type": "boolean",
+              "optional": true
+            }
+          },
+          "response": {
+            "success": "boolean"
+          }
+        },
+        "DELETE": {
+          "adminOnly": true,
+          "queryParams": {
+            "questionId": {
+              "type": "string",
+              "required": true
+            },
+            "permanent": {
+              "type": "string",
+              "enum": ["true", "false"],
+              "optional": true
+            }
+          },
+          "response": {
+            "success": "boolean"
+          }
+        }
+      }
+    },
+    "visitorAnalytics": {
+      "endpoint": "/api/visitor-analytics/visitors",
+      "collection": "og_uuid_visitorProfiles",
+      "methods": {
+        "GET": {
+          "adminOnly": true,
+          "response": {
+            "success": "boolean",
+            "visitors": "array",
+            "count": "number"
+          }
+        }
+      }
+    },
+    "banVisitor": {
+      "endpoint": "/api/visitor-analytics/ban",
+      "methods": {
+        "POST": {
+          "adminOnly": true,
+          "requiredFields": ["mask"],
+          "schema": {
+            "mask": {
+              "type": "string",
+              "required": true
+            },
+            "reason": {
+              "type": "string",
+              "optional": true
+            },
+            "bannedBy": {
+              "type": "string",
+              "optional": true,
+              "default": "admin"
+            },
+            "duration": {
+              "type": "string",
+              "enum": ["permanent", "1hour", "1day", "1week", "1month"],
+              "optional": true,
+              "default": "permanent"
+            }
+          },
+          "response": {
+            "success": "boolean",
+            "message": "string",
+            "visitor": "object"
+          }
+        }
+      }
+    },
+    "unbanVisitor": {
+      "endpoint": "/api/visitor-analytics/unban",
+      "methods": {
+        "POST": {
+          "adminOnly": true,
+          "requiredFields": ["mask"],
+          "schema": {
+            "mask": {
+              "type": "string",
+              "required": true
+            }
+          },
+          "response": {
+            "success": "boolean",
+            "message": "string",
+            "visitor": "object"
+          }
+        }
+      }
+    },
+    "checkBanStatus": {
+      "endpoint": "/api/visitor-analytics/check-ban",
+      "methods": {
+        "GET": {
+          "queryParams": {
+            "mask": {
+              "type": "string",
+              "required": true
+            }
+          },
+          "response": {
+            "isBanned": "boolean",
+            "reason": "string (optional)",
+            "bannedUntil": "ISO date string (optional)",
+            "message": "string (if banned)"
+          }
+        }
+      }
+    },
+    "banAppeals": {
+      "endpoint": "/api/ban-appeals",
+      "collection": "banAppeals",
+      "methods": {
+        "GET": {
+          "adminOnly": true,
+          "response": {
+            "success": "boolean",
+            "appeals": "array",
+            "count": "number"
+          }
+        },
+        "POST": {
+          "requiredFields": ["visitorMask", "reason", "contactEmail"],
+          "schema": {
+            "visitorMask": {
+              "type": "string",
+              "required": true
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 20,
+              "maxLength": 1000,
+              "required": true
+            },
+            "contactEmail": {
+              "type": "string",
+              "format": "email",
+              "required": true
+            }
+          },
+          "response": {
+            "success": "boolean",
+            "appeal": "object",
+            "message": "string"
+          }
+        },
+        "PUT": {
+          "adminOnly": true,
+          "requiredFields": ["id", "status"],
+          "schema": {
+            "id": {
+              "type": "string",
+              "required": true
+            },
+            "status": {
+              "type": "string",
+              "enum": ["approved", "rejected"],
+              "required": true
+            },
+            "adminNotes": {
+              "type": "string",
+              "optional": true
+            },
+            "reviewedBy": {
+              "type": "string",
+              "optional": true,
+              "default": "admin"
+            }
+          },
+          "response": {
+            "success": "boolean",
+            "appeal": "object",
+            "message": "string"
+          }
+        }
+      }
+    }
+  },
+  "commonErrors": {
+    "400": {
+      "success": false,
+      "error": "string",
+      "validationErrors": [
+        {
+          "field": "string",
+          "message": "string"
+        }
+      ]
+    },
+    "404": {
+      "success": false,
+      "error": "string"
+    },
+    "429": {
+      "success": false,
+      "error": "string",
+      "retryAfter": "number"
+    },
+    "500": {
+      "success": false,
+      "error": "string",
+      "details": "string"
+    }
+  }
+}

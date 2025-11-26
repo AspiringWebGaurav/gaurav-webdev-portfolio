@@ -11,6 +11,7 @@ import ContactFormModal from "./ContactFormModal";
 import BugReportIntro from "./BugReportIntro";
 import BugReportForm from "./BugReportForm";
 import { generateDeviceFingerprint } from "@/lib/deviceFingerprint";
+import { clientIdentifyVisitor } from "@/lib/uuid-sync";
 
 const Footer = () => {
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
@@ -19,27 +20,20 @@ const Footer = () => {
   const [patchId, setPatchId] = useState<string>("...");
 
   useEffect(() => {
-    // Fetch UUID once - it never changes so no need to poll
-    const fetchUUID = async () => {
+    // Fetch visitor mask once using UUID-sync system
+    const fetchMask = async () => {
       try {
-        const res = await fetch('/api/my-uuid');
-        const data = await res.json();
-        setPatchId(data.visitorId);
+        const fingerprint = generateDeviceFingerprint();
+        const mask = await clientIdentifyVisitor(fingerprint);
+        setPatchId(mask);
       } catch {
         setPatchId("offline");
       }
     };
 
-    fetchUUID();
-    // REMOVED: Polling interval (UUID is static, no need to refetch)
+    fetchMask();
+    // Mask is static per visitor, no need to poll
   }, []);
-
-  const handleAdminClick = () => {
-    // Get the current host (works for both localhost and production)
-    const protocol = window.location.protocol;
-    const host = window.location.host;
-    window.open(`${protocol}//${host}/admin/login`, "_blank");
-  };
 
   const handleContactClick = () => {
     setIsContactModalOpen(true);
@@ -111,8 +105,10 @@ const Footer = () => {
           <span className="text-white-200/40">•</span>
           
           {/* Admin Access */}
-          <button
-            onClick={handleAdminClick}
+          <a
+            href="/admin/login"
+            target="_blank"
+            rel="noopener noreferrer"
             className="group relative px-3 py-1 rounded-lg bg-purple/5 hover:bg-purple/10 border border-purple/20 hover:border-purple/40 transition-all duration-300 flex items-center gap-1.5"
             aria-label="Admin Access"
             title="Admin Login"
@@ -121,21 +117,24 @@ const Footer = () => {
             <span className="text-purple/60 group-hover:text-purple text-xs font-medium transition-colors">
               Admin
             </span>
-          </button>
+          </a>
           
           <span className="text-white-200/40">•</span>
           
           {/* Device ID */}
           <span 
-            className="group relative px-3 py-1 rounded-lg bg-black-200/50 border border-white-200/10 hover:border-white-200/30 font-mono text-xs text-gray-400 hover:text-gray-300 transition-all cursor-pointer flex items-center gap-1.5"
-            title="Click to copy Device ID"
+            className="group relative px-3 py-1.5 rounded-lg bg-black-200/50 border border-white-200/10 hover:border-green-400/30 font-mono text-xs transition-all cursor-pointer flex items-center gap-2"
+            title="Click to copy your Device Mask"
             onClick={() => {
               navigator.clipboard.writeText(patchId);
               // Optional: Add a toast notification here
             }}
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
-            {patchId}
+            <span className="text-white-200/60 font-sans">Visitor ID:</span>
+            <span className="text-green-400 group-hover:text-green-300 font-semibold flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+              {patchId}
+            </span>
           </span>
         </div>
 

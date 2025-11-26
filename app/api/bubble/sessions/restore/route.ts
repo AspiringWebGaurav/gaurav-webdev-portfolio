@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { updateDoc, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 const COLLECTIONS = {
-  SESSIONS: 'bubbleSessions',
+  SESSIONS: 'og_uuid_sessions',
   MESSAGES: 'bubbleMessages',
 };
 
 /**
- * POST /api/bubble/sessions/restore
+ * POST /api/bubble/sessions/restore (UUID-sync compatible)
  * Restores a soft-deleted session by removing the deletedAt timestamp
  */
 export async function POST(request: NextRequest) {
@@ -20,16 +20,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Session ID required' }, { status: 400 });
     }
 
-    // Find the session by its original ID (not Firestore doc ID)
-    const sessionsRef = collection(db, COLLECTIONS.SESSIONS);
-    const q = query(sessionsRef, where('id', '==', sessionId));
-    const querySnapshot = await getDocs(q);
+    console.log('[RESTORE SESSION] Restoring UUID:', sessionId);
 
-    if (querySnapshot.empty) {
+    // Get session using UUID as document ID
+    const sessionDocRef = doc(db, COLLECTIONS.SESSIONS, sessionId);
+    const sessionDoc = await getDoc(sessionDocRef);
+
+    if (!sessionDoc.exists()) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     }
 
-    const sessionDoc = querySnapshot.docs[0];
     const sessionData = sessionDoc.data();
 
     // Check if it's actually deleted
@@ -38,14 +38,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Remove the deletedAt timestamp to restore
-    await updateDoc(doc(db, COLLECTIONS.SESSIONS, sessionDoc.id), {
+    await updateDoc(sessionDocRef, {
       deletedAt: null,
     });
+
+    console.log('[RESTORE SESSION] ✓ Restored UUID:', sessionId);
 
     return NextResponse.json({
       success: true,
       session: {
-        id: sessionData.id,
+        id: sessionId,  // UUID
+        mask: sessionData.mask,  // Public mask
         visitorEmail: sessionData.visitorEmail,
         startedAt: sessionData.startedAt?.toDate?.()?.toISOString() || new Date().toISOString(),
         lastActive: sessionData.lastActive?.toDate?.()?.toISOString() || new Date().toISOString(),
@@ -55,7 +58,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error restoring session:', error);
+    console.error('[RESTORE SESSION] Error:', error);
     return NextResponse.json({ error: 'Failed to restore session' }, { status: 500 });
   }
 }

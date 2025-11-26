@@ -8,7 +8,7 @@ import networkManager from '@/lib/networkManager';
 import TurnstileWidget from '@/components/TurnstileWidget';
 
 // Get Turnstile site key from environment
-const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '0x4AAAAAAAzPcRQFMSIBvmWw';
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '';
 
 export default function ChatInterface() {
   const { messages, loading, sending, fetchMessages, sendMessage, markMessagesAsRead, setChatOpen } = useBubbleMessages();
@@ -84,26 +84,10 @@ export default function ChatInterface() {
     return unsubscribe;
   }, [sendError]);
 
-  // Track captcha failures to visitor analytics
+  // Captcha tracking removed - not part of optimized analytics
   const trackCaptchaFailure = async () => {
-    try {
-      await fetch('/api/visitor-analytics/track', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          eventType: 'captcha_failed',
-          metadata: {
-            sessionId: visitorId,
-            visitorId: visitorId || session?.id,
-            attempts: captchaAttempts + 1,
-            page: window.location.pathname,
-            timestamp: new Date().toISOString(),
-          },
-        }),
-      });
-    } catch (error) {
-      console.error('[ChatInterface] Failed to track captcha failure:', error);
-    }
+    // No-op - captcha events not tracked in new system
+    console.debug('[ChatInterface] Captcha failure (not tracked)');
   };
 
   // Handle captcha verification
@@ -112,7 +96,11 @@ export default function ChatInterface() {
     setCaptchaToken(token);
     setCaptchaError(null);
     
-    // Track success
+    // Captcha tracking removed - not part of optimized analytics
+    console.debug('[ChatInterface] Captcha success (not tracked)');
+    
+    /*
+    // OLD CODE - captcha tracking removed
     fetch('/api/visitor-analytics/track', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -124,6 +112,7 @@ export default function ChatInterface() {
         },
       }),
     }).catch(console.error);
+    */
     
     // Auto-retry pending message
     if (pendingMessage) {
@@ -146,7 +135,7 @@ export default function ChatInterface() {
 
   // Retry sending message with captcha token
   const retrySendWithCaptcha = async (messageContent: string, token: string) => {
-    if (!visitorId) return;
+    if (!session?.id) return;
 
     try {
       const response = await fetch('/api/bubble/messages', {
@@ -156,7 +145,7 @@ export default function ChatInterface() {
           'X-Turnstile-Token': token,
         },
         body: JSON.stringify({
-          sessionId: visitorId,
+          sessionId: session.id,
           role: 'visitor',
           content: messageContent,
           visitorEmail: email || undefined,
@@ -195,7 +184,7 @@ export default function ChatInterface() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!inputMessage.trim() || isOffline) return;
+    if (!inputMessage.trim() || isOffline || !session?.id) return;
 
     const messageContent = inputMessage.trim();
     setInputMessage('');
@@ -215,7 +204,7 @@ export default function ChatInterface() {
           ...(captchaToken && { 'X-Turnstile-Token': captchaToken }),
         },
         body: JSON.stringify({
-          sessionId: visitorId,
+          sessionId: session?.id,
           role: 'visitor',
           content: messageContent,
           visitorEmail: email || undefined,
@@ -238,7 +227,11 @@ export default function ChatInterface() {
           setPendingMessage(messageContent);
           setSendError(null);
           
-          // Track that captcha was triggered
+          // Captcha tracking removed - not part of optimized analytics
+          console.debug('[ChatInterface] Captcha required (not tracked)');
+          
+          /*
+          // OLD CODE - captcha tracking removed
           fetch('/api/visitor-analytics/track', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -250,6 +243,7 @@ export default function ChatInterface() {
               },
             }),
           }).catch(console.error);
+          */
         } else {
           throw new Error(errorData.error || 'Failed to send message');
         }
@@ -286,10 +280,9 @@ export default function ChatInterface() {
   const visitorIdRef = useRef<string | null>(null);
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      import('@/lib/deviceFingerprint').then(({ generateEnhancedFingerprint }) => {
-        generateEnhancedFingerprint().then(fp => {
-          visitorIdRef.current = fp;
-        });
+      import('@/lib/deviceFingerprint').then(({ generateDeviceFingerprint }) => {
+        const fp = generateDeviceFingerprint();
+        visitorIdRef.current = fp;
       });
     }
   }, []);

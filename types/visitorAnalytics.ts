@@ -3,20 +3,12 @@
  * Privacy-focused, server-synced analytics system with compliance guardrails
  */
 
-// Event types that can be tracked
+// Event types that can be tracked - OPTIMIZED: Only high-value events
 export type VisitorEventType =
-  | "page_view"
-  | "bubble_open"
-  | "bubble_close"
-  | "bubble_interaction"
-  | "resume_view"
-  | "resume_download"
-  | "form_submit"
-  | "contact_open"
-  | "session_start"
-  | "session_end"
-  | "captcha_failed"
-  | "captcha_success";
+  | "resume_view"        // User views resume
+  | "resume_download"    // User downloads resume (HIGH VALUE!)
+  | "contact_open"       // User opens contact form
+  | "form_submit";       // User submits form (HIGH VALUE!)
 
 // Device classification
 export type DeviceClass = "mobile" | "tablet" | "desktop" | "unknown";
@@ -79,7 +71,8 @@ export interface DeviceSnapshot {
 
 // Aggregated visitor profile (server-computed)
 export interface VisitorProfile {
-  id: string; // Hashed/anonymized visitor ID
+  id: string; // UUID - permanent visitor identifier
+  mask?: string; // Public mask for portfolio/ban reference
   firstVisit: Date;
   lastVisit: Date;
   totalVisits: number;
@@ -134,9 +127,12 @@ export interface AnalyticsAggregates {
   totalSessions: number;
   totalPageViews: number;
   totalInteractions: number;
+  // NEW: All 4 critical analytics events
   totalResumeViews: number; // Total times resume was viewed
   totalResumeDownloads: number; // Total times resume was downloaded
+  totalFormSubmissions: number; // Total form submissions
   visitorsWhoDownloaded: number; // Unique visitors who downloaded (for conversion rate)
+  visitorsWhoSubmitted: number; // Unique visitors who submitted forms
   activeVisitors: number; // Real-time or near-real-time
   topRegions: RegionStat[];
   topDevices: DeviceStat[];
@@ -259,18 +255,10 @@ export const MAX_GEO_HISTORY_LENGTH = 10; // Limit geo location history
 // Validation helpers
 export function isValidEventType(type: string): type is VisitorEventType {
   const validTypes: VisitorEventType[] = [
-    "page_view",
-    "bubble_open",
-    "bubble_close",
-    "bubble_interaction",
     "resume_view",
-    "resume_download",
-    "form_submit",
+    "resume_download", 
     "contact_open",
-    "session_start",
-    "session_end",
-    "captcha_failed",
-    "captcha_success",
+    "form_submit"
   ];
   return validTypes.includes(type as VisitorEventType);
 }
@@ -285,6 +273,7 @@ export function firestoreToVisitorProfile(doc: any): VisitorProfile {
   const data = doc.data();
   return {
     id: doc.id,
+    mask: data.mask, // Include mask for admin reference
     firstVisit: data.firstVisit?.toDate() || new Date(),
     lastVisit: data.lastVisit?.toDate() || new Date(),
     totalVisits: data.totalVisits || 0,
@@ -339,26 +328,6 @@ export function firestoreToVisitorEvent(doc: any): VisitorEvent {
     timestamp: data.timestamp?.toDate() || new Date(),
     metadata: data.metadata,
   };
-}
-
-// Privacy-compliant visitor ID generation (hashed)
-export function generateVisitorId(fingerprint: string): string {
-  // Use device-patched UUID format for consistent identification
-  // DJB2 hash algorithm for stable UUID generation
-  let hash = 5381;
-  for (let i = 0; i < fingerprint.length; i++) {
-    const char = fingerprint.charCodeAt(i);
-    hash = ((hash << 5) + hash) + char; // hash * 33 + char
-  }
-  const hashValue = Math.abs(hash);
-  return 'device_' + hashValue.toString(36);
-}
-
-// Session ID generation - now uses same device fingerprint for consistency
-export function generateSessionId(fingerprint: string): string {
-  // Use same fingerprint-based ID as visitor ID for consistency
-  // This ensures all IDs (visitor, session, bubble) use device_<fingerprint> format
-  return generateVisitorId(fingerprint);
 }
 
 // Device class detection helper

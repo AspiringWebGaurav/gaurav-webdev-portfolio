@@ -24,6 +24,9 @@ interface RateLimitConfig {
   maxRequests: number;
   banDuration?: number;
   skipSuccessfulRequests?: boolean;
+  strictMode?: boolean; // Enable enhanced bot detection
+  burstProtection?: boolean; // Detect suspicious burst patterns
+  progressiveBackoff?: boolean; // Gradual penalties instead of instant ban
 }
 
 interface RateLimitEntry {
@@ -33,6 +36,7 @@ interface RateLimitEntry {
   blocked: boolean;
   blockExpiry?: number;
   suspiciousScore: number;
+  violations: number; // Track number of violations for progressive backoff
 }
 
 interface BotDetectionResult {
@@ -43,19 +47,30 @@ interface BotDetectionResult {
 }
 
 // Rate limit configurations for different endpoints
+// OPTIMIZED: Smart rate limiting - strict on bots, fair to users
 const RATE_LIMITS = {
-  // Chat messages - generous but protected
+  // Chat messages - BALANCED: prevent spam but allow natural conversation
   chatMessage: {
     windowMs: 60 * 1000, // 1 minute
-    maxRequests: 10, // 10 messages per minute
-    banDuration: 5 * 60 * 1000, // 5 min ban if exceeded
+    maxRequests: 20, // 20 messages per minute (natural conversation rate)
+    banDuration: 3 * 60 * 1000, // 3 min ban if exceeded (was 10)
+    strictMode: true, // Enable enhanced bot detection
+    progressiveBackoff: true, // Gradual penalties instead of instant ban
   },
   
-  // Chat polling - very generous (for real-time feel)
+  // Admin operations - GENEROUS: admins need to work fast
+  admin: {
+    windowMs: 60 * 1000,
+    maxRequests: 100, // Much higher limit for admin
+    banDuration: 1 * 60 * 1000, // Short cooldown
+  },
+  
+  // Chat polling - generous but with burst protection
   chatPoll: {
     windowMs: 60 * 1000,
     maxRequests: 120, // 120 polls per minute (every 500ms is ok)
     banDuration: 2 * 60 * 1000,
+    burstProtection: true, // Detect rapid bursts
   },
   
   // Typing indicators - moderate
@@ -65,18 +80,20 @@ const RATE_LIMITS = {
     banDuration: 2 * 60 * 1000,
   },
   
-  // Session creation - strict
+  // Session creation - STRICT but fair: prevent bot account spam
   sessionCreate: {
     windowMs: 60 * 60 * 1000, // 1 hour
-    maxRequests: 5, // Only 5 new sessions per hour
-    banDuration: 30 * 60 * 1000, // 30 min ban
+    maxRequests: 5, // 5 new sessions per hour (increased from 3)
+    banDuration: 30 * 60 * 1000, // 30 min ban (reduced from 60)
+    strictMode: true,
   },
   
-  // Contact form - strict
+  // Contact form - VERY STRICT
   contactForm: {
     windowMs: 60 * 60 * 1000, // 1 hour
     maxRequests: 3, // Only 3 submissions per hour
     banDuration: 60 * 60 * 1000, // 1 hour ban
+    strictMode: true,
   },
   
   // General API - moderate
@@ -102,15 +119,21 @@ setInterval(() => {
 }, 5 * 60 * 1000);
 
 /**
- * Get client identifier (IP + fingerprint)
+ * Get client identifier - FIXED: Prioritize fingerprint over IP
  */
 function getClientId(request: NextRequest, fingerprint?: string): string {
+  // PRIORITY 1: Fingerprint (most accurate for user tracking)
+  if (fingerprint) {
+    return `fp:${fingerprint}`;
+  }
+  
+  // PRIORITY 2: IP address (fallback)
   const ip = 
     request.headers.get('x-forwarded-for')?.split(',')[0] ||
     request.headers.get('x-real-ip') ||
     'unknown';
   
-  return fingerprint ? `${ip}:${fingerprint}` : ip;
+  return `ip:${ip}`;
 }
 
 /**
@@ -234,6 +257,7 @@ export async function checkRateLimit(
       lastRequest: now,
       blocked: false,
       suspiciousScore: 0,
+      violations: 0, // Initialize violations counter
     };
     rateLimitStore.set(key, entry);
   }
@@ -252,29 +276,83 @@ export async function checkRateLimit(
 
   // Reset if window expired
   if (now - entry.firstRequest > config.windowMs) {
+    // Window expired - reset but keep violation count for progressive backoff
+    const previousViolations = entry.violations;
     entry.count = 0;
     entry.firstRequest = now;
     entry.blocked = false;
     entry.blockExpiry = undefined;
+    entry.violations = previousViolations; // Preserve violations
+  }
+
+  // ENHANCED: Burst protection - detect rapid consecutive requests
+  if (config.burstProtection) {
+    const timeSinceLastRequest = now - entry.lastRequest;
+    if (timeSinceLastRequest < 100 && entry.count > 5) {
+      // Less than 100ms between requests, multiple times = bot behavior
+      entry.suspiciousScore += 20;
+    }
   }
 
   // Increment request count
   entry.count++;
   entry.lastRequest = now;
 
-  // Bot detection (only on certain thresholds)
+  // ENHANCED: Bot detection with strict mode
   let botDetection: BotDetectionResult | null = null;
-  if (entry.count > config.maxRequests * 0.7) {
-    // Start checking for bots when approaching limit
+  const detectionThreshold = config.strictMode ? 0.5 : 0.7;
+  
+  if (entry.count > config.maxRequests * detectionThreshold) {
+    // Start checking for bots when approaching limit (earlier in strict mode)
     botDetection = detectBot(request, entry);
     entry.suspiciousScore = Math.max(entry.suspiciousScore, botDetection.confidence);
+    
+    // ENHANCED: In strict mode, block bots immediately
+    if (config.strictMode && botDetection.isBot) {
+      entry.blocked = true;
+      entry.blockExpiry = now + (config.banDuration || 30 * 60 * 1000);
+      
+      // Log bot detection
+      if (adminDb) {
+        adminDb.collection('rateLimitBotDetections').add({
+          clientId,
+          type,
+          timestamp: new Date(),
+          suspiciousScore: entry.suspiciousScore,
+          reason: botDetection.reason,
+          userAgent: request.headers.get('user-agent'),
+        }).catch(err => console.error('[RateLimit] Failed to log bot:', err));
+      }
+      
+      return {
+        allowed: false,
+        remaining: 0,
+        resetAt: entry.blockExpiry,
+        requiresCaptcha: true,
+        botDetected: true,
+        reason: `Bot detected: ${botDetection.reason}`,
+      };
+    }
   }
 
   // Check if limit exceeded
   if (entry.count > config.maxRequests) {
+    // Increment violations
+    entry.violations++;
+    
+    // PROGRESSIVE BACKOFF: Calculate ban duration based on violations
+    let banDuration = config.banDuration || 5 * 60 * 1000;
+    
+    if (config.progressiveBackoff) {
+      // Progressive penalties:
+      // 1st: 30s, 2nd: 2min, 3rd: 5min, 4th+: full ban duration
+      const penalties = [30 * 1000, 2 * 60 * 1000, 5 * 60 * 1000];
+      banDuration = penalties[Math.min(entry.violations - 1, penalties.length - 1)] || banDuration;
+    }
+    
     // Apply ban
     entry.blocked = true;
-    entry.blockExpiry = now + (config.banDuration || 5 * 60 * 1000);
+    entry.blockExpiry = now + banDuration;
     
     // Log to Firebase for analysis (async, don't await)
     if (adminDb) {
@@ -347,6 +425,7 @@ export async function verifyTurnstile(token: string): Promise<boolean> {
 
 /**
  * Middleware helper for easy integration
+ * ENHANCED: Admin exemption and fingerprint priority
  */
 export async function rateLimitMiddleware(
   request: NextRequest,
@@ -359,7 +438,7 @@ export async function rateLimitMiddleware(
 ): Promise<{ response: Response | null; headers: Record<string, string> }> {
   const { sessionId, fingerprint, turnstileToken } = options;
 
-  // BYPASS: Check for test mode header
+  // BYPASS 1: Test mode header
   const isTestMode = request.headers.get('x-test-mode') === 'true';
   if (isTestMode && process.env.NODE_ENV === 'development') {
     console.log('[RateLimit] Test mode bypass activated');
@@ -372,6 +451,15 @@ export async function rateLimitMiddleware(
         'X-Test-Mode': 'true',
       },
     };
+  }
+
+  // BYPASS 2: Admin authentication - use more generous limits
+  const authHeader = request.headers.get('authorization');
+  const isAdmin = authHeader?.startsWith('Bearer ');
+  
+  if (isAdmin) {
+    // Use admin rate limits instead
+    type = 'admin' as keyof typeof RATE_LIMITS;
   }
 
   // Check rate limit

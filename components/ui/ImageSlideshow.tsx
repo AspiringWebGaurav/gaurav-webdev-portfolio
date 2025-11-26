@@ -17,6 +17,7 @@ interface ImageSlideshowProps {
  * Automatic image slideshow with smooth fade transitions
  * Perfect for project galleries with multiple images
  * Smooth and slow like SwiperJS
+ * Now with error handling for slow-loading images
  */
 export default function ImageSlideshow({
   images,
@@ -28,24 +29,59 @@ export default function ImageSlideshow({
   sizes = "(max-width: 640px) 80vw, 570px",
 }: ImageSlideshowProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
+  const [imageLoading, setImageLoading] = useState<Set<number>>(new Set());
+
+  // Debug logging
+  console.log('ImageSlideshow received:', { images, alt, imagesType: typeof images, isArray: Array.isArray(images) });
 
   // Handle single or no images
   if (!images || images.length === 0) {
+    console.warn('ImageSlideshow: No images provided');
     return null;
   }
+
+  // Handle image load error
+  const handleImageError = useCallback((index: number) => {
+    console.warn(`Failed to load image at index ${index}: ${images[index]}`);
+    setImageErrors(prev => new Set(prev).add(index));
+    setImageLoading(prev => {
+      const next = new Set(prev);
+      next.delete(index);
+      return next;
+    });
+  }, [images]);
+
+  // Handle image load success
+  const handleImageLoad = useCallback((index: number) => {
+    setImageLoading(prev => {
+      const next = new Set(prev);
+      next.delete(index);
+      return next;
+    });
+  }, []);
 
   // If only one image, show it without slideshow
   if (images.length === 1) {
     return (
-      <Image
-        src={images[0]}
-        alt={alt}
-        fill
-        sizes={sizes}
-        className={`z-10 object-contain object-bottom ${className}`}
-        loading={priority ? undefined : "lazy"}
-        priority={priority}
-      />
+      <div className="relative w-full h-full">
+        <Image
+          src={images[0]}
+          alt={alt}
+          fill
+          sizes={sizes}
+          className={`z-10 object-contain object-bottom ${className}`}
+          loading={priority ? undefined : "lazy"}
+          priority={priority}
+          onError={() => handleImageError(0)}
+          onLoad={() => handleImageLoad(0)}
+        />
+        {imageErrors.has(0) && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/20 text-white/70">
+            <p className="text-sm">Image temporarily unavailable</p>
+          </div>
+        )}
+      </div>
     );
   }
 
@@ -68,6 +104,8 @@ export default function ImageSlideshow({
       {/* All images rendered with stacking */}
       {images.map((image, index) => {
         const isActive = index === currentIndex;
+        const hasError = imageErrors.has(index);
+        const isLoading = imageLoading.has(index);
 
         return (
           <div
@@ -80,15 +118,31 @@ export default function ImageSlideshow({
               pointerEvents: isActive ? "auto" : "none",
             }}
           >
-            <Image
-              src={image}
-              alt={`${alt} - Image ${index + 1}`}
-              fill
-              sizes={sizes}
-              className={`object-contain object-bottom ${className}`}
-              loading={priority && index === 0 ? undefined : "lazy"}
-              priority={priority && index === 0}
-            />
+            {!hasError ? (
+              <Image
+                src={image}
+                alt={`${alt} - Image ${index + 1}`}
+                fill
+                sizes={sizes}
+                className={`object-contain object-bottom ${className}`}
+                loading={priority && index === 0 ? undefined : "lazy"}
+                priority={priority && index === 0}
+                onError={() => handleImageError(index)}
+                onLoad={() => handleImageLoad(index)}
+                unoptimized={false}
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/20 text-white/70">
+                <p className="text-sm">Image temporarily unavailable</p>
+              </div>
+            )}
+            
+            {/* Loading indicator for active image */}
+            {isActive && isLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+              </div>
+            )}
           </div>
         );
       })}

@@ -2,10 +2,12 @@
  * Next.js Proxy - Server-Side Request Handler
  * Pure server-side ban blocking - NO client storage
  * All state managed on server via Firestore
+ * USES NEW UUID-SYNC SYSTEM
  */
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { identifyVisitor, firestoreGetVisitorDocument, translateMaskToUUID } from "./lib/uuid-sync/server";
 
 const PROTECTED_ROUTES = [
   "/admin/dashboard",
@@ -14,72 +16,58 @@ const PROTECTED_ROUTES = [
 ];
 const AUTH_ROUTES = ["/admin/login"];
 
-// Generate visitor ID (same logic as backend)
-function generateVisitorId(fingerprint: string): string {
-  let hash = 5381;
-  for (let i = 0; i < fingerprint.length; i++) {
-    const char = fingerprint.charCodeAt(i);
-    hash = ((hash << 5) + hash) + char;
-  }
-  const hashValue = Math.abs(hash);
-  return 'device_' + hashValue.toString(36);
-}
-
-// Check ban status using Firestore REST API (pure server-side)
-async function checkBanStatus(request: NextRequest): Promise<{ banned: boolean; banReason?: string; banCategory?: string }> {
+// Check ban status using NEW UUID system
+async function checkBanStatus(request: NextRequest): Promise<{ 
+  banned: boolean; 
+  banReason?: string; 
+  banCategory?: string;
+  uuid?: string;
+  mask?: string;
+}> {
   try {
-    const userAgent = request.headers.get("user-agent") || "";
-    const ipAddress = request.headers.get("x-forwarded-for")?.split(',')[0]?.trim() || 
-                     request.headers.get("x-real-ip") || 
-                     "unknown";
+    // Try to get mask from cookie (if visitor already identified)
+    let mask = request.cookies.get("visitor_mask")?.value;
     
-    const fingerprint = `${ipAddress}_${userAgent}`;
-    const visitorId = generateVisitorId(fingerprint);
-
-    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-    if (!projectId) {
-      console.log('[Proxy] No Firebase project ID');
-      return { banned: false };
+    // If no cookie, generate server-side fingerprint to identify visitor
+    if (!mask) {
+      const ipAddress = 
+        request.headers.get("x-forwarded-for")?.split(",")[0] ||
+        request.headers.get("x-real-ip") ||
+        "unknown";
+      const userAgent = request.headers.get("user-agent") || "unknown";
+      
+      // Create fingerprint from IP + User Agent (server-side identification)
+      const fingerprint = `${ipAddress}_${userAgent}`;
+      
+      // Identify visitor and get mask
+      mask = await identifyVisitor(fingerprint);
+      console.log('[Proxy] Generated mask from fingerprint:', mask);
     }
-
-    const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/visitorProfiles/${visitorId}`;
     
-    const response = await fetch(firestoreUrl, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      cache: 'no-store',
-    });
-
-    if (!response.ok) {
-      // Document doesn't exist - not banned
-      return { banned: false };
-    }
-
-    const data = await response.json();
-    const fields = data.fields;
-
-    if (fields?.banned?.booleanValue === true) {
-      const banReason = fields?.banReason?.stringValue || 'Security Violation';
-      const banCategory = fields?.banCategory?.stringValue || 'normal';
+    if (mask) {
+      // Translate mask to UUID
+      const uuid = await translateMaskToUUID(mask);
       
-      console.log('[Proxy] ⛔ BANNED USER BLOCKED:', {
-        visitorId,
-        reason: banReason,
-        category: banCategory
-      });
+      // Get full visitor document to check ban status
+      const visitorDoc = await firestoreGetVisitorDocument(uuid);
       
-      return {
-        banned: true,
-        banReason,
-        banCategory,
-      };
+      if (visitorDoc && visitorDoc.banned === true) {
+        console.log('[Proxy] 🚫 Banned visitor detected:', mask);
+        return {
+          banned: true,
+          banReason: visitorDoc.banReason || 'Security Violation',
+          banCategory: visitorDoc.banCategory || 'normal',
+          uuid,
+          mask,
+        };
+      }
     }
-
-    return { banned: false };
+    
+    // No mask or not banned
+    return { banned: false, mask };
   } catch (error) {
     console.error('[Proxy] Ban check error:', error);
+    // Fail open - allow access on error
     return { banned: false };
   }
 }
@@ -100,18 +88,44 @@ export async function proxy(request: NextRequest) {
 
   // SERVER-SIDE BAN CHECK - runs before ANY content loads
   if (!shouldSkipBanCheck) {
-    const { banned, banReason, banCategory } = await checkBanStatus(request);
+    const { banned, banReason, banCategory, mask } = await checkBanStatus(request);
 
     if (banned) {
+      console.log('[Proxy] Redirecting banned visitor to /banned page');
+      
       // Build banned URL with server-side query params (NO cookies/storage)
       const bannedUrl = new URL('/banned', request.url);
       bannedUrl.searchParams.set('reason', banReason || 'Security Violation');
       bannedUrl.searchParams.set('category', banCategory || 'normal');
-      bannedUrl.searchParams.set('t', Date.now().toString()); // Prevent caching
+      bannedUrl.searchParams.set('timestamp', new Date().toISOString());
       
-      console.log('[Proxy] Redirecting banned user to:', bannedUrl.pathname);
+      const response = NextResponse.redirect(bannedUrl, { status: 307 }); // Temporary redirect
       
-      return NextResponse.redirect(bannedUrl, { status: 307 }); // Temporary redirect
+      // Set mask cookie for persistence
+      if (mask) {
+        response.cookies.set('visitor_mask', mask, {
+          httpOnly: false, // Needs to be accessible by client JS
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 60 * 60 * 24 * 365, // 1 year
+          path: '/',
+        });
+      }
+      
+      return response;
+    }
+    
+    // Set mask cookie for non-banned visitors too (for consistency)
+    if (mask && !request.cookies.get("visitor_mask")) {
+      const response = NextResponse.next();
+      response.cookies.set('visitor_mask', mask, {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 365,
+        path: '/',
+      });
+      return response;
     }
   }
 

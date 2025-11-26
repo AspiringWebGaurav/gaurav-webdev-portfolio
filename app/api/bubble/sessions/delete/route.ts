@@ -1,5 +1,5 @@
 /**
- * Delete Bubble Session API Route
+ * Delete Bubble Session API Route (UUID-sync compatible)
  * DELETE /api/bubble/sessions/delete
  * Handles single session deletion with cascade to messages and recycle bin integration
  */
@@ -18,7 +18,7 @@ export async function DELETE(request: NextRequest) {
     const token = authHeader.substring(7);
     await adminAuth.verifyIdToken(token);
 
-    // Get session ID from request body
+    // Get session ID (UUID) from request body
     const { sessionId } = await request.json();
 
     if (!sessionId) {
@@ -28,9 +28,9 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    console.log(`[DELETE SESSION] Starting cascade delete for session: ${sessionId}`);
+    console.log(`[DELETE SESSION] Starting cascade delete for UUID: ${sessionId}`);
     
-    // Delete all messages for this session
+    // Delete all messages for this session (messages use UUID as sessionId)
     const messagesQuery = adminDb.collection('bubbleMessages').where('sessionId', '==', sessionId);
     const messagesSnapshot = await messagesQuery.get();
     
@@ -53,11 +53,11 @@ export async function DELETE(request: NextRequest) {
       await messageBatch.commit();
     }
 
-    // Delete the session itself
-    const sessionsQuery = adminDb.collection('bubbleSessions').where('id', '==', sessionId);
-    const sessionsSnapshot = await sessionsQuery.get();
+    // Delete the session using UUID as document ID
+    const sessionDocRef = adminDb.collection('og_uuid_sessions').doc(sessionId);
+    const sessionDoc = await sessionDocRef.get();
     
-    if (sessionsSnapshot.empty) {
+    if (!sessionDoc.exists) {
       console.log(`[DELETE SESSION] Session not found: ${sessionId}`);
       return NextResponse.json(
         { error: "Session not found" },
@@ -66,9 +66,9 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Delete the session document
-    await sessionsSnapshot.docs[0].ref.delete();
+    await sessionDocRef.delete();
 
-    console.log(`[DELETE SESSION] Successfully deleted session ${sessionId} with ${messageCount} messages`);
+    console.log(`[DELETE SESSION] ✓ Deleted session ${sessionId} with ${messageCount} messages`);
 
     return NextResponse.json({
       success: true,

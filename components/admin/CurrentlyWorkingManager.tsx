@@ -880,7 +880,7 @@ export default function CurrentlyWorkingManager() {
               </div>
               <p className="text-sm text-gray-500 mb-1">{item.title}</p>
               <p className="text-gray-600 text-sm mb-3">{item.description}</p>                {/* Images preview */}
-                {item.images && item.images.length > 0 && (
+                {Array.isArray(item.images) && item.images.length > 0 && (
                   <div className="flex gap-2 mb-3">
                     {item.images.slice(0, 4).map((img, idx) => (
                       <div
@@ -896,7 +896,7 @@ export default function CurrentlyWorkingManager() {
                         />
                       </div>
                     ))}
-                    {item.images.length > 4 && (
+                    {Array.isArray(item.images) && item.images.length > 4 && (
                       <div className="w-16 h-16 rounded border border-gray-200 bg-gray-100 flex items-center justify-center text-gray-600 text-sm">
                         +{item.images.length - 4}
                       </div>
@@ -906,7 +906,7 @@ export default function CurrentlyWorkingManager() {
 
                 {/* Tech Icons */}
                 <div className="flex gap-2">
-                  {item.iconLists.filter(icon => {
+                  {Array.isArray(item.iconLists) && item.iconLists.filter(icon => {
                     // Only show valid URLs (http/https)
                     try {
                       return icon.startsWith('http://') || icon.startsWith('https://');
@@ -927,7 +927,7 @@ export default function CurrentlyWorkingManager() {
                       />
                     </div>
                   ))}
-                  {item.iconLists.length > 6 && (
+                  {Array.isArray(item.iconLists) && item.iconLists.length > 6 && (
                     <div className="w-8 h-8 rounded border border-gray-200 bg-gray-100 flex items-center justify-center text-gray-600 text-xs">
                       +{item.iconLists.length - 6}
                     </div>

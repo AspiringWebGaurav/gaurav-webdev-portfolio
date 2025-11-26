@@ -1403,7 +1403,7 @@ export default function ProjectManager() {
 
               {/* Technology Icons */}
               <div className="flex items-center gap-2 mb-3 flex-wrap">
-                {project.iconLists.slice(0, 5).map((icon, idx) => (
+                {Array.isArray(project.iconLists) && project.iconLists.slice(0, 5).map((icon, idx) => (
                   <div
                     key={idx}
                     className="w-8 h-8 rounded-full bg-black border border-gray-700 flex items-center justify-center overflow-hidden p-1"
@@ -1421,7 +1421,7 @@ export default function ProjectManager() {
                     </div>
                   </div>
                 ))}
-                {project.iconLists.length > 5 && (
+                {Array.isArray(project.iconLists) && project.iconLists.length > 5 && (
                   <span className="text-xs text-gray-500">
                     +{project.iconLists.length - 5}
                   </span>

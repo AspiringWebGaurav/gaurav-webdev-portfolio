@@ -446,7 +446,7 @@ export default function WorkExperienceManager() {
     setDeleteTargetTitle("");
 
     // Show progress notification
-    showToast.info("Deleting work experience...", { duration: 2000 });
+    showToast.info("Deleting work experience...", undefined, { autoClose: 2000 });
 
     try {
       // Delete thumbnail from cloud if it's stored in Firebase Storage

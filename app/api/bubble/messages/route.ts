@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { collection, addDoc, query, where, getDocs, orderBy, limit, updateDoc, doc, serverTimestamp, increment } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, orderBy, limit, updateDoc, doc, setDoc, getDoc, serverTimestamp, increment } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { v4 as uuidv4 } from 'uuid';
 import { rateLimitMiddleware } from '@/lib/rateLimit';
 
 const COLLECTIONS = {
-  SESSIONS: 'bubbleSessions',
+  SESSIONS: 'og_uuid_sessions',
   MESSAGES: 'bubbleMessages',
   TOOLTIP_EVENTS: 'bubbleTooltipEvents',
 };
@@ -92,28 +92,27 @@ export async function GET(request: NextRequest) {
     // Clean _docId from response
     messages.forEach(msg => delete msg._docId);
 
-    // Fetch session typing status and online status
-    const sessionsRef = collection(db, COLLECTIONS.SESSIONS);
-    const sessionQuery = query(sessionsRef, where('id', '==', sessionId));
-    const sessionSnapshot = await getDocs(sessionQuery);
+    // Fetch session typing status and online status using UUID as doc ID
+    const sessionDocRef = doc(db, COLLECTIONS.SESSIONS, sessionId);
+    const sessionDoc = await getDoc(sessionDocRef);
     
     let typingData = {};
     let unreadCounts = { visitorUnread: 0, adminUnread: 0 };
     
-    if (!sessionSnapshot.empty) {
-      const sessionDoc = sessionSnapshot.docs[0].data();
+    if (sessionDoc.exists()) {
+      const sessionData = sessionDoc.data();
       typingData = {
-        adminTyping: sessionDoc.adminTyping || false,
-        visitorTyping: sessionDoc.visitorTyping || false,
-        adminLastSeen: sessionDoc.adminLastSeen?.toDate() || null,
-        visitorLastSeen: sessionDoc.visitorLastSeen?.toDate() || null,
-        adminOnline: sessionDoc.adminOnline || false,
-        visitorOnline: sessionDoc.visitorOnline || false,
+        adminTyping: sessionData.adminTyping || false,
+        visitorTyping: sessionData.visitorTyping || false,
+        adminLastSeen: sessionData.adminLastSeen?.toDate() || null,
+        visitorLastSeen: sessionData.visitorLastSeen?.toDate() || null,
+        adminOnline: sessionData.adminOnline || false,
+        visitorOnline: sessionData.visitorOnline || false,
       };
       
       unreadCounts = {
-        visitorUnread: sessionDoc.unreadVisitorMessages || 0,
-        adminUnread: sessionDoc.unreadAdminReplies || 0,
+        visitorUnread: sessionData.unreadVisitorMessages || 0,
+        adminUnread: sessionData.unreadAdminReplies || 0,
       };
 
       // Update last seen for current viewer
@@ -126,7 +125,7 @@ export async function GET(request: NextRequest) {
           updateData.visitorLastSeen = serverTimestamp();
           updateData.visitorOnline = true;
         }
-        await updateDoc(sessionSnapshot.docs[0].ref, updateData);
+        await updateDoc(sessionDocRef, updateData);
       }
     }
 
@@ -154,18 +153,24 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { sessionId, role, content, visitorEmail, fingerprint, turnstileToken } = body;
+    const { sessionId, role, content, visitorEmail, fingerprint, mask, turnstileToken } = body;
 
-    // Rate limiting - moderate for messages
+    // ENHANCED: Stricter rate limiting for message sending
     const { response: rateLimitResponse, headers: rateLimitHeaders } = await rateLimitMiddleware(request, 'chatMessage', {
       sessionId,
-      fingerprint,
+      fingerprint: fingerprint || mask, // Use mask as fallback identifier
       turnstileToken,
     });
     if (rateLimitResponse) return rateLimitResponse;
 
     if (!sessionId || !role || !content) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+    
+    // Validate sessionId format (UUID)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(sessionId)) {
+      return NextResponse.json({ error: 'Invalid session ID format' }, { status: 400 });
     }
 
     if (role !== 'visitor' && role !== 'admin') {
@@ -174,6 +179,11 @@ export async function POST(request: NextRequest) {
 
     if (!content.trim()) {
       return NextResponse.json({ error: 'Content cannot be empty' }, { status: 400 });
+    }
+    
+    // ENHANCED: Content length validation (prevent spam with huge messages)
+    if (content.length > 2000) {
+      return NextResponse.json({ error: 'Message too long (max 2000 characters)' }, { status: 400 });
     }
 
     const messageId = uuidv4();
@@ -193,13 +203,11 @@ export async function POST(request: NextRequest) {
 
     await addDoc(collection(db, COLLECTIONS.MESSAGES), messageData);
 
-    // Update or create session
-    const sessionsRef = collection(db, COLLECTIONS.SESSIONS);
-    const q = query(sessionsRef, where('id', '==', sessionId));
-    const querySnapshot = await getDocs(q);
+    // Update session using UUID as doc ID
+    const sessionDocRef = doc(db, COLLECTIONS.SESSIONS, sessionId);
+    const sessionDoc = await getDoc(sessionDocRef);
 
-    if (!querySnapshot.empty) {
-      const sessionDoc = querySnapshot.docs[0];
+    if (sessionDoc.exists()) {
       const updateData: any = {
         lastActive: serverTimestamp(),
         messageCount: increment(1),
@@ -232,9 +240,9 @@ export async function POST(request: NextRequest) {
         updateData.visitorEmail = visitorEmail;
       }
 
-      await updateDoc(doc(db, COLLECTIONS.SESSIONS, sessionDoc.id), updateData);
+      await updateDoc(sessionDocRef, updateData);
     } else {
-      // Create new session if it doesn't exist
+      // Create new session if it doesn't exist - use setDoc with UUID as doc ID
       const newSessionData: any = {
         id: sessionId,
         startedAt: serverTimestamp(),
@@ -250,7 +258,7 @@ export async function POST(request: NextRequest) {
         visitorLastSeen: role === 'visitor' ? serverTimestamp() : null,
       };
 
-      await addDoc(collection(db, COLLECTIONS.SESSIONS), newSessionData);
+      await setDoc(doc(db, COLLECTIONS.SESSIONS, sessionId), newSessionData);
 
       // If admin is replying to a new session, create tooltip event
       if (role === 'admin') {
@@ -317,6 +325,8 @@ export async function PUT(request: NextRequest) {
           await updateDoc(docSnapshot.ref, {
             read: true,
             readAt: serverTimestamp(),
+            delivered: true,
+            deliveredAt: serverTimestamp(),
           });
         }
       }
@@ -345,11 +355,10 @@ export async function PUT(request: NextRequest) {
 
     // Reset unread count for the reading party
     if (role) {
-      const sessionsRef = collection(db, COLLECTIONS.SESSIONS);
-      const sessionQuery = query(sessionsRef, where('id', '==', sessionId));
-      const sessionSnapshot = await getDocs(sessionQuery);
+      const sessionDocRef = doc(db, COLLECTIONS.SESSIONS, sessionId);
+      const sessionDoc = await getDoc(sessionDocRef);
       
-      if (!sessionSnapshot.empty) {
+      if (sessionDoc.exists()) {
         const updateData: any = {};
         if (role === 'admin') {
           updateData.unreadVisitorMessages = 0;
@@ -357,7 +366,7 @@ export async function PUT(request: NextRequest) {
           updateData.unreadAdminReplies = 0;
           updateData.hasUnreadTooltip = false;
         }
-        await updateDoc(sessionSnapshot.docs[0].ref, updateData);
+        await updateDoc(sessionDocRef, updateData);
       }
     }
 

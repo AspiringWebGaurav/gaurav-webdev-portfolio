@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { MessageCircle, X, WifiOff } from 'lucide-react';
 import { useBubbleSession } from '@/contexts/BubbleSessionContext';
 import { useChatBubbleControl } from '@/contexts/ChatBubbleControlContext';
-import { useInteractionTracking } from '@/lib/useVisitorTracking';
 import BubblePanel from './BubblePanel';
 import networkManager from '@/lib/networkManager';
 
@@ -14,10 +13,16 @@ export default function ChatBubble() {
   const [isOffline, setIsOffline] = useState(false);
   const { session, loading, markTooltipRead } = useBubbleSession();
   const { isOpen, viewMode, openBubble, closeBubble } = useChatBubbleControl();
-  const { trackBubbleOpen, trackBubbleClose } = useInteractionTracking();
   const [bubbleSettings, setBubbleSettings] = useState({
     bubbleColor: '#2563eb',
     enableTooltip: true,
+    bubbleIcon: 'message-circle',
+    bubbleSize: 'medium',
+    showBubbleText: false,
+    panelWidth: 400,
+    panelHeight: 600,
+    theme: 'light',
+    soundEnabled: false,
   });
 
   // Fetch bubble settings
@@ -28,8 +33,15 @@ export default function ChatBubble() {
         if (response.ok) {
           const data = await response.json();
           setBubbleSettings({
-            bubbleColor: data.bubbleColor || '#2563eb',
-            enableTooltip: data.enableTooltip !== undefined ? data.enableTooltip : true,
+            bubbleColor: data.settings.bubbleColor || '#2563eb',
+            enableTooltip: data.settings.enableTooltip !== undefined ? data.settings.enableTooltip : true,
+            bubbleIcon: data.settings.bubbleIcon || 'message-circle',
+            bubbleSize: data.settings.bubbleSize || 'medium',
+            showBubbleText: data.settings.showBubbleText !== undefined ? data.settings.showBubbleText : false,
+            panelWidth: data.settings.panelWidth || 400,
+            panelHeight: data.settings.panelHeight || 600,
+            theme: data.settings.theme || 'light',
+            soundEnabled: data.settings.soundEnabled !== undefined ? data.settings.soundEnabled : false,
           });
         }
       } catch (error) {
@@ -65,15 +77,20 @@ export default function ChatBubble() {
   }, [session?.hasUnreadTooltip, bubbleSettings.enableTooltip, isOpen]);
 
   const handleToggle = () => {
+    if (bubbleSettings.soundEnabled) {
+      // Play notification sound
+      const audio = new Audio('/sounds/notification.mp3');
+      audio.volume = 0.3;
+      audio.play().catch(() => {});
+    }
+    
     if (!isOpen && showTooltip) {
       markTooltipRead();
       setShowTooltip(false);
     }
     if (isOpen) {
-      trackBubbleClose();
       closeBubble();
     } else {
-      trackBubbleOpen();
       openBubble('main');
     }
   };
@@ -81,7 +98,6 @@ export default function ChatBubble() {
   const handleClose = () => {
     // Trigger closing animation
     setIsClosing(true);
-    trackBubbleClose();
     
     // Wait for animation to complete before actually closing
     setTimeout(() => {
@@ -114,11 +130,9 @@ export default function ChatBubble() {
             
             ${/* Tablet & Desktop: Floating panel */''} 
             sm:bottom-20 sm:right-4 sm:left-auto sm:top-auto
-            sm:w-[380px] sm:h-[580px] sm:max-h-[calc(100vh-100px)]
-            md:w-[400px] md:h-[600px]
-            lg:w-[420px] lg:h-[640px]
+            sm:max-h-[calc(100vh-100px)]
             
-            bg-white shadow-2xl
+            shadow-2xl
             
             ${/* Mobile: No border radius */''} 
             rounded-none
@@ -126,9 +140,14 @@ export default function ChatBubble() {
             
             ${isClosing ? 'animate-bubble-close' : 'animate-bubble-open'}
           `}
+          style={{
+            width: window.innerWidth < 640 ? '100%' : `${bubbleSettings.panelWidth}px`,
+            height: window.innerWidth < 640 ? '100%' : `${bubbleSettings.panelHeight}px`,
+            backgroundColor: bubbleSettings.theme === 'dark' ? '#1f2937' : '#ffffff',
+          }}
           onClick={(e) => e.stopPropagation()}
         >
-          <BubblePanel onClose={handleClose} initialViewMode={viewMode} />
+          <BubblePanel onClose={handleClose} initialViewMode={viewMode} theme={bubbleSettings.theme} />
         </div>
       )}
 
@@ -137,16 +156,20 @@ export default function ChatBubble() {
         onClick={handleToggle}
         disabled={loading}
         className={`
-          fixed z-50 flex items-center justify-center shadow-lg 
+          fixed z-50 flex items-center gap-2 justify-center shadow-lg 
           transition-all duration-500 hover:scale-105 active:scale-95
           
-          ${/* Mobile: Larger touch target */''} 
-          bottom-3 right-3 w-16 h-16
-          
-          ${/* Desktop: Standard size */''} 
-          sm:bottom-4 sm:right-4 sm:w-14 sm:h-14
+          ${bubbleSettings.bubbleSize === 'small' ? 'w-12 h-12 sm:w-10 sm:h-10' : ''}
+          ${bubbleSettings.bubbleSize === 'medium' ? 'w-16 h-16 sm:w-14 sm:h-14' : ''}
+          ${bubbleSettings.bubbleSize === 'large' ? 'w-20 h-20 sm:w-16 sm:h-16' : ''}
           
           rounded-full
+          
+          ${/* Mobile: Larger touch target */''} 
+          bottom-3 right-3
+          
+          ${/* Desktop: Standard size */''} 
+          sm:bottom-4 sm:right-4
         `}
         style={{
           backgroundColor: isOffline ? '#6b7280' : bubbleSettings.bubbleColor,
@@ -157,11 +180,25 @@ export default function ChatBubble() {
         aria-label={isOffline ? "Chat offline" : "Open chat"}
       >
         {isOffline ? (
-          <WifiOff className="w-6 h-6 sm:w-5 sm:h-5 text-white" />
+          <WifiOff className={`text-white ${
+            bubbleSettings.bubbleSize === 'small' ? 'w-4 h-4 sm:w-3 sm:h-3' :
+            bubbleSettings.bubbleSize === 'large' ? 'w-8 h-8 sm:w-7 sm:h-7' :
+            'w-6 h-6 sm:w-5 sm:h-5'
+          }`} />
         ) : isOpen ? (
-          <X className="w-6 h-6 sm:w-5 sm:h-5 text-white" />
+          <X className={`text-white ${
+            bubbleSettings.bubbleSize === 'small' ? 'w-4 h-4 sm:w-3 sm:h-3' :
+            bubbleSettings.bubbleSize === 'large' ? 'w-8 h-8 sm:w-7 sm:h-7' :
+            'w-6 h-6 sm:w-5 sm:h-5'
+          }`} />
         ) : (
-          <MessageCircle className="w-6 h-6 sm:w-5 sm:h-5 text-white" />
+          <>
+            <MessageCircle className={`text-white ${
+              bubbleSettings.bubbleSize === 'small' ? 'w-4 h-4 sm:w-3 sm:h-3' :
+              bubbleSettings.bubbleSize === 'large' ? 'w-8 h-8 sm:w-7 sm:h-7' :
+              'w-6 h-6 sm:w-5 sm:h-5'
+            }`} />
+          </>
         )}
         
         {/* Offline indicator badge */}

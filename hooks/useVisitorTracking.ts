@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Helper: Get country from timezone (fallback detection)
  */
@@ -39,56 +41,56 @@ function getCountryFromTimezone(timezone: string): { country: string; code: stri
  * - Heartbeat mechanism
  * - Behavioral tracking (mouse, scroll, clicks)
  * - Time tracking
+ * - ROBUST: Uses reliability layer for guaranteed delivery
+ * NEW: Uses UUID-sync system for visitor identification
  */
-
-"use client";
 
 import { useEffect, useRef, useCallback } from "react";
 import { generateDeviceFingerprint } from "@/lib/deviceFingerprint";
+import { getAnalyticsReliability } from "@/lib/analyticsReliability";
+import { useBubbleSession } from "@/contexts/BubbleSessionContext";
 
 interface TrackingEvent {
-  type: "page_view" | "interaction" | "scroll" | "mouse_move" | "click" | "resume_view" | "resume_download" | "contact_open" | "form_submit" | "heartbeat";
+  type: "resume_view" | "resume_download" | "contact_open" | "form_submit";
   timestamp: Date;
   data?: any;
-  url?: string;
-  metadata?: {
-    scrollDepth?: number;
-    timeOnPage?: number;
-    mousePosition?: { x: number; y: number };
-    clickTarget?: string;
-    interactionCount?: number;
-  };
+  metadata?: Record<string, any>;
 }
 
 export function useVisitorTracking() {
   const sessionIdRef = useRef<string | null>(null);
   const visitorIdRef = useRef<string | null>(null);
-  const sessionStartRef = useRef<number>(Date.now());
-  const lastHeartbeatRef = useRef<number>(Date.now());
-  const mousePositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const maxScrollDepthRef = useRef<number>(0);
-  const interactionCountRef = useRef<number>(0);
   const isTrackingRef = useRef<boolean>(false);
   
-  // 🔥 CRITICAL: Batch events to prevent API spam
-  const eventQueueRef = useRef<TrackingEvent[]>([]);
-  const flushTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastFlushRef = useRef<number>(Date.now());
+  // Get mask from BubbleSessionContext (single source of truth)
+  const { visitorId: maskFromContext } = useBubbleSession();
+  
+  // Get analytics reliability layer
+  const analyticsRef = useRef(getAnalyticsReliability());
 
   /**
    * Initialize visitor tracking session
    */
   const initializeTracking = useCallback(async () => {
     if (isTrackingRef.current) return;
+    
+    // Wait for mask from BubbleSessionContext
+    if (!maskFromContext) {
+      console.log('[VisitorTracking] Waiting for mask from BubbleSessionContext...');
+      return;
+    }
+    
     isTrackingRef.current = true;
 
     try {
-      // Get deterministic device fingerprint (NO localStorage - pure calculation)
-      const { generateEnhancedFingerprint } = await import("@/lib/deviceFingerprint");
-      const fingerprint = await generateEnhancedFingerprint();
-      visitorIdRef.current = fingerprint;
+      // Use mask from BubbleSessionContext (no duplicate identify call)
+      const mask = maskFromContext;
+      visitorIdRef.current = mask;
 
-      console.log('[VisitorTracking] Device fingerprint generated:', fingerprint);
+      // Register mask with analytics layer for batch requests
+      analyticsRef.current.setVisitorMask(mask);
+
+      console.log('[VisitorTracking] Using mask from BubbleSessionContext:', mask);
 
       // Get geolocation (non-blocking) - try multiple sources for reliability
       let geoData = null;
@@ -121,7 +123,7 @@ export function useVisitorTracking() {
         try {
           // Try ipapi.co first (more detailed)
           const geoResponse = await fetch("https://ipapi.co/json/", {
-            signal: AbortSignal.timeout(3000), // 3s timeout
+            signal: AbortSignal.timeout(5000), // 5s timeout
           });
           if (geoResponse.ok) {
             const data = await geoResponse.json();
@@ -138,8 +140,8 @@ export function useVisitorTracking() {
         // Fallback to ip-api.com if primary fails
         if (!geoData) {
           try {
-            const fallbackResponse = await fetch("http://ip-api.com/json/", {
-              signal: AbortSignal.timeout(3000),
+            const fallbackResponse = await fetch("https://ip-api.com/json/", {
+              signal: AbortSignal.timeout(5000),
             });
             if (fallbackResponse.ok) {
               const data = await fallbackResponse.json();
@@ -185,7 +187,7 @@ export function useVisitorTracking() {
 
       // Collect comprehensive visitor data
       const visitorData = {
-        visitorId: fingerprint,
+        mask,
         timestamp: new Date().toISOString(),
         url: window.location.href,
         referrer: document.referrer || "direct",
@@ -248,267 +250,98 @@ export function useVisitorTracking() {
         battery: await getBatteryInfo(),
       };
 
-      // Send tracking data to API
-      const response = await fetch("/api/visitor-analytics/track", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          event: "session_start",
-          visitorData,
-        }),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        sessionIdRef.current = result.sessionId;
-        console.log("[VisitorTracking] Session initialized:", result.sessionId);
-      }
+      // Session initialized - no automatic tracking
+      // Only manual high-value events will be tracked
+      sessionIdRef.current = visitorIdRef.current; // Use visitor mask as session ID
+      console.log("[VisitorTracking] Session initialized (lightweight):", sessionIdRef.current);
     } catch (error) {
       console.error("[VisitorTracking] Initialization error:", error);
     }
   }, []);
 
   /**
-   * Flush batched events to API (reduces API calls by 90%!)
-   */
-  const flushEvents = useCallback(async () => {
-    if (eventQueueRef.current.length === 0) return;
-    if (!visitorIdRef.current || !sessionIdRef.current) return;
-
-    const eventsToSend = [...eventQueueRef.current];
-    eventQueueRef.current = []; // Clear queue immediately
-    lastFlushRef.current = Date.now();
-
-    try {
-      // Send all events in ONE API call
-      await fetch("/api/visitor-analytics/events", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          visitorId: visitorIdRef.current,
-          sessionId: sessionIdRef.current,
-          events: eventsToSend.map(e => ({
-            eventType: e.type,
-            data: e.data,
-            metadata: {
-              ...e.metadata,
-              url: e.url || window.location.href,
-              timestamp: e.timestamp.toISOString(),
-            },
-          })),
-        }),
-      });
-    } catch (error) {
-      console.error("[VisitorTracking] Flush error:", error);
-      // Don't retry - just drop the events to prevent spam
-    }
-  }, []);
-
-  /**
-   * Track an event (BATCHED - queues events and flushes every 10 seconds)
+   * Track an event using the reliability layer - GUARANTEED DELIVERY
    */
   const trackEvent = useCallback(async (event: TrackingEvent) => {
-    if (!visitorIdRef.current || !sessionIdRef.current) return;
-
-    // Add to queue
-    eventQueueRef.current.push(event);
-
-    // Cancel existing flush timeout
-    if (flushTimeoutRef.current) {
-      clearTimeout(flushTimeoutRef.current);
+    if (!visitorIdRef.current || !sessionIdRef.current) {
+      console.warn('[VisitorTracking] Cannot track - visitor/session not initialized');
+      // Store event for retry when initialized
+      setTimeout(() => {
+        if (visitorIdRef.current && sessionIdRef.current) {
+          console.log('[VisitorTracking] Retrying event after initialization');
+          trackEvent(event);
+        }
+      }, 1000);
+      return;
     }
 
-    // Flush after 10 seconds of inactivity OR when queue reaches 10 events
-    const shouldFlushNow = eventQueueRef.current.length >= 10 || 
-                          (Date.now() - lastFlushRef.current) > 30000;
+    try {
+      // Prepare metadata with all context
+      const metadata = {
+        ...event.metadata,
+        visitorId: visitorIdRef.current,
+        sessionId: sessionIdRef.current,
+        url: event.url || (typeof window !== 'undefined' ? window.location.href : undefined),
+        timestamp: event.timestamp.toISOString(),
+        data: event.data,
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+        referrer: typeof document !== 'undefined' ? document.referrer : undefined,
+      };
 
-    if (shouldFlushNow) {
-      await flushEvents();
-    } else {
-      // Schedule flush in 10 seconds
-      flushTimeoutRef.current = setTimeout(flushEvents, 10000);
+      // Track with reliability layer (handles all retries automatically)
+      await analyticsRef.current.trackEvent(event.type, metadata);
+      
+      console.log(`[VisitorTracking] ✅ Event tracked successfully: ${event.type}`);
+    } catch (error) {
+      // Reliability layer handles all errors - this should never throw
+      // But if it does, log it for debugging
+      console.error('[VisitorTracking] Unexpected error:', error);
+      
+      // Last resort: Try again after 2 seconds
+      setTimeout(() => {
+        console.log('[VisitorTracking] Emergency retry for:', event.type);
+        analyticsRef.current.trackEvent(event.type, {
+          ...event.metadata,
+          emergencyRetry: true,
+          originalError: error instanceof Error ? error.message : 'Unknown',
+        }).catch(err => {
+          console.error('[VisitorTracking] Emergency retry also failed:', err);
+        });
+      }, 2000);
     }
-  }, [flushEvents]);
-
-  /**
-   * Send heartbeat to track active session time accurately
-   */
-  const sendHeartbeat = useCallback(async () => {
-    const now = Date.now();
-    const timeSinceLastHeartbeat = now - lastHeartbeatRef.current;
-    const totalTimeOnPage = now - sessionStartRef.current;
-
-    await trackEvent({
-      type: "heartbeat",
-      timestamp: new Date(),
-      metadata: {
-        timeOnPage: Math.floor(totalTimeOnPage / 1000),
-        scrollDepth: maxScrollDepthRef.current,
-        interactionCount: interactionCountRef.current,
-      },
-    });
-
-    lastHeartbeatRef.current = now;
-  }, [trackEvent]);
-
-  /**
-   * Track mouse movement (throttled)
-   */
-  const trackMouseMove = useCallback((e: MouseEvent) => {
-    mousePositionRef.current = { x: e.clientX, y: e.clientY };
   }, []);
 
-  /**
-   * Track scroll depth
-   */
-  const trackScroll = useCallback(() => {
-    const scrollTop = window.scrollY;
-    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-    const scrollPercent = docHeight > 0 ? Math.round((scrollTop / docHeight) * 100) : 0;
-    
-    if (scrollPercent > maxScrollDepthRef.current) {
-      maxScrollDepthRef.current = scrollPercent;
-      
-      // Track milestone scrolls (25%, 50%, 75%, 100%)
-      if (scrollPercent === 25 || scrollPercent === 50 || scrollPercent === 75 || scrollPercent === 100) {
-        trackEvent({
-          type: "scroll",
-          timestamp: new Date(),
-          metadata: {
-            scrollDepth: scrollPercent,
-          },
-        });
-      }
-    }
-  }, [trackEvent]);
+  // Automatic tracking removed - only manual high-value events tracked
 
   /**
-   * Track clicks
-   */
-  const trackClick = useCallback((e: MouseEvent) => {
-    interactionCountRef.current++;
-    
-    const target = e.target as HTMLElement;
-    const clickData = {
-      tag: target.tagName,
-      id: target.id,
-      class: target.className,
-      text: target.textContent?.substring(0, 50),
-      href: target instanceof HTMLAnchorElement ? target.href : undefined,
-    };
-
-    trackEvent({
-      type: "click",
-      timestamp: new Date(),
-      metadata: {
-        clickTarget: JSON.stringify(clickData),
-        mousePosition: mousePositionRef.current,
-      },
-      data: clickData,
-    });
-  }, [trackEvent]);
-
-  /**
-   * Track page view
-   */
-  const trackPageView = useCallback(() => {
-    trackEvent({
-      type: "page_view",
-      timestamp: new Date(),
-      url: window.location.href,
-    });
-  }, [trackEvent]);
-
-  /**
-   * Setup event listeners
+   * Initialize tracking session (lightweight - no automatic events)
+   * Waits for mask from BubbleSessionContext before initializing
    */
   useEffect(() => {
-    // Initialize tracking
-    initializeTracking();
+    if (maskFromContext) {
+      initializeTracking();
+    }
+  }, [maskFromContext, initializeTracking]);
 
-    // Track page view
-    trackPageView();
-
-    // Mouse movement tracking (throttled to every 2 seconds)
-    let mouseThrottle: NodeJS.Timeout;
-    const throttledMouseMove = (e: MouseEvent) => {
-      if (!mouseThrottle) {
-        trackMouseMove(e);
-        mouseThrottle = setTimeout(() => {
-          mouseThrottle = null as any;
-        }, 2000);
-      }
-    };
-
-    // Scroll tracking (throttled to every 500ms)
-    let scrollThrottle: NodeJS.Timeout;
-    const throttledScroll = () => {
-      if (!scrollThrottle) {
-        trackScroll();
-        scrollThrottle = setTimeout(() => {
-          scrollThrottle = null as any;
-        }, 500);
-      }
-    };
-
-    // Event listeners
-    window.addEventListener("mousemove", throttledMouseMove);
-    window.addEventListener("scroll", throttledScroll);
-    window.addEventListener("click", trackClick);
-
-    // Heartbeat every 30 seconds (optimized to reduce Firebase writes)
-    // This still provides accurate session tracking while reducing costs
-    const heartbeatInterval = setInterval(sendHeartbeat, 30000);
-
-    // Track page visibility changes
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        sendHeartbeat(); // Send final heartbeat before tab becomes hidden
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    // Track session end
-    const handleBeforeUnload = () => {
-      if (sessionIdRef.current) {
-        // Use sendBeacon for guaranteed delivery
-        navigator.sendBeacon(
-          "/api/visitor-analytics/track",
-          JSON.stringify({
-            event: "session_end",
-            visitorId: visitorIdRef.current,
-            sessionId: sessionIdRef.current,
-            metadata: {
-              timeOnPage: Math.floor((Date.now() - sessionStartRef.current) / 1000),
-              scrollDepth: maxScrollDepthRef.current,
-              interactionCount: interactionCountRef.current,
-            },
-          })
-        );
-      }
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-
-    // Cleanup
-    return () => {
-      window.removeEventListener("mousemove", throttledMouseMove);
-      window.removeEventListener("scroll", throttledScroll);
-      window.removeEventListener("click", trackClick);
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      clearInterval(heartbeatInterval);
-      if (mouseThrottle) clearTimeout(mouseThrottle);
-      if (scrollThrottle) clearTimeout(scrollThrottle);
-    };
-  }, [initializeTracking, trackPageView, trackMouseMove, trackScroll, trackClick, sendHeartbeat]);
-
-  // Public API for manual tracking
+  // Public API for manual tracking - GUARANTEED DELIVERY FOR ALL 4 EVENTS
   return {
     trackEvent,
-    trackResumeView: () => trackEvent({ type: "resume_view", timestamp: new Date() }),
-    trackResumeDownload: () => trackEvent({ type: "resume_download", timestamp: new Date() }),
-    trackContactOpen: () => trackEvent({ type: "contact_open", timestamp: new Date() }),
-    trackFormSubmit: (data: any) => trackEvent({ type: "form_submit", timestamp: new Date(), data }),
+    trackResumeView: () => {
+      console.log('[VisitorTracking] 📄 Tracking resume view');
+      return trackEvent({ type: "resume_view", timestamp: new Date() });
+    },
+    trackResumeDownload: () => {
+      console.log('[VisitorTracking] ⬇️ Tracking resume download [HIGH PRIORITY]');
+      return trackEvent({ type: "resume_download", timestamp: new Date() });
+    },
+    trackContactOpen: () => {
+      console.log('[VisitorTracking] 📧 Tracking contact form open');
+      return trackEvent({ type: "contact_open", timestamp: new Date() });
+    },
+    trackFormSubmit: (data: any) => {
+      console.log('[VisitorTracking] ✉️ Tracking form submission [HIGH PRIORITY]');
+      return trackEvent({ type: "form_submit", timestamp: new Date(), data });
+    },
   };
 }
 

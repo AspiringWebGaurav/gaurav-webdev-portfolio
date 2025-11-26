@@ -24,7 +24,7 @@ interface BubbleMessageContextType {
 const BubbleMessageContext = createContext<BubbleMessageContextType | undefined>(undefined);
 
 export function BubbleMessageProvider({ children }: { children: React.ReactNode }) {
-  const { visitorId } = useBubbleSession();
+  const { visitorId, session } = useBubbleSession();
   const [messages, setMessages] = useState<BubbleMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
@@ -40,7 +40,7 @@ export function BubbleMessageProvider({ children }: { children: React.ReactNode 
   const lastFetchRef = useRef<number>(0);
 
   const fetchMessages = useCallback(async (silent = false) => {
-    if (!visitorId) return;
+    if (!session?.id) return;
 
     const now = Date.now();
     // Debounce rapid fetches (< 500ms)
@@ -53,7 +53,7 @@ export function BubbleMessageProvider({ children }: { children: React.ReactNode 
     
     try {
       const response = await networkManager.fetch(
-        `/api/bubble/messages?sessionId=${visitorId}&role=visitor`,
+        `/api/bubble/messages?sessionId=${session.id}&role=visitor`,
         { method: 'GET' },
         3 // 3 second timeout
       );
@@ -99,10 +99,10 @@ export function BubbleMessageProvider({ children }: { children: React.ReactNode 
     } finally {
       if (!silent) setLoading(false);
     }
-  }, [visitorId, isChatOpen]);
+  }, [session?.id, isChatOpen]);
 
   const sendMessage = useCallback(async (content: string, visitorEmail?: string) => {
-    if (!visitorId) return;
+    if (!session?.id) return;
 
     setSending(true);
     
@@ -110,7 +110,7 @@ export function BubbleMessageProvider({ children }: { children: React.ReactNode 
     const tempId = `temp-${Date.now()}`;
     const optimisticMessage: BubbleMessage = {
       id: tempId,
-      sessionId: visitorId,
+      sessionId: session.id,
       role: 'visitor',
       content,
       timestamp: new Date(),
@@ -127,7 +127,7 @@ export function BubbleMessageProvider({ children }: { children: React.ReactNode 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          sessionId: visitorId,
+          sessionId: session.id,
           role: 'visitor',
           content,
           visitorEmail,
@@ -160,17 +160,17 @@ export function BubbleMessageProvider({ children }: { children: React.ReactNode 
     } finally {
       setSending(false);
     }
-  }, [visitorId]);
+  }, [session?.id]);
 
   const markMessagesAsRead = useCallback(async (messageIds?: string[]) => {
-    if (!visitorId) return;
+    if (!session?.id) return;
 
     try {
       const response = await networkManager.fetch('/api/bubble/messages', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          sessionId: visitorId, 
+          sessionId: session.id, 
           messageIds,
           role: 'visitor', // Mark as read by visitor
         }),
@@ -189,10 +189,10 @@ export function BubbleMessageProvider({ children }: { children: React.ReactNode 
     } catch (error) {
       console.error('[BubbleMessages] ❌ Mark read failed:', error);
     }
-  }, [visitorId]);
+  }, [session?.id]);
 
   const markAsDelivered = useCallback(async (messageIds: string[]) => {
-    if (!visitorId || messageIds.length === 0) return;
+    if (!session?.id || messageIds.length === 0) return;
 
     // Optimistically update UI
     setMessages(prev =>
@@ -200,17 +200,17 @@ export function BubbleMessageProvider({ children }: { children: React.ReactNode 
         messageIds.includes(msg.id) ? { ...msg, delivered: true, deliveredAt: new Date() } : msg
       )
     );
-  }, [visitorId]);
+  }, [session?.id]);
 
   const setTyping = useCallback((isTyping: boolean) => {
-    if (!visitorId) return;
+    if (!session?.id) return;
 
     // Send typing indicator to backend
     networkManager.fetch('/api/bubble/messages/typing', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
-        sessionId: visitorId, 
+        sessionId: session.id, 
         isTyping,
         role: 'visitor',
       }),
@@ -226,7 +226,7 @@ export function BubbleMessageProvider({ children }: { children: React.ReactNode 
         setTyping(false);
       }, 3000);
     }
-  }, [visitorId]);
+  }, [session?.id]);
 
   const setChatOpen = useCallback((open: boolean) => {
     setIsChatOpen(open);
@@ -249,7 +249,7 @@ export function BubbleMessageProvider({ children }: { children: React.ReactNode 
 
   // Setup ultra-optimized smart polling
   useEffect(() => {
-    if (!visitorId) return;
+    if (!session?.id) return;
 
     // Register with critical priority for instant messaging
     smartPolling.register(
@@ -278,7 +278,7 @@ export function BubbleMessageProvider({ children }: { children: React.ReactNode 
         clearTimeout(typingTimeoutRef.current);
       }
     };
-  }, [visitorId, fetchMessages]);
+  }, [session?.id, fetchMessages]);
 
   // Network status monitoring
   useEffect(() => {
@@ -286,13 +286,13 @@ export function BubbleMessageProvider({ children }: { children: React.ReactNode 
       const wasOffline = !isOnline;
       setIsOnline(status.isOnline);
       
-      if (wasOffline && status.isOnline && visitorId) {
+      if (wasOffline && status.isOnline && session?.id) {
         console.log('[BubbleMessages] Back online - fetching messages');
         fetchMessages();
       }
     });
     return unsubscribe;
-  }, [isOnline, visitorId, fetchMessages]);
+  }, [isOnline, session?.id, fetchMessages]);
 
   return (
     <BubbleMessageContext.Provider

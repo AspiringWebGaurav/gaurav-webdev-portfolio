@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const body: RestoreBanAppealDTO = await request.json();
 
     // Validate required fields
-    if (!body.visitorId || !body.appealReason || !body.banReason) {
+    if (!body.mask || !body.appealReason || !body.banReason) {
       return NextResponse.json(
         {
           success: false,
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     // Restore the appeal
     const now = new Date();
     const restoredAppeal: any = {
-      visitorId: body.visitorId,
+      mask: body.mask,
       appealReason: body.appealReason,
       banReason: body.banReason,
       banCategory: body.banCategory,

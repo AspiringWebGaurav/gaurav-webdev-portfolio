@@ -41,7 +41,7 @@ export default function UnbanModal({ visitorId, banReason, onClose, onUnbanSucce
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          visitorId,
+          mask: visitorId,  // Admin sends mask (visitorId is actually mask from VisitorAnalyticsManager)
           unbanReason: unbanReason || "Unbanned by admin",
         }),
       });

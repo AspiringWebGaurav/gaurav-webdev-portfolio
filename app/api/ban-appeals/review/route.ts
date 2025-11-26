@@ -8,9 +8,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminDb, verifyAuth } from "@/lib/firebaseAdmin";
 import { ReviewBanAppealDTO, validateReviewNotes } from "@/types/banAppeal";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
+import { translateMaskToUUID } from "@/lib/uuid-sync/server";
 
 const APPEALS_COLLECTION = "banAppeals";
-const VISITORS_COLLECTION = "visitorProfiles";
+const VISITORS_COLLECTION = "og_uuid";
 
 /**
  * POST - Review a ban appeal (accept or reject)
@@ -128,12 +129,15 @@ export async function POST(request: NextRequest) {
     });
 
     // If accepted, unban the visitor
-    if (body.action === "accept" && appealData?.visitorId) {
+    if (body.action === "accept" && appealData?.mask) {
       try {
-        console.log(`[Ban Appeals] Attempting to unban visitor: ${appealData.visitorId}`);
-        const visitorRef = adminDb.collection(VISITORS_COLLECTION).doc(appealData.visitorId);
+        console.log(`[Ban Appeals] Attempting to unban visitor with mask: ${appealData.mask}`);
+        
+        // Translate mask to UUID for database operations
+        const uuid = await translateMaskToUUID(appealData.mask);
+        const visitorRef = adminDb.collection(VISITORS_COLLECTION).doc(uuid);
         const visitorDoc = await visitorRef.get();
-
+        
         if (visitorDoc.exists) {
           const visitorData = visitorDoc.data();
           console.log(`[Ban Appeals] Visitor document found, current banned status: ${visitorData?.banned}`);
@@ -150,9 +154,9 @@ export async function POST(request: NextRequest) {
             updatedAt: now,
           });
 
-          console.log(`[Ban Appeals] ✅ Visitor unbanned: ${appealData.visitorId}`);
+          console.log(`[Ban Appeals] ✅ Visitor unbanned: ${appealData.mask}`);
         } else {
-          console.warn(`[Ban Appeals] ⚠️ Visitor document not found: ${appealData.visitorId}`);
+          console.warn(`[Ban Appeals] ⚠️ Visitor document not found for mask: ${appealData.mask}`);
         }
       } catch (unbanError) {
         console.error("[Ban Appeals] Error unbanning visitor:", unbanError);
@@ -166,7 +170,7 @@ export async function POST(request: NextRequest) {
 
     const updatedAppeal = {
       id: updatedAppealDoc.id,
-      visitorId: updatedData?.visitorId,
+      mask: updatedData?.mask,
       appealReason: updatedData?.appealReason,
       banReason: updatedData?.banReason,
       banCategory: updatedData?.banCategory,

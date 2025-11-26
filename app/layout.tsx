@@ -10,9 +10,11 @@ import { BubbleMessageProvider } from "@/contexts/BubbleMessageContext";
 import { ChatBubbleControlProvider } from "@/contexts/ChatBubbleControlContext";
 import ConditionalChatBubble from "@/components/ConditionalChatBubble";
 import BubbleSessionDeletedNotification from "@/components/BubbleSessionDeletedNotification";
-import VisitorTracker from "@/components/VisitorTracker";
 import BanChecker from "@/components/BanChecker";
 import ToastProvider from "@/components/providers/ToastProvider";
+import AnalyticsHealthMonitor from "@/components/AnalyticsHealthMonitor";
+// Initialize fingerprint ONCE at app startup to prevent race conditions
+import "@/lib/fingerprintInit";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -50,7 +52,7 @@ export default function RootLayout({
                   <BubbleMessageProvider>
                     <ChatBubbleControlProvider>
                       <BanChecker />
-                      <VisitorTracker />
+                      <AnalyticsHealthMonitor />
                       {children}
                       <ConditionalChatBubble />
                       <BubbleSessionDeletedNotification />

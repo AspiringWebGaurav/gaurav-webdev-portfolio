@@ -120,8 +120,21 @@ const RecentProjects = () => {
       </h1>
       <div className="flex flex-wrap items-center justify-center p-4 gap-x-24 gap-y-3 sm:gap-y-8 mt-10">
         {projects.map(({ id, title, des, img, images, iconLists, link }) => {
-          // Use images array if available, otherwise fallback to single img
-          const projectImages = images && images.length > 0 ? images : [img];
+          // Convert to arrays if they're objects with numeric keys (Firestore issue)
+          const projectImages = (() => {
+            // Check if images exists and has content
+            if (images && Array.isArray(images) && images.length > 0) return images;
+            if (images && typeof images === 'object' && Object.keys(images).length > 0) {
+              return Object.values(images);
+            }
+            // Fallback to main img field
+            return img ? [img] : [];
+          })();
+          
+          // Ensure iconLists is always an array
+          const icons = Array.isArray(iconLists) 
+            ? iconLists 
+            : (typeof iconLists === 'object' ? Object.values(iconLists) : []);
 
           return (
             <div
@@ -170,7 +183,7 @@ const RecentProjects = () => {
 
                 <div className="flex items-center justify-between mt-7 mb-3">
                   <div className="flex items-center">
-                    {iconLists.map((icon, index) => (
+                    {icons.map((icon, index) => (
                       <div
                         key={index}
                         className="border border-white/[.2] rounded-full bg-black lg:w-10 lg:h-10 w-8 h-8 flex justify-center items-center"

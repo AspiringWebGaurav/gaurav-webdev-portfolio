@@ -6,6 +6,7 @@ import { showToast } from '@/lib/toast';
 import MobileScreen from './screens/MobileScreen';
 import TabletScreen from './screens/TabletScreen';
 import DesktopScreen from './screens/DesktopScreen';
+import { banStatusManager } from '@/lib/banStatusManager';
 
 interface BanInfo {
   reason: string;
@@ -14,8 +15,9 @@ interface BanInfo {
   reviewTime: string;
 }
 
-const UNBAN_CHECK_INTERVAL = 5000; // Check every 5 seconds for unban
+const FALLBACK_CHECK_INTERVAL = 10000; // Fallback check every 10 seconds
 const TOAST_DURATION = 3000; // 3 seconds toast display
+const REDIRECT_DELAY = 3000; // 3 seconds before redirect
 const PORTFOLIO_HOME = '/'; // Dynamic portfolio home route
 
 // Get review time based on category
@@ -43,32 +45,113 @@ function BannedPageContent() {
     reviewTime: '72-96 hours',
     category: 'normal',
   });
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   // Load ban info from URL params (server-side passed via proxy.ts)
   useEffect(() => {
     const reason = searchParams.get('reason');
     const category = searchParams.get('category');
+    const timestamp = searchParams.get('timestamp');
     
-    if (reason || category) {
+    if (reason || category || timestamp) {
       setBanInfo({
         reason: reason || 'Security Violation',
         category: category || 'normal',
-        timestamp: new Date().toISOString(),
+        timestamp: timestamp || new Date().toISOString(),
         reviewTime: getCategoryReviewTime(category || 'normal'),
       });
     }
   }, [searchParams]);
 
-  // Periodically check if user has been unbanned
+  /**
+   * Handle unban via real-time listener
+   */
   useEffect(() => {
+    if (isRedirecting) return;
+
+    console.log('[Banned Page] Setting up real-time unban monitoring');
+
+    let unsubscribe: (() => void) | null = null;
+    let mounted = true;
+
+    // Async setup function
+    const setupMonitoring = async () => {
+      try {
+        // Initialize and subscribe (both async now)
+        if (!banStatusManager.isReady()) {
+          await banStatusManager.initialize();
+        }
+
+        if (!mounted) return; // Component unmounted during init
+
+        // Subscribe to real-time updates
+        unsubscribe = await banStatusManager.subscribe(
+          'banned-page-unban-monitor',
+          (status) => {
+            // If not banned anymore, show success toast and redirect
+            if (status.banned === false && !isRedirecting) {
+              console.log('[Banned Page] ✅ User has been unbanned (real-time)!');
+              setIsRedirecting(true);
+              
+              // Show success toast
+              showToast.success(
+                'You have been unbanned by admin. Welcome back!',
+                'Welcome Back',
+                { autoClose: TOAST_DURATION }
+              );
+              
+              // Redirect after delay
+              setTimeout(() => {
+                // Reset ban status manager before redirecting
+                banStatusManager.reset();
+                window.location.href = PORTFOLIO_HOME;
+              }, REDIRECT_DELAY);
+            }
+          },
+          (error) => {
+            console.error('[Banned Page] Real-time listener error:', error);
+          }
+        );
+      } catch (error) {
+        console.error('[Banned Page] Failed to setup real-time monitoring:', error);
+      }
+    };
+
+    // Start setup
+    setupMonitoring();
+
+    // Cleanup function
+    return () => {
+      mounted = false;
+      console.log('[Banned Page] Cleaning up real-time listener');
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [isRedirecting]);
+
+  /**
+   * Fallback polling check (in case real-time fails)
+   */
+  useEffect(() => {
+    if (isRedirecting) return;
+
     const checkUnbanStatus = async () => {
       try {
+        // Get visitor mask from ban status manager
+        const mask = banStatusManager.getMask();
+        
+        if (!mask) {
+          console.warn('[Banned Page] No mask available for fallback check');
+          return;
+        }
+        
         const response = await fetch('/api/visitor-analytics/check-ban', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({}),
+          body: JSON.stringify({ mask }), // Send mask to avoid dual identity
           cache: 'no-store',
         });
 
@@ -76,8 +159,9 @@ function BannedPageContent() {
           const data = await response.json();
           
           // If not banned anymore, show success toast and redirect
-          if (data.banned === false) {
-            console.log('[Banned Page] ✅ User has been unbanned!');
+          if (data.banned === false && !isRedirecting) {
+            console.log('[Banned Page] ✅ User has been unbanned (fallback check)!');
+            setIsRedirecting(true);
             
             // Show success toast
             showToast.success(
@@ -88,8 +172,10 @@ function BannedPageContent() {
             
             // Redirect to portfolio home after toast
             setTimeout(() => {
+              // Reset ban status manager before redirecting
+              banStatusManager.reset();
               window.location.href = PORTFOLIO_HOME;
-            }, TOAST_DURATION);
+            }, REDIRECT_DELAY);
           }
         }
       } catch (error) {
@@ -100,11 +186,11 @@ function BannedPageContent() {
     // Check immediately on mount
     checkUnbanStatus();
 
-    // Then check periodically
-    const interval = setInterval(checkUnbanStatus, UNBAN_CHECK_INTERVAL);
+    // Then check periodically as fallback
+    const interval = setInterval(checkUnbanStatus, FALLBACK_CHECK_INTERVAL);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [isRedirecting]);
 
   // Detect screen size
   useEffect(() => {

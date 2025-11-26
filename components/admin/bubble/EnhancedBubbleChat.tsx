@@ -6,6 +6,7 @@ import { showToast } from "@/lib/toast";
 import { useRouter } from 'next/navigation';
 import { useBubbleManagement } from '@/contexts/BubbleManagementContext';
 import { useRecycleBin } from '@/contexts/RecycleBinContext';
+import { auth } from '@/lib/firebase';
 
 import { BubbleMessage, BubbleSession } from '@/types/bubble';
 import smartPolling from '@/lib/smartPolling';
@@ -54,24 +55,45 @@ export default function EnhancedBubbleChat() {
     try {
       if (!silent) setLoading(true);
       
-      const response = await networkManager.fetch('/api/bubble/sessions?allSessions=true', { method: 'GET' }, 3);
+      // Get auth token
+      const user = auth.currentUser;
+      if (!user) {
+        console.error('[AdminChat] ❌ No authenticated user');
+        if (!silent) showToast.error('Please log in to view sessions');
+        return;
+      }
+      const token = await user.getIdToken();
       
-      if (response.ok) {
-        const data = await response.json();
-        const newSessions = data.sessions || [];
-        setSessions(newSessions);
-        
-        // Calculate unread counts
-        const counts = new Map<string, number>();
-        newSessions.forEach((session: BubbleSession) => {
-          counts.set(session.id, session.unreadVisitorMessages || 0);
-        });
-        setUnreadCounts(counts);
-        
-        // Auto-select first session if none selected
-        if (!selectedSession && newSessions.length > 0) {
-          setSelectedSession(newSessions[0]);
-        }
+      console.log('[AdminChat] 🔄 Fetching sessions...');
+      const response = await fetch('/api/bubble/sessions?allSessions=true', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('[AdminChat] ❌ Fetch sessions failed:', response.status, errorData);
+        if (!silent) showToast.error(`Failed to load sessions: ${errorData.error}`);
+        return;
+      }
+      
+      const data = await response.json();
+      const newSessions = data.sessions || [];
+      console.log('[AdminChat] ✅ Loaded sessions:', newSessions.length);
+      setSessions(newSessions);
+      
+      // Calculate unread counts
+      const counts = new Map<string, number>();
+      newSessions.forEach((session: BubbleSession) => {
+        counts.set(session.id, session.unreadVisitorMessages || 0);
+      });
+      setUnreadCounts(counts);
+      
+      // Auto-select first session if none selected
+      if (!selectedSession && newSessions.length > 0) {
+        setSelectedSession(newSessions[0]);
       }
     } catch (error) {
       console.error('[AdminChat] ❌ Fetch sessions failed:', error);
@@ -83,40 +105,45 @@ export default function EnhancedBubbleChat() {
   // Fetch messages for selected session
   const fetchMessages = useCallback(async (sessionId: string, silent = false) => {
     try {
-      const response = await networkManager.fetch(
+      console.log('[AdminChat] 🔄 Fetching messages for session:', sessionId);
+      const response = await fetch(
         `/api/bubble/messages?sessionId=${sessionId}&role=admin`,
-        { method: 'GET' },
-        3
+        { method: 'GET' }
       );
       
-      if (response.ok) {
-        const data = await response.json();
-        const newMessages = data.messages || [];
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('[AdminChat] ❌ Fetch messages failed:', response.status, errorData);
+        return;
+      }
+      
+      const data = await response.json();
+      const newMessages = data.messages || [];
+      console.log('[AdminChat] ✅ Loaded messages:', newMessages.length);
+      
+      // Check if new visitor messages arrived
+      if (newMessages.length > lastMessageCountRef.current) {
+        const newCount = newMessages.length - lastMessageCountRef.current;
+        const newVisitorMsgs = newMessages.slice(-newCount).filter((m: BubbleMessage) => m.role === 'visitor');
         
-        // Check if new visitor messages arrived
-        if (newMessages.length > lastMessageCountRef.current) {
-          const newCount = newMessages.length - lastMessageCountRef.current;
-          const newVisitorMsgs = newMessages.slice(-newCount).filter((m: BubbleMessage) => m.role === 'visitor');
-          
-          if (newVisitorMsgs.length > 0 && !silent) {
-            console.log('[AdminChat] 📨 New visitor messages:', newVisitorMsgs.length);
-            scrollToBottom();
-          }
+        if (newVisitorMsgs.length > 0 && !silent) {
+          console.log('[AdminChat] 📨 New visitor messages:', newVisitorMsgs.length);
+          scrollToBottom();
         }
-        
-        lastMessageCountRef.current = newMessages.length;
-        setMessages(newMessages);
-        setVisitorTyping(data.visitorTyping || false);
-        setVisitorOnline(data.visitorOnline || false);
-        
-        // Auto-mark as read when viewing
-        const unreadVisitorMessages = newMessages.filter((m: BubbleMessage) => 
-          m.role === 'visitor' && !m.read
-        );
-        
-        if (unreadVisitorMessages.length > 0) {
-          markAsRead(unreadVisitorMessages.map((m: BubbleMessage) => m.id));
-        }
+      }
+      
+      lastMessageCountRef.current = newMessages.length;
+      setMessages(newMessages);
+      setVisitorTyping(data.visitorTyping || false);
+      setVisitorOnline(data.visitorOnline || false);
+      
+      // Auto-mark as read when viewing
+      const unreadVisitorMessages = newMessages.filter((m: BubbleMessage) => 
+        m.role === 'visitor' && !m.read
+      );
+      
+      if (unreadVisitorMessages.length > 0) {
+        markAsRead(unreadVisitorMessages.map((m: BubbleMessage) => m.id));
       }
     } catch (error) {
       console.error('[AdminChat] ❌ Fetch messages failed:', error);
@@ -153,7 +180,7 @@ export default function EnhancedBubbleChat() {
     setTimeout(() => scrollToBottom(), 50);
     
     try {
-      const response = await networkManager.fetch('/api/bubble/messages', {
+      const response = await fetch('/api/bubble/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -161,7 +188,7 @@ export default function EnhancedBubbleChat() {
           role: 'admin',
           content: messageContent,
         }),
-      }, 5);
+      });
 
       if (response.ok) {
         const newMessage = await response.json();
@@ -198,7 +225,7 @@ export default function EnhancedBubbleChat() {
     if (!selectedSession || messageIds.length === 0) return;
 
     try {
-      await networkManager.fetch('/api/bubble/messages', {
+      await fetch('/api/bubble/messages', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -231,7 +258,7 @@ export default function EnhancedBubbleChat() {
 
     setIsTyping(typing);
     
-    networkManager.fetch('/api/bubble/messages/typing', {
+    fetch('/api/bubble/messages/typing', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -239,7 +266,7 @@ export default function EnhancedBubbleChat() {
         isTyping: typing,
         role: 'admin',
       }),
-    }, 2).catch(err => console.error('[AdminChat] ❌ Typing failed:', err));
+    }).catch(err => console.error('[AdminChat] ❌ Typing failed:', err));
 
     // Auto-clear typing after 3s
     if (typingTimeoutRef.current) {
@@ -266,6 +293,7 @@ export default function EnhancedBubbleChat() {
 
   // Select session handler
   const handleSelectSession = useCallback((session: BubbleSession) => {
+    console.log('[AdminChat] 🔵 Selected session:', session.id, 'Mask:', session.mask);
     setSelectedSession(session);
     setMessages([]);
     lastMessageCountRef.current = 0;
@@ -696,8 +724,9 @@ export default function EnhancedBubbleChat() {
                 const isActive = selectedSession?.id === session.id;
                 const isSelected = selectedIds.has(session.id);
                 
-                // Display the central UUID - prioritize visitorId, fallback to session.id
-                const displayUUID = session.visitorId || session.id || 'Unknown';
+                // Admin sees UUID (primary) + mask (for portfolio reference)
+                const displayUUID = session.id || 'Unknown';
+                const displayMask = session.mask || 'N/A';
                 
                 return (
                   <div
@@ -801,13 +830,16 @@ export default function EnhancedBubbleChat() {
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-white flex items-center gap-2">
-                      {selectedSession.visitorId || selectedSession.id || 'Visitor'}
+                      {selectedSession.visitorEmail || selectedSession.id.slice(0, 12) || 'Visitor'}
                       {visitorOnline && (
                         <Circle className="w-2 h-2 fill-green-400 text-green-400" />
                       )}
                     </h3>
                     <p className="text-xs text-blue-100 mt-0.5">
                       {visitorOnline ? 'Online now' : `Last seen ${formatTime(selectedSession.lastActive)}`}
+                    </p>
+                    <p className="text-xs text-blue-200 mt-0.5 font-mono">
+                      Mask: {selectedSession.mask || 'N/A'}
                     </p>
                   </div>
                   
@@ -962,7 +994,10 @@ export default function EnhancedBubbleChat() {
                 <span className="font-medium">Session:</span> {deletingSession.visitorEmail || 'Visitor'}
               </p>
               <p className="text-xs text-gray-500 mt-1 font-mono">
-                {deletingSession.visitorId}
+                UUID: {deletingSession.id}
+              </p>
+              <p className="text-xs text-gray-500 mt-1 font-mono">
+                Mask: {deletingSession.mask || 'N/A'} <span className="text-gray-400">(Portfolio ref)</span>
               </p>
               <p className="text-sm text-gray-700 mt-1">
                 <span className="font-medium">Messages:</span> {deletingSession.messageCount}

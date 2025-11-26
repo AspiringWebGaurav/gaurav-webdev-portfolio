@@ -211,6 +211,27 @@ function VisitorDetailModal({ visitorId, onClose }: VisitorDetailModalProps) {
                   </svg>
                 </button>
               </div>
+              {detailData?.profile.mask && (
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-xs text-blue-100 font-medium">Mask (Portfolio):</span>
+                  <code className="text-sm text-blue-300 font-mono bg-white/20 px-3 py-1 rounded-lg">
+                    {detailData.profile.mask}
+                  </code>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigator.clipboard.writeText(detailData.profile.mask);
+                      showToast.success('Mask copied to clipboard');
+                    }}
+                    className="flex-shrink-0 p-1.5 hover:bg-white/20 rounded-lg transition-colors"
+                    title="Copy mask for portfolio reference"
+                  >
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                </div>
+              )}
             </div>
             <button
               onClick={handleClose}
@@ -1028,13 +1049,13 @@ function VisitorDataTable({ visitorIdParam }: { visitorIdParam?: string | null }
     setTimeout(() => setIsRefreshing(false), 300);
   };
 
-  const handleBan = (id: string) => {
-    setBanTargetId(id);
+  const handleBan = (mask: string) => {
+    setBanTargetId(mask);
     setShowBanModal(true);
   };
 
-  const handleUnban = (id: string, reason?: string) => {
-    setBanTargetId(id);
+  const handleUnban = (mask: string, reason?: string) => {
+    setBanTargetId(mask);
     setBanTargetReason(reason);
     setShowUnbanModal(true);
   };
@@ -1090,8 +1111,8 @@ function VisitorDataTable({ visitorIdParam }: { visitorIdParam?: string | null }
     const totalItems = selectedVisitors.size;
     
     // Show progress notification
-    showToast.info(`Deleting ${totalItems} visitor${totalItems > 1 ? 's' : ''}...`, {
-      duration: 3000,
+    showToast.info(`Deleting ${totalItems} visitor${totalItems > 1 ? 's' : ''}...`, undefined, {
+      autoClose: 3000,
     });
     
     // Process deletions in background
@@ -1127,8 +1148,8 @@ function VisitorDataTable({ visitorIdParam }: { visitorIdParam?: string | null }
     setShowDeleteConfirm(false);
     
     // Show progress notification
-    showToast.info("Deleting all visitor data...", {
-      duration: 3000,
+    showToast.info("Deleting all visitor data...", undefined, {
+      autoClose: 3000,
     });
     
     // Process deletion in background
@@ -1318,28 +1339,62 @@ function VisitorDataTable({ visitorIdParam }: { visitorIdParam?: string | null }
       )}
 
       {/* Visitor List */}
-      {loading && visitors.length === 0 ? (
+      {loading && (!visitors || visitors.length === 0) ? (
         // Only show loading spinner if there's NO existing data (initial load)
-        <div className="flex flex-col items-center justify-center py-12">
-          <RefreshCw className="w-8 h-8 text-blue-600 animate-spin mb-3" />
-          <p className="text-sm text-gray-600">Loading visitor data...</p>
+        <div className="flex flex-col items-center justify-center py-16 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+          <RefreshCw className="w-12 h-12 text-blue-600 animate-spin mb-4" />
+          <p className="text-base font-medium text-gray-700">Loading visitor data...</p>
+          <p className="text-sm text-gray-500 mt-1">Please wait while we fetch your analytics</p>
         </div>
-      ) : visitors.length === 0 ? (
-        // No data and not loading - show empty state
-        <div className="text-center py-12">
-          <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500">No visitors found</p>
-          <p className="text-sm text-gray-400 mt-1">
+      ) : error ? (
+        // Error state - show error message with retry option
+        <div className="flex flex-col items-center justify-center py-16 bg-red-50 rounded-lg border-2 border-red-200">
+          <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
+          <p className="text-base font-medium text-red-700">Error loading visitors</p>
+          <p className="text-sm text-red-600 mt-1">{error}</p>
+          <button
+            onClick={handleRefresh}
+            className="mt-4 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Retry
+          </button>
+        </div>
+      ) : !visitors || visitors.length === 0 ? (
+        // No data and not loading - show empty state with helpful message
+        <div className="flex flex-col items-center justify-center py-16 bg-gradient-to-br from-gray-50 to-blue-50 rounded-lg border-2 border-dashed border-gray-300">
+          <Users className="w-20 h-20 text-gray-400 mb-5" />
+          <p className="text-lg font-semibold text-gray-700">No visitors found</p>
+          <p className="text-sm text-gray-500 mt-2 max-w-md text-center">
             Visitors will appear here once they interact with your portfolio
           </p>
+          {(statusFilter !== 'all' || deviceFilter !== 'all' || searchQuery) && (
+            <div className="mt-4 flex flex-col items-center gap-2">
+              <p className="text-xs text-gray-600">Try adjusting your filters:</p>
+              <button
+                onClick={handleReset}
+                className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+              >
+                <X className="w-3 h-3" />
+                Clear All Filters
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         // Show data with subtle loading indicator during refresh
         <>
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden" style={{ opacity: loading && visitors.length === 0 ? 0.7 : 1, transition: 'opacity 0.3s ease' }}>
             <div className="divide-y divide-gray-200">
-              {visitors.map((visitor) => {
+              {Array.isArray(visitors) && visitors.map((visitor) => {
+                // Safety check - skip if visitor is null/undefined
+                if (!visitor || !visitor.id) {
+                  console.warn('Skipping invalid visitor:', visitor);
+                  return null;
+                }
+                
                 const formatDuration = (seconds: number) => {
+                  if (!seconds || isNaN(seconds)) return '0s';
                   if (seconds < 60) return `${Math.round(seconds)}s`;
                   if (seconds < 3600) return `${Math.round(seconds / 60)}m`;
                   return `${Math.round(seconds / 3600)}h`;
@@ -1451,7 +1506,11 @@ function VisitorDataTable({ visitorIdParam }: { visitorIdParam?: string | null }
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleUnban(visitor.id, visitor.banReason);
+                                  if (!visitor.mask) {
+                                    showToast.error('Cannot unban: Visitor mask not found');
+                                    return;
+                                  }
+                                  handleUnban(visitor.mask, visitor.banReason);
                                 }}
                                 className="px-3 py-1.5 text-sm font-medium text-green-700 hover:text-green-800 bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 hover:border-green-300 transition-all flex items-center gap-1.5"
                                 title="Unban visitor"
@@ -1463,7 +1522,11 @@ function VisitorDataTable({ visitorIdParam }: { visitorIdParam?: string | null }
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleBan(visitor.id);
+                                  if (!visitor.mask) {
+                                    showToast.error('Cannot ban: Visitor mask not found');
+                                    return;
+                                  }
+                                  handleBan(visitor.mask);
                                 }}
                                 className="px-3 py-1.5 text-sm font-medium text-red-700 hover:text-red-800 bg-red-50 hover:bg-red-100 rounded-lg border border-red-200 hover:border-red-300 transition-all flex items-center gap-1.5"
                                 title="Ban visitor"
@@ -1539,6 +1602,28 @@ function VisitorDataTable({ visitorIdParam }: { visitorIdParam?: string | null }
                                 </svg>
                               </button>
                             </div>
+                            
+                            {/* Mask for Portfolio Reference */}
+                            {visitor.mask && (
+                              <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-50 rounded-md border border-blue-200 hover:border-blue-400 transition-all">
+                                <span className="text-xs font-mono text-gray-600 font-medium">
+                                  Mask: <span className="text-blue-700">{visitor.mask}</span>
+                                </span>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigator.clipboard.writeText(visitor.mask);
+                                    showToast.success('Mask copied for ban reference!');
+                                  }}
+                                  className="ml-1 p-1 hover:bg-blue-100 rounded transition-colors"
+                                  title="Copy mask (see on portfolio)"
+                                >
+                                  <svg className="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                  </svg>
+                                </button>
+                              </div>
+                            )}
 
                             {/* ISP */}
                             {(visitor.geoLocation as any)?.isp && (

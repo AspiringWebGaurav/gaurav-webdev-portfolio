@@ -1,5 +1,7 @@
 /**
- * Visitor Analytics Event Ingestion API
+ * Visitor Analytics Event Ingestion API (Single Event)
+ * Uses UUID-sync system exclusively
+ * 
  * Handles server-side event logging with validation and anti-tampering
  */
 
@@ -25,8 +27,6 @@ import { db } from "@/lib/firebase";
 import {
   EventIngestionDTO,
   isValidEventType,
-  generateVisitorId,
-  generateSessionId,
   detectDeviceClass,
   extractBrowserInfo,
   MAX_EVENTS_PER_SESSION,
@@ -34,8 +34,9 @@ import {
   MAX_SESSION_DURATION_HOURS,
 } from "@/types/visitorAnalytics";
 import { adminDb } from "@/lib/firebaseAdmin";
+import { getIdentityResult } from "@/lib/uuid-sync/server";
 
-const VISITORS_COLLECTION = "visitorProfiles";
+const VISITORS_COLLECTION = "og_uuid";
 const SESSIONS_COLLECTION = "visitorSessions";
 const EVENTS_COLLECTION = "visitorEvents";
 
@@ -96,15 +97,24 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST - Log a visitor event (server-synced only)
+ * Handles both single events and batch events
  */
 export async function POST(request: NextRequest) {
   try {
-    const body: EventIngestionDTO = await request.json();
+    const body: any = await request.json();
     
-    // Validate event type
+    // Handle batch events (redirect to batch endpoint internally)
+    if (body.events && Array.isArray(body.events)) {
+      console.log('[Events API] Detected batch request, processing...');
+      
+      // Process as batch internally
+      return await processBatchEvents(request, body);
+    }
+    
+    // Validate single event
     if (!body.eventType || !isValidEventType(body.eventType)) {
       return NextResponse.json(
-        { success: false, error: "Invalid event type" },
+        { success: false, error: "Invalid event type or missing eventType field" },
         { status: 400 }
       );
     }
@@ -117,18 +127,15 @@ export async function POST(request: NextRequest) {
                      "unknown";
     const forwardedFor = headersList.get("x-forwarded-for") || "";
     
-    // Generate privacy-compliant visitor ID (hash of IP + UA)
+    // Generate privacy-compliant visitor UUID using UUID-sync
     const fingerprint = `${ipAddress}_${userAgent}`;
-    const visitorId = generateVisitorId(fingerprint);
+    const { uuid, mask, isNew } = await getIdentityResult(fingerprint);
     
-    // Get or create session (check cookies for session ID)
-    const cookieHeader = headersList.get("cookie") || "";
-    let sessionId = extractSessionIdFromCookie(cookieHeader);
+    // Use UUID as document ID (mask is for display only)
+    const visitorId = uuid;
     
-    if (!sessionId) {
-      // Use same fingerprint for session ID to maintain consistency
-      sessionId = generateSessionId(fingerprint);
-    }
+    // Use mask as session ID (no cookies, no random generation)
+    const sessionId = mask;
     
     // Extract device and browser info
     const viewportWidth = body.metadata?.viewportWidth;
@@ -301,7 +308,7 @@ export async function POST(request: NextRequest) {
     // Anti-abuse: check event count for this session
     // (In production, implement rate limiting here)
     
-    // Return response with session cookie
+    // Return response (no cookies - stateless UUID-sync)
     const response = NextResponse.json(
       {
         success: true,
@@ -312,15 +319,7 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
     
-    // Set session cookie (httpOnly, secure)
-    response.cookies.set("visitor_session", sessionId, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: SESSION_TIMEOUT_MINUTES * 60, // seconds
-      path: "/",
-    });
-    
+    // No cookies - UUID-sync is stateless
     return response;
     
   } catch (error) {
@@ -334,14 +333,6 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-/**
- * Helper: Extract session ID from cookie header
- */
-function extractSessionIdFromCookie(cookieHeader: string): string | null {
-  const match = cookieHeader.match(/visitor_session=([^;]+)/);
-  return match ? match[1] : null;
 }
 
 /**
@@ -387,7 +378,7 @@ async function getGeoLocation(ipAddress: string): Promise<any> {
   try {
     // Use ip-api.com free tier (limit: 45 req/min)
     // In production, use a paid service or cache results
-    const response = await fetch(`http://ip-api.com/json/${ipAddress}?fields=status,country,countryCode,city,regionName,timezone`, {
+    const response = await fetch(`https://ip-api.com/json/${ipAddress}?fields=status,country,countryCode,city,regionName,timezone`, {
       next: { revalidate: 3600 }, // Cache for 1 hour
     });
     
@@ -428,4 +419,133 @@ function hashString(str: string): string {
     hash = hash & hash;
   }
   return Math.abs(hash).toString(36);
+}
+
+/**
+ * Process batch events inline
+ */
+async function processBatchEvents(request: NextRequest, body: any) {
+  try {
+    const headersList = await headers();
+    const userAgent = headersList.get("user-agent") || "";
+    const ipAddress = headersList.get("x-forwarded-for") || 
+                     headersList.get("x-real-ip") || 
+                     "unknown";
+    
+    const fingerprint = `${ipAddress}_${userAgent}`;
+    const { uuid, mask } = await getIdentityResult(fingerprint);
+    const visitorId = uuid;
+    
+    // Use mask as session ID (provided in body or from mask)
+    const sessionId = body.sessionId || mask;
+    
+    const serverTime = new Date();
+    let processed = 0;
+    let failed = 0;
+    
+    // Process each event individually
+    for (const event of body.events) {
+      try {
+        if (!event.eventType || !isValidEventType(event.eventType)) {
+          failed++;
+          continue;
+        }
+        
+        // Log event
+        const eventData = {
+          visitorId,
+          sessionId,
+          eventType: event.eventType,
+          timestamp: Timestamp.fromDate(serverTime),
+          metadata: {
+            ...event.metadata,
+            serverTimestamp: serverTime.toISOString(),
+            ipHash: hashString(ipAddress),
+          },
+        };
+        
+        await addDoc(collection(db, EVENTS_COLLECTION), eventData);
+        processed++;
+        
+        // Update counters
+        const visitorRef = doc(db, VISITORS_COLLECTION, visitorId);
+        const sessionRef = doc(db, SESSIONS_COLLECTION, sessionId);
+        
+        const visitorUpdates: any = {
+          lastVisit: Timestamp.fromDate(serverTime),
+          currentStatus: "active",
+          updatedAt: Timestamp.fromDate(serverTime),
+        };
+        
+        const sessionUpdates: any = {
+          isActive: true,
+        };
+        
+        if (event.eventType === "page_view") {
+          visitorUpdates.totalPageViews = increment(1);
+          sessionUpdates.pageViews = increment(1);
+        } else if (event.eventType === "bubble_open") {
+          visitorUpdates.totalBubbleOpens = increment(1);
+          sessionUpdates.bubbleOpens = increment(1);
+        } else if (event.eventType === "resume_view") {
+          visitorUpdates.resumeViews = increment(1);
+        } else if (event.eventType === "resume_download") {
+          visitorUpdates.resumeDownloads = increment(1);
+        } else if (event.eventType === "form_submit") {
+          visitorUpdates.formSubmissions = increment(1);
+        }
+        
+        if (["bubble_interaction", "resume_view", "resume_download", "form_submit"].includes(event.eventType)) {
+          visitorUpdates.totalInteractions = increment(1);
+          sessionUpdates.interactions = increment(1);
+        }
+        
+        // Apply updates (ignore errors)
+        try {
+          const visitorDoc = await getDoc(visitorRef);
+          if (visitorDoc.exists()) {
+            await updateDoc(visitorRef, visitorUpdates);
+          }
+          
+          const sessionDoc = await getDoc(sessionRef);
+          if (sessionDoc.exists()) {
+            await updateDoc(sessionRef, sessionUpdates);
+          }
+        } catch (updateError) {
+          console.error('[Events API] Update error:', updateError);
+        }
+        
+      } catch (eventError) {
+        failed++;
+        console.error('[Events API] Event processing error:', eventError);
+      }
+    }
+    
+    const response = NextResponse.json(
+      {
+        success: true,
+        visitorId,
+        sessionId,
+        processed,
+        failed,
+        total: body.events.length,
+        message: `Processed ${processed}/${body.events.length} events`,
+      },
+      { status: 200 }
+    );
+    
+    // No cookies - UUID-sync is stateless
+    return response;
+    
+  } catch (error) {
+    console.error('[Events API] Batch processing error:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Failed to process batch",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
+  }
 }

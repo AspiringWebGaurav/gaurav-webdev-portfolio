@@ -15,7 +15,7 @@ export async function POST() {
     let totalDeleted = 0;
     
     // Delete test visitor profiles
-    const profilesSnapshot = await adminDb.collection("visitorProfiles").get();
+    const profilesSnapshot = await adminDb.collection("og_uuid").get();
     const testProfiles = profilesSnapshot.docs.filter(doc => doc.id.startsWith(TEST_PREFIX));
     
     if (testProfiles.length > 0) {

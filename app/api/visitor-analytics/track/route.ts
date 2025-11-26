@@ -1,13 +1,15 @@
 /**
- * Advanced Visitor Tracking API
- * Handles all visitor tracking events with maximum detail
+ * Visitor Tracking API - ROBUST & RESILIENT
+ * Uses UUID-sync system exclusively
+ * This endpoint handles visitor presence tracking with automatic session management
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb, adminAuth } from "@/lib/firebaseAdmin";
 import { Timestamp, FieldValue } from "firebase-admin/firestore";
+import { translateMaskToUUID, isValidMask } from "@/lib/uuid-sync/server";
 
-const VISITORS_COLLECTION = "visitorProfiles";
+const VISITORS_COLLECTION = "og_uuid";
 const SESSIONS_COLLECTION = "visitorSessions";
 const EVENTS_COLLECTION = "visitorEvents";
 const INTERACTIONS_COLLECTION = "visitorInteractions";
@@ -25,29 +27,49 @@ export async function POST(request: NextRequest) {
     if (event === "session_start") {
       const { visitorData } = body;
       
-      // Support both visitorId and uuid (for compatibility with different parts of the app)
-      const vid = visitorData.visitorId || visitorData.uuid;
+      // Require mask (new system only)
+      const mask = visitorData.mask;
       
-      if (!vid) {
+      if (!mask) {
         return NextResponse.json({ 
           success: false, 
-          error: "visitorId or uuid is required in visitorData" 
+          error: "mask is required in visitorData" 
         }, { status: 400 });
       }
 
-      console.log('[VisitorTracking] Session start for visitor:', vid);
+      // Translate mask to UUID
+      let uuid: string;
+      if (isValidMask(mask)) {
+        try {
+          uuid = await translateMaskToUUID(mask);
+          console.log('[VisitorTracking] Translated mask', mask, 'to UUID', uuid.substring(0, 13));
+        } catch (error: any) {
+          console.error('[VisitorTracking] Failed to translate mask:', error.message);
+          return NextResponse.json({ 
+            success: false, 
+            error: `Invalid mask: ${error.message}` 
+          }, { status: 400 });
+        }
+      } else {
+        return NextResponse.json({ 
+          success: false, 
+          error: "Invalid mask format" 
+        }, { status: 400 });
+      }
+
+      console.log('[VisitorTracking] Session start for visitor:', uuid.substring(0, 13));
 
       // Check if visitor exists
-      const visitorRef = adminDb.collection(VISITORS_COLLECTION).doc(vid);
+      const visitorRef = adminDb.collection(VISITORS_COLLECTION).doc(uuid);
       const visitorDoc = await visitorRef.get();
 
       const now = Timestamp.now();
       
-      // Use device_ ID directly as session ID for consistency
+      // Use UUID as session ID for consistency
       // This ensures the same visitor gets the same session across tabs
-      const sessionId = vid;
+      const sessionId = uuid;
 
-      console.log('[VisitorTracking] Using device ID as session ID:', sessionId);
+      console.log('[VisitorTracking] Using UUID as session ID:', uuid.substring(0, 13));
 
       if (visitorDoc.exists) {
         // Existing visitor - check if this is a new visit or just a new session
@@ -100,7 +122,7 @@ export async function POST(request: NextRequest) {
         console.log('[VisitorTracking] New visitor detected, creating profile');
         
         await visitorRef.set({
-          id: vid,
+          id: uuid,  // Store UUID as ID
           firstVisit: now,
           lastVisit: now,
           totalVisits: 1,
@@ -142,7 +164,7 @@ export async function POST(request: NextRequest) {
       // Clean up undefined values to avoid Firestore errors
       const sessionData: any = {
         id: sessionId,
-        visitorId: vid,
+        visitorId: uuid,  // Store UUID internally
         startTime: now,
         endTime: null,
         duration: 0,

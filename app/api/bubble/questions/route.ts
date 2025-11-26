@@ -48,10 +48,10 @@ export async function GET(request: NextRequest) {
       questions = questions.filter(q => q.active === true);
     }
 
-    return NextResponse.json({ questions });
+    return NextResponse.json({ success: true, questions });
   } catch (error) {
     console.error('Error in questions GET:', error);
-    return NextResponse.json({ error: 'Failed to fetch questions' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to fetch questions' }, { status: 500 });
   }
 }
 
@@ -80,17 +80,20 @@ export async function POST(request: NextRequest) {
     await addDoc(collection(db, COLLECTIONS.QUESTIONS), questionData);
 
     return NextResponse.json({
-      id: questionId,
-      question,
-      answer,
-      order: order || 0,
-      active: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      success: true,
+      question: {
+        id: questionId,
+        question,
+        answer,
+        order: order || 0,
+        active: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
     });
   } catch (error) {
     console.error('Error in questions POST:', error);
-    return NextResponse.json({ error: 'Failed to create question' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to create question' }, { status: 500 });
   }
 }
 

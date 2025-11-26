@@ -350,7 +350,7 @@ export async function POST(request: NextRequest) {
 
     // Send notification for high/critical severity (fire and forget)
     if (sanitized.severity === "high" || sanitized.severity === "critical") {
-      fetch(`${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/bug-reports/notify`, {
+      fetch(`${process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'}/api/bug-reports/notify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -437,6 +437,7 @@ export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const reportId = searchParams.get("id");
+    const soft = searchParams.get("soft") === "true";
 
     if (!reportId) {
       return NextResponse.json(
@@ -457,7 +458,37 @@ export async function DELETE(request: NextRequest) {
 
     const bugReport = firestoreToBugReport(docSnap);
 
-    // Delete attachments from storage
+    if (soft) {
+      // Soft delete - move to recycle bin (keep attachments)
+      const reportData = docSnap.data();
+      const now = Timestamp.now();
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + 15);
+
+      await addDoc(collection(db, "recycleBin"), {
+        originalId: reportId,
+        userId: "portfolio-user",
+        source: "bug-report",
+        data: reportData,
+        deletedAt: now,
+        expiryDate: Timestamp.fromDate(expiryDate),
+        expiryDays: 15,
+        deletedBy: "admin",
+      });
+
+      // Delete from original collection
+      await deleteDoc(docRef);
+
+      return NextResponse.json(
+        {
+          success: true,
+          message: "Bug report moved to recycle bin",
+        },
+        { status: 200 }
+      );
+    }
+
+    // Hard delete - remove attachments from storage
     if (bugReport.attachments && bugReport.attachments.length > 0) {
       for (const attachment of bugReport.attachments) {
         try {

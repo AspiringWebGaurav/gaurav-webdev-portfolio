@@ -72,7 +72,7 @@ export default function BanAppealsManager() {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
         (a) =>
-          a.visitorId.toLowerCase().includes(query) ||
+          a.uuid.toLowerCase().includes(query) ||
           a.appealReason.toLowerCase().includes(query) ||
           a.banReason.toLowerCase().includes(query) ||
           a.reviewNotes?.toLowerCase().includes(query)
@@ -472,8 +472,11 @@ export default function BanAppealsManager() {
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
                             <h3 className="font-medium text-gray-900">
-                              Visitor ID: {appeal.visitorId.slice(0, 16)}...
+                              {appeal.uuid.slice(0, 12)}
                             </h3>
+                            <span className="text-xs text-gray-500 font-mono">
+                              ({appeal.mask})
+                            </span>
                             <span
                               className={`px-2 py-0.5 rounded-full text-xs font-medium bg-${statusColor}-100 text-${statusColor}-700`}
                             >
@@ -584,9 +587,15 @@ export default function BanAppealsManager() {
               <div className="bg-gray-50 rounded-lg p-4 space-y-2">
                 <div className="flex items-center gap-2 text-sm">
                   <User className="w-4 h-4 text-gray-500" />
-                  <span className="text-gray-600">Visitor ID:</span>
+                  <span className="text-gray-600">UUID:</span>
                   <span className="font-mono text-gray-900">
-                    {viewingAppeal.visitorId}
+                    {viewingAppeal.uuid}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-gray-600">Mask (Portfolio):</span>
+                  <span className="font-mono text-blue-600">
+                    {viewingAppeal.mask}
                   </span>
                 </div>
                 {viewingAppeal.deviceInfo && (

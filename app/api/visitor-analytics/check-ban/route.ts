@@ -1,54 +1,69 @@
 /**
  * Check Ban Status API
  * Checks if a visitor is banned by their device UUID
+ * NEW: Uses UUID-sync system
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebaseAdmin";
-import { generateVisitorId } from "@/types/visitorAnalytics";
+import { identifyVisitor, getIdentityResult, firestoreCheckBanStatus, firestoreGetVisitorDocument, translateMaskToUUID } from "@/lib/uuid-sync/server";
 
-const VISITORS_COLLECTION = "visitorProfiles";
+const VISITORS_COLLECTION = "og_uuid";
 
 export async function POST(request: NextRequest) {
   try {
-    // Get request headers for fingerprinting (same as events API)
-    const userAgent = request.headers.get("user-agent") || "";
-    const ipAddress = request.headers.get("x-forwarded-for") || 
-                     request.headers.get("x-real-ip") || 
-                     "unknown";
+    const body = await request.json();
+    const { mask: clientMask } = body;
+
+    let mask: string;
+    let uuid: string;
+
+    // If client provides mask, use it (preferred - avoids dual identity)
+    if (clientMask) {
+      mask = clientMask;
+      uuid = await translateMaskToUUID(mask);
+      console.log("[Check Ban API] Using client-provided mask:", mask);
+    } else {
+      // Fallback: Generate from headers (for server-side calls)
+      const userAgent = request.headers.get("user-agent") || "";
+      const ipAddress = request.headers.get("x-forwarded-for") || 
+                       request.headers.get("x-real-ip") || 
+                       "unknown";
+      
+      const fingerprint = `${ipAddress}_${userAgent}`;
+      const result = await getIdentityResult(fingerprint);
+      mask = result.mask;
+      uuid = result.uuid;
+      console.log("[Check Ban API] Generated mask from headers:", mask);
+    }
     
-    // Generate visitor ID using SERVER-SIDE method (same as events API)
-    const fingerprint = `${ipAddress}_${userAgent}`;
-    const visitorId = generateVisitorId(fingerprint);
+    console.log("[Check Ban API] Checking ban for visitor:", mask);
 
-    console.log("[Check Ban API] Checking ban for visitor:", visitorId);
+    // Check ban status
+    const banned = await firestoreCheckBanStatus(uuid);
 
-    // Check visitor ban status
-    const visitorRef = adminDb.collection(VISITORS_COLLECTION).doc(visitorId);
-    const visitorDoc = await visitorRef.get();
-
-    if (!visitorDoc.exists) {
-      // Visitor doesn't exist in database - not banned (new visitor)
-      console.log("[Check Ban API] ✅ New visitor (not in database) - not banned");
+    if (!banned) {
+      console.log("[Check Ban API] ✅ Visitor not banned");
       return NextResponse.json({
         banned: false,
+        mask,
       });
     }
 
-    const visitorData = visitorDoc.data();
+    // Get full visitor document for ban details
+    const visitorData = await firestoreGetVisitorDocument(uuid);
     
-    if (visitorData?.banned === true) {
-      // Visitor is BANNED - log full ban details
+    if (visitorData) {
       console.log("[Check Ban API] ⛔ Visitor IS BANNED!", {
-        id: visitorId,
+        mask,
         banReason: visitorData.banReason || "No reason specified",
         banCategory: visitorData.banCategory || "normal",
         bannedBy: visitorData.bannedBy || "system",
-        banTimestamp: visitorData.banTimestamp?.toDate?.()?.toISOString() || "unknown",
       });
       
       return NextResponse.json({
         banned: true,
+        mask,
         banInfo: {
           reason: visitorData.banReason || "Security Violation",
           category: visitorData.banCategory || "normal",
@@ -58,10 +73,11 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Visitor exists but NOT banned - only log visitor ID
-    console.log("[Check Ban API] ✅ Visitor exists but NOT banned:", visitorId);
+    // Visitor exists but NOT banned
+    console.log("[Check Ban API] ✅ Visitor exists but NOT banned:", mask);
     return NextResponse.json({
       banned: false,
+      mask,
     });
 
   } catch (error) {
@@ -73,28 +89,45 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET method for quick check (uses same server-side fingerprinting)
+// GET method for quick check (supports mask query param)
 export async function GET(request: NextRequest) {
   try {
-    // Use same server-side fingerprinting as POST
-    const userAgent = request.headers.get("user-agent") || "";
-    const ipAddress = request.headers.get("x-forwarded-for") || 
-                     request.headers.get("x-real-ip") || 
-                     "unknown";
+    const { searchParams } = new URL(request.url);
+    const clientMask = searchParams.get('mask');
+
+    let mask: string;
+    let uuid: string;
+
+    // If client provides mask, use it (preferred)
+    if (clientMask) {
+      mask = clientMask;
+      uuid = await translateMaskToUUID(mask);
+      console.log("[Check Ban API GET] Using client-provided mask:", mask);
+    } else {
+      // Fallback: Generate from headers
+      const userAgent = request.headers.get("user-agent") || "";
+      const ipAddress = request.headers.get("x-forwarded-for") || 
+                       request.headers.get("x-real-ip") || 
+                       "unknown";
+      
+      const fingerprint = `${ipAddress}_${userAgent}`;
+      const result = await getIdentityResult(fingerprint);
+      mask = result.mask;
+      uuid = result.uuid;
+      console.log("[Check Ban API GET] Generated mask from headers:", mask);
+    }
     
-    const fingerprint = `${ipAddress}_${userAgent}`;
-    const visitorId = generateVisitorId(fingerprint);
+    // Check ban status
+    const banned = await firestoreCheckBanStatus(uuid);
 
-    const visitorRef = adminDb.collection(VISITORS_COLLECTION).doc(visitorId);
-    const visitorDoc = await visitorRef.get();
-
-    if (!visitorDoc.exists || !visitorDoc.data()?.banned) {
-      return NextResponse.json({ banned: false });
+    if (!banned) {
+      return NextResponse.json({ banned: false, mask });
     }
 
-    const visitorData = visitorDoc.data();
+    const visitorData = await firestoreGetVisitorDocument(uuid);
     return NextResponse.json({
       banned: true,
+      mask,
       banInfo: {
         reason: visitorData?.banReason || "Security Violation",
         category: visitorData?.banCategory || "normal",

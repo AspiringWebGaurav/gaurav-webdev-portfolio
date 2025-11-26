@@ -12,7 +12,7 @@ import {
   sanitizeAppealReason,
   MAX_BAN_APPEALS
 } from "@/types/banAppeal";
-import { generateVisitorId } from "@/types/visitorAnalytics";
+import { identifyVisitor, getIdentityResult, translateMaskToUUID } from "@/lib/uuid-sync/server";
 
 const COLLECTION_NAME = "banAppeals";
 
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
       const data = doc.data();
       return {
         id: doc.id,
-        visitorId: data.visitorId,
+        mask: data.mask,
         appealReason: data.appealReason,
         banReason: data.banReason,
         banCategory: data.banCategory,
@@ -64,18 +64,35 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    // Generate visitor ID server-side from request headers
-    const userAgent = request.headers.get("user-agent") || "";
-    const ipAddress = request.headers.get("x-forwarded-for") || 
-                     request.headers.get("x-real-ip") || 
-                     "unknown";
+    // Use mask from request body (sent by banned page) OR fallback to header-based identification
+    let mask: string;
+    let uuid: string;
     
-    const fingerprint = `${ipAddress}_${userAgent}`;
-    const visitorId = generateVisitorId(fingerprint);
+    if (body.mask) {
+      // Visitor provided their mask (preferred - avoids dual identity)
+      mask = body.mask;
+      console.log("[Ban Appeals API] Using client-provided mask:", mask);
+      
+      // Translate mask to UUID
+      uuid = await translateMaskToUUID(mask);
+    } else {
+      // Fallback: Generate from headers (legacy support)
+      const userAgent = request.headers.get("user-agent") || "";
+      const ipAddress = request.headers.get("x-forwarded-for") || 
+                       request.headers.get("x-real-ip") || 
+                       "unknown";
+      
+      const fingerprint = `${ipAddress}_${userAgent}`;
+      mask = await identifyVisitor(fingerprint);
+      const { uuid: translatedUuid } = await getIdentityResult(fingerprint);
+      uuid = translatedUuid;
+      
+      console.log("[Ban Appeals API] Generated mask from headers:", mask);
+    }
 
-    console.log("[Ban Appeals API] Creating appeal for visitor:", visitorId);
+    console.log("[Ban Appeals API] Creating appeal for visitor:", mask, "UUID:", uuid);
 
-    // Create DTO with server-generated visitor ID
+    // Create DTO with visitor mask
     const appealData: CreateBanAppealDTO = {
       appealReason: body.appealReason,
       banReason: body.banReason,
@@ -111,7 +128,7 @@ export async function POST(request: NextRequest) {
 
     // Check if visitor already has a pending appeal
     const existingAppealSnapshot = await appealsRef
-      .where("visitorId", "==", visitorId)
+      .where("mask", "==", mask)
       .where("status", "==", "pending")
       .limit(1)
       .get();
@@ -129,10 +146,11 @@ export async function POST(request: NextRequest) {
     // Sanitize appeal reason
     const sanitizedReason = sanitizeAppealReason(appealData.appealReason);
 
-    // Create new appeal
+    // Create new appeal with UUID + mask
     const now = new Date();
     const newAppeal: any = {
-      visitorId,
+      uuid, // Admin operates on UUID
+      mask, // Stored for visitor reference
       appealReason: sanitizedReason,
       banReason: appealData.banReason,
       banCategory: appealData.banCategory,
@@ -196,6 +214,7 @@ export async function DELETE(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
+    const soft = searchParams.get("soft") === "true";
 
     if (!id) {
       return NextResponse.json(

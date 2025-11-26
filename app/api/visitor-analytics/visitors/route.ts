@@ -1,6 +1,7 @@
 /**
  * Visitor Analytics List API
  * Admin-only endpoint for retrieving visitor profiles with filters and pagination
+ * NEW: Returns masks instead of UUIDs
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -23,8 +24,9 @@ import {
   firestoreToVisitorProfile,
   ACTIVE_VISITOR_THRESHOLD_MINUTES,
 } from "@/types/visitorAnalytics";
+import { translateUUIDToMask } from "@/lib/uuid-sync/server";
 
-const VISITORS_COLLECTION = "visitorProfiles";
+const VISITORS_COLLECTION = "og_uuid";
 const AUDIT_LOG_COLLECTION = "analyticsAuditLogs";
 
 /**
@@ -53,6 +55,13 @@ export async function GET(request: NextRequest) {
 
     // Parse query parameters
     const searchParams = request.nextUrl.searchParams;
+    
+    // Check if requesting specific visitor details
+    const visitorId = searchParams.get("visitorId");
+    if (visitorId) {
+      return getVisitorDetails(visitorId, decodedToken);
+    }
+    
     const params: VisitorListParams = {
       page: parseInt(searchParams.get("page") || "1"),
       limit: parseInt(searchParams.get("limit") || "50"),
@@ -125,11 +134,12 @@ export async function GET(request: NextRequest) {
       return visitor;
     });
 
-    // Apply client-side search filter if provided (search in ID or location)
+    // Apply client-side search filter if provided (search in UUID, mask, or location)
     if (params.searchQuery) {
       const query = params.searchQuery.toLowerCase();
       visitors = visitors.filter(v => 
         v.id.toLowerCase().includes(query) ||
+        v.mask?.toLowerCase().includes(query) ||
         v.geoLocation?.country?.toLowerCase().includes(query) ||
         v.geoLocation?.city?.toLowerCase().includes(query)
       );
@@ -173,11 +183,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        visitors: filteredVisitors,
-        total: filteredVisitors.length,
-        page: params.page || 1,
-        limit: limitValue,
-        hasMore: snapshot.docs.length >= limitValue,
+        data: {
+          visitors: filteredVisitors,
+          total: filteredVisitors.length,
+          page: params.page || 1,
+          limit: limitValue,
+          hasMore: snapshot.docs.length >= limitValue,
+        },
       },
       { status: 200 }
     );
@@ -188,6 +200,54 @@ export async function GET(request: NextRequest) {
       {
         success: false,
         error: "Failed to fetch visitor profiles",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * Get specific visitor details
+ */
+async function getVisitorDetails(visitorId: string, decodedToken: any) {
+  try {
+    const { doc, getDoc } = await import("firebase/firestore");
+    
+    const visitorRef = doc(db, VISITORS_COLLECTION, visitorId);
+    const visitorDoc = await getDoc(visitorRef);
+    
+    if (!visitorDoc.exists()) {
+      return NextResponse.json(
+        { success: false, error: "Visitor not found" },
+        { status: 404 }
+      );
+    }
+    
+    const visitor = firestoreToVisitorProfile(visitorDoc);
+    
+    // Log access
+    await logAuditAction({
+      adminId: decodedToken.uid,
+      adminEmail: decodedToken.email || "unknown",
+      action: "view_detail",
+      targetVisitorId: visitorId,
+      timestamp: new Date(),
+    });
+    
+    return NextResponse.json(
+      {
+        success: true,
+        visitor,
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error fetching visitor details:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Failed to fetch visitor details",
         details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }

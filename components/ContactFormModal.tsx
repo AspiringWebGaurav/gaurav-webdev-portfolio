@@ -25,7 +25,7 @@ import { X, Send, CheckCircle, AlertCircle, Loader2, Shield } from "lucide-react
 import { motion, AnimatePresence } from "framer-motion";
 import { Formik, Form, Field, ErrorMessage, FormikHelpers } from "formik";
 import { useContactSubmissions } from "@/contexts/ContactSubmissionContext";
-import { useInteractionTracking } from "@/lib/useVisitorTracking";
+import { useVisitorTracking } from "@/hooks/useVisitorTracking";
 import TurnstileWidget from "@/components/TurnstileWidget";
 import { generateDeviceFingerprint } from "@/lib/deviceFingerprint";
 import {
@@ -52,7 +52,7 @@ export default function ContactFormModal({
   onClose,
 }: ContactFormModalProps) {
   const { createSubmission } = useContactSubmissions();
-  const { trackContactOpen, trackFormSubmit } = useInteractionTracking();
+  const { trackEvent } = useVisitorTracking();
   const [status, setStatus] = useState<SubmissionStatus>("idle");
   const [generalError, setGeneralError] = useState<string>("");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -64,19 +64,38 @@ export default function ContactFormModal({
   const [fingerprint, setFingerprint] = useState<string | null>(null);
   const [formOpenTime, setFormOpenTime] = useState<number>(0);
   const [showTurnstile, setShowTurnstile] = useState(false);
+  const [contactOpenTracked, setContactOpenTracked] = useState(false);
   const turnstileRef = useRef<HTMLDivElement>(null);
 
-  // Track contact form open and initialize protections
+  // Track contact form open and initialize protections - GUARANTEED DELIVERY
   useEffect(() => {
-    if (isOpen) {
-      trackContactOpen();
+    if (isOpen && !contactOpenTracked) {
+      console.log('[ContactForm] 📧 Modal opened - tracking contact_open');
+      trackEvent('contact_open')
+        .then(() => {
+          setContactOpenTracked(true);
+          console.log('[ContactForm] ✅ Contact open tracked successfully');
+        })
+        .catch((err) => {
+          console.error('[ContactForm] Contact open tracking failed, will retry:', err);
+          // Retry after 2 seconds
+          setTimeout(() => {
+            trackEvent('contact_open').then(() => setContactOpenTracked(true));
+          }, 2000);
+        });
+      
       setFormOpenTime(Date.now());
       
       // Generate device fingerprint
       const fp = generateDeviceFingerprint();
       setFingerprint(fp);
     }
-  }, [isOpen, trackContactOpen]);
+    
+    // Reset when modal closes
+    if (!isOpen) {
+      setContactOpenTracked(false);
+    }
+  }, [isOpen, contactOpenTracked, trackEvent]);
 
   // EmailJS configuration
   const SERVICE_ID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || "";
@@ -162,7 +181,14 @@ export default function ContactFormModal({
     }
 
     setStatus("submitting");
-    trackFormSubmit(); // Track form submission
+    
+    // Track form submission IMMEDIATELY (HIGH PRIORITY - never miss)
+    console.log('[ContactForm] ✉️ Submitting form - tracking form_submit [HIGH PRIORITY]');
+    trackEvent('form_submit').catch(err => {
+      console.error('[ContactForm] Form submit tracking failed:', err);
+      // Retry in background - don't block submission
+      setTimeout(() => trackEvent('form_submit'), 1000);
+    });
 
     try {
       // Get user agent and IP (IP will be set on server side for security)

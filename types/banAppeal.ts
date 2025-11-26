@@ -2,11 +2,16 @@
  * Ban Appeal Type Definitions - SIMPLIFIED
  * Handles visitor ban appeals with admin review functionality
  * No complex history tracking or automatic recycle bin moves
+ * 
+ * ARCHITECTURE:
+ * - uuid: Permanent visitor identifier (admin sees this)
+ * - mask: Public identifier (visitor uses this, stored but not shown to admin)
  */
 
 export interface BanAppeal {
   id: string;
-  visitorId: string;
+  uuid: string; // Admin operates on UUID (permanent identifier)
+  mask: string; // Stored for visitor reference only
   appealReason: string; // User's explanation
   banReason: string; // Original ban reason
   banCategory: "normal" | "medium" | "danger" | "severe";
@@ -40,7 +45,7 @@ export interface ReviewBanAppealDTO {
 }
 
 export interface RestoreBanAppealDTO {
-  visitorId: string;
+  mask: string;
   appealReason: string;
   banReason: string;
   banCategory: "normal" | "medium" | "danger" | "severe";

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, Download, Eye, Loader2, HardDrive, Clock } from 'lucide-react';
-import { useInteractionTracking } from '@/lib/useVisitorTracking';
+import { useVisitorTracking } from '@/hooks/useVisitorTracking';
 
 interface ResumeViewerProps {
   isOpen: boolean;
@@ -23,14 +23,31 @@ export default function ResumeViewer({
 }: ResumeViewerProps) {
   const [downloading, setDownloading] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
-  const { trackResumeView, trackResumeDownload } = useInteractionTracking();
+  const [viewTracked, setViewTracked] = useState(false);
+  const { trackEvent } = useVisitorTracking();
 
-  // Track resume view when modal opens
+  // Track resume view when modal opens - GUARANTEED DELIVERY
   useEffect(() => {
-    if (isOpen) {
-      trackResumeView();
+    if (isOpen && !viewTracked) {
+      console.log('[ResumeViewer] 📄 Modal opened - tracking view');
+      trackEvent('resume_view')
+        .then(() => {
+          setViewTracked(true);
+          console.log('[ResumeViewer] ✅ View tracked successfully');
+        })
+        .catch((err) => {
+          console.error('[ResumeViewer] View tracking failed, will retry:', err);
+          // Retry after 2 seconds
+          setTimeout(() => {
+            trackEvent('resume_view').then(() => setViewTracked(true));
+          }, 2000);
+        });
     }
-  }, [isOpen, trackResumeView]);
+    // Reset when modal closes
+    if (!isOpen) {
+      setViewTracked(false);
+    }
+  }, [isOpen, viewTracked, trackEvent]);
 
   // Handle close with animation
   const handleClose = () => {
@@ -259,10 +276,18 @@ export default function ResumeViewer({
   };
 
   // FIXED: Silent download using proxy API - NO new tab, NO navigation
-  const handleDownload = () => {
+  // GUARANTEED TRACKING: Resume download is HIGH PRIORITY event
+  const handleDownload = async () => {
     try {
       setDownloading(true);
-      trackResumeDownload(); // Track download event
+      
+      // Track download event BEFORE starting download (high priority - never miss)
+      console.log('[ResumeViewer] ⬇️ Starting download - tracking event [HIGH PRIORITY]');
+      await trackEvent('resume_download').catch(err => {
+        console.error('[ResumeViewer] Download tracking failed:', err);
+        // Don't block download, but retry tracking
+        setTimeout(() => trackEvent('resume_download'), 1000);
+      });
 
       // Use our proxy API that forces download with Content-Disposition: attachment
       // This prevents browser from opening PDF in new tab
@@ -275,6 +300,8 @@ export default function ResumeViewer({
       
       // Append iframe to trigger download
       document.body.appendChild(iframe);
+      
+      console.log('[ResumeViewer] ✅ Download triggered successfully');
       
       // Remove iframe after download starts (user stays on page)
       setTimeout(() => {

@@ -97,7 +97,7 @@ export default function BanModal({ visitorId, onClose, onBanSuccess }: BanModalP
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          visitorId,
+          mask: visitorId,  // Admin sends mask (visitorId is actually mask from VisitorAnalyticsManager)
           reason: selectedReason,
           category: selectedCategory,
           customReason: selectedReason === "Custom Reason" ? customReason : undefined,

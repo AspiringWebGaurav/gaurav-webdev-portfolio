@@ -1,16 +1,16 @@
 /**
  * Device Fingerprinting Utility
  * Generates a stable, deterministic unique identifier for the device/browser combination
- * NO localStorage - purely based on device characteristics (server-reconciled)
+ * Uses global window object for true singleton across all imports
+ * 
+ * NOTE: This only generates fingerprints. Use UUID-sync system for visitor identification.
  */
 
-/**
- * Generate the primary visitor ID in format: device_<fingerprint>
- * This is THE main identifier used throughout the entire application
- */
-export function generateVisitorId(): string {
-  const fingerprint = generateDeviceFingerprint();
-  return `device_${fingerprint}`;
+// Use window object for TRUE singleton across all module imports
+declare global {
+  interface Window {
+    __deviceFingerprint?: string;
+  }
 }
 
 export function generateDeviceFingerprint(): string {
@@ -18,8 +18,13 @@ export function generateDeviceFingerprint(): string {
     return 'server-side';
   }
 
+  // Check global singleton cache first
+  if (window.__deviceFingerprint) {
+    console.log('[Fingerprint] Using cached:', window.__deviceFingerprint);
+    return window.__deviceFingerprint;
+  }
+
   // Generate fingerprint from stable browser characteristics
-  // This generates the SAME fingerprint for the same device every time
   const components = [
     navigator.userAgent,
     navigator.language,
@@ -32,14 +37,19 @@ export function generateDeviceFingerprint(): string {
     navigator.vendor || 'unknown',
     screen.pixelDepth,
     navigator.maxTouchPoints || 0,
-    // Add more stable characteristics for better uniqueness
     (navigator as any).deviceMemory || 'unknown',
     window.screen.availWidth,
     window.screen.availHeight,
   ];
 
-  // Create a deterministic hash that's always the same for this device
+  // Create a deterministic hash
   const fingerprint = deterministicHash(components.join('|'));
+  
+  console.log('[Fingerprint] Generated NEW fingerprint:', fingerprint);
+  console.log('[Fingerprint] Components:', components.slice(0, 3)); // First 3 for debugging
+  
+  // Store in global window object (survives module re-imports)
+  window.__deviceFingerprint = fingerprint;
   
   return fingerprint;
 }
@@ -47,7 +57,7 @@ export function generateDeviceFingerprint(): string {
 /**
  * Deterministic hash function - same input always produces same output
  * This ensures the same device always gets the same UUID
- * Returns RAW hash value for use with generateVisitorId()
+ * Returns RAW hash value for UUID-sync system
  */
 function deterministicHash(str: string): string {
   let hash = 5381; // DJB2 hash algorithm - more stable than simple hash
@@ -57,42 +67,8 @@ function deterministicHash(str: string): string {
   }
   // Convert to positive number and base36 encoding for compact representation
   const hashValue = Math.abs(hash);
-  // Return raw fingerprint without prefix - let generateVisitorId add the device_ prefix
+  // Return raw fingerprint for UUID-sync identification
   return hashValue.toString(36) + '_' + str.length.toString(36);
-}
-
-/**
- * Enhanced fingerprint with additional entropy for better uniqueness
- */
-export async function generateEnhancedFingerprint(): Promise<string> {
-  const baseFingerprint = generateDeviceFingerprint();
-  
-  // Add canvas fingerprinting for better uniqueness (optional, non-blocking)
-  try {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      canvas.width = 200;
-      canvas.height = 50;
-      ctx.textBaseline = 'top';
-      ctx.font = '14px Arial';
-      ctx.textBaseline = 'alphabetic';
-      ctx.fillStyle = '#f60';
-      ctx.fillRect(125, 1, 62, 20);
-      ctx.fillStyle = '#069';
-      ctx.fillText('Browser Fingerprint', 2, 15);
-      ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
-      ctx.fillText('Canvas Fingerprint', 4, 17);
-      
-      const canvasHash = deterministicHash(canvas.toDataURL());
-      return baseFingerprint + '_' + canvasHash.substring(0, 8);
-    }
-  } catch (e) {
-    // Canvas fingerprinting failed, use base fingerprint
-    console.log('[Fingerprint] Canvas fingerprinting unavailable, using base fingerprint');
-  }
-  
-  return baseFingerprint;
 }
 
 /**

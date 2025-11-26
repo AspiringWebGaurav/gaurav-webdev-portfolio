@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { banStatusManager } from '@/lib/banStatusManager';
 
 interface BanInfo {
   reason: string;
@@ -46,7 +47,16 @@ export default function DesktopScreen({ banInfo }: DesktopScreenProps) {
   useEffect(() => {
     const checkAppealStatus = async () => {
       try {
-        const response = await fetch('/api/ban-appeals/status');
+        // Get mask from banStatusManager
+        const mask = banStatusManager.getMask();
+        
+        if (!mask) {
+          console.warn('[Appeal Status] No mask available yet');
+          setIsLoadingStatus(false);
+          return;
+        }
+        
+        const response = await fetch(`/api/ban-appeals/status?mask=${encodeURIComponent(mask)}`);
         const result = await response.json();
 
         if (result.success && result.hasAppeal) {
@@ -84,12 +94,16 @@ export default function DesktopScreen({ banInfo }: DesktopScreenProps) {
     setSubmitError(null);
 
     try {
+      // Get visitor mask for proper identity linking
+      const visitorMask = banStatusManager.getVisitorId();
+      
       const response = await fetch('/api/ban-appeals', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          mask: visitorMask, // Send mask to link appeal to correct visitor
           appealReason: appealText.trim(),
           banReason: banInfo.reason,
           banCategory: banInfo.category || 'normal',

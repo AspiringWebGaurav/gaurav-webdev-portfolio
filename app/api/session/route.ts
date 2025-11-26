@@ -1,59 +1,71 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { collection, query, where, getDocs, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { translateMaskToUUID } from '@/lib/uuid-sync/server';
+import { MaskNotFoundError, UUIDValidationError } from '@/lib/uuid-sync/errors';
+import { headers } from 'next/headers';
 
 const COLLECTIONS = {
-  BUBBLE_SESSIONS: 'bubbleSessions',
+  BUBBLE_SESSIONS: 'og_uuid_sessions',
 };
 
 /**
- * UUID-Only Session Management API
+ * UUID-Sync Session Management API
  * 
  * Simple, stateless session handling:
  * - No cookies, no tokens, no authentication
- * - Pure device_ UUID based identification
+ * - Pure mask-based identification (device_**********)
  * - All state stored server-side in Firebase
- * - Client sends UUID with every request
+ * - Client sends mask with every request
  */
 
 /**
- * GET: Fetch session by UUID
- * Query param: visitorId (device_xxx)
+ * GET: Fetch session by mask using UUID-sync
+ * Query param: mask (device_**********)
  */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const visitorId = searchParams.get('visitorId');
+    const mask = searchParams.get('mask');
 
-    if (!visitorId) {
+    if (!mask) {
       return NextResponse.json(
-        { error: 'visitorId required' },
+        { error: 'mask required' },
         { status: 400 }
       );
     }
 
-    if (!visitorId.startsWith('device_')) {
-      return NextResponse.json(
-        { error: 'Invalid visitorId format. Must start with device_' },
-        { status: 400 }
-      );
+    // Translate mask to UUID with robust error handling
+    let uuid: string;
+    try {
+      uuid = await translateMaskToUUID(mask);
+    } catch (error: any) {
+      if (error instanceof MaskNotFoundError) {
+        return NextResponse.json(
+          { error: 'Mask not found', exists: false },
+          { status: 404 }
+        );
+      }
+      if (error instanceof UUIDValidationError) {
+        return NextResponse.json(
+          { error: `Invalid mask format: ${error.message}` },
+          { status: 400 }
+        );
+      }
+      throw error; // Re-throw unexpected errors
     }
+    
+    // Fetch session by UUID (document ID)
+    const sessionDocRef = doc(db, COLLECTIONS.BUBBLE_SESSIONS, uuid);
+    const sessionDoc = await getDoc(sessionDocRef);
 
-    console.log('[Session API] Fetching session for:', visitorId);
-
-    // Fetch session from Firebase
-    const sessionsRef = collection(db, COLLECTIONS.BUBBLE_SESSIONS);
-    const q = query(sessionsRef, where('id', '==', visitorId));
-    const snapshot = await getDocs(q);
-
-    if (snapshot.empty) {
+    if (!sessionDoc.exists()) {
       return NextResponse.json(
         { error: 'Session not found', exists: false },
         { status: 404 }
       );
     }
 
-    const sessionDoc = snapshot.docs[0];
     const sessionData = sessionDoc.data();
 
     // Don't return deleted sessions
@@ -64,13 +76,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log('[Session API] ✓ Session found:', visitorId);
-
     const response = NextResponse.json({
       success: true,
       exists: true,
       session: {
-        id: sessionData.id,
+        id: uuid,  // Return UUID as id
+        mask: sessionData.mask,  // Return mask
         deviceFingerprint: sessionData.deviceFingerprint,
         visitorEmail: sessionData.visitorEmail,
         startedAt: sessionData.startedAt?.toDate() || new Date(),
@@ -90,47 +101,65 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('[Session API] GET error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch session' },
+      { error: 'Failed to fetch session', exists: false },
       { status: 500 }
     );
   }
 }
 
 /**
- * POST: Create or reactivate session
- * Body: { visitorId: "device_xxx" }
+ * POST: Create or reactivate session using UUID-sync
+ * Body: { mask: "device_**********" }
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { visitorId } = body;
+    const { mask } = body;
 
-    if (!visitorId) {
+    if (!mask) {
       return NextResponse.json(
-        { error: 'visitorId required' },
+        { error: 'mask required' },
         { status: 400 }
       );
     }
 
-    if (!visitorId.startsWith('device_')) {
-      return NextResponse.json(
-        { error: 'Invalid visitorId format. Must start with device_' },
-        { status: 400 }
-      );
+    // Translate mask to UUID with robust error handling
+    let uuid: string;
+    try {
+      uuid = await translateMaskToUUID(mask);
+    } catch (error: any) {
+      if (error instanceof MaskNotFoundError) {
+        return NextResponse.json(
+          { error: `Mask not found: ${mask}`, success: false },
+          { status: 404 }
+        );
+      }
+      if (error instanceof UUIDValidationError) {
+        return NextResponse.json(
+          { error: `Invalid mask format: ${error.message}`, success: false },
+          { status: 400 }
+        );
+      }
+      throw error; // Re-throw unexpected errors
     }
 
-    console.log('[Session API] Creating/reactivating session:', visitorId);
+    // Get fingerprint from headers for logging/tracking
+    const headersList = await headers();
+    const userAgent = headersList.get("user-agent") || "";
+    const ipAddress = headersList.get("x-forwarded-for") || 
+                     headersList.get("x-real-ip") || 
+                     "unknown";
+    const fingerprint = `${ipAddress}_${userAgent}`;
 
-    // Check if session already exists
-    const sessionsRef = collection(db, COLLECTIONS.BUBBLE_SESSIONS);
-    const existingQuery = query(sessionsRef, where('id', '==', visitorId));
-    const existingSnapshot = await getDocs(existingQuery);
+    // Check if session already exists (using UUID as doc ID)
+    const sessionDocRef = doc(db, COLLECTIONS.BUBBLE_SESSIONS, uuid);
+    const existingDoc = await getDoc(sessionDocRef);
 
-    if (existingSnapshot.empty) {
-      // Create new session
+    if (!existingDoc.exists()) {
+      // Create new session with UUID as document ID
       const sessionData = {
-        id: visitorId,
-        deviceFingerprint: visitorId,
+        mask: mask,  // Use the mask provided by client
+        deviceFingerprint: fingerprint,
         startedAt: serverTimestamp(),
         lastActive: serverTimestamp(),
         messageCount: 0,
@@ -142,28 +171,26 @@ export async function POST(request: NextRequest) {
         deletedAt: null,
       };
 
-      await addDoc(sessionsRef, sessionData);
-      console.log('[Session API] ✓ Created new session:', visitorId);
+      await setDoc(sessionDocRef, sessionData);
 
       return NextResponse.json({
         success: true,
-        sessionId: visitorId,
+        sessionId: uuid,
+        mask: mask,
         message: 'Session created',
         created: true,
       });
     } else {
       // Reactivate existing session
-      const sessionDoc = existingSnapshot.docs[0];
-      await updateDoc(sessionDoc.ref, {
+      await updateDoc(sessionDocRef, {
         lastActive: serverTimestamp(),
         visitorOnline: true,
       });
 
-      console.log('[Session API] ✓ Reactivated session:', visitorId);
-
       return NextResponse.json({
         success: true,
-        sessionId: visitorId,
+        sessionId: uuid,
+        mask: mask,
         message: 'Session reactivated',
         created: false,
       });
@@ -171,98 +198,130 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('[Session API] POST error:', error);
     return NextResponse.json(
-      { error: 'Failed to create session' },
+      { error: 'Failed to create session', success: false },
       { status: 500 }
     );
   }
 }
 
 /**
- * PUT: Update session (email, online status, etc.)
- * Body: { visitorId: "device_xxx", updates: {...} }
+ * PUT: Update session using UUID-sync
+ * Body: { mask: "device_**********", updates: {...} }
  */
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { visitorId, updates } = body;
+    const { mask, updates } = body;
 
-    if (!visitorId) {
+    if (!mask) {
       return NextResponse.json(
-        { error: 'visitorId required' },
+        { error: 'mask required' },
         { status: 400 }
       );
     }
 
-    console.log('[Session API] Updating session:', visitorId, updates);
+    // Translate mask to UUID with robust error handling
+    let uuid: string;
+    try {
+      uuid = await translateMaskToUUID(mask);
+    } catch (error: any) {
+      if (error instanceof MaskNotFoundError) {
+        return NextResponse.json(
+          { error: `Mask not found: ${mask}`, success: false },
+          { status: 404 }
+        );
+      }
+      if (error instanceof UUIDValidationError) {
+        return NextResponse.json(
+          { error: `Invalid mask format: ${error.message}`, success: false },
+          { status: 400 }
+        );
+      }
+      throw error; // Re-throw unexpected errors
+    }
+    const sessionDocRef = doc(db, COLLECTIONS.BUBBLE_SESSIONS, uuid);
 
-    const sessionsRef = collection(db, COLLECTIONS.BUBBLE_SESSIONS);
-    const q = query(sessionsRef, where('id', '==', visitorId));
-    const snapshot = await getDocs(q);
-
-    if (snapshot.empty) {
+    // Check if session exists
+    const sessionDoc = await getDoc(sessionDocRef);
+    if (!sessionDoc.exists()) {
       return NextResponse.json(
         { error: 'Session not found' },
         { status: 404 }
       );
     }
 
-    const sessionDoc = snapshot.docs[0];
-    await updateDoc(sessionDoc.ref, {
+    await updateDoc(sessionDocRef, {
       ...updates,
       lastActive: serverTimestamp(),
     });
 
-    console.log('[Session API] ✓ Session updated:', visitorId);
-
     return NextResponse.json({
       success: true,
-      message: 'Session updated',
+      session: {
+        id: uuid,
+        mask,
+        ...updates,
+      },
     });
   } catch (error) {
     console.error('[Session API] PUT error:', error);
     return NextResponse.json(
-      { error: 'Failed to update session' },
+      { error: 'Failed to update session', success: false },
       { status: 500 }
     );
   }
 }
 
 /**
- * DELETE: Mark session as deleted (soft delete)
- * Body: { visitorId: "device_xxx" }
+ * DELETE: Mark session as deleted using UUID-sync (soft delete)
+ * Body: { mask: "device_**********" }
  */
 export async function DELETE(request: NextRequest) {
   try {
     const body = await request.json();
-    const { visitorId } = body;
+    const { mask } = body;
 
-    if (!visitorId) {
+    if (!mask) {
       return NextResponse.json(
-        { error: 'visitorId required' },
+        { error: 'mask required' },
         { status: 400 }
       );
     }
 
-    console.log('[Session API] Deleting session:', visitorId);
+    // Translate mask to UUID with robust error handling
+    let uuid: string;
+    try {
+      uuid = await translateMaskToUUID(mask);
+    } catch (error: any) {
+      if (error instanceof MaskNotFoundError) {
+        return NextResponse.json(
+          { error: `Mask not found: ${mask}`, success: false },
+          { status: 404 }
+        );
+      }
+      if (error instanceof UUIDValidationError) {
+        return NextResponse.json(
+          { error: `Invalid mask format: ${error.message}`, success: false },
+          { status: 400 }
+        );
+      }
+      throw error; // Re-throw unexpected errors
+    }
+    const sessionDocRef = doc(db, COLLECTIONS.BUBBLE_SESSIONS, uuid);
 
-    const sessionsRef = collection(db, COLLECTIONS.BUBBLE_SESSIONS);
-    const q = query(sessionsRef, where('id', '==', visitorId));
-    const snapshot = await getDocs(q);
-
-    if (snapshot.empty) {
+    // Check if session exists
+    const sessionDoc = await getDoc(sessionDocRef);
+    if (!sessionDoc.exists()) {
       return NextResponse.json(
         { error: 'Session not found' },
         { status: 404 }
       );
     }
 
-    const sessionDoc = snapshot.docs[0];
-    await updateDoc(sessionDoc.ref, {
+    await updateDoc(sessionDocRef, {
       deletedAt: serverTimestamp(),
       visitorOnline: false,
     });
-
-    console.log('[Session API] ✓ Session deleted:', visitorId);
 
     return NextResponse.json({
       success: true,
@@ -271,7 +330,7 @@ export async function DELETE(request: NextRequest) {
   } catch (error) {
     console.error('[Session API] DELETE error:', error);
     return NextResponse.json(
-      { error: 'Failed to delete session' },
+      { error: 'Failed to delete session', success: false },
       { status: 500 }
     );
   }

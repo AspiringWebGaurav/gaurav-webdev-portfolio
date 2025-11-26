@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
               </p>
               
               <a href="${
-                process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+                process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
               }/admin/dashboard?tab=bug-hunt" 
                  style="display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
                 View in Dashboard

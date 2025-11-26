@@ -5,10 +5,11 @@ import { BubbleSession } from '@/types/bubble';
 import { generateDeviceFingerprint } from '@/lib/deviceFingerprint';
 import { logSessionEventSync } from '@/lib/sessionLogger';
 import smartPolling from '@/lib/smartPolling';
+import { clientIdentifyVisitor } from '@/lib/uuid-sync';
 
 interface BubbleSessionContextType {
   session: BubbleSession | null;
-  visitorId: string | null;
+  visitorId: string | null;  // Public mask (device_**********) from UUID-sync
   loading: boolean;
   initializeSession: () => Promise<void>;
   updateSession: (data: Partial<BubbleSession>) => Promise<void>;
@@ -20,14 +21,14 @@ interface BubbleSessionContextType {
 const BubbleSessionContext = createContext<BubbleSessionContextType | undefined>(undefined);
 
 /**
- * UUID-Only Session Management
+ * UUID-Sync Session Management
  * 
  * Simple, stateless approach:
  * - No cookies, no tokens, no authentication
- * - Device UUID generated on first visit (device_<fingerprint>)
- * - UUID stored in memory only
- * - All API calls include UUID in body/query
- * - Server validates and fetches session by UUID
+ * - Device mask generated via UUID-sync system (device_**********)
+ * - Mask stored in memory only
+ * - All API calls include mask in body/query
+ * - Server translates mask to UUID and fetches session
  */
 
 export function BubbleSessionProvider({ children }: { children: React.ReactNode }) {
@@ -37,17 +38,17 @@ export function BubbleSessionProvider({ children }: { children: React.ReactNode 
   const [isInitializing, setIsInitializing] = useState(false);
 
   /**
-   * Initialize session - generate UUID and create/fetch session
+   * Initialize session - generate mask and create/fetch session
    * 
    * Flow:
-   * 1. Generate device_ UUID from browser fingerprint
-   * 2. Try to fetch existing session (GET /api/session?visitorId=xxx)
-   * 3. If not found, create new session (POST /api/session)
-   * 4. Store UUID in memory (component state)
+   * 1. Generate fingerprint from browser
+   * 2. Identify visitor via UUID-sync (returns mask)
+   * 3. Try to fetch existing session (GET /api/session?mask=device_**)
+   * 4. If not found, create new session (POST /api/session with mask)
+   * 5. Store mask in memory (component state)
    */
   const initializeSession = useCallback(async () => {
     if (isInitializing) {
-      console.log('[BubbleSession] Already initializing, skipping...');
       return;
     }
 
@@ -55,60 +56,49 @@ export function BubbleSessionProvider({ children }: { children: React.ReactNode 
       setIsInitializing(true);
       setLoading(true);
       
-      // Get fingerprint and fetch the visitor ID from backend
+      // Get fingerprint and identify visitor using UUID-sync
       const fingerprint = generateDeviceFingerprint();
-      const response = await fetch(`/api/visitor-analytics/current-visitor?fingerprint=${fingerprint}`);
-      const data = await response.json();
-      const deviceId = data.visitorId;
+      const mask = await clientIdentifyVisitor(fingerprint);
       
-      setVisitorId(deviceId);
-
-      console.log('[BubbleSession] Fetched visitor UUID:', deviceId);
+      setVisitorId(mask);
 
       // Try to fetch existing session
-      const getResponse = await fetch(`/api/session?visitorId=${deviceId}`, {
+      const getResponse = await fetch(`/api/session?mask=${mask}`, {
         method: 'GET',
       });
 
       if (getResponse.status === 404) {
         // No session exists - create new one
-        console.log('[BubbleSession] No existing session, creating new one');
-        
         const createResponse = await fetch('/api/session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ visitorId: deviceId }),
+          body: JSON.stringify({ mask }),
         });
 
         if (!createResponse.ok) {
           throw new Error('Failed to create session');
         }
 
-        const createData = await createResponse.json();
-        console.log('[BubbleSession] ✓ New session created:', deviceId);
-        logSessionEventSync('session_created', deviceId, { visitorId: deviceId });
+        logSessionEventSync('session_created', mask, { mask });
 
         // Fetch the newly created session
-        const fetchResponse = await fetch(`/api/session?visitorId=${deviceId}`, {
+        const fetchResponse = await fetch(`/api/session?mask=${mask}`, {
           method: 'GET',
         });
 
         if (fetchResponse.ok) {
           const fetchData = await fetchResponse.json();
           setSession(fetchData.session);
-          console.log('[BubbleSession] ✓ Session data loaded');
         }
       } else if (getResponse.ok) {
         // Existing session found
         const getData = await getResponse.json();
         setSession(getData.session);
-        console.log('[BubbleSession] ✓ Existing session found:', deviceId);
-        logSessionEventSync('session_retrieved', deviceId, { visitorId: deviceId });
+        logSessionEventSync('session_retrieved', mask, { mask });
       } else {
         throw new Error(`Unexpected response: ${getResponse.status}`);
       }
     } catch (error) {
-      console.error('[BubbleSession] ✗ Failed to initialize session:', error);
       setSession(null);
       setVisitorId(null);
     } finally {
@@ -123,18 +113,15 @@ export function BubbleSessionProvider({ children }: { children: React.ReactNode 
    */
   const updateSession = useCallback(async (data: Partial<BubbleSession>) => {
     if (!visitorId) {
-      console.error('[BubbleSession] Cannot update - no visitorId');
       return;
     }
 
     try {
-      console.log('[BubbleSession] Updating session:', data);
-      
       const response = await fetch('/api/session', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          visitorId,
+          mask: visitorId,
           updates: data 
         }),
       });
@@ -145,10 +132,9 @@ export function BubbleSessionProvider({ children }: { children: React.ReactNode 
 
       const responseData = await response.json();
       setSession(responseData.session);
-      console.log('[BubbleSession] ✓ Session updated');
-      logSessionEventSync('session_updated', visitorId, { updates: data });
+      logSessionEventSync('session_updated', visitorId, { mask: visitorId, updates: data });
     } catch (error) {
-      console.error('[BubbleSession] ✗ Failed to update session:', error);
+      // Silent fail
     }
   }, [visitorId]);
 
@@ -173,21 +159,18 @@ export function BubbleSessionProvider({ children }: { children: React.ReactNode 
     if (!visitorId) return;
 
     try {
-      console.log('[BubbleSession] Destroying session...');
-      
       const response = await fetch('/api/session', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ visitorId }),
+        body: JSON.stringify({ mask: visitorId }),
       });
 
       if (response.ok) {
         setSession(null);
         setVisitorId(null);
-        console.log('[BubbleSession] ✓ Session destroyed');
       }
     } catch (error) {
-      console.error('[BubbleSession] ✗ Failed to destroy session:', error);
+      // Silent fail
     }
   }, [visitorId]);
 
@@ -203,12 +186,11 @@ export function BubbleSessionProvider({ children }: { children: React.ReactNode 
    */
   const checkForTooltipUpdates = useCallback(async () => {
     if (!visitorId) {
-      console.log('[BubbleSession] Skipping poll - no visitorId');
       return;
     }
 
     try {
-      const response = await fetch(`/api/session?visitorId=${visitorId}`, {
+      const response = await fetch(`/api/session?mask=${visitorId}`, {
         method: 'GET',
       });
 
@@ -224,34 +206,20 @@ export function BubbleSessionProvider({ children }: { children: React.ReactNode 
               lastActive: data.session.lastActive ? new Date(data.session.lastActive) : prev?.lastActive,
             };
             
-            // Log only when tooltip status changes
-            if (!prev || prev.hasUnreadTooltip !== data.session.hasUnreadTooltip) {
-              console.log('[BubbleSession] 🔔 Tooltip status updated:', {
-                hasUnread: data.session.hasUnreadTooltip,
-                unreadCount: data.session.unreadAdminReplies,
-                messageCount: data.session.messageCount
-              });
-            }
-            
             return updated;
           });
         }
-      } else {
-        console.warn('[BubbleSession] Poll failed:', response.status);
       }
     } catch (error) {
-      console.error('[BubbleSession] Poll error:', error);
+      // Silent fail
     }
   }, [visitorId]);
 
   // Setup smart polling for tooltip updates
   useEffect(() => {
     if (!visitorId) {
-      console.log('[BubbleSession] Polling not started - waiting for visitorId');
       return;
     }
-
-    console.log('[BubbleSession] 🚀 Starting tooltip polling for UUID:', visitorId.substring(0, 16) + '...');
 
     smartPolling.register(
       'bubble-tooltip-check',
@@ -272,12 +240,10 @@ export function BubbleSessionProvider({ children }: { children: React.ReactNode 
 
     // Trigger initial check immediately
     setTimeout(() => {
-      console.log('[BubbleSession] Running initial tooltip check...');
       checkForTooltipUpdates();
     }, 500); // Reduced from 2000ms to 500ms for faster startup
 
     return () => {
-      console.log('[BubbleSession] ⏹️ Stopping tooltip polling');
       smartPolling.unregister('bubble-tooltip-check');
     };
   }, [visitorId, checkForTooltipUpdates]);

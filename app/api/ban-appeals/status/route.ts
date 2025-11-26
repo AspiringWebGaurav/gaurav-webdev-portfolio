@@ -5,7 +5,6 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebaseAdmin";
-import { generateVisitorId } from "@/types/visitorAnalytics";
 
 const APPEALS_COLLECTION = "banAppeals";
 
@@ -14,20 +13,25 @@ const APPEALS_COLLECTION = "banAppeals";
  */
 export async function GET(request: NextRequest) {
   try {
-    // Get visitor identification from headers (server-side)
-    const ipAddress = 
-      request.headers.get("x-forwarded-for")?.split(",")[0] ||
-      request.headers.get("x-real-ip") ||
-      "unknown";
-    const userAgent = request.headers.get("user-agent") || "unknown";
-    
-    const fingerprint = `${ipAddress}_${userAgent}`;
-    const visitorId = generateVisitorId(fingerprint);
+    // Get mask from query parameter (client should pass their mask)
+    const { searchParams } = new URL(request.url);
+    const mask = searchParams.get('mask');
 
-    console.log("[Ban Appeal Status] Checking for visitor:", visitorId);
+    if (!mask) {
+      return NextResponse.json({
+        success: false,
+        error: 'Mask parameter is required',
+      }, { status: 400 });
+    }
+
+    console.log("[Ban Appeal Status] Checking for visitor:", mask);
+
+    // Translate mask to UUID for database queries
+    const { translateMaskToUUID } = await import('@/lib/uuid-sync/services/maskTranslator');
+    const uuid = await translateMaskToUUID(mask);
 
     // First, get the CURRENT ban timestamp from visitor profile
-    const visitorRef = adminDb.collection("visitorProfiles").doc(visitorId);
+    const visitorRef = adminDb.collection("og_uuid").doc(uuid);
     const visitorDoc = await visitorRef.get();
 
     if (!visitorDoc.exists || !visitorDoc.data()?.banned) {
@@ -52,7 +56,7 @@ export async function GET(request: NextRequest) {
     // Find appeal matching CURRENT ban timestamp (including in recycle bin)
     const appealsRef = adminDb.collection(APPEALS_COLLECTION);
     const snapshot = await appealsRef
-      .where("visitorId", "==", visitorId)
+      .where("mask", "==", mask)
       .where("banTimestamp", "==", currentBanTimestamp)
       .orderBy("createdAt", "desc")
       .limit(1)
@@ -64,7 +68,7 @@ export async function GET(request: NextRequest) {
       const recycleBinRef = adminDb.collection("recycleBin");
       const recycleBinSnapshot = await recycleBinRef
         .where("type", "==", "banAppeal")
-        .where("data.visitorId", "==", visitorId)
+        .where("data.mask", "==", mask)
         .where("data.banTimestamp", "==", currentBanTimestamp)
         .orderBy("deletedAt", "desc")
         .limit(1)

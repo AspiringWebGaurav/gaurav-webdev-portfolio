@@ -245,6 +245,8 @@ export async function PUT(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const soft = searchParams.get("soft") === "true";
     const body = await request.json();
 
     if (!body.id) {
@@ -271,7 +273,37 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Delete document
+    if (soft) {
+      // Soft delete - move to recycle bin
+      const experienceData = experienceSnapshot.data();
+      const now = Timestamp.now();
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + 15);
+
+      await addDoc(collection(db, "recycleBin"), {
+        originalId: body.id,
+        userId: "portfolio-user",
+        source: "work-experience",
+        data: experienceData,
+        deletedAt: now,
+        expiryDate: Timestamp.fromDate(expiryDate),
+        expiryDays: 15,
+        deletedBy: "admin",
+      });
+
+      // Delete from original collection
+      await deleteDoc(experienceRef);
+
+      return NextResponse.json(
+        {
+          success: true,
+          message: "Work experience moved to recycle bin",
+        },
+        { status: 200 }
+      );
+    }
+
+    // Hard delete
     await deleteDoc(experienceRef);
 
     return NextResponse.json(

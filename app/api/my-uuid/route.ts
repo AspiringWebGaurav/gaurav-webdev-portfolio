@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
 
     // Fallback: get any recent visitor
     const fallback = await adminDb
-      .collection("visitorProfiles")
+      .collection("og_uuid")
       .orderBy("lastVisit", "desc")
       .limit(1)
       .get();
