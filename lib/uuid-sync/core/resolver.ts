@@ -8,6 +8,7 @@ import { createVisitorIdentity, isValidMask, isValidUUID } from './generator';
 import { firestoreGetIdentity, firestoreSaveIdentity } from '../services/firestoreSync';
 import { cacheGet, cacheSet } from '../services/cacheManager';
 import { CACHE_TTL } from '../constants';
+import { identityGuard } from '../guards/identityGuard';
 
 // In-flight resolution lock to prevent race conditions
 const resolutionLocks = new Map<string, Promise<IdentityResolutionResult>>();
@@ -57,7 +58,11 @@ export async function resolveIdentity(fingerprint: string): Promise<IdentityReso
       }
       
       // Not found - create new identity
-      const newIdentity = createVisitorIdentity(fingerprint);
+      const source = typeof window === 'undefined' ? 'server' : 'client';
+      const newIdentity = createVisitorIdentity(fingerprint, source);
+      
+      // ENTERPRISE GUARD: Register creation to prevent duplicates
+      identityGuard.registerCreation(fingerprint, newIdentity.mask, source);
       
       // Save to Firestore
       await firestoreSaveIdentity(newIdentity);

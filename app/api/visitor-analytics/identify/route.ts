@@ -9,7 +9,9 @@ import { identifyVisitor } from '@/lib/uuid-sync/server';
 import { log, logError } from '@/lib/uuid-sync/utils';
 
 // Request deduplication: prevent multiple calls for same fingerprint in short time
+// Increased timeout to handle slower network conditions
 const activeRequests = new Map<string, Promise<string>>();
+const REQUEST_DEDUP_TIMEOUT = 10000; // 10 seconds
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,13 +30,18 @@ export async function POST(request: NextRequest) {
     
     if (!maskPromise) {
       // Create new request
+      log('Creating new identity request', { fingerprint: fingerprint.substring(0, 20) });
+      
       maskPromise = identifyVisitor(fingerprint).finally(() => {
-        // Clean up after 5 seconds
-        setTimeout(() => activeRequests.delete(fingerprint), 5000);
+        // Clean up after timeout
+        setTimeout(() => {
+          activeRequests.delete(fingerprint);
+          log('Cleaned up deduplication entry', { fingerprint: fingerprint.substring(0, 20) });
+        }, REQUEST_DEDUP_TIMEOUT);
       });
       activeRequests.set(fingerprint, maskPromise);
     } else {
-      log('Deduplicating concurrent request', { fingerprint: fingerprint.substring(0, 20) });
+      log('Deduplicating concurrent request (preventing duplicate entry)', { fingerprint: fingerprint.substring(0, 20) });
     }
     
     // Wait for result (either new or in-progress)

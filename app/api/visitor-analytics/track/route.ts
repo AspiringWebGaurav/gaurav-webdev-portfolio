@@ -2,12 +2,14 @@
  * Visitor Tracking API - ROBUST & RESILIENT
  * Uses UUID-sync system exclusively
  * This endpoint handles visitor presence tracking with automatic session management
+ * Tracks IP addresses for server-side ban detection
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb, adminAuth } from "@/lib/firebaseAdmin";
 import { Timestamp, FieldValue } from "firebase-admin/firestore";
 import { translateMaskToUUID, isValidMask } from "@/lib/uuid-sync/server";
+import { getClientIPFromRequest, updateVisitorIP } from "@/lib/ipTracking";
 
 const VISITORS_COLLECTION = "og_uuid";
 const SESSIONS_COLLECTION = "visitorSessions";
@@ -37,27 +39,35 @@ export async function POST(request: NextRequest) {
         }, { status: 400 });
       }
 
-      // Translate mask to UUID
+      // Translate mask to UUID - mask should already exist from /api/visitor-analytics/identify
       let uuid: string;
-      if (isValidMask(mask)) {
-        try {
-          uuid = await translateMaskToUUID(mask);
-          console.log('[VisitorTracking] Translated mask', mask, 'to UUID', uuid.substring(0, 13));
-        } catch (error: any) {
-          console.error('[VisitorTracking] Failed to translate mask:', error.message);
-          return NextResponse.json({ 
-            success: false, 
-            error: `Invalid mask: ${error.message}` 
-          }, { status: 400 });
-        }
-      } else {
+      if (!isValidMask(mask)) {
         return NextResponse.json({ 
           success: false, 
           error: "Invalid mask format" 
         }, { status: 400 });
       }
 
+      try {
+        // Translate existing mask to UUID
+        uuid = await translateMaskToUUID(mask);
+        console.log('[VisitorTracking] Translated mask', mask, 'to UUID', uuid.substring(0, 13));
+      } catch (error: any) {
+        // Mask not found - this should not happen if BubbleSessionContext initialized properly
+        // Return error instead of creating duplicate identity
+        console.error('[VisitorTracking] Mask not found in database:', mask, error.message);
+        return NextResponse.json({ 
+          success: false, 
+          error: `Visitor identity not found. Please refresh the page.`,
+          details: error.message 
+        }, { status: 404 });
+      }
+
       console.log('[VisitorTracking] Session start for visitor:', uuid.substring(0, 13));
+
+      // Extract and track IP address for server-side ban checks
+      const clientIP = getClientIPFromRequest(request);
+      console.log('[VisitorTracking] Client IP:', clientIP);
 
       // Check if visitor exists
       const visitorRef = adminDb.collection(VISITORS_COLLECTION).doc(uuid);
@@ -72,51 +82,105 @@ export async function POST(request: NextRequest) {
       console.log('[VisitorTracking] Using UUID as session ID:', uuid.substring(0, 13));
 
       if (visitorDoc.exists) {
-        // Existing visitor - check if this is a new visit or just a new session
-        console.log('[VisitorTracking] Existing visitor detected');
         const existingData = visitorDoc.data();
         
-        // Calculate time since last visit
-        const lastVisitTime = existingData.lastVisit?.toDate?.() || new Date(0);
-        const minutesSinceLastVisit = (Date.now() - lastVisitTime.getTime()) / (1000 * 60);
+        // Check if this is a UUID-sync stub record (has mask/fingerprint but no analytics fields)
+        const isStubRecord = !existingData.hasOwnProperty('totalVisits') || !existingData.hasOwnProperty('totalSessions');
         
-        // Only increment visit count if visitor has been inactive for more than threshold
-        const isNewVisit = minutesSinceLastVisit > VISIT_TIMEOUT_MINUTES;
-        
-        console.log(`[VisitorTracking] Time since last visit: ${Math.round(minutesSinceLastVisit)} minutes`);
-        console.log(`[VisitorTracking] Counting as new visit: ${isNewVisit}`);
-        
-        const updateData: any = {
-          lastVisit: now,
-          totalSessions: FieldValue.increment(1),
-          updatedAt: now,
-          currentStatus: "active",
-          deviceString: `${visitorData.os.name} · ${visitorData.browser.name}`,
-          deviceClass: visitorData.device.type,
-          ...(visitorData.geolocation && 
-              visitorData.geolocation.country && 
-              visitorData.geolocation.country !== 'Unknown' &&
-              visitorData.geolocation.countryCode &&
-              visitorData.geolocation.countryCode !== 'XX' && {
-            geoLocation: {
-              city: visitorData.geolocation.city || 'Unknown',
-              region: visitorData.geolocation.region || 'Unknown',
-              country: visitorData.geolocation.country,
-              countryCode: visitorData.geolocation.countryCode,
-              latitude: visitorData.geolocation.latitude,
-              longitude: visitorData.geolocation.longitude,
-              timezone: visitorData.geolocation.timezone,
-              isp: visitorData.geolocation.isp,
-            },
-          }),
-        };
-        
-        // Only increment visit count if this is truly a new visit (after inactivity period)
-        if (isNewVisit) {
-          updateData.totalVisits = FieldValue.increment(1);
+        if (isStubRecord) {
+          // UUID-sync created a stub - convert it to full visitor profile
+          console.log('[VisitorTracking] Converting UUID-sync stub to full visitor profile');
+          
+          await visitorRef.set({
+            id: uuid,  // Store UUID as ID
+            firstVisit: now,
+            lastVisit: now,
+            lastIP: clientIP,  // Track IP for server-side ban checks
+            lastIPUpdatedAt: now,
+            totalVisits: 1,
+            totalSessions: 1,
+            averageSessionDuration: 0,
+            totalActiveTime: 0,
+            totalPageViews: 0,
+            totalBubbleOpens: 0,
+            totalInteractions: 0,
+            resumeViews: 0,
+            resumeDownloads: 0,
+            formSubmissions: 0,
+            currentStatus: "active",
+            deviceClass: visitorData.device.type,
+            deviceString: `${visitorData.os.name} · ${visitorData.browser.name}`,
+            ...(visitorData.geolocation && 
+                visitorData.geolocation.country && 
+                visitorData.geolocation.country !== 'Unknown' &&
+                visitorData.geolocation.countryCode &&
+                visitorData.geolocation.countryCode !== 'XX' && {
+              geoLocation: {
+                city: visitorData.geolocation.city || 'Unknown',
+                region: visitorData.geolocation.region || 'Unknown',
+                country: visitorData.geolocation.country,
+                countryCode: visitorData.geolocation.countryCode,
+                latitude: visitorData.geolocation.latitude || 0,
+                longitude: visitorData.geolocation.longitude || 0,
+                timezone: visitorData.geolocation.timezone || 'UTC',
+                isp: visitorData.geolocation.isp || 'Unknown',
+              },
+            }),
+            banned: false,
+            // Preserve UUID-sync fields
+            mask: existingData.mask,
+            fingerprint: existingData.fingerprint,
+            createdAt: existingData.createdAt || now,
+            updatedAt: now,
+          }, { merge: true }); // Use merge to preserve any other fields
+        } else {
+          // Existing visitor with analytics - check if this is a new visit or just a new session
+          console.log('[VisitorTracking] Existing visitor with analytics detected');
+          
+          // Calculate time since last visit
+          const lastVisitTime = existingData.lastVisit?.toDate?.() || new Date(0);
+          const minutesSinceLastVisit = (Date.now() - lastVisitTime.getTime()) / (1000 * 60);
+          
+          // Only increment visit count if visitor has been inactive for more than threshold
+          const isNewVisit = minutesSinceLastVisit > VISIT_TIMEOUT_MINUTES;
+          
+          console.log(`[VisitorTracking] Time since last visit: ${Math.round(minutesSinceLastVisit)} minutes`);
+          console.log(`[VisitorTracking] Counting as new visit: ${isNewVisit}`);
+          
+          const updateData: any = {
+            lastVisit: now,
+            lastIP: clientIP,  // Track IP for server-side ban checks
+            lastIPUpdatedAt: now,
+            totalSessions: FieldValue.increment(1),
+            updatedAt: now,
+            currentStatus: "active",
+            deviceString: `${visitorData.os.name} · ${visitorData.browser.name}`,
+            deviceClass: visitorData.device.type,
+            ...(visitorData.geolocation && 
+                visitorData.geolocation.country && 
+                visitorData.geolocation.country !== 'Unknown' &&
+                visitorData.geolocation.countryCode &&
+                visitorData.geolocation.countryCode !== 'XX' && {
+              geoLocation: {
+                city: visitorData.geolocation.city || 'Unknown',
+                region: visitorData.geolocation.region || 'Unknown',
+                country: visitorData.geolocation.country,
+                countryCode: visitorData.geolocation.countryCode,
+                latitude: visitorData.geolocation.latitude,
+                longitude: visitorData.geolocation.longitude,
+                timezone: visitorData.geolocation.timezone,
+                isp: visitorData.geolocation.isp,
+              },
+            }),
+          };
+          
+          // Only increment visit count if this is truly a new visit (after inactivity period)
+          if (isNewVisit) {
+            updateData.totalVisits = FieldValue.increment(1);
+          }
+          
+          await visitorRef.update(updateData);
         }
-        
-        await visitorRef.update(updateData);
       } else {
         // New visitor - create fresh record
         console.log('[VisitorTracking] New visitor detected, creating profile');
@@ -125,6 +189,8 @@ export async function POST(request: NextRequest) {
           id: uuid,  // Store UUID as ID
           firstVisit: now,
           lastVisit: now,
+          lastIP: clientIP,  // Track IP for server-side ban checks
+          lastIPUpdatedAt: now,
           totalVisits: 1,
           totalSessions: 1,
           averageSessionDuration: 0,
@@ -221,7 +287,7 @@ export async function POST(request: NextRequest) {
       }
       
       await adminDb.collection(EVENTS_COLLECTION).add({
-        visitorId: vid,
+        visitorId: uuid,
         sessionId: sessionId,
         eventType: "session_start",
         timestamp: now,
@@ -233,7 +299,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         sessionId: sessionId,
-        visitorId: vid,
+        visitorId: uuid,
       });
     }
 

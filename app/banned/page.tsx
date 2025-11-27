@@ -7,6 +7,8 @@ import MobileScreen from './screens/MobileScreen';
 import TabletScreen from './screens/TabletScreen';
 import DesktopScreen from './screens/DesktopScreen';
 import { banStatusManager } from '@/lib/banStatusManager';
+import { generateDeviceFingerprint } from '@/lib/deviceFingerprint';
+import { clientIdentifyVisitor } from '@/lib/uuid-sync';
 
 interface BanInfo {
   reason: string;
@@ -38,6 +40,7 @@ const getCategoryReviewTime = (category?: string): string => {
 
 function BannedPageContent() {
   const searchParams = useSearchParams();
+  const [mask, setMask] = useState<string | null>(null);
   const [screenSize, setScreenSize] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
   const [banInfo, setBanInfo] = useState<BanInfo>({
     reason: 'Security Violation',
@@ -46,6 +49,16 @@ function BannedPageContent() {
     category: 'normal',
   });
   const [isRedirecting, setIsRedirecting] = useState(false);
+
+  // Get visitor mask independently (avoid session context loop)
+  useEffect(() => {
+    const getMask = async () => {
+      const fingerprint = generateDeviceFingerprint();
+      const visitorMask = await clientIdentifyVisitor(fingerprint);
+      setMask(visitorMask);
+    };
+    getMask();
+  }, []);
 
   // Load ban info from URL params (server-side passed via proxy.ts)
   useEffect(() => {
@@ -69,7 +82,13 @@ function BannedPageContent() {
   useEffect(() => {
     if (isRedirecting) return;
 
-    console.log('[Banned Page] Setting up real-time unban monitoring');
+    // Wait for mask
+    if (!mask) {
+      console.log('[Banned Page] Waiting for mask...');
+      return;
+    }
+
+    console.log('[Banned Page] Setting up real-time unban monitoring with mask:', mask);
 
     let unsubscribe: (() => void) | null = null;
     let mounted = true;
@@ -77,9 +96,9 @@ function BannedPageContent() {
     // Async setup function
     const setupMonitoring = async () => {
       try {
-        // Initialize and subscribe (both async now)
+        // Initialize with mask
         if (!banStatusManager.isReady()) {
-          await banStatusManager.initialize();
+          await banStatusManager.initialize(mask);
         }
 
         if (!mounted) return; // Component unmounted during init
@@ -128,23 +147,22 @@ function BannedPageContent() {
         unsubscribe();
       }
     };
-  }, [isRedirecting]);
+  }, [isRedirecting, mask]);
 
   /**
    * Fallback polling check (in case real-time fails)
    */
   useEffect(() => {
     if (isRedirecting) return;
+    
+    // Wait for mask from BubbleSessionContext
+    if (!mask) {
+      console.log('[Banned Page] Waiting for mask for fallback polling...');
+      return;
+    }
 
     const checkUnbanStatus = async () => {
       try {
-        // Get visitor mask from ban status manager
-        const mask = banStatusManager.getMask();
-        
-        if (!mask) {
-          console.warn('[Banned Page] No mask available for fallback check');
-          return;
-        }
         
         const response = await fetch('/api/visitor-analytics/check-ban', {
           method: 'POST',
@@ -190,7 +208,7 @@ function BannedPageContent() {
     const interval = setInterval(checkUnbanStatus, FALLBACK_CHECK_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [isRedirecting]);
+  }, [isRedirecting, mask]);
 
   // Detect screen size
   useEffect(() => {

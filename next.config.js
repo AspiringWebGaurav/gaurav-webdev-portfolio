@@ -40,6 +40,18 @@ const nextConfig = {
   experimental: {
     // Optimize package imports to reduce chunk size
     optimizePackageImports: ["lucide-react", "react-icons", "motion"],
+    
+    // Enable proxy for request interception (server-side ban detection)
+    proxyTimeout: 30000,
+  },
+  
+  // Custom proxy for server-side ban detection
+  async rewrites() {
+    return {
+      beforeFiles: [],
+      afterFiles: [],
+      fallback: [],
+    };
   },
 
   // Production optimizations

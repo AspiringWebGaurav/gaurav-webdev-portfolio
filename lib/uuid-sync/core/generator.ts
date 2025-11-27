@@ -29,11 +29,18 @@ export function generateMaskFromUUID(uuid: string): string {
 /**
  * Create a complete visitor identity
  */
-export function createVisitorIdentity(fingerprint: string): VisitorIdentity {
+export function createVisitorIdentity(fingerprint: string, source: string = 'unknown'): VisitorIdentity {
   const uuid = generateUUID();
   const mask = generateMaskFromUUID(uuid);
   
-  log('Created new visitor identity', { mask });
+  // Enhanced debug logging to track duplicate creation sources
+  console.log('[UUID-Sync] 🆕 Created new visitor identity', { 
+    mask, 
+    fingerprint: fingerprint.substring(0, 20) + '...',
+    source,
+    timestamp: new Date().toISOString(),
+    stackTrace: new Error().stack?.split('\n').slice(2, 5).join('\n') // Show call stack
+  });
   
   return {
     uuid,

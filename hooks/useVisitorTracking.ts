@@ -57,6 +57,10 @@ interface TrackingEvent {
   metadata?: Record<string, any>;
 }
 
+// GLOBAL session tracking state (shared across all component instances)
+let globalSessionStartSent = false;
+let globalSessionInitializing = false;
+
 export function useVisitorTracking() {
   const sessionIdRef = useRef<string | null>(null);
   const visitorIdRef = useRef<string | null>(null);
@@ -72,7 +76,11 @@ export function useVisitorTracking() {
    * Initialize visitor tracking session
    */
   const initializeTracking = useCallback(async () => {
-    if (isTrackingRef.current) return;
+    // CRITICAL: Use global flag to prevent multiple session_start events
+    if (globalSessionStartSent || globalSessionInitializing) {
+      console.log('[VisitorTracking] Session already started or initializing - skipping');
+      return;
+    }
     
     // Wait for mask from BubbleSessionContext
     if (!maskFromContext) {
@@ -80,9 +88,11 @@ export function useVisitorTracking() {
       return;
     }
     
-    isTrackingRef.current = true;
-
+    // Set global flags immediately to prevent race conditions
+    globalSessionInitializing = true;
+    
     try {
+      isTrackingRef.current = true;
       // Use mask from BubbleSessionContext (no duplicate identify call)
       const mask = maskFromContext;
       visitorIdRef.current = mask;
@@ -250,14 +260,43 @@ export function useVisitorTracking() {
         battery: await getBatteryInfo(),
       };
 
-      // Session initialized - no automatic tracking
-      // Only manual high-value events will be tracked
-      sessionIdRef.current = visitorIdRef.current; // Use visitor mask as session ID
-      console.log("[VisitorTracking] Session initialized (lightweight):", sessionIdRef.current);
+      // Send session_start to create visitor profile and session
+      sessionIdRef.current = mask; // Use mask as session ID
+      console.log('[VisitorTracking] 🚀 Sending session_start to create visitor profile...');
+      
+      try {
+        const response = await fetch('/api/visitor-analytics/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            event: 'session_start',
+            visitorData,
+          }),
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          console.log('[VisitorTracking] ✅ Session started successfully:', result.sessionId);
+          globalSessionStartSent = true; // Mark as successfully sent globally
+        } else {
+          console.error('[VisitorTracking] ❌ Failed to start session:', response.status);
+          // Reset flags to allow retry
+          globalSessionStartSent = false;
+        }
+      } catch (error) {
+        console.error('[VisitorTracking] ❌ Error sending session_start:', error);
+        // Reset flags to allow retry
+        globalSessionStartSent = false;
+      } finally {
+        globalSessionInitializing = false;
+      }
+      
+      console.log("[VisitorTracking] Session initialized:", sessionIdRef.current);
     } catch (error) {
       console.error("[VisitorTracking] Initialization error:", error);
+      globalSessionInitializing = false;
     }
-  }, []);
+  }, [maskFromContext]);
 
   /**
    * Track an event using the reliability layer - GUARANTEED DELIVERY

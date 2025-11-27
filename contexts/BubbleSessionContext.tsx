@@ -52,6 +52,18 @@ export function BubbleSessionProvider({ children }: { children: React.ReactNode 
       return;
     }
 
+    // CRITICAL: Don't initialize session on /banned or /admin pages
+    if (typeof window !== 'undefined') {
+      const pathname = window.location.pathname;
+      
+      // Skip visitor tracking for admin panel and banned page
+      if (pathname === '/banned' || pathname.startsWith('/admin')) {
+        console.log('[BubbleSession] ⏭️ Skipping session init on', pathname, '(not a visitor)');
+        setLoading(false);
+        return;
+      }
+    }
+
     try {
       setIsInitializing(true);
       setLoading(true);
@@ -61,6 +73,37 @@ export function BubbleSessionProvider({ children }: { children: React.ReactNode 
       const mask = await clientIdentifyVisitor(fingerprint);
       
       setVisitorId(mask);
+
+      // CRITICAL: Check ban status BEFORE fetching/creating session
+      // This ensures banned visitors redirect immediately without seeing content
+      console.log('[BubbleSession] 🔍 Checking ban status before session init...');
+      
+      const banCheckResponse = await fetch('/api/visitor-analytics/check-ban-realtime', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mask }),
+        cache: 'no-store',
+      });
+
+      if (banCheckResponse.ok) {
+        const banData = await banCheckResponse.json();
+        
+        if (banData.banned === true) {
+          console.log('[BubbleSession] ⛔ BANNED VISITOR - Redirecting immediately');
+          
+          // IMMEDIATE redirect before session init
+          const params = new URLSearchParams({
+            reason: banData.banReason || 'Security Violation',
+            category: banData.banCategory || 'normal',
+            timestamp: new Date().toISOString(),
+          });
+          
+          window.location.replace(`/banned?${params.toString()}`);
+          return; // Stop session initialization
+        }
+      }
+
+      console.log('[BubbleSession] ✅ Not banned - proceeding with session init');
 
       // Try to fetch existing session
       const getResponse = await fetch(`/api/session?mask=${mask}`, {

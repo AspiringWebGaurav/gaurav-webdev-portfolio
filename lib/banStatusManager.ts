@@ -11,8 +11,6 @@
 
 import { onSnapshot, doc, getDoc, Unsubscribe } from 'firebase/firestore';
 import { db } from './firebase';
-import { generateDeviceFingerprint } from './deviceFingerprint';
-import { clientIdentifyVisitor } from '@/lib/uuid-sync';
 
 export interface BanStatusData {
   banned: boolean;
@@ -42,10 +40,11 @@ class BanStatusManager {
   private reconnectDelay = 1000; // Start with 1 second
 
   /**
-   * Initialize the manager with current visitor ID
+   * Initialize the manager with visitor mask from BubbleSessionContext
+   * Accepts mask parameter to avoid redundant identity creation
    * Returns a promise that resolves when initialization is complete
    */
-  async initialize(): Promise<void> {
+  async initialize(mask?: string): Promise<void> {
     // Return existing initialization promise if already in progress
     if (this.initializationPromise) {
       return this.initializationPromise;
@@ -60,11 +59,12 @@ class BanStatusManager {
     // Create new initialization promise
     this.initializationPromise = (async () => {
       try {
-        // Generate visitor ID from device fingerprint
-        const fingerprint = generateDeviceFingerprint();
-        const mask = await clientIdentifyVisitor(fingerprint);
+        // Mask must be provided from BubbleSessionContext to avoid duplicate identity creation
+        if (!mask) {
+          throw new Error('Mask is required for initialization. Wait for BubbleSessionContext.');
+        }
         
-        console.log('[Ban Status Manager] Got mask:', mask);
+        console.log('[Ban Status Manager] Initializing with provided mask:', mask);
         
         // Translate mask to UUID using client-side Firestore query
         const maskDocRef = doc(db, 'og_uuid_masks', mask);
@@ -88,6 +88,19 @@ class BanStatusManager {
     })();
 
     return this.initializationPromise;
+  }
+
+  /**
+   * Set the visitor mask (called by BubbleSessionContext after it initializes)
+   * This allows ban monitoring to start once the mask is available
+   */
+  setMask(mask: string): void {
+    if (!this.isInitialized && mask) {
+      // Initialize with the provided mask
+      this.initialize(mask).catch(err => {
+        console.error('[Ban Status Manager] Failed to initialize with mask:', err);
+      });
+    }
   }
 
   /**

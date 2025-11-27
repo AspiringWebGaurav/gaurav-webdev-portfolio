@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { FaLocationArrow } from "react-icons/fa6";
 import { Bug, AlertTriangle, Shield } from "lucide-react";
 import Image from "next/image";
@@ -10,30 +10,16 @@ import MagicButton from "./ui/MagicButton";
 import ContactFormModal from "./ContactFormModal";
 import BugReportIntro from "./BugReportIntro";
 import BugReportForm from "./BugReportForm";
-import { generateDeviceFingerprint } from "@/lib/deviceFingerprint";
-import { clientIdentifyVisitor } from "@/lib/uuid-sync";
+import { useBubbleSession } from "@/contexts/BubbleSessionContext";
 
 const Footer = () => {
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [isBugIntroOpen, setIsBugIntroOpen] = useState(false);
   const [isBugFormOpen, setIsBugFormOpen] = useState(false);
-  const [patchId, setPatchId] = useState<string>("...");
-
-  useEffect(() => {
-    // Fetch visitor mask once using UUID-sync system
-    const fetchMask = async () => {
-      try {
-        const fingerprint = generateDeviceFingerprint();
-        const mask = await clientIdentifyVisitor(fingerprint);
-        setPatchId(mask);
-      } catch {
-        setPatchId("offline");
-      }
-    };
-
-    fetchMask();
-    // Mask is static per visitor, no need to poll
-  }, []);
+  
+  // Get mask from BubbleSessionContext (single source of truth - no duplicate identity creation)
+  const { visitorId: mask } = useBubbleSession();
+  const patchId = mask || "..."; // Display visitor mask for admin ban purposes
 
   const handleContactClick = () => {
     setIsContactModalOpen(true);

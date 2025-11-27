@@ -2,28 +2,17 @@
  * Visitor Analytics Batch Event Ingestion API
  * Handles multiple events in a single request for efficiency
  * Uses UUID-sync system exclusively
+ * 
+ * IMPORTANT: This API does NOT create visitors or sessions
+ * Visitor/session creation ONLY happens via session_start in /api/visitor-analytics/track
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
-import {
-  collection,
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  addDoc,
-  Timestamp,
-  increment,
-  writeBatch,
-} from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { adminDb } from "@/lib/firebaseAdmin";
+import { Timestamp, FieldValue } from "firebase-admin/firestore";
 import {
   isValidEventType,
-  detectDeviceClass,
-  extractBrowserInfo,
-  SESSION_TIMEOUT_MINUTES,
-  MAX_SESSION_DURATION_HOURS,
 } from "@/types/visitorAnalytics";
 import { getIdentityResult, translateMaskToUUID } from "@/lib/uuid-sync/server";
 
@@ -123,49 +112,28 @@ export async function POST(request: NextRequest) {
     // Use mask as session ID (provided in body or from mask)
     const sessionId = body.sessionId || mask;
     
-    console.log(`[Batch API] Request - Visitor: ${mask}, Session: ${sessionId}`);
-    
-    // Extract device and browser info
-    const deviceClass = detectDeviceClass(userAgent);
-    const browserInfo = extractBrowserInfo(userAgent);
-    
-    // Get geo location
-    const geoLocation = await getGeoLocation(ipAddress);
+    console.log(`[Batch API] Processing ${body.events.length} events for visitor: ${visitorId}`);
     
     // Server timestamp (source of truth)
     const serverTime = new Date();
     
-    // Create device snapshot
-    const deviceSnapshot = {
-      deviceClass,
-      os: browserInfo.os || "Unknown",
-      browser: browserInfo.browser || "Unknown",
-      browserVersion: browserInfo.browserVersion || "Unknown",
-      userAgent: userAgent || "Unknown",
-      networkQuality: "unknown" as const,
-    };
+    // Verify visitor exists before processing events
+    const visitorRef = adminDb.collection(VISITORS_COLLECTION).doc(visitorId);
+    const visitorDoc = await visitorRef.get();
     
-    // Ensure visitor profile exists (non-blocking - always continues)
-    await ensureVisitorProfile(
-      visitorId,
-      serverTime,
-      deviceClass,
-      browserInfo,
-      geoLocation
-    );
-    
-    // Ensure session exists (non-blocking - always continues)
-    console.log(`[Batch API] Attempting to ensure session: ${sessionId} for visitor: ${visitorId}`);
-    await ensureSession(
-      sessionId,
-      visitorId,
-      serverTime,
-      deviceSnapshot,
-      geoLocation,
-      cookieHeader
-    );
-    
-    console.log(`[Batch API] Session and visitor checks complete, processing ${body.events.length} events`);
+    if (!visitorDoc.exists) {
+      // Visitor doesn't exist - they need to call session_start first
+      console.warn(`[Batch API] Visitor ${visitorId} not found - must call session_start first`);
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Visitor not found. Please initialize session with session_start first.",
+          processed: 0,
+          failed: body.events.length,
+        },
+        { status: 400 }
+      );
+    }
     
     // Process events with individual error handling
     const results = {
@@ -175,9 +143,8 @@ export async function POST(request: NextRequest) {
     };
     
     // Use Firestore batch for efficiency
-    const batch = writeBatch(db);
-    const visitorRef = doc(db, VISITORS_COLLECTION, visitorId);
-    const sessionRef = doc(db, SESSIONS_COLLECTION, sessionId);
+    const batch = adminDb.batch();
+    const sessionRef = adminDb.collection(SESSIONS_COLLECTION).doc(sessionId);
     
     const updates = {
       visitor: {} as Record<string, any>,
@@ -213,18 +180,18 @@ export async function POST(request: NextRequest) {
           },
         };
         
-        const eventRef = doc(collection(db, EVENTS_COLLECTION));
+        const eventRef = adminDb.collection(EVENTS_COLLECTION).doc();
         batch.set(eventRef, eventData);
         
         // Accumulate counter updates (ONLY 4 ESSENTIAL EVENT COUNTERS - NO GENERIC COUNTERS)
         if (event.eventType === "resume_view") {
-          updates.visitor.resumeViews = increment(1);
+          updates.visitor.resumeViews = FieldValue.increment(1);
         } else if (event.eventType === "resume_download") {
-          updates.visitor.resumeDownloads = increment(1);
+          updates.visitor.resumeDownloads = FieldValue.increment(1);
         } else if (event.eventType === "contact_open") {
           // contact_open doesn't have a dedicated counter
         } else if (event.eventType === "form_submit") {
-          updates.visitor.formSubmissions = increment(1);
+          updates.visitor.formSubmissions = FieldValue.increment(1);
         }
         
         results.processed++;
@@ -310,203 +277,6 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-/**
- * Ensure visitor profile exists
- */
-async function ensureVisitorProfile(
-  visitorId: string,
-  serverTime: Date,
-  deviceClass: string,
-  browserInfo: any,
-  geoLocation: any
-): Promise<boolean> {
-  try {
-    console.log(`[Batch API] Checking visitor profile: ${visitorId}`);
-    
-    const visitorRef = doc(db, VISITORS_COLLECTION, visitorId);
-    const visitorDoc = await getDoc(visitorRef);
-    
-    if (!visitorDoc.exists()) {
-      console.log(`[Batch API] Creating new visitor profile: ${visitorId}`);
-      
-      try {
-        const visitorData = {
-          firstVisit: Timestamp.fromDate(serverTime),
-          lastVisit: Timestamp.fromDate(serverTime),
-          totalVisits: 1,
-          totalSessions: 1,
-          // ONLY new event counters (4 total)
-          resumeViews: 0,
-          resumeDownloads: 0,
-          formSubmissions: 0,
-          // Profile metadata
-          currentStatus: "active",
-          deviceClass: deviceClass || "unknown",
-          deviceString: `${browserInfo?.os || "Unknown"} · ${browserInfo?.browser || "Unknown"}`,
-          geoLocation: geoLocation || {},
-          geoHistory: geoLocation ? [geoLocation] : [],
-          banned: false,
-          createdAt: Timestamp.fromDate(serverTime),
-          updatedAt: Timestamp.fromDate(serverTime),
-        };
-        
-        await setDoc(visitorRef, visitorData);
-        console.log(`[Batch API] ✓ Visitor profile created: ${visitorId}`);
-        return true;
-      } catch (createError) {
-        console.error(`[Batch API] ✗ Failed to create visitor ${visitorId}:`, createError);
-        console.error(`[Batch API] Error details:`, {
-          name: createError instanceof Error ? createError.name : 'Unknown',
-          message: createError instanceof Error ? createError.message : String(createError),
-        });
-        // CRITICAL: Don't block analytics on visitor creation failure
-        return true; // Allow event processing anyway
-      }
-    } else {
-      console.log(`[Batch API] ✓ Visitor profile exists: ${visitorId}`);
-    }
-    
-    return true;
-  } catch (error) {
-    console.error('[Batch API] Error in ensureVisitorProfile:', error);
-    // NEVER block - analytics must work even if visitor management fails
-    return true;
-  }
-}
-
-/**
- * Ensure session exists and is valid
- */
-async function ensureSession(
-  sessionId: string,
-  visitorId: string,
-  serverTime: Date,
-  deviceSnapshot: any,
-  geoLocation: any,
-  cookieHeader: string
-): Promise<boolean> {
-  try {
-    const sessionRef = doc(db, SESSIONS_COLLECTION, sessionId);
-    const sessionDoc = await getDoc(sessionRef);
-    
-    if (!sessionDoc.exists()) {
-      // Create new session - ALWAYS SUCCEEDS
-      console.log(`[Batch API] Creating new session: ${sessionId} for visitor: ${visitorId}`);
-      
-      try {
-        const newSessionData = {
-          visitorId,
-          startTime: Timestamp.fromDate(serverTime),
-          endTime: null,
-          duration: null,
-          deviceSnapshot: deviceSnapshot || {},
-          geoLocation: geoLocation || {},
-          referrerSource: "direct",
-          isActive: true,
-          createdAt: Timestamp.fromDate(serverTime),
-        };
-        
-        console.log(`[Batch API] Session data prepared:`, JSON.stringify(newSessionData, null, 2));
-        
-        await setDoc(sessionRef, newSessionData);
-        
-        console.log(`[Batch API] ✓ Session created successfully: ${sessionId}`);
-        return true;
-      } catch (createError) {
-        console.error(`[Batch API] ✗ Failed to create session ${sessionId}:`, createError);
-        console.error(`[Batch API] Error details:`, {
-          name: createError instanceof Error ? createError.name : 'Unknown',
-          message: createError instanceof Error ? createError.message : String(createError),
-          stack: createError instanceof Error ? createError.stack : undefined,
-        });
-        // CRITICAL: Don't fail on session creation - allow event processing
-        return true; // Let events through even if session creation fails
-      }
-    }
-    
-    // Check session timeout
-    const sessionData = sessionDoc.data();
-    if (!sessionData || !sessionData.startTime) {
-      console.warn(`[Batch API] Session ${sessionId} missing required data, accepting anyway`);
-      return true; // Accept malformed sessions
-    }
-    
-    const sessionStart = sessionData.startTime?.toDate() || serverTime;
-    const timeSinceStart = (serverTime.getTime() - sessionStart.getTime()) / 1000 / 60; // minutes
-    
-    if (timeSinceStart > SESSION_TIMEOUT_MINUTES || timeSinceStart > MAX_SESSION_DURATION_HOURS * 60) {
-      // Session expired
-      console.log(`[Batch API] Session ${sessionId} expired (age: ${timeSinceStart.toFixed(1)} minutes), allowing anyway`);
-      return true; // Don't block on expired sessions - let events through
-    }
-    
-    console.log(`[Batch API] ✓ Session ${sessionId} is valid (age: ${timeSinceStart.toFixed(1)} minutes)`);
-    return true;
-  } catch (error) {
-    console.error('[Batch API] Error in ensureSession:', error);
-    // NEVER fail - always return true to allow event processing
-    return true;
-  }
-}
-
-/**
- * Get geo location from IP (with caching and fallback)
- */
-async function getGeoLocation(ipAddress: string): Promise<any> {
-  // Don't geolocate local/unknown IPs
-  if (ipAddress === "unknown" || 
-      ipAddress.startsWith("127.") || 
-      ipAddress.startsWith("192.168.") || 
-      ipAddress.startsWith("10.") ||
-      ipAddress.startsWith("172.")) {
-    return {
-      country: "Local Network",
-      countryCode: "XX",
-      city: "Unknown",
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
-    };
-  }
-  
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout
-    
-    const response = await fetch(
-      `https://ip-api.com/json/${ipAddress}?fields=status,country,countryCode,city,regionName,timezone`,
-      { 
-        signal: controller.signal,
-        next: { revalidate: 3600 }, // Cache for 1 hour
-      }
-    );
-    
-    clearTimeout(timeoutId);
-    
-    if (!response.ok) throw new Error("Geolocation API failed");
-    
-    const data = await response.json();
-    
-    if (data.status === "success") {
-      return {
-        country: data.country,
-        countryCode: data.countryCode,
-        city: data.city,
-        region: data.regionName,
-        timezone: data.timezone,
-      };
-    }
-  } catch (error) {
-    console.error("[Batch API] Geolocation error:", error);
-  }
-  
-  // Fallback
-  return {
-    country: "Unknown",
-    countryCode: "XX",
-    city: "Unknown",
-    timezone: "UTC",
-  };
 }
 
 /**
