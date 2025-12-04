@@ -102,6 +102,13 @@ const RATE_LIMITS = {
     maxRequests: 60,
     banDuration: 5 * 60 * 1000,
   },
+  
+  // Ban check - very permissive (happens on every page load)
+  banCheck: {
+    windowMs: 60 * 1000, // 1 minute
+    maxRequests: 120, // Allow frequent checks
+    banDuration: 1 * 60 * 1000, // Short 1-min cooldown
+  },
 } as const;
 
 // In-memory store (fast lookup)

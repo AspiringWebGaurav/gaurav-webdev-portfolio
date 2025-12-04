@@ -472,10 +472,10 @@ export default function BanAppealsManager() {
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
                             <h3 className="font-medium text-gray-900">
-                              {appeal.uuid.slice(0, 12)}
+                              {appeal.uuid?.slice(0, 12) || 'Unknown UUID'}
                             </h3>
                             <span className="text-xs text-gray-500 font-mono">
-                              ({appeal.mask})
+                              ({appeal.mask || 'Unknown mask'})
                             </span>
                             <span
                               className={`px-2 py-0.5 rounded-full text-xs font-medium bg-${statusColor}-100 text-${statusColor}-700`}
@@ -622,7 +622,7 @@ export default function BanAppealsManager() {
                     <strong>Reason:</strong> {viewingAppeal.banReason}
                   </p>
                   <p className="text-xs text-gray-600">
-                    Banned {formatDistanceToNow(new Date(viewingAppeal.banTimestamp), { addSuffix: true })}
+                    Appeal submitted {formatDistanceToNow(new Date(viewingAppeal.createdAt), { addSuffix: true })}
                   </p>
                 </div>
               </div>

@@ -61,25 +61,23 @@ export async function proxy(request: NextRequest) {
 
   const shouldSkipBanCheck = excludedFromBanCheck.some(path => pathname.startsWith(path));
 
-  // SERVER-SIDE BAN CHECK - runs before ANY content loads (pure server-side, no cookies)
+  // SERVER-SIDE BAN CHECK - runs before ANY content loads (IP-based only)
   if (!shouldSkipBanCheck) {
     const banCheckResult = await checkBanStatus(request);
 
     if (banCheckResult.banned) {
-      // Always log security events (banned visitor blocked)
-      console.log('[Proxy] ⛔ BLOCKED BANNED VISITOR:', {
+      console.log('[Proxy] ⛔ BLOCKED BANNED VISITOR (IP lookup):', {
         path: pathname,
         reason: banCheckResult.banReason,
         timestamp: new Date().toISOString(),
       });
       
-      // Build banned URL with server-side query params (NO cookies/storage)
       const bannedUrl = new URL('/banned', request.url);
       bannedUrl.searchParams.set('reason', banCheckResult.banReason || 'Security Violation');
       bannedUrl.searchParams.set('category', banCheckResult.banCategory || 'normal');
       bannedUrl.searchParams.set('timestamp', new Date().toISOString());
       
-      return NextResponse.redirect(bannedUrl, { status: 307 }); // Temporary redirect
+      return NextResponse.redirect(bannedUrl, { status: 307 });
     }
   }
 

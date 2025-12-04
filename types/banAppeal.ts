@@ -10,7 +10,7 @@
 
 export interface BanAppeal {
   id: string;
-  uuid: string; // Admin operates on UUID (permanent identifier)
+  uuid?: string; // Admin operates on UUID (permanent identifier) - optional for backward compatibility
   mask: string; // Stored for visitor reference only
   appealReason: string; // User's explanation
   banReason: string; // Original ban reason

@@ -12,11 +12,10 @@ import { checkRateLimit } from '@/lib/rateLimit';
 
 export async function POST(request: NextRequest) {
   try {
-    // Rate limiting: 30 requests per minute (ban checks happen on navigation)
+    // Rate limiting: Use 'banCheck' type with permissive limits
     const rateLimitResult = await checkRateLimit(
       request,
-      'banCheck',
-      { windowMs: 60000, maxRequests: 30 }
+      'banCheck'
     );
 
     if (!rateLimitResult.allowed) {

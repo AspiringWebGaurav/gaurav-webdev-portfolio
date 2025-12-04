@@ -112,10 +112,8 @@ export default function BanChecker() {
         const data = await response.json();
         
         if (data.banned === true) {
-          console.log("[Ban Checker] ⛔ BANNED VISITOR DETECTED - Immediate redirect (no toast)");
+          console.log("[Ban Checker] ⛔ BANNED VISITOR DETECTED - Immediate redirect");
           
-          // IMMEDIATE redirect without toast for returning banned visitors
-          // This ensures banned users never see homepage content
           const params = new URLSearchParams({
             reason: data.banReason || "Security Violation",
             category: data.banCategory || "normal",
@@ -176,16 +174,19 @@ export default function BanChecker() {
         if (data.banned === true && !lastBanStatus.current) {
           console.log("[Ban Checker] ⛔ Fallback check detected ban - redirecting");
           
+          const reason = data.banInfo?.reason || "Security Violation";
+          const category = data.banInfo?.category || "normal";
+          
           showToast.error(
-            data.banInfo?.reason || "Security Violation",
+            reason,
             "Access Restricted",
             { autoClose: 3000 }
           );
 
           setTimeout(() => {
             const params = new URLSearchParams({
-              reason: data.banInfo?.reason || "Security Violation",
-              category: data.banInfo?.category || "normal",
+              reason,
+              category,
               timestamp: data.banInfo?.timestamp || new Date().toISOString(),
             });
             window.location.href = `/banned?${params.toString()}`;

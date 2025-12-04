@@ -49,6 +49,7 @@ function BannedPageContent() {
     category: 'normal',
   });
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const [checkingStatus, setCheckingStatus] = useState(true);
 
   // Get visitor mask independently (avoid session context loop)
   useEffect(() => {
@@ -59,6 +60,46 @@ function BannedPageContent() {
     };
     getMask();
   }, []);
+
+  // IMMEDIATE CHECK: If user is not banned, redirect silently (no toast)
+  useEffect(() => {
+    if (!mask || isRedirecting) return;
+
+    const checkCurrentBanStatus = async () => {
+      try {
+        const response = await fetch('/api/visitor-analytics/check-ban-realtime', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mask }),
+          cache: 'no-store',
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.banned === false) {
+            // User is NOT banned - redirect immediately without toast
+            console.log('[Banned Page] ✅ User is not banned - Silent redirect to portfolio');
+            setIsRedirecting(true);
+            window.location.replace(PORTFOLIO_HOME);
+            return;
+          } else {
+            // User is still banned - show the banned UI
+            console.log('[Banned Page] ⛔ User is still banned - Showing ban screen');
+            setCheckingStatus(false);
+          }
+        } else {
+          // API error - show banned UI as fallback
+          setCheckingStatus(false);
+        }
+      } catch (error) {
+        console.error('[Banned Page] Error checking ban status:', error);
+        setCheckingStatus(false);
+      }
+    };
+
+    checkCurrentBanStatus();
+  }, [mask, isRedirecting]);
 
   // Load ban info from URL params (server-side passed via proxy.ts)
   useEffect(() => {
@@ -107,24 +148,14 @@ function BannedPageContent() {
         unsubscribe = await banStatusManager.subscribe(
           'banned-page-unban-monitor',
           (status) => {
-            // If not banned anymore, show success toast and redirect
+            // If not banned anymore, redirect silently (admin unbanned while user on this page)
             if (status.banned === false && !isRedirecting) {
-              console.log('[Banned Page] ✅ User has been unbanned (real-time)!');
+              console.log('[Banned Page] ✅ User has been unbanned (real-time) - Silent redirect');
               setIsRedirecting(true);
               
-              // Show success toast
-              showToast.success(
-                'You have been unbanned by admin. Welcome back!',
-                'Welcome Back',
-                { autoClose: TOAST_DURATION }
-              );
-              
-              // Redirect after delay
-              setTimeout(() => {
-                // Reset ban status manager before redirecting
-                banStatusManager.reset();
-                window.location.href = PORTFOLIO_HOME;
-              }, REDIRECT_DELAY);
+              // Silent redirect without toast
+              banStatusManager.reset();
+              window.location.replace(PORTFOLIO_HOME);
             }
           },
           (error) => {
@@ -176,24 +207,14 @@ function BannedPageContent() {
         if (response.ok) {
           const data = await response.json();
           
-          // If not banned anymore, show success toast and redirect
+          // If not banned anymore, redirect silently
           if (data.banned === false && !isRedirecting) {
-            console.log('[Banned Page] ✅ User has been unbanned (fallback check)!');
+            console.log('[Banned Page] ✅ User has been unbanned (fallback check) - Silent redirect');
             setIsRedirecting(true);
             
-            // Show success toast
-            showToast.success(
-              'You have been unbanned by admin. Welcome back!',
-              'Welcome Back',
-              { autoClose: TOAST_DURATION }
-            );
-            
-            // Redirect to portfolio home after toast
-            setTimeout(() => {
-              // Reset ban status manager before redirecting
-              banStatusManager.reset();
-              window.location.href = PORTFOLIO_HOME;
-            }, REDIRECT_DELAY);
+            // Silent redirect without toast
+            banStatusManager.reset();
+            window.location.replace(PORTFOLIO_HOME);
           }
         }
       } catch (error) {
@@ -230,6 +251,18 @@ function BannedPageContent() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Show loading state while checking ban status
+  if (checkingStatus) {
+    return (
+      <div className="fixed inset-0 bg-black-100 flex items-center justify-center z-50">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-purple border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-white text-sm opacity-70">Checking access status...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Render appropriate screen based on size
   if (screenSize === 'mobile') {

@@ -43,7 +43,7 @@ export default function TabletScreen({ banInfo }: TabletScreenProps) {
 
     try {
       // Get visitor mask for proper identity linking
-      const visitorMask = banStatusManager.getVisitorId();
+      const visitorMask = banStatusManager.getMask();
       
       const response = await fetch('/api/ban-appeals', {
         method: 'POST',

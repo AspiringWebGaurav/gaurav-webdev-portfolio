@@ -11,8 +11,11 @@ import { ChatBubbleControlProvider } from "@/contexts/ChatBubbleControlContext";
 import ConditionalChatBubble from "@/components/ConditionalChatBubble";
 import BubbleSessionDeletedNotification from "@/components/BubbleSessionDeletedNotification";
 import BanChecker from "@/components/BanChecker";
+import BanGate from "@/components/BanGate";
+import BanMonitor from "@/components/BanMonitor";
 import ToastProvider from "@/components/providers/ToastProvider";
 import AnalyticsHealthMonitor from "@/components/AnalyticsHealthMonitor";
+import VisitorTracker from "@/components/VisitorTracker";
 // Initialize fingerprint ONCE at app startup to prevent race conditions
 import "@/lib/fingerprintInit";
 
@@ -51,12 +54,15 @@ export default function RootLayout({
                 <BubbleSessionProvider>
                   <BubbleMessageProvider>
                     <ChatBubbleControlProvider>
-                      <BanChecker />
-                      <AnalyticsHealthMonitor />
-                      {children}
-                      <ConditionalChatBubble />
-                      <BubbleSessionDeletedNotification />
-                      <ToastProvider />
+                      <BanGate>
+                        <BanMonitor />
+                        <AnalyticsHealthMonitor />
+                        <VisitorTracker />
+                        {children}
+                        <ConditionalChatBubble />
+                        <BubbleSessionDeletedNotification />
+                        <ToastProvider />
+                      </BanGate>
                     </ChatBubbleControlProvider>
                   </BubbleMessageProvider>
                 </BubbleSessionProvider>
