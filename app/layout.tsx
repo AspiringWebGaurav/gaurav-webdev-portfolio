@@ -13,11 +13,16 @@ import BubbleSessionDeletedNotification from "@/components/BubbleSessionDeletedN
 import BanChecker from "@/components/BanChecker";
 import BanGate from "@/components/BanGate";
 import BanMonitor from "@/components/BanMonitor";
+import MaintenanceGate from "@/components/MaintenanceGate";
+import MaintenanceMonitor from "@/components/MaintenanceMonitor";
 import ToastProvider from "@/components/providers/ToastProvider";
 import AnalyticsHealthMonitor from "@/components/AnalyticsHealthMonitor";
 import VisitorTracker from "@/components/VisitorTracker";
+import ScrollRestoration from "@/hooks/useScrollRestoration";
 // Initialize fingerprint ONCE at app startup to prevent race conditions
 import "@/lib/fingerprintInit";
+// Development: Test utilities for scroll restoration
+import "@/lib/scrollRestorationTest";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -55,13 +60,17 @@ export default function RootLayout({
                   <BubbleMessageProvider>
                     <ChatBubbleControlProvider>
                       <BanGate>
-                        <BanMonitor />
-                        <AnalyticsHealthMonitor />
-                        <VisitorTracker />
-                        {children}
-                        <ConditionalChatBubble />
-                        <BubbleSessionDeletedNotification />
-                        <ToastProvider />
+                        <MaintenanceGate>
+                          <ScrollRestoration />
+                          <BanMonitor />
+                          <MaintenanceMonitor />
+                          <AnalyticsHealthMonitor />
+                          <VisitorTracker />
+                          {children}
+                          <ConditionalChatBubble />
+                          <BubbleSessionDeletedNotification />
+                          <ToastProvider />
+                        </MaintenanceGate>
                       </BanGate>
                     </ChatBubbleControlProvider>
                   </BubbleMessageProvider>

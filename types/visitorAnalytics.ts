@@ -23,6 +23,9 @@ export interface GeoLocation {
   city?: string;
   region?: string;
   timezone?: string;
+  isBot?: boolean;
+  botName?: string;
+  source?: string; // 'ipapi.co', 'ip-api.com', 'ipwhois.io', 'server'
 }
 
 // Single event record (server-logged)

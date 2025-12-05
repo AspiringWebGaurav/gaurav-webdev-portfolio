@@ -173,28 +173,27 @@ function VisitorDetailModal({ visitorId, onClose }: VisitorDetailModalProps) {
 
   return (
     <div 
-      className={`fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity duration-200 ${
+      className={`fixed inset-0 bg-white z-50 overflow-hidden flex flex-col transition-opacity duration-200 ${
         isClosing ? 'opacity-0' : 'opacity-100'
       }`}
-      onClick={handleBackdropClick}
+      onClick={(e) => e.stopPropagation()}
     >
       <div 
-        className={`bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col transition-all duration-200 ${
+        className={`flex-1 flex flex-col transition-all duration-200 ${
           isClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'
         }`}
-        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-purple-600">
-          <div className="flex items-center justify-between">
+        <div className="px-8 py-6 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-purple-600 flex-shrink-0">
+          <div className="flex items-center justify-between max-w-[1800px] mx-auto">
             <div className="flex-1 min-w-0">
-              <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                <Eye className="w-6 h-6" />
-                Visitor Profile
+              <h2 className="text-3xl font-bold text-white flex items-center gap-3">
+                <Eye className="w-8 h-8" />
+                Visitor Profile - Full Details
               </h2>
-              <div className="flex items-center gap-2 mt-2">
-                <span className="text-xs text-blue-100 font-medium">UUID:</span>
-                <code className="text-sm text-white font-mono bg-white/20 px-3 py-1 rounded-lg">
+              <div className="flex items-center gap-2 mt-3">
+                <span className="text-sm text-blue-100 font-medium">UUID:</span>
+                <code className="text-base text-white font-mono bg-white/20 px-4 py-1.5 rounded-lg">
                   {visitorId}
                 </code>
                 <button
@@ -203,7 +202,7 @@ function VisitorDetailModal({ visitorId, onClose }: VisitorDetailModalProps) {
                     navigator.clipboard.writeText(visitorId);
                     showToast.success('UUID copied to clipboard');
                   }}
-                  className="flex-shrink-0 p-1.5 hover:bg-white/20 rounded-lg transition-colors"
+                  className="flex-shrink-0 p-2 hover:bg-white/20 rounded-lg transition-colors"
                   title="Copy UUID"
                 >
                   <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -212,9 +211,9 @@ function VisitorDetailModal({ visitorId, onClose }: VisitorDetailModalProps) {
                 </button>
               </div>
               {detailData?.profile.mask && (
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-xs text-blue-100 font-medium">Mask (Portfolio):</span>
-                  <code className="text-sm text-blue-300 font-mono bg-white/20 px-3 py-1 rounded-lg">
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-sm text-blue-100 font-medium">Mask (Portfolio):</span>
+                  <code className="text-base text-blue-300 font-mono bg-white/20 px-4 py-1.5 rounded-lg">
                     {detailData.profile.mask}
                   </code>
                   <button
@@ -223,7 +222,7 @@ function VisitorDetailModal({ visitorId, onClose }: VisitorDetailModalProps) {
                       navigator.clipboard.writeText(detailData.profile.mask);
                       showToast.success('Mask copied to clipboard');
                     }}
-                    className="flex-shrink-0 p-1.5 hover:bg-white/20 rounded-lg transition-colors"
+                    className="flex-shrink-0 p-2 hover:bg-white/20 rounded-lg transition-colors"
                     title="Copy mask for portfolio reference"
                   >
                     <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -235,16 +234,18 @@ function VisitorDetailModal({ visitorId, onClose }: VisitorDetailModalProps) {
             </div>
             <button
               onClick={handleClose}
-              className="flex-shrink-0 p-2 hover:bg-white/20 rounded-lg transition-colors"
-              title="Close"
+              className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-all shadow-md hover:shadow-lg"
+              title="Close (ESC)"
             >
-              <X className="w-6 h-6 text-white" />
+              <X className="w-5 h-5" />
+              <span className="hidden sm:inline">Close</span>
             </button>
           </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto bg-gray-50">
+          <div className="max-w-[1800px] mx-auto px-8 py-6">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20">
               <Loader2 className="w-10 h-10 text-blue-600 animate-spin mb-3" />
@@ -338,6 +339,14 @@ function VisitorDetailModal({ visitorId, onClose }: VisitorDetailModalProps) {
                           Visitor Location
                         </h4>
                         <div className="space-y-3">
+                          {detailData.profile.geoLocation?.isBot && (
+                            <div className="flex justify-between items-center py-2 border-b border-purple-200 bg-purple-50 px-3 rounded">
+                              <span className="text-sm text-purple-700 font-medium">Bot Detected:</span>
+                              <span className="text-sm font-bold text-purple-900">
+                                {detailData.profile.geoLocation.botName || 'Crawler'}
+                              </span>
+                            </div>
+                          )}
                           <div className="flex justify-between items-center py-2 border-b border-blue-100">
                             <span className="text-sm text-gray-600">Country:</span>
                             <span className={`text-sm font-semibold ${isLocalVisitor ? 'text-orange-700' : 'text-gray-900'}`}>
@@ -457,6 +466,7 @@ function VisitorDetailModal({ visitorId, onClose }: VisitorDetailModalProps) {
               Failed to load visitor details
             </div>
           )}
+          </div>
         </div>
       </div>
     </div>
@@ -994,6 +1004,20 @@ function VisitorDataTable({ visitorIdParam }: { visitorIdParam?: string | null }
   const [showUnbanModal, setShowUnbanModal] = useState(false);
   const [banTargetId, setBanTargetId] = useState<string | null>(null);
   const [banTargetReason, setBanTargetReason] = useState<string | undefined>(undefined);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [isFullPageMode, setIsFullPageMode] = useState(false);
+
+  // Handle ESC key to exit full-page mode
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isFullPageMode) {
+        setIsFullPageMode(false);
+      }
+    };
+    
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isFullPageMode]);
 
   // Initial data load
   useEffect(() => {
@@ -1164,33 +1188,52 @@ function VisitorDataTable({ visitorIdParam }: { visitorIdParam?: string | null }
     setShowDetailModal(true);
   };
 
-  return (
-    <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
-      {/* Header with Actions */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h2 className="text-lg font-semibold text-gray-900">Visitor Data</h2>
-          {isSelectionMode && selectedVisitors.size > 0 && (
-            <span className="px-2.5 py-0.5 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
-              {selectedVisitors.size} selected
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleRefresh}
-            disabled={isRefreshing || loading}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <RefreshCw className={`w-4 h-4 ${isRefreshing || loading ? "animate-spin" : ""}`} />
-            Refresh
-          </button>
-        </div>
-      </div>
+  // Toggle row expansion
+  const toggleRowExpansion = (visitorId: string) => {
+    setExpandedRows((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(visitorId)) {
+        newSet.delete(visitorId);
+      } else {
+        newSet.add(visitorId);
+      }
+      return newSet;
+    });
+  };
 
+  // Helper functions
+  const formatDuration = (seconds: number) => {
+    if (!seconds || isNaN(seconds)) return '0s';
+    if (seconds < 60) return `${Math.round(seconds)}s`;
+    if (seconds < 3600) return `${Math.round(seconds / 60)}m`;
+    return `${Math.round(seconds / 3600)}h`;
+  };
+
+  const getRelativeTime = (date: Date) => {
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - new Date(date).getTime()) / 1000);
+    
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+    return new Date(date).toLocaleDateString();
+  };
+
+  const getDeviceIcon = (deviceClass: DeviceClass) => {
+    switch (deviceClass) {
+      case "mobile": return <Smartphone className="w-4 h-4 text-gray-600" />;
+      case "tablet": return <Tablet className="w-4 h-4 text-gray-600" />;
+      default: return <Monitor className="w-4 h-4 text-gray-600" />;
+    }
+  };
+
+  // Render content (filters, table, modals)
+  const renderContent = () => (
+    <>
       {/* Filters */}
       <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
           {/* Select Button */}
           <div className="flex items-end">
             <button
@@ -1204,6 +1247,17 @@ function VisitorDataTable({ visitorIdParam }: { visitorIdParam?: string | null }
             >
               <CheckCircle className="w-4 h-4" />
               {isSelectionMode ? "Cancel" : "Select"}
+            </button>
+          </div>
+          {/* Full Screen Button */}
+          <div className="flex items-end">
+            <button
+              onClick={() => setIsFullPageMode(true)}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-colors font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 border border-purple-300"
+              title="Open table in full screen mode"
+            >
+              <ExternalLink className="w-4 h-4" />
+              Full Screen
             </button>
           </div>
           <div>
@@ -1251,20 +1305,25 @@ function VisitorDataTable({ visitorIdParam }: { visitorIdParam?: string | null }
               <option value="desktop">Desktop</option>
             </select>
           </div>
-          <div className="flex items-end gap-2 md:col-span-2">
+          <div className="flex items-end gap-2 md:col-span-1">
             <button
               onClick={handleSearch}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className={`flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-medium ${
+                searchQuery || statusFilter !== 'all' || deviceFilter !== 'all' ? 'flex-1' : 'w-full'
+              }`}
             >
               <Filter className="w-4 h-4" />
               Apply
             </button>
-            <button
-              onClick={handleReset}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            {(searchQuery || statusFilter !== 'all' || deviceFilter !== 'all') && (
+              <button
+                onClick={handleReset}
+                className="px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-200 transition-all animate-in fade-in slide-in-from-right-2 duration-200"
+                title="Clear filters"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -1382,211 +1441,278 @@ function VisitorDataTable({ visitorIdParam }: { visitorIdParam?: string | null }
           )}
         </div>
       ) : (
-        // Show data with subtle loading indicator during refresh
+        // Show data - NEW COMPACT TABLE LAYOUT
         <>
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden" style={{ opacity: loading && visitors.length === 0 ? 0.7 : 1, transition: 'opacity 0.3s ease' }}>
-            <div className="divide-y divide-gray-200">
+            {/* Table Header */}
+            <div className="bg-gray-50 border-b border-gray-200 overflow-x-auto">
+              <div className="flex gap-3 px-3 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-max">
+                <div className="w-[40px] flex items-center justify-center flex-shrink-0">
+                  {isSelectionMode && (
+                    <button
+                      onClick={toggleSelectAll}
+                      className="p-1 hover:bg-gray-200 rounded transition-colors"
+                      title={selectedVisitors.size === visitors.length && visitors.length > 0 ? "Deselect all" : "Select all"}
+                    >
+                      {selectedVisitors.size === visitors.length && visitors.length > 0 ? (
+                        <CheckCircle className="w-4 h-4 text-blue-600" />
+                      ) : (
+                        <Target className="w-4 h-4 text-gray-400" />
+                      )}
+                    </button>
+                  )}
+                </div>
+                <div className="w-[180px] flex-shrink-0">Location</div>
+                <div className="w-[85px] flex-shrink-0 text-center">Status</div>
+                <div className="w-[120px] flex-shrink-0">Device</div>
+                <div className="w-[55px] flex-shrink-0 text-center">Visits</div>
+                <div className="w-[280px] flex-shrink-0">UUID</div>
+                <div className="w-[150px] flex-shrink-0">Mask</div>
+                <div className="w-[55px] flex-shrink-0 text-center">Views</div>
+                <div className="w-[65px] flex-shrink-0 text-center">Down</div>
+                <div className="w-[95px] flex-shrink-0">Last Visit</div>
+                <div className="w-[115px] flex-shrink-0 text-right sticky right-0 bg-gray-50 shadow-[-2px_0_4px_rgba(0,0,0,0.05)]">Actions</div>
+              </div>
+            </div>
+
+            {/* Table Body */}
+            <div className="divide-y divide-gray-100 overflow-x-auto">
+              <div className="min-w-max">
               {Array.isArray(visitors) && visitors.map((visitor) => {
-                // Safety check - skip if visitor is null/undefined
+                // Safety check
                 if (!visitor || !visitor.id) {
                   console.warn('Skipping invalid visitor:', visitor);
                   return null;
                 }
                 
-                const formatDuration = (seconds: number) => {
-                  if (!seconds || isNaN(seconds)) return '0s';
-                  if (seconds < 60) return `${Math.round(seconds)}s`;
-                  if (seconds < 3600) return `${Math.round(seconds / 60)}m`;
-                  return `${Math.round(seconds / 3600)}h`;
-                };
-
-                const getDeviceIcon = () => {
-                  switch (visitor.deviceClass) {
-                    case "mobile": return <Smartphone className="w-5 h-5 text-gray-400" />;
-                    case "tablet": return <Tablet className="w-5 h-5 text-gray-400" />;
-                    default: return <Monitor className="w-5 h-5 text-gray-400" />;
-                  }
-                };
-
                 const isNew = visitor.totalVisits === 1;
-
                 const isLocalVisitor = !visitor.geoLocation || 
                   visitor.geoLocation.city === "Unknown" || 
                   visitor.geoLocation.country === "Unknown";
+                const isExpanded = expandedRows.has(visitor.id);
 
                 return (
-                  <div
-                    key={visitor.id}
-                    className={`group p-5 hover:bg-gradient-to-r hover:from-gray-50 hover:to-blue-50/30 transition-all duration-200 border-b border-gray-100 last:border-b-0 ${
-                      isNew ? "bg-gradient-to-r from-blue-50/40 to-purple-50/20" : ""
-                    } ${selectedVisitors.has(visitor.id) ? "bg-blue-50 border-l-4 border-l-blue-600 shadow-sm" : ""} ${!isSelectionMode ? "cursor-pointer" : ""}`}
-                    onClick={() => !isSelectionMode && handleViewDetail(visitor.id)}
-                  >
-                    <div className="flex items-start gap-4">
-                      {/* Checkbox - Only show in selection mode */}
-                      {isSelectionMode && (
-                        <div className="flex-shrink-0 pt-1.5">
+                  <React.Fragment key={visitor.id}>
+                    {/* Compact Row */}
+                    <div
+                      className={`group hover:bg-gray-50 transition-colors ${
+                        isNew ? "bg-blue-50/30" : ""
+                      } ${selectedVisitors.has(visitor.id) ? "bg-blue-50 border-l-4 border-l-blue-500" : ""} ${
+                        isExpanded ? "bg-blue-50/40" : ""
+                      }`}
+                    >
+                      <div className="flex gap-3 px-3 py-3 items-center text-sm min-w-max">
+                        {/* Expand/Select Button */}
+                        <div className="w-[40px] flex-shrink-0 flex items-center justify-center gap-1">
+                          <button
+                            onClick={() => toggleRowExpansion(visitor.id)}
+                            className="flex-shrink-0 p-1 hover:bg-gray-200 rounded transition-colors"
+                            title={isExpanded ? "Collapse details" : "Expand details"}
+                          >
+                            <ChevronRight className={`w-4 h-4 text-gray-500 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
+                          </button>
+                          {isSelectionMode && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleVisitorSelection(visitor.id);
+                              }}
+                              className="p-1 hover:bg-gray-200 rounded transition-colors"
+                            >
+                              {selectedVisitors.has(visitor.id) ? (
+                                <CheckCircle className="w-4 h-4 text-blue-600" />
+                              ) : (
+                                <Target className="w-4 h-4 text-gray-400" />
+                              )}
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Location */}
+                        <div className="w-[180px] flex-shrink-0 flex items-center gap-2 overflow-hidden">
+                          <MapPin className={`w-4 h-4 flex-shrink-0 ${isLocalVisitor ? 'text-orange-500' : (visitor.geoLocation?.isBot ? 'text-purple-500' : 'text-blue-500')}`} />
+                          <span className="font-medium text-gray-900 truncate" title={
+                            isLocalVisitor 
+                              ? "Local/Private Network" 
+                              : visitor.geoLocation?.isBot
+                                ? `${visitor.geoLocation.botName || 'Bot'} - ${visitor.geoLocation?.city}, ${visitor.geoLocation?.country}`
+                                : `${visitor.geoLocation?.city}, ${visitor.geoLocation?.country}`
+                          }>
+                            {isLocalVisitor 
+                              ? "localhost" 
+                              : visitor.geoLocation?.isBot 
+                                ? `🤖 ${visitor.geoLocation.city}, ${visitor.geoLocation.countryCode}`
+                                : `${visitor.geoLocation?.city}, ${visitor.geoLocation?.countryCode}`
+                            }
+                          </span>
+                          {isNew && <span className="flex-shrink-0 text-xs font-semibold text-blue-600">✨</span>}
+                          {visitor.banned && <Ban className="w-3.5 h-3.5 text-red-600 flex-shrink-0" />}
+                        </div>
+
+                        {/* Status */}
+                        <div className="w-[85px] flex-shrink-0 flex justify-center">
+                          {visitor.currentStatus === "active" ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                              Active
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                              Offline
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Device */}
+                        <div className="w-[120px] flex-shrink-0 flex items-center gap-2 overflow-hidden">
+                          {getDeviceIcon(visitor.deviceClass)}
+                          <span className="text-gray-700 truncate" title={visitor.deviceString}>
+                            {visitor.deviceString?.split('·')[0]?.trim() || visitor.deviceClass}
+                          </span>
+                        </div>
+
+                        {/* Total Visits */}
+                        <div className="w-[55px] flex-shrink-0 text-center">
+                          <span className="font-semibold text-gray-900">{visitor.totalVisits}</span>
+                        </div>
+
+                        {/* UUID */}
+                        <div className="w-[280px] flex-shrink-0 flex items-center gap-1 overflow-hidden">
+                          <code className="text-xs font-mono text-indigo-700 truncate" title={visitor.id}>
+                            {visitor.id.length > 32 ? `${visitor.id.substring(0, 32)}...` : visitor.id}
+                          </code>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              toggleVisitorSelection(visitor.id);
+                              navigator.clipboard.writeText(visitor.id);
+                              showToast.success('UUID copied!');
                             }}
-                            className="p-1 hover:bg-gray-200 rounded transition-colors"
+                            className="flex-shrink-0 p-0.5 hover:bg-indigo-100 rounded"
+                            title="Copy UUID"
                           >
-                            {selectedVisitors.has(visitor.id) ? (
-                              <CheckCircle className="w-5 h-5 text-blue-600" />
-                            ) : (
-                              <Target className="w-5 h-5 text-gray-400" />
-                            )}
+                            <svg className="w-3 h-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
                           </button>
                         </div>
-                      )}
-                      
-                      {/* Main Content */}
-                      <div className="flex-1 min-w-0">
-                        {/* Header Row */}
-                        <div className="flex items-start justify-between gap-4 mb-3">
-                          <div className="flex items-center gap-3 flex-1 min-w-0">
-                            {/* Device Icon with background */}
-                            <div className="flex-shrink-0 p-2 bg-white rounded-lg border border-gray-200 group-hover:border-blue-300 group-hover:shadow-sm transition-all">
-                              {getDeviceIcon()}
-                            </div>
-                            
-                            {/* Location & Status */}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <MapPin className={`w-4 h-4 flex-shrink-0 ${isLocalVisitor ? 'text-orange-500' : 'text-blue-500'}`} />
-                                <h3 className={`font-semibold text-base truncate ${isLocalVisitor ? 'text-orange-900' : 'text-gray-900'}`}>
-                                  {isLocalVisitor ? (
-                                    <span className="flex items-center gap-2">
-                                      <span>Local/Private Network</span>
-                                      <span className="text-xs font-normal text-orange-600 bg-orange-50 px-2 py-0.5 rounded">
-                                        localhost
-                                      </span>
-                                    </span>
-                                  ) : (
-                                    `${visitor.geoLocation?.city}, ${visitor.geoLocation?.country}`
-                                  )}
-                                </h3>
-                              </div>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                {/* Status Badge */}
-                                {visitor.currentStatus === "active" ? (
-                                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-200">
-                                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-sm"></span>
-                                    Active
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
-                                    Offline
-                                  </span>
-                                )}
-                                
-                                {/* New Visitor Badge */}
-                                {isNew && (
-                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-blue-100 to-purple-100 text-blue-900 border border-blue-200">
-                                    <span className="text-blue-600">✨</span> New
-                                  </span>
-                                )}
 
-                                {/* Banned Badge */}
-                                {visitor.banned && (
-                                  <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold bg-red-600 text-white shadow-md border-2 border-red-700">
-                                    <Ban className="w-3.5 h-3.5" /> BANNED
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
+                        {/* Mask */}
+                        <div className="w-[150px] flex-shrink-0 flex items-center gap-1 overflow-hidden">
+                          {visitor.mask ? (
+                            <>
+                              <code className="text-xs font-mono text-blue-700 truncate" title={visitor.mask}>
+                                {visitor.mask}
+                              </code>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigator.clipboard.writeText(visitor.mask);
+                                  showToast.success('Mask copied!');
+                                }}
+                                className="flex-shrink-0 p-0.5 hover:bg-blue-100 rounded"
+                                title="Copy Mask"
+                              >
+                                <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                              </button>
+                            </>
+                          ) : (
+                            <span className="text-xs text-gray-400">—</span>
+                          )}
+                        </div>
+
+                        {/* Views */}
+                        <div className="w-[55px] flex-shrink-0 text-center">
+                          <span className="font-semibold text-gray-900">{visitor.resumeViews || 0}</span>
+                        </div>
+
+                        {/* Downloads */}
+                        <div className="w-[65px] flex-shrink-0 text-center">
+                          <span className="font-semibold text-gray-900">{visitor.resumeDownloads || 0}</span>
+                        </div>
+
+                        {/* Last Visit */}
+                        <div className="w-[95px] flex-shrink-0 flex items-center gap-1.5 text-gray-600 overflow-hidden">
+                          <Clock className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                          <span className="truncate text-xs" title={new Date(visitor.lastVisit).toLocaleString()}>
+                            {getRelativeTime(visitor.lastVisit)}
+                          </span>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="w-[115px] flex-shrink-0 flex items-center justify-end gap-1 sticky right-0 bg-white group-hover:bg-gray-50 shadow-[-2px_0_4px_rgba(0,0,0,0.05)]">
+                          {/* Full Screen */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedVisitorId(visitor.id);
+                              setShowDetailModal(true);
+                            }}
+                            className="p-1.5 text-purple-600 hover:bg-purple-50 rounded transition-colors"
+                            title="Open in full screen"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </button>
                           
-                          {/* Action Buttons */}
-                          <div className="flex-shrink-0 flex items-center gap-2">
-                            {/* Ban/Unban Button */}
-                            {visitor.banned ? (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (!visitor.mask) {
-                                    showToast.error('Cannot unban: Visitor mask not found');
-                                    return;
-                                  }
-                                  handleUnban(visitor.mask, visitor.banReason);
-                                }}
-                                className="px-3 py-1.5 text-sm font-medium text-green-700 hover:text-green-800 bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 hover:border-green-300 transition-all flex items-center gap-1.5"
-                                title="Unban visitor"
-                              >
-                                <CheckCircle className="w-4 h-4" />
-                                Unban
-                              </button>
-                            ) : (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (!visitor.mask) {
-                                    showToast.error('Cannot ban: Visitor mask not found');
-                                    return;
-                                  }
-                                  handleBan(visitor.mask);
-                                }}
-                                className="px-3 py-1.5 text-sm font-medium text-red-700 hover:text-red-800 bg-red-50 hover:bg-red-100 rounded-lg border border-red-200 hover:border-red-300 transition-all flex items-center gap-1.5"
-                                title="Ban visitor"
-                              >
-                                <Ban className="w-4 h-4" />
-                                Ban
-                              </button>
-                            )}
-                            
-                            {/* View Details Button */}
+                          {/* Ban/Unban */}
+                          {visitor.banned ? (
                             <button
-                              onClick={() => handleViewDetail(visitor.id)}
-                              className="px-3 py-1.5 text-sm font-medium text-blue-700 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 hover:border-blue-300 transition-all flex items-center gap-1.5"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (!visitor.mask) {
+                                  showToast.error('Cannot unban: Visitor mask not found');
+                                  return;
+                                }
+                                handleUnban(visitor.mask, visitor.banReason);
+                              }}
+                              className="p-1.5 text-green-600 hover:bg-green-50 rounded transition-colors"
+                              title="Unban visitor"
                             >
-                              <Eye className="w-4 h-4" />
-                              View
+                              <CheckCircle className="w-4 h-4" />
                             </button>
-                          </div>
+                          ) : (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (!visitor.mask) {
+                                  showToast.error('Cannot ban: Visitor mask not found');
+                                  return;
+                                }
+                                handleBan(visitor.mask);
+                              }}
+                              className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                              title="Ban visitor"
+                            >
+                              <Ban className="w-4 h-4" />
+                            </button>
+                          )}
+                          
+                          {/* Delete */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(visitor.id);
+                            }}
+                            className="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                            title="Delete visitor"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
-                        
-                        {/* Stats Grid - Essential Only */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-                          <div className="bg-white rounded-lg p-2.5 border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all">
-                            <p className="text-xs text-gray-500 font-medium mb-0.5 flex items-center gap-1">
-                              <MapPin className="w-3 h-3" />
-                              Location
-                            </p>
-                            <p className="text-sm font-bold text-gray-900">{visitor.geoLocation?.country || 'Unknown'}</p>
-                          </div>
-                          <div className="bg-white rounded-lg p-2.5 border border-gray-200 hover:border-purple-300 hover:shadow-sm transition-all">
-                            <p className="text-xs text-gray-500 font-medium mb-0.5 flex items-center gap-1">
-                              <Monitor className="w-3 h-3" />
-                              Device
-                            </p>
-                            <p className="text-sm font-bold text-gray-900 capitalize">{visitor.deviceClass}</p>
-                          </div>
-                          <div className="bg-white rounded-lg p-2.5 border border-gray-200 hover:border-green-300 hover:shadow-sm transition-all">
-                            <p className="text-xs text-gray-500 font-medium mb-0.5 flex items-center gap-1">
-                              <Eye className="w-3 h-3" />
-                              Resume Views
-                            </p>
-                            <p className="text-sm font-bold text-gray-900">{visitor.resumeDownloads * 3}</p>
-                          </div>
-                          <div className="bg-white rounded-lg p-2.5 border border-gray-200 hover:border-orange-300 hover:shadow-sm transition-all">
-                            <p className="text-xs text-gray-500 font-medium mb-0.5 flex items-center gap-1">
-                              <FileDown className="w-3 h-3" />
-                              Downloads
-                            </p>
-                            <p className="text-sm font-bold text-gray-900">{visitor.resumeDownloads}</p>
-                          </div>
-                        </div>
-                        
-                        {/* Footer - Enhanced Info */}
-                        <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-lg p-3 border border-gray-200">
-                          <div className="flex flex-wrap items-center gap-2">
-                            {/* Full UUID - Expandable */}
-                            <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white rounded-md border border-indigo-200 hover:border-indigo-400 transition-all group/uuid">
-                              <Target className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0" />
-                              <span className="text-xs font-mono text-gray-700 font-medium">
-                                UUID: <span className="text-indigo-700">{visitor.id}</span>
+                      </div>
+                    </div>
+
+                    {/* Expanded Details */}
+                    {isExpanded && (
+                      <div className="bg-gradient-to-r from-blue-50/50 to-indigo-50/30 border-t border-blue-100">
+                        <div className="px-4 py-4 space-y-3">
+                          {/* IDs and Technical Info */}
+                          <div className="flex flex-wrap gap-2">
+                            <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg border border-indigo-200 shadow-sm">
+                              <Target className="w-3.5 h-3.5 text-indigo-600" />
+                              <span className="text-xs font-mono text-gray-700">
+                                UUID: <span className="text-indigo-700 font-semibold">{visitor.id}</span>
                               </span>
                               <button
                                 onClick={(e) => {
@@ -1594,72 +1720,126 @@ function VisitorDataTable({ visitorIdParam }: { visitorIdParam?: string | null }
                                   navigator.clipboard.writeText(visitor.id);
                                   showToast.success('UUID copied!');
                                 }}
-                                className="ml-1 p-1 hover:bg-indigo-50 rounded transition-colors"
-                                title="Copy UUID"
+                                className="ml-1 p-0.5 hover:bg-indigo-100 rounded"
                               >
-                                <svg className="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-3 h-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                 </svg>
                               </button>
                             </div>
                             
-                            {/* Mask for Portfolio Reference */}
                             {visitor.mask && (
-                              <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-50 rounded-md border border-blue-200 hover:border-blue-400 transition-all">
-                                <span className="text-xs font-mono text-gray-600 font-medium">
-                                  Mask: <span className="text-blue-700">{visitor.mask}</span>
+                              <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg border border-blue-200 shadow-sm">
+                                <span className="text-xs font-mono text-gray-700">
+                                  Mask: <span className="text-blue-700 font-semibold">{visitor.mask}</span>
                                 </span>
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     navigator.clipboard.writeText(visitor.mask);
-                                    showToast.success('Mask copied for ban reference!');
+                                    showToast.success('Mask copied!');
                                   }}
-                                  className="ml-1 p-1 hover:bg-blue-100 rounded transition-colors"
-                                  title="Copy mask (see on portfolio)"
+                                  className="p-0.5 hover:bg-blue-100 rounded"
                                 >
-                                  <svg className="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                   </svg>
                                 </button>
                               </div>
                             )}
 
-                            {/* ISP */}
                             {(visitor.geoLocation as any)?.isp && (
-                              <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white rounded-md border border-blue-200">
-                                <Globe className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                              <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg border border-gray-200 shadow-sm">
+                                <Globe className="w-3.5 h-3.5 text-blue-600" />
                                 <span className="text-xs text-gray-700">
-                                  <span className="font-medium">ISP:</span> {(visitor.geoLocation as any).isp}
+                                  ISP: <span className="font-semibold">{(visitor.geoLocation as any).isp}</span>
                                 </span>
                               </div>
                             )}
 
-                            {/* Last Visit */}
-                            <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white rounded-md border border-purple-200">
-                              <Clock className="w-3.5 h-3.5 text-purple-600 flex-shrink-0" />
-                              <span className="text-xs text-gray-700">
-                                <span className="font-medium">Last:</span> {new Date(visitor.lastVisit).toLocaleString('en-US', { 
-                                  month: 'short', 
-                                  day: 'numeric', 
-                                  hour: '2-digit', 
-                                  minute: '2-digit'
-                                })}
-                              </span>
-                            </div>
+                            {(visitor.geoLocation as any)?.isBot && (
+                              <div className="flex items-center gap-2 px-3 py-1.5 bg-purple-50 rounded-lg border border-purple-300 shadow-sm">
+                                <span className="text-xs text-purple-700 font-bold">
+                                  🤖 Bot: <span className="font-semibold">{(visitor.geoLocation as any).botName || 'Crawler'}</span>
+                                </span>
+                              </div>
+                            )}
 
-                            {/* Device */}
                             {visitor.deviceString && (
-                              <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white rounded-md border border-gray-200">
-                                <Monitor className="w-3.5 h-3.5 text-gray-600 flex-shrink-0" />
-                                <span className="text-xs text-gray-700 font-medium">{visitor.deviceString}</span>
+                              <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg border border-gray-200 shadow-sm">
+                                <Monitor className="w-3.5 h-3.5 text-gray-600" />
+                                <span className="text-xs text-gray-700 font-semibold">{visitor.deviceString}</span>
                               </div>
                             )}
                           </div>
+
+                          {/* Stats Grid */}
+                          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                            <div className="bg-white rounded-lg p-2.5 border border-gray-200 shadow-sm">
+                              <p className="text-xs text-gray-500 font-medium mb-0.5">Total Visits</p>
+                              <p className="text-lg font-bold text-gray-900">{visitor.totalVisits}</p>
+                            </div>
+                            <div className="bg-white rounded-lg p-2.5 border border-gray-200 shadow-sm">
+                              <p className="text-xs text-gray-500 font-medium mb-0.5">Sessions</p>
+                              <p className="text-lg font-bold text-gray-900">{visitor.totalSessions}</p>
+                            </div>
+                            <div className="bg-white rounded-lg p-2.5 border border-gray-200 shadow-sm">
+                              <p className="text-xs text-gray-500 font-medium mb-0.5">Avg. Duration</p>
+                              <p className="text-lg font-bold text-gray-900">{formatDuration(visitor.averageSessionDuration)}</p>
+                            </div>
+                            <div className="bg-white rounded-lg p-2.5 border border-gray-200 shadow-sm">
+                              <p className="text-xs text-gray-500 font-medium mb-0.5">Page Views</p>
+                              <p className="text-lg font-bold text-gray-900">{visitor.totalPageViews}</p>
+                            </div>
+                            <div className="bg-white rounded-lg p-2.5 border border-gray-200 shadow-sm">
+                              <p className="text-xs text-gray-500 font-medium mb-0.5">Bubble Opens</p>
+                              <p className="text-lg font-bold text-gray-900">{visitor.totalBubbleOpens}</p>
+                            </div>
+                            <div className="bg-white rounded-lg p-2.5 border border-gray-200 shadow-sm">
+                              <p className="text-xs text-gray-500 font-medium mb-0.5">Form Submits</p>
+                              <p className="text-lg font-bold text-gray-900">{visitor.formSubmissions || 0}</p>
+                            </div>
+                          </div>
+
+                          {/* Timestamps */}
+                          <div className="flex flex-wrap gap-3 text-xs text-gray-600">
+                            <div className="flex items-center gap-1.5">
+                              <Clock className="w-3.5 h-3.5" />
+                              <span>First: {new Date(visitor.firstVisit).toLocaleString()}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <Clock className="w-3.5 h-3.5" />
+                              <span>Last: {new Date(visitor.lastVisit).toLocaleString()}</span>
+                            </div>
+                          </div>
+
+                          {/* Ban Info */}
+                          {visitor.banned && visitor.banReason && (
+                            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                              <p className="text-xs font-semibold text-red-800 mb-1">Ban Reason:</p>
+                              <p className="text-sm text-red-700">{visitor.banReason}</p>
+                              {visitor.banTimestamp && (
+                                <p className="text-xs text-red-600 mt-1">
+                                  Banned on: {new Date(visitor.banTimestamp).toLocaleString()}
+                                </p>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Action Button */}
+                          <div className="pt-2 border-t border-blue-200">
+                            <button
+                              onClick={() => handleViewDetail(visitor.id)}
+                              className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1.5"
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                              View Full Details & Event Timeline
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
+                    )}
+                  </React.Fragment>
                 );
               })}
             </div>
@@ -1689,6 +1869,7 @@ function VisitorDataTable({ visitorIdParam }: { visitorIdParam?: string | null }
                 </div>
               </div>
             )}
+            </div>
           </div>
         </>
       )}
@@ -1858,6 +2039,94 @@ function VisitorDataTable({ visitorIdParam }: { visitorIdParam?: string | null }
           </p>
         </div>
       )}
+    </>
+  );
+
+  // Full-page mode
+  if (isFullPageMode) {
+    return (
+      <div className="fixed inset-0 bg-gray-50 z-50 overflow-hidden flex flex-col">
+        {/* Full Page Header */}
+        <div className="px-6 py-4 border-b border-gray-300 bg-gradient-to-r from-blue-600 to-purple-600 flex-shrink-0 shadow-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Database className="w-7 h-7 text-white" />
+              <h2 className="text-2xl font-bold text-white">Visitor Data - Full Screen View</h2>
+              {isSelectionMode && selectedVisitors.size > 0 && (
+                <span className="px-3 py-1.5 bg-white/20 text-white text-sm font-semibold rounded-full border border-white/30">
+                  {selectedVisitors.size} selected
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleRefresh}
+                disabled={isRefreshing || loading}
+                className="flex items-center gap-2 px-4 py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-all disabled:opacity-50 border border-white/30 font-medium shadow-sm"
+              >
+                <RefreshCw className={`w-4 h-4 ${isRefreshing || loading ? "animate-spin" : ""}`} />
+                <span className="hidden sm:inline">Refresh</span>
+              </button>
+              <button
+                onClick={() => setIsFullPageMode(false)}
+                className="flex items-center gap-2 px-5 py-2.5 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-all shadow-md hover:shadow-lg"
+                title="Exit full screen mode (Press ESC)"
+              >
+                <X className="w-5 h-5" />
+                <span>Exit Full Screen</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Full Screen Content - Table fills entire remaining space */}
+        <div className="flex-1 overflow-auto">
+          <div className="h-full p-6">
+            <div className="h-full bg-white rounded-lg shadow-xl border border-gray-200 flex flex-col">
+              <div className="flex-1 overflow-auto p-6">
+                {renderContent()}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Normal mode
+  return (
+    <div className="bg-white rounded-lg shadow-sm p-2 space-y-4 w-full max-w-full">
+      {/* Header with Actions */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <h2 className="text-lg font-semibold text-gray-900">Visitor Data</h2>
+          {isSelectionMode && selectedVisitors.size > 0 && (
+            <span className="px-2.5 py-0.5 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
+              {selectedVisitors.size} selected
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsFullPageMode(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            title="Open in full page mode"
+          >
+            <ExternalLink className="w-4 h-4" />
+            Full Page View
+          </button>
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing || loading}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <RefreshCw className={`w-4 h-4 ${isRefreshing || loading ? "animate-spin" : ""}`} />
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      {renderContent()}
     </div>
   );
 }

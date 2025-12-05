@@ -145,97 +145,56 @@ export default function VisitorTracker() {
 
       console.log('[VisitorTracker] Using mask from BubbleSessionContext:', mask);
 
-      // Get geolocation (non-blocking) - try multiple sources for reliability
+      // Get geolocation from server-side API (more accurate)
       let geoData = null;
-      let isLocalhost = false;
       
-      // Check if running on localhost/local network
-      const hostname = window.location.hostname;
-      if (hostname === 'localhost' || 
-          hostname === '127.0.0.1' || 
-          hostname.startsWith('192.168.') ||
-          hostname.startsWith('10.') ||
-          hostname.startsWith('172.16.') ||
-          hostname === '[::1]') {
-        isLocalhost = true;
-        // Create special localhost geo data
+      try {
+        // Use our server-side geolocation API
+        const geoResponse = await fetch("/api/geolocation", {
+          signal: AbortSignal.timeout(8000), // 8s timeout
+        });
+        
+        if (geoResponse.ok) {
+          const data = await geoResponse.json();
+          // Validate we got real data
+          if (data && data.country && data.country !== 'Unknown') {
+            geoData = {
+              ip: data.ip,
+              city: data.city || 'Unknown',
+              region: data.region || 'Unknown',
+              country_name: data.country,
+              country_code: data.countryCode || 'XX',
+              latitude: data.latitude || 0,
+              longitude: data.longitude || 0,
+              timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+              org: data.isp || 'Unknown ISP',
+              isBot: data.isBot || false,
+              botName: data.botName,
+              source: data.source || 'server',
+            };
+            console.log('[VisitorTracker] Geolocation from server API:', data.country, data.source ? `(${data.source})` : '');
+          }
+        }
+      } catch (err) {
+        console.log("[VisitorTracker] Server geolocation failed, using fallback");
+      }
+        
+      // Last resort: Timezone-based country detection
+      if (!geoData) {
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const countryFromTz = getCountryFromTimezone(timezone);
         geoData = {
-          ip: 'localhost',
-          city: 'Local Development',
-          region: 'Local',
-          country_name: 'Localhost',
-          country_code: 'LOCAL',
+          ip: 'unknown',
+          city: 'Unknown',
+          region: 'Unknown',
+          country_name: countryFromTz.country,
+          country_code: countryFromTz.code,
           latitude: 0,
           longitude: 0,
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          org: 'Local Network',
+          timezone: timezone,
+          org: 'Unknown ISP',
         };
-        console.log('[VisitorTracker] Detected localhost environment');
-      } else {
-        // Not localhost, try to get real geolocation
-        try {
-          // Try ipapi.co first (more detailed)
-          const geoResponse = await fetch("https://ipapi.co/json/", {
-            signal: AbortSignal.timeout(5000), // 5s timeout
-          });
-          if (geoResponse.ok) {
-            const data = await geoResponse.json();
-            // Validate we got real data
-            if (data && data.country_name && data.country_name !== 'Unknown') {
-              geoData = data;
-              console.log('[VisitorTracker] Geolocation from ipapi.co:', data.country_name);
-            }
-          }
-        } catch (err) {
-          console.log("Primary geolocation failed, trying fallback");
-        }
-        
-        // Fallback to ip-api.com if primary fails
-        if (!geoData) {
-          try {
-            const fallbackResponse = await fetch("https://ip-api.com/json/", {
-              signal: AbortSignal.timeout(5000),
-            });
-            if (fallbackResponse.ok) {
-              const data = await fallbackResponse.json();
-              if (data && data.status === 'success' && data.country && data.country !== 'Unknown') {
-                // Transform to ipapi.co format
-                geoData = {
-                  ip: data.query,
-                  city: data.city || 'Unknown City',
-                  region: data.regionName || 'Unknown Region',
-                  country_name: data.country,
-                  country_code: data.countryCode,
-                  latitude: data.lat,
-                  longitude: data.lon,
-                  timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
-                  org: data.isp || 'Unknown ISP',
-                };
-                console.log('[VisitorTracker] Geolocation from ip-api.com:', data.country);
-              }
-            }
-          } catch (err) {
-            console.log("Fallback geolocation also failed, using timezone-based detection");
-          }
-        }
-        
-        // Last resort: Timezone-based country detection
-        if (!geoData) {
-          const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-          const countryFromTz = getCountryFromTimezone(timezone);
-          geoData = {
-            ip: 'unknown',
-            city: 'Unknown',
-            region: 'Unknown',
-            country_name: countryFromTz.country,
-            country_code: countryFromTz.code,
-            latitude: 0,
-            longitude: 0,
-            timezone: timezone,
-            org: 'Unknown ISP',
-          };
-          console.log('[VisitorTracker] Using timezone-based location:', countryFromTz.country);
-        }
+        console.log('[VisitorTracker] Using timezone-based location:', countryFromTz.country);
       }
 
       // Collect comprehensive visitor data
@@ -285,6 +244,9 @@ export default function VisitorTracker() {
           longitude: geoData.longitude,
           timezone: geoData.timezone,
           isp: geoData.org,
+          isBot: geoData.isBot || false,
+          botName: geoData.botName,
+          source: geoData.source,
         } : null,
         browser: {
           name: getBrowserName(),

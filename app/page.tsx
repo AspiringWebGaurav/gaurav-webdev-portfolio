@@ -16,15 +16,33 @@ export default function Home() {
     <main className="relative bg-black-100 flex justify-center items-center flex-col mx-auto sm:px-10 px-5 overflow-clip">
       <div className="w-full">
         <FloatingNav navItems={navItems} />
-        <Hero />
-        <Grid />
-        <CurrentlyWorking />
-        <RecentProjects />
-        <Clients />
-        <Experience />
-        <Approach />
-        <BugHunt />
-        <Footer />
+        <section id="hero">
+          <Hero />
+        </section>
+        <section id="about">
+          <Grid />
+        </section>
+        <section id="currently-working">
+          <CurrentlyWorking />
+        </section>
+        <section id="projects">
+          <RecentProjects />
+        </section>
+        <section id="testimonials">
+          <Clients />
+        </section>
+        <section id="experience">
+          <Experience />
+        </section>
+        <section id="approach">
+          <Approach />
+        </section>
+        <section id="bug-hunt">
+          <BugHunt />
+        </section>
+        <section id="contact">
+          <Footer />
+        </section>
       </div>
     </main>
   );

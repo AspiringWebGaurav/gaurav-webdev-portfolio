@@ -24,13 +24,18 @@ export function generateDeviceFingerprint(): string {
     return window.__deviceFingerprint;
   }
 
-  // Generate fingerprint from stable browser characteristics
+  // Generate fingerprint from STABLE browser characteristics ONLY
+  // CRITICAL: Exclude screen dimensions - they change when switching mobile/desktop mode
+  // Use MAX dimensions instead to get stable physical screen size
+  const maxWidth = Math.max(screen.width, screen.height);
+  const maxHeight = Math.min(screen.width, screen.height);
+  
   const components = [
     navigator.userAgent,
     navigator.language,
     screen.colorDepth,
-    screen.width,
-    screen.height,
+    maxWidth,  // Physical width (stable across orientations)
+    maxHeight, // Physical height (stable across orientations)
     new Date().getTimezoneOffset(),
     navigator.hardwareConcurrency || 'unknown',
     navigator.platform,
@@ -38,8 +43,7 @@ export function generateDeviceFingerprint(): string {
     screen.pixelDepth,
     navigator.maxTouchPoints || 0,
     (navigator as any).deviceMemory || 'unknown',
-    window.screen.availWidth,
-    window.screen.availHeight,
+    // Removed availWidth/availHeight - they change with mobile/desktop mode
   ];
 
   // Create a deterministic hash

@@ -19,6 +19,7 @@ interface TrackingEvent {
   type: "resume_view" | "resume_download" | "contact_open" | "form_submit";
   timestamp: Date;
   data?: any;
+  url?: string;
   metadata?: Record<string, any>;
 }
 
@@ -41,8 +42,18 @@ export function useVisitorTracking() {
 
   /**
    * Track an event using the reliability layer - GUARANTEED DELIVERY
+   * Supports both full event object and simple string type
    */
-  const trackEvent = useCallback(async (event: TrackingEvent) => {
+  const trackEvent = useCallback(async (eventOrType: TrackingEvent | string, data?: any) => {
+    // Normalize input to TrackingEvent object
+    const event: TrackingEvent = typeof eventOrType === 'string' 
+      ? { type: eventOrType as TrackingEvent['type'], timestamp: new Date(), data }
+      : eventOrType;
+
+    // Ensure timestamp exists
+    if (!event.timestamp) {
+      event.timestamp = new Date();
+    }
     if (!visitorIdRef.current || !sessionIdRef.current) {
       console.warn('[VisitorTracking] Cannot track - visitor/session not initialized');
       // Store event for retry when initialized

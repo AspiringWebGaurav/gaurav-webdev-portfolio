@@ -18,6 +18,7 @@ import VisitorAnalyticsErrorBoundary from "@/components/admin/VisitorAnalyticsEr
 import BanAppealsManager from "@/components/admin/BanAppealsManager";
 import BugHuntManager from "@/components/admin/BugHuntManager";
 import VersionNotesModal from "@/components/admin/VersionNotesModal";
+import AdminRightsModal from "@/components/admin/AdminRightsModal";
 import { useContactSubmissions } from "@/contexts/ContactSubmissionContext";
 import { useBugReports } from "@/contexts/BugReportContext";
 import { useNotifications } from "@/contexts/NotificationContext";
@@ -44,6 +45,7 @@ function DashboardContent() {
   const [authorized, setAuthorized] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [showVersionNotes, setShowVersionNotes] = useState(false);
+  const [showAdminRights, setShowAdminRights] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
@@ -236,7 +238,10 @@ function DashboardContent() {
         className="h-screen flex flex-col bg-surface overflow-hidden"
       >
       <div className="shrink-0">
-        <Navbar onVersionNotesClick={() => setShowVersionNotes(true)} />
+        <Navbar 
+          onVersionNotesClick={() => setShowVersionNotes(true)}
+          onAdminRightsClick={() => setShowAdminRights(true)}
+        />
 
         {/* Tab Grid - 2 rows layout */}
         <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-3">
@@ -280,7 +285,7 @@ function DashboardContent() {
 
       {/* Main Content - Scrollable Section */}
       <main className="flex-1 overflow-y-auto bg-gray-50 scrollbar-hide">
-        <div className="max-w-7xl mx-auto p-6">
+        <div className={activeSection === "visitor-analytics" ? "w-full px-2 py-4" : "max-w-7xl mx-auto p-6"}>
           {activeSection === "tech-stacks" && <TechStackManager />}
           {activeSection === "currently-working" && <CurrentlyWorkingManager />}
           {activeSection === "projects" && <ProjectManager />}
@@ -306,6 +311,12 @@ function DashboardContent() {
       <VersionNotesModal 
         isOpen={showVersionNotes} 
         onClose={() => setShowVersionNotes(false)} 
+      />
+
+      {/* Admin Rights Modal */}
+      <AdminRightsModal 
+        isOpen={showAdminRights} 
+        onClose={() => setShowAdminRights(false)} 
       />
 
       {/* Hide scrollbar styles */}

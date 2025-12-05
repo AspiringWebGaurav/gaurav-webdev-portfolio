@@ -19,7 +19,7 @@ export default function BanGate({ children }: { children: React.ReactNode }) {
   const hasChecked = useRef(false);
 
   // Check if we should skip ban gate
-  const shouldSkipGate = pathname?.startsWith("/admin") || pathname?.startsWith("/banned");
+  const shouldSkipGate = pathname?.startsWith("/admin") || pathname?.startsWith("/banned") || pathname?.startsWith("/maintenance");
 
   useEffect(() => {
     // Skip ban check for admin/banned pages

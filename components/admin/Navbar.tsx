@@ -10,6 +10,7 @@ import {
   Trash2,
   RefreshCw,
   Activity,
+  Shield,
 } from "lucide-react";
 import BrandLogo from "./BrandLogo";
 import NotificationBell from "./NotificationBell";
@@ -22,11 +23,13 @@ import { useRefreshDashboard } from "@/hooks/useRefreshDashboard";
 interface NavbarProps {
   showNotifications?: boolean;
   onVersionNotesClick?: () => void;
+  onAdminRightsClick?: () => void;
 }
 
 export default function Navbar({
   showNotifications = true,
   onVersionNotesClick,
+  onAdminRightsClick,
 }: NavbarProps) {
   const [currentTime, setCurrentTime] = useState<string>("");
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -390,6 +393,18 @@ export default function Navbar({
                       >
                         <FileText className="w-4 h-4" />
                         <span>Version Notes</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowProfileMenu(false);
+                          if (onAdminRightsClick) {
+                            onAdminRightsClick();
+                          }
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        <Shield className="w-4 h-4" />
+                        <span>Admin Rights</span>
                       </button>
                       <button
                         onClick={() => {

@@ -1,8 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
 import { PredefinedQuestion } from '@/types/bubble';
+
+interface MaintenanceBubbleSettings {
+  allowResumeView: boolean;
+  allowResumeDownload: boolean;
+  allowAskDirect: boolean;
+  allowPredefinedQuestions: boolean;
+  disabledMessage: string;
+}
 
 interface PredefinedQuestionsProps {
   title: string;
@@ -12,6 +20,27 @@ export default function PredefinedQuestions({ title }: PredefinedQuestionsProps)
   const [questions, setQuestions] = useState<PredefinedQuestion[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [maintenanceSettings, setMaintenanceSettings] = useState<MaintenanceBubbleSettings | null>(null);
+
+  // Check maintenance status
+  useEffect(() => {
+    async function checkMaintenanceStatus() {
+      try {
+        const response = await fetch('/api/maintenance/status');
+        if (response.ok) {
+          const data = await response.json();
+          setMaintenanceMode(data.enabled);
+          if (data.enabled && data.bubbleSettings) {
+            setMaintenanceSettings(data.bubbleSettings);
+          }
+        }
+      } catch (error) {
+        console.error('[PredefinedQuestions] Error checking maintenance:', error);
+      }
+    }
+    checkMaintenanceStatus();
+  }, []);
 
   useEffect(() => {
     async function fetchQuestions() {
@@ -40,6 +69,9 @@ export default function PredefinedQuestions({ title }: PredefinedQuestionsProps)
     setExpandedId(expandedId === id ? null : id);
   };
 
+  // Check if predefined questions are disabled during maintenance
+  const isPredefinedQuestionsDisabled = maintenanceMode && maintenanceSettings && !maintenanceSettings.allowPredefinedQuestions;
+
   if (loading) {
     return (
       <div className="mb-4 sm:mb-6">
@@ -55,6 +87,21 @@ export default function PredefinedQuestions({ title }: PredefinedQuestionsProps)
 
   if (questions.length === 0) {
     return null;
+  }
+
+  // Show disabled state during maintenance
+  if (isPredefinedQuestionsDisabled) {
+    return (
+      <div>
+        <h3 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3 px-0.5">{title}</h3>
+        <div className="p-4 rounded-lg border border-amber-200 bg-amber-50">
+          <div className="flex items-center gap-2 text-amber-700">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span className="text-sm">{maintenanceSettings?.disabledMessage || 'Disabled by admin due to maintenance'}</span>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

@@ -24,7 +24,7 @@ export default function BanMonitor() {
   const hasReceivedFirstUpdate = useRef(false);
 
   // Check if we should skip monitoring
-  const shouldSkipMonitoring = pathname?.startsWith("/admin") || pathname?.startsWith("/banned");
+  const shouldSkipMonitoring = pathname?.startsWith("/admin") || pathname?.startsWith("/banned") || pathname?.startsWith("/maintenance");
 
   useEffect(() => {
     // Skip monitoring for admin/banned pages
