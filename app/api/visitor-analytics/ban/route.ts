@@ -1,5 +1,5 @@
 /**
- * Ban Visitor API - Enterprise Level
+ * Ban Visitor API - Enterprise Level (Enhanced)
  * Bans a visitor by MASK with reason and category
  * Features:
  * - Transaction-based atomic operations
@@ -8,12 +8,13 @@
  * - Audit logging
  * - Real-time update triggers
  * - NEW: Mask → UUID translation
+ * - NEW: Identity graph integration for ban persistence
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb, verifyAuth } from "@/lib/firebaseAdmin";
 import { Timestamp, FieldValue } from "firebase-admin/firestore";
-import { translateMaskToUUID, validateMask } from "@/lib/uuid-sync/server";
+import { translateMaskToUUID } from "@/lib/uuid-sync/server";
 
 const VISITORS_COLLECTION = "og_uuid";
 const BAN_LOGS_COLLECTION = "banLogs";

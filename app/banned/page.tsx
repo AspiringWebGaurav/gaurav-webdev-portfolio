@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { showToast } from '@/lib/toast';
 import MobileScreen from './screens/MobileScreen';
@@ -8,7 +8,8 @@ import TabletScreen from './screens/TabletScreen';
 import DesktopScreen from './screens/DesktopScreen';
 import { banStatusManager } from '@/lib/banStatusManager';
 import { generateDeviceFingerprint } from '@/lib/deviceFingerprint';
-import { clientIdentifyVisitor } from '@/lib/uuid-sync';
+// REMOVED: clientIdentifyVisitor - DO NOT call identify APIs on banned page!
+// This was causing new UUIDs to be created when banned users visited this page
 
 interface BanInfo {
   reason: string;
@@ -21,6 +22,7 @@ const FALLBACK_CHECK_INTERVAL = 10000; // Fallback check every 10 seconds
 const TOAST_DURATION = 3000; // 3 seconds toast display
 const REDIRECT_DELAY = 3000; // 3 seconds before redirect
 const PORTFOLIO_HOME = '/'; // Dynamic portfolio home route
+const MAX_VERIFICATION_TIME = 5000; // Max 5 seconds for verification before showing UI
 
 // Get review time based on category
 const getCategoryReviewTime = (category?: string): string => {
@@ -50,20 +52,70 @@ function BannedPageContent() {
   });
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [checkingStatus, setCheckingStatus] = useState(true);
+  const verificationTimeout = useRef<NodeJS.Timeout | null>(null);
+  const hasStartedCheck = useRef(false);
 
-  // Get visitor mask independently (avoid session context loop)
+  // Safety timeout: Always show banned UI after MAX_VERIFICATION_TIME
+  // This prevents infinite "checking" state
   useEffect(() => {
-    const getMask = async () => {
-      const fingerprint = generateDeviceFingerprint();
-      const visitorMask = await clientIdentifyVisitor(fingerprint);
-      setMask(visitorMask);
+    verificationTimeout.current = setTimeout(() => {
+      if (checkingStatus) {
+        console.log('[Banned Page] ⏱️ Verification timeout reached - showing banned UI');
+        setCheckingStatus(false);
+      }
+    }, MAX_VERIFICATION_TIME);
+    
+    return () => {
+      if (verificationTimeout.current) {
+        clearTimeout(verificationTimeout.current);
+      }
     };
-    getMask();
+  }, []);
+
+  // Get visitor mask by checking ban status with fingerprint
+  // CRITICAL: DO NOT call identify APIs here - they would create a new UUID!
+  // Instead, use check-ban-by-fingerprint which only looks up existing identity
+  useEffect(() => {
+    const getMaskFromBanCheck = async () => {
+      try {
+        const fingerprint = generateDeviceFingerprint();
+        
+        // Use fingerprint-based ban check that returns mask WITHOUT creating new identity
+        const response = await fetch('/api/visitor-analytics/check-ban-by-fingerprint', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fingerprint }),
+          cache: 'no-store',
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.mask) {
+            setMask(data.mask);
+            console.log('[Banned Page] Got mask from fingerprint lookup:', data.mask);
+          } else {
+            // No existing identity found - this shouldn't happen for banned users
+            console.warn('[Banned Page] No existing identity found for fingerprint');
+            // Show banned UI anyway (conservative)
+            setCheckingStatus(false);
+          }
+        } else {
+          console.error('[Banned Page] Failed to lookup identity by fingerprint');
+          setCheckingStatus(false);
+        }
+      } catch (error) {
+        console.error('[Banned Page] Error getting mask:', error);
+        // On error, show banned UI (conservative)
+        setCheckingStatus(false);
+      }
+    };
+    getMaskFromBanCheck();
   }, []);
 
   // IMMEDIATE CHECK: If user is not banned, redirect silently (no toast)
   useEffect(() => {
-    if (!mask || isRedirecting) return;
+    if (!mask || isRedirecting || hasStartedCheck.current) return;
+    hasStartedCheck.current = true;
 
     const checkCurrentBanStatus = async () => {
       try {
@@ -89,11 +141,13 @@ function BannedPageContent() {
             setCheckingStatus(false);
           }
         } else {
-          // API error - show banned UI as fallback
+          // API error - show banned UI as fallback (conservative approach)
+          console.log('[Banned Page] API error - showing banned UI as fallback');
           setCheckingStatus(false);
         }
       } catch (error) {
         console.error('[Banned Page] Error checking ban status:', error);
+        // On error, show banned UI (conservative - assume they're banned)
         setCheckingStatus(false);
       }
     };

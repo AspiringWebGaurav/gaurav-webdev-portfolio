@@ -2,6 +2,7 @@
  * Visitor Analytics Detail API
  * Admin-only endpoint for retrieving detailed visitor data
  * NEW: Accepts mask, translates to UUID, returns mask in responses
+ * NEW: Enhanced delete includes identity graph cleanup
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -495,7 +496,7 @@ export async function DELETE(
       await banHistoryBatch.commit();
     }
 
-    // Step 8: Finally delete the visitor profile (og_uuid)
+    // Step 9: Finally delete the visitor profile (og_uuid)
     await adminDb.collection(VISITORS_COLLECTION).doc(uuid).delete();
     
     console.log(`[DELETE] ✅ CASCADE DELETE COMPLETE for visitor ${uuid}:`, {

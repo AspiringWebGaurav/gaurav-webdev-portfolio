@@ -14,12 +14,19 @@ export {
   isValidMask
 } from './core/validator';
 
-// Client adapters (React hooks)
+// Client adapters (React hooks) - Basic and Enhanced
 export {
   clientIdentifyVisitor,
+  clientIdentifyVisitorEnhanced,
+  clientCheckBanEnhanced,
   useVisitorIdentity,
+  useVisitorIdentityEnhanced,
   formatMaskForDisplay,
   isValidMaskFormat
+} from './adapters/clientAdapter';
+
+export type {
+  EnhancedIdentityResult
 } from './adapters/clientAdapter';
 
 export {

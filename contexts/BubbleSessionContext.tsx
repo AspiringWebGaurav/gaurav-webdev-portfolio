@@ -5,7 +5,7 @@ import { BubbleSession } from '@/types/bubble';
 import { generateDeviceFingerprint } from '@/lib/deviceFingerprint';
 import { logSessionEventSync } from '@/lib/sessionLogger';
 import smartPolling from '@/lib/smartPolling';
-import { clientIdentifyVisitor } from '@/lib/uuid-sync';
+import { clientIdentifyVisitor, clientIdentifyVisitorEnhanced } from '@/lib/uuid-sync';
 
 interface BubbleSessionContextType {
   session: BubbleSession | null;
@@ -21,14 +21,14 @@ interface BubbleSessionContextType {
 const BubbleSessionContext = createContext<BubbleSessionContextType | undefined>(undefined);
 
 /**
- * UUID-Sync Session Management
+ * UUID-Sync Session Management (Enhanced)
  * 
- * Simple, stateless approach:
- * - No cookies, no tokens, no authentication
+ * Enhanced multi-signal identity approach:
+ * - No cookies, no localStorage - pure API sync
  * - Device mask generated via UUID-sync system (device_**********)
- * - Mask stored in memory only
- * - All API calls include mask in body/query
- * - Server translates mask to UUID and fetches session
+ * - Multiple fingerprint signals (canvas, webgl, audio, fonts)
+ * - Device token stored in memory for session continuity
+ * - All signals checked against identity graph for ban enforcement
  */
 
 export function BubbleSessionProvider({ children }: { children: React.ReactNode }) {
@@ -40,12 +40,13 @@ export function BubbleSessionProvider({ children }: { children: React.ReactNode 
   /**
    * Initialize session - generate mask and create/fetch session
    * 
-   * Flow:
-   * 1. Generate fingerprint from browser
-   * 2. Identify visitor via UUID-sync (returns mask)
-   * 3. Try to fetch existing session (GET /api/session?mask=device_**)
-   * 4. If not found, create new session (POST /api/session with mask)
-   * 5. Store mask in memory (component state)
+   * Enhanced Flow:
+   * 1. Generate primary fingerprint from browser
+   * 2. Identify visitor via enhanced UUID-sync (multiple signals)
+   * 3. Check if banned during identification
+   * 4. Try to fetch existing session (GET /api/session?mask=device_**)
+   * 5. If not found, create new session (POST /api/session with mask)
+   * 6. Store mask in memory (component state)
    */
   const initializeSession = useCallback(async () => {
     if (isInitializing) {
@@ -68,15 +69,32 @@ export function BubbleSessionProvider({ children }: { children: React.ReactNode 
       setIsInitializing(true);
       setLoading(true);
       
-      // Get fingerprint and identify visitor using UUID-sync
+      // Get fingerprint and identify visitor using enhanced UUID-sync
       const fingerprint = generateDeviceFingerprint();
-      const mask = await clientIdentifyVisitor(fingerprint);
+      
+      // Use enhanced identification with multi-signal fingerprinting
+      const identity = await clientIdentifyVisitorEnhanced(fingerprint);
+      const mask = identity.mask;
       
       setVisitorId(mask);
 
-      // CRITICAL: Check ban status BEFORE fetching/creating session
-      // This ensures banned visitors redirect immediately without seeing content
-      console.log('[BubbleSession] 🔍 Checking ban status before session init...');
+      // Check if banned during identification (enhanced check already done)
+      if (identity.banned) {
+        console.log('[BubbleSession] ⛔ BANNED VISITOR (during identification) - Redirecting');
+        
+        const params = new URLSearchParams({
+          reason: identity.banReason || 'Security Violation',
+          category: identity.banCategory || 'normal',
+          timestamp: new Date().toISOString(),
+        });
+        
+        window.location.replace(`/banned?${params.toString()}`);
+        return;
+      }
+
+      // ADDITIONAL: Double-check ban status via realtime endpoint
+      // This catches edge cases where ban was applied after enhanced identification
+      console.log('[BubbleSession] 🔍 Double-checking ban status...');
       
       const banCheckResponse = await fetch('/api/visitor-analytics/check-ban-realtime', {
         method: 'POST',
@@ -89,9 +107,8 @@ export function BubbleSessionProvider({ children }: { children: React.ReactNode 
         const banData = await banCheckResponse.json();
         
         if (banData.banned === true) {
-          console.log('[BubbleSession] ⛔ BANNED VISITOR - Redirecting immediately');
+          console.log('[BubbleSession] ⛔ BANNED VISITOR (realtime check) - Redirecting');
           
-          // IMMEDIATE redirect before session init
           const params = new URLSearchParams({
             reason: banData.banReason || 'Security Violation',
             category: banData.banCategory || 'normal',
@@ -99,11 +116,16 @@ export function BubbleSessionProvider({ children }: { children: React.ReactNode 
           });
           
           window.location.replace(`/banned?${params.toString()}`);
-          return; // Stop session initialization
+          return;
         }
       }
 
       console.log('[BubbleSession] ✅ Not banned - proceeding with session init');
+      console.log('[BubbleSession] 📍 Identity:', { 
+        mask: mask?.substring(0, 15), 
+        matchedSignal: identity.matchedSignal,
+        isNew: identity.isNewIdentity 
+      });
 
       // Try to fetch existing session
       const getResponse = await fetch(`/api/session?mask=${mask}`, {
