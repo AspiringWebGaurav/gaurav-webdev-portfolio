@@ -1,20 +1,37 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { AlertCircle, RefreshCcw } from 'lucide-react';
 import { useBubbleSession } from '@/contexts/BubbleSessionContext';
 
 /**
  * Shows a notification when the admin deletes the current session
  * Allows visitor to start a new conversation
+ * 
+ * IMPORTANT: Does NOT show on maintenance, banned, or admin pages
+ * as session loss on these pages is expected and not due to admin action
  */
 export default function BubbleSessionDeletedNotification() {
+  const pathname = usePathname();
   const { visitorId } = useBubbleSession();
   const [wasDeleted, setWasDeleted] = useState(false);
   const [previousVisitorId, setPreviousVisitorId] = useState<string | null>(null);
 
+  // Don't show notification on special pages where session loss is expected
+  const isSpecialPage = pathname?.startsWith('/maintenance') || 
+                        pathname?.startsWith('/banned') || 
+                        pathname?.startsWith('/admin');
+
   useEffect(() => {
-    // Track if we had a session that disappeared
+    // Never trigger "deleted" state on special pages
+    if (isSpecialPage) {
+      // Reset state when navigating to special pages
+      setWasDeleted(false);
+      return;
+    }
+
+    // Track if we had a session that disappeared (only on normal pages)
     if (previousVisitorId && !visitorId) {
       setWasDeleted(true);
       
@@ -29,9 +46,10 @@ export default function BubbleSessionDeletedNotification() {
     if (visitorId) {
       setPreviousVisitorId(visitorId);
     }
-  }, [visitorId, previousVisitorId]);
+  }, [visitorId, previousVisitorId, isSpecialPage]);
 
-  if (!wasDeleted) return null;
+  // Don't render on special pages or if not deleted
+  if (isSpecialPage || !wasDeleted) return null;
 
   return (
     <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100001] max-w-md mx-auto px-4 animate-in slide-in-from-top duration-300">

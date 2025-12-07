@@ -11,7 +11,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, verifyAuth } from '@/lib/firebaseAdmin';
-import { Timestamp } from 'firebase-admin/firestore';
+import { Timestamp, FieldValue } from 'firebase-admin/firestore';
 
 const ALLOWED_EMAIL = "gauravpatil9262@gmail.com";
 const COLLECTION = 'siteSettings';
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     
     // 3. Parse request body
     const body = await request.json();
-    const { enabled, message, title, estimatedDuration, bubbleSettings } = body;
+    const { enabled, message, title, estimatedDuration, bubbleSettings, autoEndEnabled } = body;
     
     if (typeof enabled !== 'boolean') {
       return NextResponse.json(
@@ -65,6 +65,7 @@ export async function POST(request: NextRequest) {
     // 4. Update Firestore document
     const docRef = adminDb.collection(COLLECTION).doc(DOC_ID);
     const now = Timestamp.now();
+    const nowDate = now.toDate();
     
     const updateData: Record<string, any> = {
       enabled,
@@ -79,6 +80,17 @@ export async function POST(request: NextRequest) {
       // Store estimated duration in minutes
       if (typeof estimatedDuration === 'number' && estimatedDuration > 0) {
         updateData.estimatedDuration = estimatedDuration;
+      }
+      
+      // Handle auto-end feature
+      if (autoEndEnabled === true && typeof estimatedDuration === 'number' && estimatedDuration > 0) {
+        // Calculate auto-end timestamp: now + estimatedDuration (in minutes)
+        const autoEndTime = new Date(nowDate.getTime() + (estimatedDuration * 60 * 1000));
+        updateData.autoEndEnabled = true;
+        updateData.autoEndAt = Timestamp.fromDate(autoEndTime);
+      } else {
+        updateData.autoEndEnabled = false;
+        updateData.autoEndAt = null;
       }
       // Store bubble settings for maintenance mode
       if (bubbleSettings) {
@@ -102,18 +114,33 @@ export async function POST(request: NextRequest) {
         };
       }
     } else {
+      // When disabling maintenance, keep minimal data and DELETE unnecessary fields
+      // This saves Firestore costs by reducing document size
       updateData.disabledAt = now;
       updateData.disabledBy = decodedToken.email;
-      // Clear estimated duration when disabling
-      updateData.estimatedDuration = null;
-      // Clear bubble settings when disabling (back to normal)
-      updateData.bubbleSettings = null;
+      
+      // PERMANENTLY DELETE these fields from database to save costs
+      updateData.estimatedDuration = FieldValue.delete();
+      updateData.bubbleSettings = FieldValue.delete();
+      updateData.autoEndEnabled = FieldValue.delete();
+      updateData.autoEndAt = FieldValue.delete();
+      updateData.enabledAt = FieldValue.delete();
+      updateData.enabledBy = FieldValue.delete();
+      updateData.message = FieldValue.delete();
+      updateData.title = FieldValue.delete();
     }
     
     // Check if document exists, create or update accordingly
     const docSnapshot = await docRef.get();
     
     if (!docSnapshot.exists) {
+      // Calculate auto-end timestamp if applicable
+      let autoEndAtTimestamp = null;
+      if (enabled && autoEndEnabled === true && typeof estimatedDuration === 'number' && estimatedDuration > 0) {
+        const autoEndTime = new Date(nowDate.getTime() + (estimatedDuration * 60 * 1000));
+        autoEndAtTimestamp = Timestamp.fromDate(autoEndTime);
+      }
+      
       // Create document with defaults
       await docRef.set({
         enabled,
@@ -125,6 +152,8 @@ export async function POST(request: NextRequest) {
         disabledAt: enabled ? null : now,
         disabledBy: enabled ? null : decodedToken.email,
         estimatedDuration: enabled && typeof estimatedDuration === 'number' ? estimatedDuration : null,
+        autoEndEnabled: enabled && autoEndEnabled === true && typeof estimatedDuration === 'number' && estimatedDuration > 0,
+        autoEndAt: autoEndAtTimestamp,
         bubbleSettings: enabled ? {
           hideBubbleCompletely: bubbleSettings?.hideBubbleCompletely ?? false,
           allowResumeView: bubbleSettings?.allowResumeView ?? true,
@@ -194,6 +223,8 @@ export async function GET(request: NextRequest) {
         enabledAt: null,
         enabledBy: null,
         estimatedDuration: null,
+        autoEndEnabled: false,
+        autoEndAt: null,
         bubbleSettings: null,
       });
     }
@@ -211,6 +242,8 @@ export async function GET(request: NextRequest) {
       disabledAt: data?.disabledAt?.toDate?.()?.toISOString() || null,
       disabledBy: data?.disabledBy || null,
       estimatedDuration: data?.estimatedDuration || null,
+      autoEndEnabled: data?.autoEndEnabled ?? false,
+      autoEndAt: data?.autoEndAt?.toDate?.()?.toISOString() || null,
       bubbleSettings: data?.bubbleSettings || null,
     });
     

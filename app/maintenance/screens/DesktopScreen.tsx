@@ -1,20 +1,30 @@
 'use client';
 /**
- * Desktop Maintenance Screen
+ * Desktop Maintenance Screen - HORIZONTAL SYMMETRIC LAYOUT
  * 
  * Full-featured layout for large screens (1024px+)
  * Non-scrollable, fixed viewport design
+ * Horizontal distribution with dynamic rotating content
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Wrench, Clock, Timer, Loader2 } from 'lucide-react';
+import { Clock, Timer, Loader2, MoreVertical, Shield, Bug } from 'lucide-react';
 import { FaLocationArrow } from 'react-icons/fa6';
 import { Spotlight } from '@/components/ui/Spotlight';
-import { TextGenerateEffect } from '@/components/ui/TextGenerateEffect';
 import FlipCountdown from '@/components/ui/FlipCountdown';
 import ContactFormModal from '@/components/ContactFormModal';
+import BugReportIntro from '@/components/BugReportIntro';
+import BugReportForm from '@/components/BugReportForm';
 import { socialMedia } from '@/data';
+import { 
+  TITLES, 
+  FUN_FACTS, 
+  ROTATING_ICONS, 
+  CURRENT_ACTIVITIES,
+  PHASE_INFO,
+  getPhaseFromOverdue 
+} from '@/data/maintenanceContent';
 import Image from 'next/image';
 
 interface MaintenanceInfo {
@@ -37,9 +47,104 @@ export default function DesktopScreen({ maintenanceInfo }: DesktopScreenProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [localOverdue, setLocalOverdue] = useState(maintenanceInfo.isOverdue);
+  
+  // Menu dropdown state
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isBugIntroOpen, setIsBugIntroOpen] = useState(false);
+  const [isBugFormOpen, setIsBugFormOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  
+  // Dynamic content indices
+  const [titleIndex, setTitleIndex] = useState(0);
+  const [iconIndex, setIconIndex] = useState(0);
+  const [funFactIndices, setFunFactIndices] = useState([0, 1, 2, 3]);
+  const [activityIndex, setActivityIndex] = useState(0);
+  
+  // Live elapsed time in seconds for smoother display
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Determine phase based on overdue time
+  const phase = useMemo(() => {
+    return getPhaseFromOverdue(maintenanceInfo.overdueBy || 0, localOverdue);
+  }, [localOverdue, maintenanceInfo.overdueBy]);
+
+  // Get titles based on phase
+  const currentTitles = useMemo(() => {
+    return TITLES[phase];
+  }, [phase]);
+
+  const phaseBadge = PHASE_INFO[phase];
+
+  // Clock timer - every second
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Elapsed time calculator - every second
+  useEffect(() => {
+    if (!maintenanceInfo.enabledAt) return;
+    
+    const updateElapsed = () => {
+      const now = new Date();
+      const elapsed = Math.floor((now.getTime() - maintenanceInfo.enabledAt!.getTime()) / 1000);
+      setElapsedSeconds(elapsed);
+    };
+    
+    updateElapsed();
+    const timer = setInterval(updateElapsed, 1000);
+    return () => clearInterval(timer);
+  }, [maintenanceInfo.enabledAt]);
+
+  // Title rotation (every 8 seconds)
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTitleIndex(prev => (prev + 1) % currentTitles.length);
+    }, 8000);
+    return () => clearInterval(timer);
+  }, [currentTitles.length]);
+
+  // Icon rotation (every 5 seconds)
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIconIndex(prev => (prev + 1) % ROTATING_ICONS.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Fun facts rotation (every 6 seconds, rotate one at a time)
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setFunFactIndices(prev => {
+        const newIndices = [...prev];
+        const rotatePosition = Math.floor(Math.random() * 4);
+        let newIndex;
+        do {
+          newIndex = Math.floor(Math.random() * FUN_FACTS.length);
+        } while (newIndices.includes(newIndex));
+        newIndices[rotatePosition] = newIndex;
+        return newIndices;
+      });
+    }, 6000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Activity rotation (every 10 seconds)
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActivityIndex(prev => (prev + 1) % CURRENT_ACTIVITIES.length);
+    }, 10000);
     return () => clearInterval(timer);
   }, []);
 
@@ -51,15 +156,14 @@ export default function DesktopScreen({ maintenanceInfo }: DesktopScreenProps) {
     }
   }, [maintenanceInfo.isOverdue, localOverdue]);
 
-  // Handle countdown completion - immediate transition
-  const handleCountdownComplete = () => {
+  // Handle countdown completion
+  const handleCountdownComplete = useCallback(() => {
     setIsTransitioning(true);
-    // Brief loading state then switch to overdue
     setTimeout(() => {
       setLocalOverdue(true);
       setIsTransitioning(false);
     }, 1500);
-  };
+  }, []);
 
   const formatDuration = (minutes: number) => {
     if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
@@ -69,33 +173,32 @@ export default function DesktopScreen({ maintenanceInfo }: DesktopScreenProps) {
     return `${hrs}h ${mins}m`;
   };
 
-  const formatOverdueTime = (minutes: number) => {
-    if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
-    const hrs = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    if (mins === 0) return `${hrs} hour${hrs !== 1 ? 's' : ''}`;
-    return `${hrs}h ${mins}m`;
+  const formatElapsedTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    if (mins < 60) return `${mins}m ${secs.toString().padStart(2, '0')}s`;
+    const hrs = Math.floor(mins / 60);
+    const remainingMins = mins % 60;
+    return `${hrs}h ${remainingMins}m`;
   };
 
   // Format start time in IST 12-hour format
   const formatStartTimeIST = (date: Date | null): string => {
     if (!date) return '';
-    
-    // Convert to IST (UTC + 5:30)
-    const istOffset = 5.5 * 60 * 60 * 1000; // 5 hours 30 minutes in ms
+    const istOffset = 5.5 * 60 * 60 * 1000;
     const utcTime = date.getTime() + (date.getTimezoneOffset() * 60 * 1000);
     const istTime = new Date(utcTime + istOffset);
-    
-    // Format in 12-hour format
     let hours = istTime.getHours();
     const minutes = istTime.getMinutes();
     const ampm = hours >= 12 ? 'PM' : 'AM';
     hours = hours % 12;
-    hours = hours ? hours : 12; // 0 should be 12
+    hours = hours ? hours : 12;
     const minutesStr = minutes < 10 ? '0' + minutes : minutes;
-    
-    return `${hours}:${minutesStr} ${ampm} IST`;
+    return `${hours}:${minutesStr} ${ampm}`;
   };
+
+  const CurrentIcon = ROTATING_ICONS[iconIndex];
+  const currentFunFacts = funFactIndices.map(i => FUN_FACTS[i]);
 
   return (
     <div className="h-screen w-screen bg-black-100 text-white overflow-hidden fixed inset-0">
@@ -112,20 +215,14 @@ export default function DesktopScreen({ maintenanceInfo }: DesktopScreenProps) {
       </div>
 
       {/* Main content */}
-      <div className="relative z-10 h-full flex flex-col px-6 lg:px-8 py-4">
+      <div className="relative z-10 h-full flex flex-col px-8 lg:px-12 xl:px-16 py-2 pb-12">
         
-        {/* Top bar */}
-        <div className="flex items-center justify-between pb-3 border-b border-white/10 flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple to-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">G</span>
-            </div>
-            <div>
-              <h2 className="text-white font-semibold text-base">Gaurav Portfolio</h2>
-              <p className="text-white/50 text-sm">Maintenance Mode Active</p>
-            </div>
-          </div>
-
+        {/* Top bar - Navbar */}
+        <div className="flex items-center justify-between py-2 border-b border-white/10 flex-shrink-0">
+          {/* Left spacer for balance */}
+          <div className="w-8" />
+          
+          {/* Center: Time & Date */}
           <div className="flex items-center gap-4 text-white/70 text-base">
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4" />
@@ -138,72 +235,186 @@ export default function DesktopScreen({ maintenanceInfo }: DesktopScreenProps) {
               {currentTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
             </span>
           </div>
+          
+          {/* Right: Menu Dropdown */}
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-2 rounded-lg text-white/50 hover:text-white/80 hover:bg-white/5 transition-all"
+              aria-label="Menu"
+            >
+              <MoreVertical className="w-5 h-5" />
+            </button>
+            
+            {/* Dropdown Menu */}
+            <AnimatePresence>
+              {isMenuOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 mt-2 w-44 bg-black-200/95 backdrop-blur-md border border-white/10 rounded-lg shadow-xl overflow-hidden z-50"
+                >
+                  <a
+                    href="/admin/login"
+                    className="flex items-center gap-3 px-4 py-3 text-white/70 hover:text-white hover:bg-white/5 transition-colors text-sm"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Shield className="w-4 h-4" />
+                    <span>Admin Panel</span>
+                  </a>
+                  <div className="h-px bg-white/10" />
+                  <button
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      setIsBugIntroOpen(true);
+                    }}
+                    className="flex items-center gap-3 px-4 py-3 text-white/70 hover:text-white hover:bg-white/5 transition-colors text-sm w-full text-left"
+                  >
+                    <Bug className="w-4 h-4" />
+                    <span>Report a Bug</span>
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
 
-        {/* Center content */}
-        <div className="flex-1 flex flex-col items-center justify-center min-h-0 py-2">
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col justify-center items-center min-h-0 py-4 gap-5">
           
-          {/* Animated icon */}
+          {/* Phase Badge - Top Center */}
           <motion.div
-            animate={isTransitioning ? { rotate: 360 } : { rotate: [0, -15, 15, -15, 0] }}
-            transition={isTransitioning ? { duration: 1, repeat: Infinity, ease: "linear" } : { duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-            className="mb-3"
+            key={phase}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className={`px-6 py-2.5 rounded-full border text-sm font-semibold uppercase tracking-wider ${phaseBadge.color} shadow-lg ${phaseBadge.glow}`}
           >
-            <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-full bg-purple/20 flex items-center justify-center border border-purple/30">
-              {isTransitioning ? (
-                <Loader2 className="w-7 h-7 lg:w-8 lg:h-8 text-purple animate-spin" />
-              ) : (
-                <Wrench className="w-7 h-7 lg:w-8 lg:h-8 text-purple" />
-              )}
-            </div>
+            <motion.span
+              animate={{ opacity: [1, 0.7, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              {phaseBadge.emoji} {phaseBadge.text}
+            </motion.span>
           </motion.div>
 
-          {/* Title with AnimatePresence for smooth transitions */}
-          <AnimatePresence mode="wait">
-            {isTransitioning ? (
-              <motion.div
-                key="transitioning"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="text-center mb-3"
+          {/* HORIZONTAL ROW: Elapsed | Icon | Overtime - PERFECTLY SYMMETRIC */}
+          <div className="flex items-center justify-center gap-6 lg:gap-12 xl:gap-20">
+            
+            {/* Left: Elapsed Time Card - Fixed width for symmetry */}
+            <motion.div 
+              className="flex flex-col items-center justify-center w-[150px] h-[90px] bg-white/5 rounded-xl border border-white/10"
+              animate={{ borderColor: ['rgba(255,255,255,0.1)', 'rgba(139,92,246,0.3)', 'rgba(255,255,255,0.1)'] }}
+              transition={{ duration: 3, repeat: Infinity }}
+            >
+              <span className="text-white/50 text-xs uppercase tracking-wider mb-1">⏱️ Elapsed</span>
+              <span className="text-2xl lg:text-3xl font-bold text-white font-mono">
+                {formatElapsedTime(elapsedSeconds)}
+              </span>
+              <span className="text-white/40 text-xs mt-1">Running</span>
+            </motion.div>
+
+            {/* Center: Animated Icon */}
+            <div className="relative flex items-center justify-center">
+              {/* Particle effects */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                {[...Array(8)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute w-1.5 h-1.5 bg-purple/50 rounded-full"
+                    animate={{
+                      x: [0, Math.cos(i * 45 * Math.PI / 180) * 50],
+                      y: [0, Math.sin(i * 45 * Math.PI / 180) * 50],
+                      opacity: [0, 0.8, 0],
+                      scale: [0, 1.2, 0],
+                    }}
+                    transition={{
+                      duration: 2.5,
+                      repeat: Infinity,
+                      delay: i * 0.25,
+                      ease: "easeOut"
+                    }}
+                  />
+                ))}
+              </div>
+              
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={iconIndex}
+                  initial={{ opacity: 0, scale: 0.5, rotate: -180 }}
+                  animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                  exit={{ opacity: 0, scale: 0.5, rotate: 180 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <motion.div
+                    animate={isTransitioning ? { rotate: 360 } : { scale: [1, 1.08, 1] }}
+                    transition={isTransitioning ? { duration: 1, repeat: Infinity, ease: "linear" } : { duration: 2, repeat: Infinity }}
+                    className="w-20 h-20 lg:w-24 lg:h-24 rounded-full bg-gradient-to-br from-purple/30 to-blue-600/20 flex items-center justify-center border-2 border-purple/40 shadow-xl shadow-purple/20"
+                  >
+                    {isTransitioning ? (
+                      <Loader2 className="w-10 h-10 lg:w-12 lg:h-12 text-purple animate-spin" />
+                    ) : (
+                      <CurrentIcon.Icon className={`w-10 h-10 lg:w-12 lg:h-12 ${CurrentIcon.color}`} />
+                    )}
+                  </motion.div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Right: Over Estimate Card - Same fixed width for symmetry */}
+            {localOverdue ? (
+              <motion.div 
+                className="flex flex-col items-center justify-center w-[150px] h-[90px] bg-amber-500/10 rounded-xl border border-amber-500/30"
+                animate={{ borderColor: ['rgba(245,158,11,0.3)', 'rgba(245,158,11,0.5)', 'rgba(245,158,11,0.3)'] }}
+                transition={{ duration: 2, repeat: Infinity }}
               >
-                <h1 className="text-2xl lg:text-3xl font-bold text-white mb-2">
-                  Time's up!
-                </h1>
-                <p className="text-base text-white/70">Updating status...</p>
-              </motion.div>
-            ) : localOverdue ? (
-              <motion.div
-                key="overdue"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="text-center mb-3"
-              >
-                <h1 className="text-3xl lg:text-4xl font-bold text-white mb-1">
-                  Gaurav is still working...
-                </h1>
-                <p className="text-base lg:text-lg text-white/70">
-                  +{formatOverdueTime(maintenanceInfo.overdueBy || 0)} over estimated time
-                </p>
+                <span className="text-amber-400/70 text-xs uppercase tracking-wider mb-1">📊 Over Est.</span>
+                <span className="text-2xl lg:text-3xl font-bold text-amber-400 font-mono">
+                  +{maintenanceInfo.overdueBy || 0}m
+                </span>
+                <span className="text-amber-400/50 text-xs mt-1">Extended</span>
               </motion.div>
             ) : (
-              <motion.div
-                key="normal"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0, y: -10 }}
+              <motion.div 
+                className="flex flex-col items-center justify-center w-[150px] h-[90px] bg-green-500/10 rounded-xl border border-green-500/30"
               >
-                <TextGenerateEffect
-                  words={maintenanceInfo.title}
-                  className="text-3xl lg:text-4xl xl:text-5xl mb-2"
-                />
+                <span className="text-green-400/70 text-xs uppercase tracking-wider mb-1">📊 Status</span>
+                <span className="text-2xl lg:text-3xl font-bold text-green-400">✓</span>
+                <span className="text-green-400/50 text-xs mt-1">On Track</span>
               </motion.div>
+            )}
+          </div>
+
+          {/* Dynamic Title */}
+          <AnimatePresence mode="wait">
+            {isTransitioning ? (
+              <motion.h1
+                key="transitioning"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="text-2xl lg:text-3xl xl:text-4xl font-bold text-white text-center mb-4 leading-[1.18]"
+                style={{ marginBottom: '1rem' }}
+              >
+                Time&apos;s up! Updating...
+              </motion.h1>
+            ) : (
+              <motion.h1
+                key={titleIndex}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5 }}
+                className="text-2xl lg:text-3xl xl:text-4xl font-bold bg-gradient-to-r from-white via-purple-200 to-white bg-clip-text text-transparent text-center px-4 mb-4 leading-[1.18]"
+                style={{ marginBottom: '1.5rem' }}
+              >
+                {currentTitles[titleIndex]}
+              </motion.h1>
             )}
           </AnimatePresence>
 
-          {/* Countdown Timer or Transition State */}
+          {/* Countdown or Overdue Info - Better styled badge */}
           <AnimatePresence mode="wait">
             {isTransitioning ? (
               <motion.div
@@ -211,12 +422,10 @@ export default function DesktopScreen({ maintenanceInfo }: DesktopScreenProps) {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className="mb-3 flex flex-col items-center gap-2"
+                className="flex items-center gap-3 px-5 py-2.5 bg-purple/20 border border-purple/40 rounded-full"
               >
-                <div className="flex items-center gap-3 p-4 bg-purple/10 border border-purple/30 rounded-lg">
-                  <Loader2 className="w-5 h-5 text-purple animate-spin" />
-                  <span className="text-white/80 text-sm">Calculating overtime...</span>
-                </div>
+                <Loader2 className="w-4 h-4 text-purple animate-spin" />
+                <span className="text-white text-sm font-medium">Calculating overtime...</span>
               </motion.div>
             ) : maintenanceInfo.estimatedEndTime && !localOverdue ? (
               <motion.div
@@ -224,9 +433,9 @@ export default function DesktopScreen({ maintenanceInfo }: DesktopScreenProps) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="mb-3"
+                className="flex flex-col items-center"
               >
-                <p className="text-center text-white/60 mb-2 text-sm uppercase tracking-widest">
+                <p className="text-white/60 mb-2 text-xs uppercase tracking-widest">
                   Estimated time remaining
                 </p>
                 <FlipCountdown 
@@ -239,9 +448,9 @@ export default function DesktopScreen({ maintenanceInfo }: DesktopScreenProps) {
                 key="overdue-info"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-3 p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg"
+                className="px-6 py-2.5 bg-amber-500/20 border-2 border-amber-500/50 rounded-full shadow-lg shadow-amber-500/10"
               >
-                <div className="flex items-center justify-center gap-2 text-amber-300 text-sm">
+                <div className="flex items-center gap-2 text-amber-200 text-sm font-medium">
                   <Timer className="w-4 h-4" />
                   <span>Originally estimated: {formatDuration(maintenanceInfo.estimatedDuration)}</span>
                 </div>
@@ -249,62 +458,110 @@ export default function DesktopScreen({ maintenanceInfo }: DesktopScreenProps) {
             ) : null}
           </AnimatePresence>
 
-          {/* Maintenance Start Time */}
-          {maintenanceInfo.enabledAt && !isTransitioning && (
-            <div className="mb-2 text-center">
-              <p className="text-white/50 text-xs">
-                Maintenance started at <span className="text-purple-300 font-medium">{formatStartTimeIST(maintenanceInfo.enabledAt)}</span>
-              </p>
+          {/* Fun Facts Row - 4 Cards Horizontal with equal width */}
+          <div className="flex justify-center items-center gap-3 lg:gap-4">
+            {currentFunFacts.map((fact, idx) => (
+              <AnimatePresence key={`fact-slot-${idx}`} mode="wait">
+                <motion.div
+                  key={`${idx}-${funFactIndices[idx]}`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-lg border border-white/10 hover:border-white/20 transition-colors min-w-[180px] justify-center"
+                >
+                  <fact.icon className={`w-4 h-4 ${fact.color} flex-shrink-0`} />
+                  <span className="text-white/80 text-xs lg:text-sm">{fact.text}</span>
+                </motion.div>
+              </AnimatePresence>
+            ))}
+          </div>
+
+          {/* Info Bar - Full Width Centered */}
+          <div className="flex items-center justify-center gap-6 lg:gap-10 px-8 py-3 bg-white/5 rounded-xl border border-white/10">
+            <div className="flex items-center gap-2 text-white/70 text-sm">
+              <Timer className="w-4 h-4 text-purple-400" />
+              <span>Est: <span className="text-white font-medium">{maintenanceInfo.estimatedDuration || 0}m</span></span>
             </div>
-          )}
+            <div className="h-4 w-px bg-white/20" />
+            <div className="flex items-center gap-2 text-white/70 text-sm">
+              <Clock className="w-4 h-4 text-blue-400" />
+              <span>Started: <span className="text-white font-medium">{formatStartTimeIST(maintenanceInfo.enabledAt)} IST</span></span>
+            </div>
+            <div className="h-4 w-px bg-white/20" />
+            <div className="flex items-center gap-2 text-white/70 text-sm">
+              <span className="text-purple-400">◉</span>
+              <span>Phase: <span className="text-white font-medium">{phaseBadge.text}</span></span>
+            </div>
+          </div>
 
-          {/* Message */}
-          <p className="text-white/70 text-sm lg:text-base max-w-lg text-center mb-3">
-            {maintenanceInfo.message}
-          </p>
-
-          {/* Contact button - MagicButton style - Always visible */}
-          <button
-            onClick={() => setIsContactOpen(true)}
-            className="relative inline-flex h-12 w-56 overflow-hidden rounded-lg p-[1px] focus:outline-none"
-          >
-            <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2CBFF_0%,#393BB2_50%,#E2CBFF_100%)]" />
-            <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-lg bg-slate-950 px-6 text-base font-medium text-white backdrop-blur-3xl gap-2">
-              Contact Me
-              <FaLocationArrow />
-            </span>
-          </button>
-
-          {/* Social links */}
-          <div className="flex flex-col items-center gap-2 mt-4">
-            <div className="flex items-center gap-3">
+          {/* Bottom Row: Social | Contact | Activity - Perfectly centered */}
+          <div className="flex items-center justify-center gap-10 lg:gap-16">
+            
+            {/* Left: Social Links - Fixed width */}
+            <div className="flex items-center gap-3 w-[140px] justify-center">
               {socialMedia.map((info) => (
-                <div
+                <motion.div
                   key={info.id}
-                  className="w-10 h-10 flex items-center justify-center bg-black-200 rounded-lg border border-white/10 hover:border-purple/50 transition-all cursor-pointer"
+                  whileHover={{ scale: 1.1, borderColor: 'rgba(139,92,246,0.5)' }}
+                  className="w-10 h-10 flex items-center justify-center bg-black-200 rounded-lg border border-white/10 cursor-pointer transition-all"
                 >
                   <Image src={info.img} alt="social" width={20} height={20} />
-                </div>
+                </motion.div>
               ))}
             </div>
-            <span className="text-white/50 text-xs">© 2025 Gaurav Patil. All rights reserved.</span>
-          </div>
-        </div>
 
-        {/* Footer */}
-        <div className="flex-shrink-0 flex items-center justify-between py-2 border-t border-white/10 text-sm text-white/50 pr-16">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <span>System Active</span>
+            {/* Center: Contact Button */}
+            <button
+              onClick={() => setIsContactOpen(true)}
+              className="relative inline-flex h-12 w-48 overflow-hidden rounded-lg p-[1px] focus:outline-none"
+            >
+              <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2CBFF_0%,#393BB2_50%,#E2CBFF_100%)]" />
+              <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-lg bg-slate-950 px-6 text-base font-medium text-white backdrop-blur-3xl gap-2 hover:bg-slate-900 transition-colors">
+                Contact Me
+                <FaLocationArrow />
+              </span>
+            </button>
+
+            {/* Right: Current Activity - Fixed width */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activityIndex}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="flex items-center gap-2 px-4 py-2.5 bg-purple/10 rounded-lg border border-purple/30 w-[200px] justify-center"
+              >
+                <span className="text-purple-400">🛠️</span>
+                <span className="text-white/80 text-sm">{CURRENT_ACTIVITIES[activityIndex]}</span>
+              </motion.div>
+            </AnimatePresence>
           </div>
-          <span>We apologize for the inconvenience</span>
         </div>
+      </div>
+
+      {/* Footer */}
+      <div className="absolute bottom-0 left-0 right-0 py-2 flex justify-center border-t border-white/5 bg-black-100/80 backdrop-blur-sm z-20">
+        <span className="text-white/50 text-sm">© 2025 Gaurav Patil. All rights reserved.</span>
       </div>
 
       {/* Contact Modal */}
       <ContactFormModal
         isOpen={isContactOpen}
         onClose={() => setIsContactOpen(false)}
+      />
+
+      {/* Bug Report Intro Modal */}
+      <BugReportIntro
+        isOpen={isBugIntroOpen}
+        onClose={() => setIsBugIntroOpen(false)}
+        onOpenForm={() => setIsBugFormOpen(true)}
+      />
+
+      {/* Bug Report Form Modal */}
+      <BugReportForm
+        isOpen={isBugFormOpen}
+        onClose={() => setIsBugFormOpen(false)}
       />
     </div>
   );

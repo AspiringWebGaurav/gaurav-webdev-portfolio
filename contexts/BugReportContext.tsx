@@ -8,6 +8,7 @@ import React, {
   useCallback,
   useRef,
 } from "react";
+import { usePathname } from "next/navigation";
 import { showToast } from "@/lib/toast";
 import {
   BugReport,
@@ -40,15 +41,30 @@ const BugReportContext = createContext<BugReportContextType | undefined>(
 );
 
 export function BugReportProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   const [bugReports, setBugReports] = useState<BugReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const previousNewCountRef = useRef<number>(0);
+  const hasInitializedRef = useRef(false);
+
+  // Only fetch bug reports on admin pages (requires authentication)
+  const isAdminPage = pathname?.startsWith('/admin');
 
   /**
-   * Fetch all bug reports
+   * Fetch all bug reports (admin only)
+   * 
+   * IMPORTANT: Bug reports are only fetched on /admin/* pages
+   * to avoid Firebase permission errors on public pages.
+   * Non-admin pages can still submit bug reports via createBugReport.
    */
   const fetchBugReports = useCallback(async (showLoading = true) => {
+    // Skip fetching on non-admin pages to avoid permission errors
+    if (!isAdminPage) {
+      setLoading(false);
+      return;
+    }
+
     try {
       if (showLoading) {
         setLoading(true);
@@ -59,6 +75,12 @@ export function BugReportProvider({ children }: { children: React.ReactNode }) {
       const data = await response.json();
 
       if (!response.ok || !data.success) {
+        // Check if this is a permission error - fail silently for non-critical cases
+        if (response.status === 403 || response.status === 401) {
+          console.log("[BugReports] Permission denied - user may not be authenticated");
+          setLoading(false);
+          return;
+        }
         throw new Error(data.error || "Failed to fetch bug reports");
       }
 
@@ -95,30 +117,47 @@ export function BugReportProvider({ children }: { children: React.ReactNode }) {
         timestamp: new Date().toISOString(),
       });
     } catch (error: any) {
+      // Silently handle permission errors on non-admin pages
+      if (!isAdminPage) {
+        console.log("[BugReports] Skipping error on non-admin page");
+        setLoading(false);
+        return;
+      }
       console.error("[BugReports] Error fetching bug reports:", error);
       setError(error.message);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isAdminPage]);
 
   /**
-   * Initial load
+   * Initial load - only on admin pages
+   * Reset initialization flag when leaving admin pages
    */
   useEffect(() => {
-    fetchBugReports();
-  }, [fetchBugReports]);
+    if (isAdminPage) {
+      // Fetch on admin pages - allow refetch when navigating back
+      fetchBugReports();
+    } else {
+      // Reset flag when leaving admin so next admin visit fetches fresh data
+      hasInitializedRef.current = false;
+      setLoading(false);
+    }
+  }, [fetchBugReports, isAdminPage]);
 
   /**
-   * Polling for updates (every 30 seconds)
+   * Polling for updates (every 30 seconds) - only on admin pages
    */
   useEffect(() => {
+    // Only poll on admin pages
+    if (!isAdminPage) return;
+
     const interval = setInterval(() => {
       fetchBugReports(false);
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [fetchBugReports]);
+  }, [fetchBugReports, isAdminPage]);
 
   /**
    * Create a new bug report with attachments

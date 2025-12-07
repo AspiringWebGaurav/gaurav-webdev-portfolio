@@ -9,7 +9,7 @@
 
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useCallback } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { motion, AnimatePresence } from 'motion/react';
@@ -29,6 +29,7 @@ interface MaintenanceInfo {
   estimatedDuration: number | null; // in minutes
   enabledAt: Date | null;
   overdueBy: number; // minutes overdue
+  autoEndEnabled: boolean; // whether auto-end is enabled
 }
 
 function MaintenanceContent() {
@@ -41,12 +42,29 @@ function MaintenanceContent() {
     estimatedDuration: null,
     enabledAt: null,
     overdueBy: 0,
+    autoEndEnabled: false,
   });
   const [checkingStatus, setCheckingStatus] = useState(true);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [screenSize, setScreenSize] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
   const [showCountdown, setShowCountdown] = useState(false);
   const [countdownNumber, setCountdownNumber] = useState(3);
+
+  // Handle countdown and redirect - defined early with useCallback for use in effects
+  const startCountdownRedirect = useCallback(() => {
+    if (isRedirecting) return;
+    setIsRedirecting(true);
+    setShowCountdown(true);
+    setCountdownNumber(3);
+    
+    // Countdown: 3, 2, 1, then redirect
+    setTimeout(() => setCountdownNumber(2), 1000);
+    setTimeout(() => setCountdownNumber(1), 2000);
+    setTimeout(() => {
+      setCountdownNumber(0);
+      window.location.replace('/');
+    }, 3000);
+  }, [isRedirecting]);
 
   // Detect screen size
   useEffect(() => {
@@ -105,6 +123,7 @@ function MaintenanceContent() {
           estimatedDuration: data.estimatedDuration || null,
           enabledAt,
           overdueBy,
+          autoEndEnabled: data.autoEndEnabled ?? false,
         });
         
         setCheckingStatus(false);
@@ -117,39 +136,53 @@ function MaintenanceContent() {
     checkStatus();
   }, []);
 
-  // Check for overdue status and update overdueBy periodically
+  // Check for overdue status and poll API ONLY if auto-end is enabled
   useEffect(() => {
     if (!maintenanceInfo.estimatedEndTime) return;
+    if (isRedirecting) return;
 
-    const checkOverdue = () => {
+    const checkOverdueAndMaybePollAPI = async () => {
       const now = new Date();
       if (maintenanceInfo.estimatedEndTime && now > maintenanceInfo.estimatedEndTime) {
         const overdueBy = Math.floor((now.getTime() - maintenanceInfo.estimatedEndTime.getTime()) / (60 * 1000));
         setMaintenanceInfo(prev => ({ ...prev, isOverdue: true, overdueBy }));
+        
+        // ONLY poll API if auto-end is enabled
+        // If auto-end is NOT enabled, admin will manually disable via Firestore (real-time listener handles that)
+        if (maintenanceInfo.autoEndEnabled) {
+          try {
+            const response = await fetch('/api/maintenance/status', { cache: 'no-store' });
+            const data = await response.json();
+            
+            // If maintenance is now disabled (auto-ended), start redirect
+            if (data.enabled === false && !isRedirecting) {
+              console.log('[Maintenance Page] Auto-end triggered via API - starting redirect');
+              startCountdownRedirect();
+              return;
+            }
+          } catch (err) {
+            console.error('[Maintenance Page] Error polling API:', err);
+          }
+        }
+        // If auto-end is NOT enabled, we just wait for Firestore real-time listener
+        // to detect when admin manually disables maintenance
       }
     };
 
-    // Run immediately and then every minute
-    checkOverdue();
-    const interval = setInterval(checkOverdue, 60000); // Update every minute
-    return () => clearInterval(interval);
-  }, [maintenanceInfo.estimatedEndTime]);
-
-  // Handle countdown and redirect
-  const startCountdownRedirect = () => {
-    if (isRedirecting) return;
-    setIsRedirecting(true);
-    setShowCountdown(true);
-    setCountdownNumber(3);
+    // Run immediately
+    checkOverdueAndMaybePollAPI();
     
-    // Countdown: 3, 2, 1, then redirect
-    setTimeout(() => setCountdownNumber(2), 1000);
-    setTimeout(() => setCountdownNumber(1), 2000);
-    setTimeout(() => {
-      setCountdownNumber(0);
-      window.location.replace('/');
-    }, 3000);
-  };
+    // Only set up interval polling if auto-end is enabled
+    // Otherwise, we rely on Firestore real-time listener for manual disable
+    if (maintenanceInfo.autoEndEnabled) {
+      const interval = setInterval(checkOverdueAndMaybePollAPI, 5000); // Check every 5 seconds
+      return () => clearInterval(interval);
+    } else {
+      // For manual maintenance, just update overdue status every minute (no API calls)
+      const interval = setInterval(checkOverdueAndMaybePollAPI, 60000); // Update overdue every minute
+      return () => clearInterval(interval);
+    }
+  }, [maintenanceInfo.estimatedEndTime, maintenanceInfo.autoEndEnabled, isRedirecting, startCountdownRedirect]);
 
   // Real-time listener: redirect when maintenance is disabled
   useEffect(() => {
@@ -200,6 +233,7 @@ function MaintenanceContent() {
             estimatedDuration: data.estimatedDuration || null,
             enabledAt,
             overdueBy,
+            autoEndEnabled: data.autoEndEnabled ?? false,
           });
         }
       },
@@ -209,7 +243,7 @@ function MaintenanceContent() {
     );
 
     return () => unsubscribe();
-  }, [isRedirecting]);
+  }, [isRedirecting, startCountdownRedirect]);
 
   // Loading state
   if (checkingStatus) {

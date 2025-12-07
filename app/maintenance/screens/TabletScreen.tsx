@@ -111,17 +111,7 @@ export default function TabletScreen({ maintenanceInfo }: TabletScreenProps) {
       <div className="relative z-10 h-full flex flex-col px-5 py-3">
         
         {/* Top bar */}
-        <div className="flex items-center justify-between pb-2 border-b border-white/10 flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 bg-gradient-to-br from-purple to-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-base">G</span>
-            </div>
-            <div>
-              <h2 className="text-white font-semibold text-sm">Gaurav Portfolio</h2>
-              <p className="text-white/50 text-xs">Maintenance Active</p>
-            </div>
-          </div>
-
+        <div className="flex items-center justify-center pb-2 border-b border-white/10 flex-shrink-0">
           <div className="flex items-center gap-3 text-white/70 text-sm">
             <div className="flex items-center gap-1.5">
               <Clock className="w-4 h-4" />
@@ -276,18 +266,13 @@ export default function TabletScreen({ maintenanceInfo }: TabletScreenProps) {
                 </div>
               ))}
             </div>
-            <span className="text-white/50 text-xs">© 2025 Gaurav Patil</span>
           </div>
         </div>
+      </div>
 
-        {/* Footer */}
-        <div className="flex-shrink-0 flex items-center justify-between py-2 border-t border-white/10 text-xs text-white/50 pr-14">
-          <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <span>Active</span>
-          </div>
-          <span>Apologies for inconvenience</span>
-        </div>
+      {/* Footer - Actual bottom of page */}
+      <div className="absolute bottom-0 left-0 right-0 py-4 flex justify-center">
+        <span className="text-white/60 text-sm">© 2025 Gaurav Patil. All rights reserved.</span>
       </div>
 
       {/* Contact Modal */}
