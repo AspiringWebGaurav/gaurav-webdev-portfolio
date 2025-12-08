@@ -215,7 +215,7 @@ export default function DesktopScreen({ maintenanceInfo }: DesktopScreenProps) {
       </div>
 
       {/* Main content */}
-      <div className="relative z-10 h-full flex flex-col px-8 lg:px-12 xl:px-16 py-2 pb-12">
+      <div className="relative z-10 h-full flex flex-col px-8 lg:px-12 xl:px-16 py-2 pb-10">
         
         {/* Top bar - Navbar */}
         <div className="flex items-center justify-between py-2 border-b border-white/10 flex-shrink-0">
@@ -282,14 +282,14 @@ export default function DesktopScreen({ maintenanceInfo }: DesktopScreenProps) {
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col justify-center items-center min-h-0 py-4 gap-5">
+        <div className="flex-1 flex flex-col justify-center items-center min-h-0 py-4 gap-3">
           
           {/* Phase Badge - Top Center */}
           <motion.div
             key={phase}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className={`px-6 py-2.5 rounded-full border text-sm font-semibold uppercase tracking-wider ${phaseBadge.color} shadow-lg ${phaseBadge.glow}`}
+            className={`px-4 py-1.5 rounded-full border text-xs font-semibold uppercase tracking-wider ${phaseBadge.color} shadow-lg ${phaseBadge.glow}`}
           >
             <motion.span
               animate={{ opacity: [1, 0.7, 1] }}
@@ -300,19 +300,19 @@ export default function DesktopScreen({ maintenanceInfo }: DesktopScreenProps) {
           </motion.div>
 
           {/* HORIZONTAL ROW: Elapsed | Icon | Overtime - PERFECTLY SYMMETRIC */}
-          <div className="flex items-center justify-center gap-6 lg:gap-12 xl:gap-20">
+          <div className="flex items-center justify-center gap-5 lg:gap-8 xl:gap-12">
             
             {/* Left: Elapsed Time Card - Fixed width for symmetry */}
             <motion.div 
-              className="flex flex-col items-center justify-center w-[150px] h-[90px] bg-white/5 rounded-xl border border-white/10"
+              className="flex flex-col items-center justify-center w-[140px] h-[80px] bg-white/5 rounded-xl border border-white/10"
               animate={{ borderColor: ['rgba(255,255,255,0.1)', 'rgba(139,92,246,0.3)', 'rgba(255,255,255,0.1)'] }}
               transition={{ duration: 3, repeat: Infinity }}
             >
-              <span className="text-white/50 text-xs uppercase tracking-wider mb-1">⏱️ Elapsed</span>
-              <span className="text-2xl lg:text-3xl font-bold text-white font-mono">
+              <span className="text-white/50 text-[10px] uppercase tracking-wider mb-0.5">⏱️ Elapsed</span>
+              <span className="text-xl lg:text-2xl font-bold text-white font-mono">
                 {formatElapsedTime(elapsedSeconds)}
               </span>
-              <span className="text-white/40 text-xs mt-1">Running</span>
+              <span className="text-white/40 text-[10px] mt-0.5">Running</span>
             </motion.div>
 
             {/* Center: Animated Icon */}
@@ -322,10 +322,10 @@ export default function DesktopScreen({ maintenanceInfo }: DesktopScreenProps) {
                 {[...Array(8)].map((_, i) => (
                   <motion.div
                     key={i}
-                    className="absolute w-1.5 h-1.5 bg-purple/50 rounded-full"
+                    className="absolute w-1 h-1 bg-purple/50 rounded-full"
                     animate={{
-                      x: [0, Math.cos(i * 45 * Math.PI / 180) * 50],
-                      y: [0, Math.sin(i * 45 * Math.PI / 180) * 50],
+                      x: [0, Math.cos(i * 45 * Math.PI / 180) * 40],
+                      y: [0, Math.sin(i * 45 * Math.PI / 180) * 40],
                       opacity: [0, 0.8, 0],
                       scale: [0, 1.2, 0],
                     }}
@@ -350,12 +350,12 @@ export default function DesktopScreen({ maintenanceInfo }: DesktopScreenProps) {
                   <motion.div
                     animate={isTransitioning ? { rotate: 360 } : { scale: [1, 1.08, 1] }}
                     transition={isTransitioning ? { duration: 1, repeat: Infinity, ease: "linear" } : { duration: 2, repeat: Infinity }}
-                    className="w-20 h-20 lg:w-24 lg:h-24 rounded-full bg-gradient-to-br from-purple/30 to-blue-600/20 flex items-center justify-center border-2 border-purple/40 shadow-xl shadow-purple/20"
+                    className="w-16 h-16 lg:w-20 lg:h-20 rounded-full bg-gradient-to-br from-purple/30 to-blue-600/20 flex items-center justify-center border-2 border-purple/40 shadow-xl shadow-purple/20"
                   >
                     {isTransitioning ? (
-                      <Loader2 className="w-10 h-10 lg:w-12 lg:h-12 text-purple animate-spin" />
+                      <Loader2 className="w-8 h-8 lg:w-10 lg:h-10 text-purple animate-spin" />
                     ) : (
-                      <CurrentIcon.Icon className={`w-10 h-10 lg:w-12 lg:h-12 ${CurrentIcon.color}`} />
+                      <CurrentIcon.Icon className={`w-8 h-8 lg:w-10 lg:h-10 ${CurrentIcon.color}`} />
                     )}
                   </motion.div>
                 </motion.div>
@@ -365,23 +365,23 @@ export default function DesktopScreen({ maintenanceInfo }: DesktopScreenProps) {
             {/* Right: Over Estimate Card - Same fixed width for symmetry */}
             {localOverdue ? (
               <motion.div 
-                className="flex flex-col items-center justify-center w-[150px] h-[90px] bg-amber-500/10 rounded-xl border border-amber-500/30"
+                className="flex flex-col items-center justify-center w-[140px] h-[80px] bg-amber-500/10 rounded-xl border border-amber-500/30"
                 animate={{ borderColor: ['rgba(245,158,11,0.3)', 'rgba(245,158,11,0.5)', 'rgba(245,158,11,0.3)'] }}
                 transition={{ duration: 2, repeat: Infinity }}
               >
-                <span className="text-amber-400/70 text-xs uppercase tracking-wider mb-1">📊 Over Est.</span>
-                <span className="text-2xl lg:text-3xl font-bold text-amber-400 font-mono">
+                <span className="text-amber-400/70 text-[10px] uppercase tracking-wider mb-0.5">📊 Over Est.</span>
+                <span className="text-xl lg:text-2xl font-bold text-amber-400 font-mono">
                   +{maintenanceInfo.overdueBy || 0}m
                 </span>
-                <span className="text-amber-400/50 text-xs mt-1">Extended</span>
+                <span className="text-amber-400/50 text-[10px] mt-0.5">Extended</span>
               </motion.div>
             ) : (
               <motion.div 
-                className="flex flex-col items-center justify-center w-[150px] h-[90px] bg-green-500/10 rounded-xl border border-green-500/30"
+                className="flex flex-col items-center justify-center w-[140px] h-[80px] bg-green-500/10 rounded-xl border border-green-500/30"
               >
-                <span className="text-green-400/70 text-xs uppercase tracking-wider mb-1">📊 Status</span>
-                <span className="text-2xl lg:text-3xl font-bold text-green-400">✓</span>
-                <span className="text-green-400/50 text-xs mt-1">On Track</span>
+                <span className="text-green-400/70 text-[10px] uppercase tracking-wider mb-0.5">📊 Status</span>
+                <span className="text-xl lg:text-2xl font-bold text-green-400">✓</span>
+                <span className="text-green-400/50 text-[10px] mt-0.5">On Track</span>
               </motion.div>
             )}
           </div>
@@ -394,8 +394,7 @@ export default function DesktopScreen({ maintenanceInfo }: DesktopScreenProps) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="text-2xl lg:text-3xl xl:text-4xl font-bold text-white text-center mb-4 leading-[1.18]"
-                style={{ marginBottom: '1rem' }}
+                className="text-xl lg:text-2xl xl:text-3xl font-bold text-white text-center leading-[1.18]"
               >
                 Time&apos;s up! Updating...
               </motion.h1>
@@ -406,8 +405,7 @@ export default function DesktopScreen({ maintenanceInfo }: DesktopScreenProps) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.5 }}
-                className="text-2xl lg:text-3xl xl:text-4xl font-bold bg-gradient-to-r from-white via-purple-200 to-white bg-clip-text text-transparent text-center px-4 mb-4 leading-[1.18]"
-                style={{ marginBottom: '1.5rem' }}
+                className="text-xl lg:text-2xl xl:text-3xl font-bold bg-gradient-to-r from-white via-purple-200 to-white bg-clip-text text-transparent text-center px-4 leading-[1.18]"
               >
                 {currentTitles[titleIndex]}
               </motion.h1>
@@ -459,7 +457,7 @@ export default function DesktopScreen({ maintenanceInfo }: DesktopScreenProps) {
           </AnimatePresence>
 
           {/* Fun Facts Row - 4 Cards Horizontal with equal width */}
-          <div className="flex justify-center items-center gap-3 lg:gap-4">
+          <div className="flex justify-center items-center gap-2 lg:gap-3">
             {currentFunFacts.map((fact, idx) => (
               <AnimatePresence key={`fact-slot-${idx}`} mode="wait">
                 <motion.div
@@ -468,45 +466,45 @@ export default function DesktopScreen({ maintenanceInfo }: DesktopScreenProps) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.3 }}
-                  className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-lg border border-white/10 hover:border-white/20 transition-colors min-w-[180px] justify-center"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/5 rounded-lg border border-white/10 hover:border-white/20 transition-colors min-w-[160px] justify-center"
                 >
-                  <fact.icon className={`w-4 h-4 ${fact.color} flex-shrink-0`} />
-                  <span className="text-white/80 text-xs lg:text-sm">{fact.text}</span>
+                  <fact.icon className={`w-3.5 h-3.5 ${fact.color} flex-shrink-0`} />
+                  <span className="text-white/80 text-xs">{fact.text}</span>
                 </motion.div>
               </AnimatePresence>
             ))}
           </div>
 
           {/* Info Bar - Full Width Centered */}
-          <div className="flex items-center justify-center gap-6 lg:gap-10 px-8 py-3 bg-white/5 rounded-xl border border-white/10">
-            <div className="flex items-center gap-2 text-white/70 text-sm">
-              <Timer className="w-4 h-4 text-purple-400" />
+          <div className="flex items-center justify-center gap-3 lg:gap-6 px-5 py-2 bg-white/5 rounded-xl border border-white/10">
+            <div className="flex items-center gap-1.5 text-white/70 text-xs">
+              <Timer className="w-3.5 h-3.5 text-purple-400" />
               <span>Est: <span className="text-white font-medium">{maintenanceInfo.estimatedDuration || 0}m</span></span>
             </div>
-            <div className="h-4 w-px bg-white/20" />
-            <div className="flex items-center gap-2 text-white/70 text-sm">
-              <Clock className="w-4 h-4 text-blue-400" />
+            <div className="h-3.5 w-px bg-white/20" />
+            <div className="flex items-center gap-1.5 text-white/70 text-xs">
+              <Clock className="w-3.5 h-3.5 text-blue-400" />
               <span>Started: <span className="text-white font-medium">{formatStartTimeIST(maintenanceInfo.enabledAt)} IST</span></span>
             </div>
-            <div className="h-4 w-px bg-white/20" />
-            <div className="flex items-center gap-2 text-white/70 text-sm">
+            <div className="h-3.5 w-px bg-white/20" />
+            <div className="flex items-center gap-1.5 text-white/70 text-xs">
               <span className="text-purple-400">◉</span>
               <span>Phase: <span className="text-white font-medium">{phaseBadge.text}</span></span>
             </div>
           </div>
 
           {/* Bottom Row: Social | Contact | Activity - Perfectly centered */}
-          <div className="flex items-center justify-center gap-10 lg:gap-16">
+          <div className="flex items-center justify-center gap-6 lg:gap-10">
             
             {/* Left: Social Links - Fixed width */}
-            <div className="flex items-center gap-3 w-[140px] justify-center">
+            <div className="flex items-center gap-2.5 w-[120px] justify-center">
               {socialMedia.map((info) => (
                 <motion.div
                   key={info.id}
                   whileHover={{ scale: 1.1, borderColor: 'rgba(139,92,246,0.5)' }}
-                  className="w-10 h-10 flex items-center justify-center bg-black-200 rounded-lg border border-white/10 cursor-pointer transition-all"
+                  className="w-9 h-9 flex items-center justify-center bg-black-200 rounded-lg border border-white/10 cursor-pointer transition-all"
                 >
-                  <Image src={info.img} alt="social" width={20} height={20} />
+                  <Image src={info.img} alt="social" width={18} height={18} />
                 </motion.div>
               ))}
             </div>
@@ -514,12 +512,12 @@ export default function DesktopScreen({ maintenanceInfo }: DesktopScreenProps) {
             {/* Center: Contact Button */}
             <button
               onClick={() => setIsContactOpen(true)}
-              className="relative inline-flex h-12 w-48 overflow-hidden rounded-lg p-[1px] focus:outline-none"
+              className="relative inline-flex h-11 w-44 overflow-hidden rounded-lg p-[1px] focus:outline-none"
             >
               <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2CBFF_0%,#393BB2_50%,#E2CBFF_100%)]" />
-              <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-lg bg-slate-950 px-6 text-base font-medium text-white backdrop-blur-3xl gap-2 hover:bg-slate-900 transition-colors">
+              <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-lg bg-slate-950 px-5 text-sm font-medium text-white backdrop-blur-3xl gap-2 hover:bg-slate-900 transition-colors">
                 Contact Me
-                <FaLocationArrow />
+                <FaLocationArrow className="w-3.5 h-3.5" />
               </span>
             </button>
 
@@ -530,10 +528,10 @@ export default function DesktopScreen({ maintenanceInfo }: DesktopScreenProps) {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="flex items-center gap-2 px-4 py-2.5 bg-purple/10 rounded-lg border border-purple/30 w-[200px] justify-center"
+                className="flex items-center gap-2 px-3 py-2 bg-purple/10 rounded-lg border border-purple/30 w-[180px] justify-center"
               >
-                <span className="text-purple-400">🛠️</span>
-                <span className="text-white/80 text-sm">{CURRENT_ACTIVITIES[activityIndex]}</span>
+                <span className="text-purple-400 text-sm">🛠️</span>
+                <span className="text-white/80 text-xs">{CURRENT_ACTIVITIES[activityIndex]}</span>
               </motion.div>
             </AnimatePresence>
           </div>
@@ -541,7 +539,7 @@ export default function DesktopScreen({ maintenanceInfo }: DesktopScreenProps) {
       </div>
 
       {/* Footer */}
-      <div className="absolute bottom-0 left-0 right-0 py-2 flex justify-center border-t border-white/5 bg-black-100/80 backdrop-blur-sm z-20">
+      <div className="absolute bottom-0 left-0 right-0 py-1.5 flex justify-center border-t border-white/5 bg-black-100/80 backdrop-blur-sm z-20">
         <span className="text-white/50 text-sm">© 2025 Gaurav Patil. All rights reserved.</span>
       </div>
 

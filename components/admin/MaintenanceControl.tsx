@@ -458,23 +458,27 @@ export default function MaintenanceControl() {
           <div className="flex items-center gap-1">
             <span className="text-[11px] text-gray-500 font-semibold w-10 shrink-0">MIN</span>
             <div className="flex flex-wrap gap-1 flex-1">
-              {[1, 2, 3, 5, 8, 10, 15, 20, 30, 45].map((mins) => (
-                <button
-                  key={`m-${mins}`}
-                  type="button"
-                  onClick={() => {
-                    setEstimatedHours(0);
-                    setEstimatedMinutes(mins);
-                  }}
-                  className={`px-2 py-1 text-xs font-semibold rounded-md transition-all ${
-                    estimatedHours === 0 && estimatedMinutes === mins
-                      ? 'bg-purple-600 text-white shadow-md'
-                      : 'bg-gray-100 text-gray-600 hover:bg-purple-100 hover:text-purple-700'
-                  }`}
-                >
-                  {mins}m
-                </button>
-              ))}
+              {[1, 2, 3, 5, 8, 10, 15, 20, 30, 45].map((mins) => {
+                const isSelected = estimatedHours === 0 && estimatedMinutes === mins;
+                return (
+                  <button
+                    key={`m-${mins}`}
+                    type="button"
+                    onClick={() => {
+                      setEstimatedHours(0);
+                      setEstimatedMinutes(mins);
+                    }}
+                    className={`px-2 py-1 text-xs font-semibold rounded-md transition-all ${
+                      isSelected
+                        ? 'bg-purple-600 shadow-md'
+                        : 'bg-gray-100 hover:bg-purple-100'
+                    }`}
+                    style={{ color: isSelected ? 'white' : 'black' }}
+                  >
+                    {mins}m
+                  </button>
+                );
+              })}
             </div>
           </div>
           
@@ -482,23 +486,27 @@ export default function MaintenanceControl() {
           <div className="flex items-center gap-1">
             <span className="text-[11px] text-gray-500 font-semibold w-10 shrink-0">HRS</span>
             <div className="flex flex-wrap gap-1 flex-1">
-              {[1, 2, 3, 4, 5, 6, 8, 12, 24, 48].map((hrs) => (
-                <button
-                  key={`h-${hrs}`}
-                  type="button"
-                  onClick={() => {
-                    setEstimatedHours(hrs);
-                    setEstimatedMinutes(0);
-                  }}
-                  className={`px-2 py-1 text-xs font-semibold rounded-md transition-all ${
-                    estimatedHours === hrs && estimatedMinutes === 0
-                      ? 'bg-purple-600 text-white shadow-md'
-                      : 'bg-gray-100 text-gray-600 hover:bg-purple-100 hover:text-purple-700'
-                  }`}
-                >
-                  {hrs}h
-                </button>
-              ))}
+              {[1, 2, 3, 4, 5, 6, 8, 12, 24, 48].map((hrs) => {
+                const isSelected = estimatedHours === hrs && estimatedMinutes === 0;
+                return (
+                  <button
+                    key={`h-${hrs}`}
+                    type="button"
+                    onClick={() => {
+                      setEstimatedHours(hrs);
+                      setEstimatedMinutes(0);
+                    }}
+                    className={`px-2 py-1 text-xs font-semibold rounded-md transition-all ${
+                      isSelected
+                        ? 'bg-purple-600 shadow-md'
+                        : 'bg-gray-100 hover:bg-purple-100'
+                    }`}
+                    style={{ color: isSelected ? 'white' : 'black' }}
+                  >
+                    {hrs}h
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

@@ -47,7 +47,7 @@ function FlipCard({ value, label, className }: FlipCardProps) {
     <div className={cn("flex flex-col items-center", className)}>
       <div className="relative">
         {/* Card container */}
-        <div className="relative w-14 h-16 sm:w-16 sm:h-20 md:w-20 md:h-24 lg:w-24 lg:h-28">
+        <div className="relative w-12 h-14 sm:w-14 sm:h-16 md:w-16 md:h-20 lg:w-20 lg:h-24">
           {/* Card background */}
           <div className="absolute inset-0 rounded-lg bg-gradient-to-b from-slate-800 to-slate-900 border border-slate-700/50 overflow-hidden flex items-center justify-center">
             {/* Single centered number */}
@@ -58,7 +58,7 @@ function FlipCard({ value, label, className }: FlipCardProps) {
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: -20, opacity: 0 }}
                 transition={{ duration: 0.3, ease: "easeOut" }}
-                className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white font-mono tracking-wider"
+                className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white font-mono tracking-wider"
               >
                 {displayValue}
               </motion.span>
@@ -71,7 +71,7 @@ function FlipCard({ value, label, className }: FlipCardProps) {
       </div>
       
       {/* Label */}
-      <span className="mt-2 text-[10px] sm:text-xs md:text-sm font-medium text-slate-400 uppercase tracking-widest">
+      <span className="mt-1.5 text-[9px] sm:text-[10px] md:text-xs font-medium text-slate-400 uppercase tracking-widest">
         {label}
       </span>
     </div>
@@ -130,25 +130,25 @@ export function FlipCountdown({ targetDate, onComplete, className }: FlipCountdo
   }, [updateTime]);
 
   return (
-    <div className={cn("flex items-center justify-center gap-2 sm:gap-3 md:gap-4 lg:gap-6", className)}>
+    <div className={cn("flex items-center justify-center gap-1.5 sm:gap-2 md:gap-3 lg:gap-4", className)}>
       {timeLeft.days > 0 && (
         <>
           <FlipCard value={timeLeft.days} label="Days" />
-          <div className="flex flex-col gap-2 py-4">
-            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-purple animate-pulse" />
-            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-purple animate-pulse" />
+          <div className="flex flex-col gap-1.5 py-3">
+            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-purple animate-pulse" />
+            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-purple animate-pulse" />
           </div>
         </>
       )}
       <FlipCard value={timeLeft.hours} label="Hours" />
-      <div className="flex flex-col gap-2 py-4">
-        <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-purple animate-pulse" />
-        <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-purple animate-pulse" />
+      <div className="flex flex-col gap-1.5 py-3">
+        <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-purple animate-pulse" />
+        <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-purple animate-pulse" />
       </div>
       <FlipCard value={timeLeft.minutes} label="Minutes" />
-      <div className="flex flex-col gap-2 py-4">
-        <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-purple animate-pulse" />
-        <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-purple animate-pulse" />
+      <div className="flex flex-col gap-1.5 py-3">
+        <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-purple animate-pulse" />
+        <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-purple animate-pulse" />
       </div>
       <FlipCard value={timeLeft.seconds} label="Seconds" />
     </div>

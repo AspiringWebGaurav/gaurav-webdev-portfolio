@@ -55,15 +55,17 @@ function MaintenanceContent() {
     if (isRedirecting) return;
     setIsRedirecting(true);
     setShowCountdown(true);
-    setCountdownNumber(3);
+    setCountdownNumber(5); // Start from 5
     
-    // Countdown: 3, 2, 1, then redirect
-    setTimeout(() => setCountdownNumber(2), 1000);
-    setTimeout(() => setCountdownNumber(1), 2000);
+    // Countdown: 5, 4, 3, 2, 1, then redirect (1 sec per number = 5 sec total)
+    setTimeout(() => setCountdownNumber(4), 1000);
+    setTimeout(() => setCountdownNumber(3), 2000);
+    setTimeout(() => setCountdownNumber(2), 3000);
+    setTimeout(() => setCountdownNumber(1), 4000);
     setTimeout(() => {
       setCountdownNumber(0);
       window.location.replace('/');
-    }, 3000);
+    }, 5000); // Total 5 seconds
   }, [isRedirecting]);
 
   // Detect screen size
@@ -260,70 +262,267 @@ function MaintenanceContent() {
   // Countdown Overlay - show when maintenance ends
   if (showCountdown) {
     return (
-      <div className="fixed inset-0 bg-black-100 flex items-center justify-center z-50">
-        <div className="flex flex-col items-center gap-6">
-          {/* Success Icon */}
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center border-2 border-green-500"
-          >
-            <motion.svg
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{ duration: 0.5 }}
-              className="w-10 h-10 text-green-500"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={3}
+      <div className="fixed inset-0 bg-black-100 flex items-center justify-center z-50 overflow-hidden">
+        {/* Animated grid background */}
+        <div className="absolute inset-0 bg-grid-white/[0.02]">
+          <div className="absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]" />
+        </div>
+
+        {/* Floating particles */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {[...Array(30)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute rounded-full"
+              style={{
+                width: Math.random() * 4 + 2,
+                height: Math.random() * 4 + 2,
+                background: i % 3 === 0 ? '#22c55e' : i % 3 === 1 ? '#8b5cf6' : '#3b82f6',
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                y: [0, -200, 0],
+                x: [0, Math.random() * 100 - 50, 0],
+                opacity: [0, 0.6, 0],
+                scale: [0, 1.5, 0],
+              }}
+              transition={{
+                duration: 4 + Math.random() * 2,
+                repeat: Infinity,
+                delay: i * 0.1,
+                ease: "easeInOut"
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Radial gradient glows */}
+        <div className="absolute inset-0">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] sm:w-[450px] sm:h-[450px] md:w-[600px] md:h-[600px] bg-green-500/10 rounded-full blur-[60px] sm:blur-[80px] md:blur-[100px]" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] sm:w-[300px] sm:h-[300px] md:w-[400px] md:h-[400px] bg-purple/10 rounded-full blur-[50px] sm:blur-[65px] md:blur-[80px]" />
+        </div>
+
+        {/* Main content */}
+        <div className="relative flex flex-col items-center gap-4 sm:gap-5 md:gap-6 px-4">
+          
+          {/* Success Icon with enhanced animations */}
+          <div className="relative">
+            {/* Rotating ring */}
+            <motion.div
+              className="absolute -inset-4 rounded-full border border-green-500/20"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
             >
-              <motion.path
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M5 13l4 4L19 7"
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-green-500" />
+            </motion.div>
+            
+            {/* Outer pulse rings */}
+            <motion.div
+              className="absolute -inset-2 rounded-full border-2 border-green-500/40"
+              initial={{ scale: 1, opacity: 0.5 }}
+              animate={{ scale: 1.8, opacity: 0 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+            />
+            <motion.div
+              className="absolute -inset-2 rounded-full border border-emerald-400/30"
+              initial={{ scale: 1, opacity: 0.3 }}
+              animate={{ scale: 2.2, opacity: 0 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeOut", delay: 0.4 }}
+            />
+            <motion.div
+              className="absolute -inset-2 rounded-full border border-green-300/20"
+              initial={{ scale: 1, opacity: 0.2 }}
+              animate={{ scale: 2.6, opacity: 0 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeOut", delay: 0.8 }}
+            />
+            
+            {/* Main icon container */}
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: "spring", stiffness: 200, damping: 15 }}
+              className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full bg-gradient-to-br from-green-500/20 via-emerald-500/10 to-green-600/20 flex items-center justify-center border-2 border-green-500/60 shadow-2xl shadow-green-500/30"
+            >
+              {/* Inner gradient glow */}
+              <div className="absolute inset-3 rounded-full bg-gradient-to-br from-green-400/20 to-transparent blur-md" />
+              
+              {/* Shine effect */}
+              <motion.div
+                className="absolute inset-0 rounded-full bg-gradient-to-tr from-transparent via-white/10 to-transparent"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
               />
-            </motion.svg>
+              
+              {/* Checkmark */}
+              <motion.svg
+                className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 text-green-400 relative z-10 drop-shadow-[0_0_10px_rgba(74,222,128,0.5)]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2.5}
+              >
+                <motion.path
+                  initial={{ pathLength: 0 }}
+                  animate={{ pathLength: 1 }}
+                  transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5 13l4 4L19 7"
+                />
+              </motion.svg>
+            </motion.div>
+          </div>
+
+          {/* Status badge */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5 }}
+            className="px-4 py-1.5 rounded-full bg-green-500/20 border border-green-500/40"
+          >
+            <div className="flex items-center gap-2">
+              <motion.span
+                className="w-2 h-2 rounded-full bg-green-500"
+                animate={{ scale: [1, 1.2, 1], opacity: [1, 0.7, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              />
+              <span className="text-green-400 text-xs font-semibold uppercase tracking-wider">System Online</span>
+            </div>
           </motion.div>
 
-          {/* Message */}
+          {/* Message with gradient text */}
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
             className="text-center"
           >
-            <h2 className="text-2xl font-bold text-white mb-2">Maintenance Complete!</h2>
-            <p className="text-white/70">Portfolio is back online</p>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-green-400 via-emerald-300 to-teal-400 bg-clip-text text-transparent mb-2 px-4">
+              Maintenance Complete!
+            </h2>
+            <motion.p
+              className="text-white/50 text-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.7 }}
+            >
+              All systems operational • Portfolio is ready
+            </motion.p>
           </motion.div>
 
-          {/* Countdown Number */}
-          <motion.div className="mt-4">
+          {/* Countdown section */}
+          <motion.div
+            className="mt-4"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.6 }}
+          >
             <AnimatePresence mode="wait">
               <motion.div
                 key={countdownNumber}
-                initial={{ scale: 0.5, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 1.5, opacity: 0 }}
-                transition={{ duration: 0.3 }}
+                initial={{ scale: 0.5, opacity: 0, y: 30, rotateX: -90 }}
+                animate={{ scale: 1, opacity: 1, y: 0, rotateX: 0 }}
+                exit={{ scale: 0.8, opacity: 0, y: -30, rotateX: 90 }}
+                transition={{ duration: 0.4, ease: "backOut" }}
                 className="text-center"
               >
                 {countdownNumber > 0 ? (
-                  <>
-                    <div className="text-6xl font-bold text-purple mb-2">{countdownNumber}</div>
-                    <p className="text-white/60 text-sm">Loading portfolio...</p>
-                  </>
-                ) : (
-                  <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 border-3 border-purple border-t-transparent rounded-full animate-spin" />
-                    <span className="text-white">Redirecting...</span>
+                  <div className="flex flex-col items-center">
+                    {/* Countdown container */}
+                    <div className="relative">
+                      {/* Background glow */}
+                      <div className="absolute inset-0 bg-purple/20 blur-2xl rounded-full scale-150" />
+                      
+                      {/* Number container */}
+                      <div className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-xl sm:rounded-2xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-purple/30 flex items-center justify-center shadow-xl shadow-purple/20 backdrop-blur-sm">
+                        <motion.span
+                          className="text-4xl sm:text-5xl md:text-6xl font-bold text-purple drop-shadow-[0_0_30px_rgba(139,92,246,0.6)]"
+                          animate={{ 
+                            scale: [1, 1.1, 1],
+                            textShadow: [
+                              "0 0 20px rgba(139,92,246,0.4)",
+                              "0 0 40px rgba(139,92,246,0.6)",
+                              "0 0 20px rgba(139,92,246,0.4)"
+                            ]
+                          }}
+                          transition={{ duration: 0.8, repeat: Infinity }}
+                        >
+                          {countdownNumber}
+                        </motion.span>
+                      </div>
+                    </div>
+                    
+                    {/* Loading text with dots animation */}
+                    <motion.div
+                      className="mt-3 sm:mt-4 flex items-center gap-1 text-white/40 text-xs sm:text-sm"
+                      animate={{ opacity: [0.4, 0.8, 0.4] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      <span>Preparing your experience</span>
+                      <motion.span
+                        animate={{ opacity: [0, 1, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity, times: [0, 0.5, 1] }}
+                      >.</motion.span>
+                      <motion.span
+                        animate={{ opacity: [0, 1, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity, times: [0, 0.5, 1], delay: 0.2 }}
+                      >.</motion.span>
+                      <motion.span
+                        animate={{ opacity: [0, 1, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity, times: [0, 0.5, 1], delay: 0.4 }}
+                      >.</motion.span>
+                    </motion.div>
                   </div>
+                ) : (
+                  <motion.div 
+                    className="flex items-center gap-2 sm:gap-3 px-4 sm:px-6 md:px-8 py-3 sm:py-4 bg-gradient-to-r from-purple/20 via-purple/30 to-purple/20 rounded-lg sm:rounded-xl border border-purple/40 shadow-lg shadow-purple/20"
+                    animate={{ 
+                      boxShadow: [
+                        "0 0 20px rgba(139,92,246,0.2)",
+                        "0 0 40px rgba(139,92,246,0.3)",
+                        "0 0 20px rgba(139,92,246,0.2)"
+                      ]
+                    }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                  >
+                    <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-purple border-t-transparent rounded-full animate-spin" />
+                    <span className="text-white font-medium text-sm sm:text-base">Redirecting to portfolio...</span>
+                  </motion.div>
                 )}
               </motion.div>
             </AnimatePresence>
+          </motion.div>
+
+          {/* Bottom decorative elements */}
+          <motion.div
+            className="flex items-center gap-2 sm:gap-3 mt-3 sm:mt-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8 }}
+          >
+            <motion.div
+              className="w-10 sm:w-12 md:w-16 h-0.5 bg-gradient-to-r from-transparent to-green-500/50"
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ delay: 0.9, duration: 0.5 }}
+            />
+            <div className="flex gap-1.5">
+              {[0, 1, 2].map((i) => (
+                <motion.div
+                  key={i}
+                  className="w-1.5 h-1.5 rounded-full bg-green-500/60"
+                  animate={{ scale: [1, 1.3, 1], opacity: [0.6, 1, 0.6] }}
+                  transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+                />
+              ))}
+            </div>
+            <motion.div
+              className="w-10 sm:w-12 md:w-16 h-0.5 bg-gradient-to-l from-transparent to-green-500/50"
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ delay: 0.9, duration: 0.5 }}
+            />
           </motion.div>
         </div>
       </div>

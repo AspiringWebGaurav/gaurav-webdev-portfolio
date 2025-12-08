@@ -2,20 +2,20 @@
  * Maintenance Monitor - Real-time Mid-Session Detection
  * ONLY monitors for maintenance that starts WHILE user is actively browsing
  * Does NOT check on initial load (MaintenanceGate handles that)
- * NO toasts on initial load - only for real-time mid-session activation
+ * 
+ * NEW: Uses CurtainTransition animation instead of toast
  * 
  * Pattern: Mirrors BanMonitor.tsx exactly
  */
 
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { showToast } from "@/lib/toast";
+import CurtainTransition from "./CurtainTransition";
 
-const REDIRECT_DELAY = 3000; // 3 seconds to show toast
 const COLLECTION = 'siteSettings';
 const DOC_ID = 'maintenance';
 
@@ -25,12 +25,33 @@ export default function MaintenanceMonitor() {
   const initialMaintenanceStatus = useRef<boolean | null>(null);
   const hasReceivedFirstUpdate = useRef(false);
   const isRedirecting = useRef(false);
+  
+  // State for curtain animation
+  const [showCurtainAnimation, setShowCurtainAnimation] = useState(false);
+  const [animationError, setAnimationError] = useState<Error | null>(null);
 
   // Skip monitoring for these paths
   const shouldSkipMonitoring = 
     pathname?.startsWith("/admin") || 
     pathname?.startsWith("/banned") ||
     pathname?.startsWith("/maintenance");
+
+  // Handle animation completion
+  const handleAnimationComplete = useCallback(() => {
+    console.log('[Maintenance Monitor] Curtain animation completed');
+    setShowCurtainAnimation(false);
+  }, []);
+
+  // Handle animation error with failsafe
+  const handleAnimationError = useCallback((error: Error) => {
+    console.error('[Maintenance Monitor] Animation error:', error);
+    setAnimationError(error);
+    
+    // Failsafe: redirect directly after error
+    setTimeout(() => {
+      router.replace('/maintenance');
+    }, 1000);
+  }, [router]);
 
   useEffect(() => {
     // Skip monitoring for admin/banned/maintenance pages
@@ -71,17 +92,8 @@ export default function MaintenanceMonitor() {
           console.log('[Maintenance Monitor] 🔧 MID-SESSION MAINTENANCE DETECTED!');
           isRedirecting.current = true;
 
-          // Show toast for mid-session maintenance
-          showToast.info(
-            'Site is entering maintenance mode...',
-            'Maintenance',
-            { autoClose: REDIRECT_DELAY }
-          );
-
-          // Redirect after delay
-          setTimeout(() => {
-            router.replace('/maintenance');
-          }, REDIRECT_DELAY);
+          // Trigger curtain animation instead of toast
+          setShowCurtainAnimation(true);
 
           // Update status to prevent duplicate triggers
           initialMaintenanceStatus.current = true;
@@ -89,6 +101,13 @@ export default function MaintenanceMonitor() {
       },
       (error) => {
         console.error('[Maintenance Monitor] Listener error:', error);
+        
+        // Failsafe: If there's a listener error during animation, force redirect
+        if (isRedirecting.current) {
+          setTimeout(() => {
+            router.replace('/maintenance');
+          }, 500);
+        }
       }
     );
 
@@ -101,5 +120,21 @@ export default function MaintenanceMonitor() {
     };
   }, [pathname, router, shouldSkipMonitoring]);
 
-  return null;
+  return (
+    <>
+      {/* Curtain Transition Animation */}
+      <CurtainTransition
+        isActive={showCurtainAnimation}
+        onComplete={handleAnimationComplete}
+        onError={handleAnimationError}
+      />
+      
+      {/* Debug info in development */}
+      {process.env.NODE_ENV === 'development' && animationError && (
+        <div className="fixed bottom-4 right-4 p-2 bg-red-500/20 text-red-400 text-xs rounded z-50">
+          Animation Error: {animationError.message}
+        </div>
+      )}
+    </>
+  );
 }
