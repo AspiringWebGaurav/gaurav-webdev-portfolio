@@ -9,6 +9,9 @@ interface BanInfo {
   category?: string;
   timestamp: string;
   reviewTime: string;
+  banType?: 'temporary' | 'permanent';
+  banExpiresAt?: string;
+  banDuration?: number;
 }
 
 interface DesktopScreenProps {
@@ -196,8 +199,12 @@ export default function DesktopScreen({ banInfo }: DesktopScreenProps) {
                 </svg>
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-white">Access Permanently Restricted</h1>
-                <p className="text-red-300 text-sm">Critical security violation</p>
+                <h1 className="text-2xl font-bold text-white">
+                  {banInfo.banType === 'temporary' ? 'Access Temporarily Restricted' : 'Access Permanently Restricted'}
+                </h1>
+                <p className="text-red-300 text-sm">
+                  {banInfo.banType === 'temporary' ? 'Temporary security restriction' : 'Critical security violation'}
+                </p>
               </div>
             </div>
           </div>

@@ -31,6 +31,9 @@ export interface BanRequest {
   category: BanCategory;
   customReason?: string;
   notifyUser?: boolean;
+  banType?: "temporary" | "permanent";  // NEW: Ban type
+  banDuration?: number | null;          // NEW: Duration in minutes (for temporary)
+  autoUnbanEnabled?: boolean;           // NEW: Auto-unban feature
 }
 
 export interface BanResponse {
@@ -131,7 +134,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<BanRespon
     }
 
     // Extract mask or uuid
-    const { mask, uuid: providedUuid, reason, category, customReason, notifyUser = false } = body;
+    const { mask, uuid: providedUuid, reason, category, customReason, notifyUser = false, banType = "permanent", banDuration, autoUnbanEnabled = false } = body;
 
     // Determine UUID (either provided directly by admin, or translate from mask)
     let uuid: string;
@@ -201,8 +204,15 @@ export async function POST(request: NextRequest): Promise<NextResponse<BanRespon
       const banReason = customReason || reason;
       const bannedBy = decodedToken.email || decodedToken.uid;
 
+      // Calculate ban expiration for temporary bans
+      let banExpiresAt: Timestamp | null = null;
+      if (banType === "temporary" && banDuration && banDuration > 0 && autoUnbanEnabled) {
+        const expirationDate = new Date(now.toDate().getTime() + (banDuration * 60 * 1000));
+        banExpiresAt = Timestamp.fromDate(expirationDate);
+      }
+
       // Update visitor with ban info
-      transaction.update(visitorRef, {
+      const updateData: any = {
         banned: true,
         banReason,
         banCategory: category,
@@ -212,7 +222,19 @@ export async function POST(request: NextRequest): Promise<NextResponse<BanRespon
         banCount: FieldValue.increment(1),
         updatedAt: now,
         lastBanUpdate: now,
-      });
+        banType,  // NEW: Store ban type
+      };
+
+      // Add temporary ban fields if applicable
+      if (banType === "temporary" && banDuration) {
+        updateData.banDuration = banDuration;  // Store in minutes
+        updateData.autoUnbanEnabled = autoUnbanEnabled;
+        if (banExpiresAt) {
+          updateData.banExpiresAt = banExpiresAt;
+        }
+      }
+
+      transaction.update(visitorRef, updateData);
 
       // Create ban log entry
       const logRef = adminDb.collection(BAN_LOGS_COLLECTION).doc();
@@ -225,6 +247,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<BanRespon
         bannedBy,
         bannedByUid: decodedToken.uid,
         timestamp: now,
+        banType,  // NEW: Log ban type
+        banDuration: banType === "temporary" ? banDuration : null,  // NEW: Log duration
+        autoUnbanEnabled: banType === "temporary" ? autoUnbanEnabled : false,  // NEW: Log auto-unban
+        banExpiresAt: banExpiresAt,  // NEW: Log expiration
         requestMetadata: {
           ipAddress: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown",
           userAgent: request.headers.get("user-agent") || "unknown",

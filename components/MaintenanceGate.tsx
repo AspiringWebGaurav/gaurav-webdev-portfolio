@@ -4,6 +4,7 @@
  * If maintenance ON: redirect to /maintenance
  * If maintenance OFF: allow portfolio to render
  * NO cookies, NO localStorage - pure API sync
+ * Shows skeleton loader during check
  * 
  * Pattern: Mirrors BanGate.tsx exactly
  */
@@ -12,6 +13,8 @@
 
 import { useEffect, useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import MaintenanceGateSkeleton from "./skeletons/sections/MaintenanceGateSkeleton";
+import { isProduction } from "@/lib/environmentUtils";
 
 export default function MaintenanceGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -24,10 +27,20 @@ export default function MaintenanceGate({ children }: { children: React.ReactNod
     pathname?.startsWith("/admin") || 
     pathname?.startsWith("/banned") ||
     pathname?.startsWith("/maintenance");
+  
+  // Skip maintenance blocking on localhost (banner will show status instead)
+  const isLocalhostEnv = !isProduction();
 
   useEffect(() => {
     // Skip check for admin/banned/maintenance pages
     if (shouldSkipGate) {
+      setIsChecking(false);
+      return;
+    }
+    
+    // Skip blocking on localhost (banner will show status instead)
+    if (isLocalhostEnv) {
+      console.log('[Maintenance Gate] Localhost detected - skipping maintenance check');
       setIsChecking(false);
       return;
     }
@@ -69,18 +82,11 @@ export default function MaintenanceGate({ children }: { children: React.ReactNod
     }
 
     checkMaintenanceStatus();
-  }, [pathname, router, shouldSkipGate]);
+  }, [pathname, router, shouldSkipGate, isLocalhostEnv]);
 
-  // While checking, show loading state (prevents flash)
+  // While checking, show skeleton loader (prevents flash)
   if (isChecking && !shouldSkipGate) {
-    return (
-      <div className="fixed inset-0 bg-black-100 flex items-center justify-center z-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-purple border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-white text-sm opacity-70">Loading...</p>
-        </div>
-      </div>
-    );
+    return <MaintenanceGateSkeleton />;
   }
 
   // Maintenance check passed - render children

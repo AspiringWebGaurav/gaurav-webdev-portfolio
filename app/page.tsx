@@ -11,37 +11,88 @@ import Approach from "@/components/Approach";
 import Footer from "@/components/Footer";
 import BugHunt from "@/components/BugHunt";
 
+// Skeleton wrapper and components
+import { WithSkeleton } from "@/components/skeletons";
+import {
+  FloatingNavSkeleton,
+  HeroSkeleton,
+  GridSkeleton,
+  CurrentlyWorkingSkeleton,
+  RecentProjectsSkeleton,
+  ClientsSkeleton,
+  ExperienceSkeleton,
+  ApproachSkeleton,
+  FooterSkeleton,
+} from "@/components/skeletons";
+
 export default function Home() {
   return (
     <main className="relative bg-black-100 flex justify-center items-center flex-col mx-auto sm:px-10 px-5 overflow-clip">
       <div className="w-full">
-        <FloatingNav navItems={navItems} />
+        {/* Floating Navigation with Skeleton - Maintains fixed positioning */}
+        <WithSkeleton skeleton={<FloatingNavSkeleton />} preserveFixed>
+          <FloatingNav navItems={navItems} />
+        </WithSkeleton>
+
+        {/* Hero Section with Skeleton */}
         <section id="hero">
-          <Hero />
+          <WithSkeleton skeleton={<HeroSkeleton />}>
+            <Hero />
+          </WithSkeleton>
         </section>
+
+        {/* About/Grid Section with Skeleton */}
         <section id="about">
-          <Grid />
+          <WithSkeleton skeleton={<GridSkeleton />}>
+            <Grid />
+          </WithSkeleton>
         </section>
+
+        {/* Currently Working Section with Skeleton */}
         <section id="currently-working">
-          <CurrentlyWorking />
+          <WithSkeleton skeleton={<CurrentlyWorkingSkeleton />}>
+            <CurrentlyWorking />
+          </WithSkeleton>
         </section>
+
+        {/* Projects Section with Skeleton */}
         <section id="projects">
-          <RecentProjects />
+          <WithSkeleton skeleton={<RecentProjectsSkeleton />}>
+            <RecentProjects />
+          </WithSkeleton>
         </section>
+
+        {/* Testimonials Section with Skeleton */}
         <section id="testimonials">
-          <Clients />
+          <WithSkeleton skeleton={<ClientsSkeleton />}>
+            <Clients />
+          </WithSkeleton>
         </section>
+
+        {/* Experience Section with Skeleton */}
         <section id="experience">
-          <Experience />
+          <WithSkeleton skeleton={<ExperienceSkeleton />}>
+            <Experience />
+          </WithSkeleton>
         </section>
+
+        {/* Approach Section with Skeleton */}
         <section id="approach">
-          <Approach />
+          <WithSkeleton skeleton={<ApproachSkeleton />}>
+            <Approach />
+          </WithSkeleton>
         </section>
+
+        {/* Bug Hunt Section (No skeleton - empty section) */}
         <section id="bug-hunt">
           <BugHunt />
         </section>
+
+        {/* Footer/Contact Section with Skeleton */}
         <section id="contact">
-          <Footer />
+          <WithSkeleton skeleton={<FooterSkeleton />}>
+            <Footer />
+          </WithSkeleton>
         </section>
       </div>
     </main>

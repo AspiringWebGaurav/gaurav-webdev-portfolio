@@ -33,25 +33,11 @@ export async function createAuthNotification(
   });
 
   if (type === "login") {
-    await notificationService.createNotification({
-      type: "login",
-      title: "Login Successful",
-      message: `${displayName} logged in at ${timestamp}`,
-      data: { userId: user?.uid, email: user?.email },
-    });
-    
     // Only show toast if not silent
     if (!options?.silent) {
       notificationService.showToast("success", `Welcome back, ${displayName}!`);
     }
   } else {
-    await notificationService.createNotification({
-      type: "logout",
-      title: "Logged Out",
-      message: `${displayName} logged out at ${timestamp}`,
-      data: { userId: user?.uid, email: user?.email },
-    });
-    
     if (!options?.silent) {
       notificationService.showToast("info", "You have been logged out");
     }
@@ -72,28 +58,15 @@ export async function createTimesheetNotification(action: "add" | "update" | "de
 
   switch (action) {
     case "add":
-      title = "Timesheet Entry Added";
-      message = `New time log entry created at ${timestamp}`;
       notificationService.showToast("success", "Entry added successfully");
       break;
     case "update":
-      title = "Timesheet Entry Updated";
-      message = `Time log entry updated at ${timestamp}`;
       notificationService.showToast("success", "Entry updated successfully");
       break;
     case "delete":
-      title = "Timesheet Entry Deleted";
-      message = `Time log entry deleted at ${timestamp}`;
       notificationService.showToast("success", "Entry deleted successfully");
       break;
   }
-
-  await notificationService.createNotification({
-    type: "timesheet",
-    title,
-    message,
-    data: data || {},
-  });
 }
 
 export async function createVersionNotification(
@@ -112,21 +85,10 @@ export async function createVersionNotification(
   let message = "";
 
   if (action === "create") {
-    title = "New Version Created";
-    message = `Version ${versionNumber} created at ${timestamp}`;
     notificationService.showToast("success", `Version ${versionNumber} created`);
   } else {
-    title = "Version Updated";
-    message = `Version ${versionNumber} updated at ${timestamp}`;
     notificationService.showToast("success", `Version ${versionNumber} updated`);
   }
-
-  await notificationService.createNotification({
-    type: "version",
-    title,
-    message,
-    data: { versionNumber },
-  });
 }
 
 export async function createErrorNotification(error: string, context?: string) {

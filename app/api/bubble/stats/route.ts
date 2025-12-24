@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { deduplicate } from '@/lib/requestDeduplication';
 
 const COLLECTIONS = {
   SESSIONS: 'og_uuid_sessions',
@@ -13,7 +14,11 @@ export async function GET() {
   try {
     // Get total visitors (sessions)
     const sessionsRef = collection(db, COLLECTIONS.SESSIONS);
-    const sessionsSnapshot = await getDocs(sessionsRef);
+    const sessionsSnapshot = await deduplicate(
+      "bubble-stats-sessions",
+      () => getDocs(sessionsRef),
+      3000 // 3s TTL for stats
+    );
     const totalVisitors = sessionsSnapshot.size;
 
     // Get active sessions (within last 24 hours)

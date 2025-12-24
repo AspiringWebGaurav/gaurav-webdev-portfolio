@@ -4,6 +4,8 @@ import { db } from '@/lib/firebase';
 import { translateMaskToUUID } from '@/lib/uuid-sync/server';
 import { MaskNotFoundError, UUIDValidationError } from '@/lib/uuid-sync/errors';
 import { headers } from 'next/headers';
+import { deduplicate } from '@/lib/requestDeduplication';
+import { withRetry, firebaseQueue } from '@/lib/retry';
 
 const COLLECTIONS = {
   BUBBLE_SESSIONS: 'og_uuid_sessions',
@@ -34,30 +36,14 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    // Translate mask to UUID with robust error handling
-    let uuid: string;
-    try {
-      uuid = await translateMaskToUUID(mask);
-    } catch (error: any) {
-      if (error instanceof MaskNotFoundError) {
-        return NextResponse.json(
-          { error: 'Mask not found', exists: false },
-          { status: 404 }
-        );
-      }
-      if (error instanceof UUIDValidationError) {
-        return NextResponse.json(
-          { error: `Invalid mask format: ${error.message}` },
-          { status: 400 }
-        );
-      }
-      throw error; // Re-throw unexpected errors
-    }
     
-    // Fetch session by UUID (document ID)
-    const sessionDocRef = doc(db, COLLECTIONS.BUBBLE_SESSIONS, uuid);
-    const sessionDoc = await getDoc(sessionDocRef);
+    // Use mask directly as document ID (no translation needed) with retry and queue
+    const sessionDocRef = doc(db, COLLECTIONS.BUBBLE_SESSIONS, mask);
+    const sessionDoc = await deduplicate(
+      `session-${mask}`,
+      () => firebaseQueue.add(() => withRetry(() => getDoc(sessionDocRef), {}, 'fetch-session')),
+      2000 // 2s TTL - critical for polling
+    );
 
     if (!sessionDoc.exists()) {
       return NextResponse.json(
@@ -80,7 +66,8 @@ export async function GET(request: NextRequest) {
       success: true,
       exists: true,
       session: {
-        id: uuid,  // Return UUID as id
+        id: mask,  // Return mask as id
+        uuid: sessionData.uuid,  // Return UUID for admin reference
         mask: sessionData.mask,  // Return mask
         deviceFingerprint: sessionData.deviceFingerprint,
         visitorEmail: sessionData.visitorEmail,
@@ -123,7 +110,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Translate mask to UUID with robust error handling
+    // Get UUID for this mask (for admin reference only)
     let uuid: string;
     try {
       uuid = await translateMaskToUUID(mask);
@@ -151,13 +138,14 @@ export async function POST(request: NextRequest) {
                      "unknown";
     const fingerprint = `${ipAddress}_${userAgent}`;
 
-    // Check if session already exists (using UUID as doc ID)
-    const sessionDocRef = doc(db, COLLECTIONS.BUBBLE_SESSIONS, uuid);
+    // Use mask as document ID (not UUID)
+    const sessionDocRef = doc(db, COLLECTIONS.BUBBLE_SESSIONS, mask);
     const existingDoc = await getDoc(sessionDocRef);
 
     if (!existingDoc.exists()) {
-      // Create new session with UUID as document ID
+      // Create new session with mask as document ID
       const sessionData = {
+        uuid: uuid,  // Store UUID for admin reference
         mask: mask,  // Use the mask provided by client
         deviceFingerprint: fingerprint,
         startedAt: serverTimestamp(),
@@ -175,8 +163,9 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        sessionId: uuid,
+        sessionId: mask,  // Return mask as sessionId
         mask: mask,
+        uuid: uuid,  // Include UUID for reference
         message: 'Session created',
         created: true,
       });
@@ -189,8 +178,9 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        sessionId: uuid,
+        sessionId: mask,  // Return mask as sessionId
         mask: mask,
+        uuid: uuid,  // Include UUID for reference
         message: 'Session reactivated',
         created: false,
       });
@@ -255,10 +245,12 @@ export async function PUT(request: NextRequest) {
       lastActive: serverTimestamp(),
     });
 
+    const sessionData = sessionDoc.data();
     return NextResponse.json({
       success: true,
       session: {
-        id: uuid,
+        id: mask,  // Return mask as id
+        uuid: sessionData.uuid,  // Include UUID for reference
         mask,
         ...updates,
       },

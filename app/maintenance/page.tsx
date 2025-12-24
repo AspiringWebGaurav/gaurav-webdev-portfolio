@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import DesktopScreen from './screens/DesktopScreen';
 import TabletScreen from './screens/TabletScreen';
 import MobileScreen from './screens/MobileScreen';
+import MaintenancePageSkeleton from '@/components/skeletons/sections/MaintenancePageSkeleton';
 
 const COLLECTION = 'siteSettings';
 const DOC_ID = 'maintenance';
@@ -247,16 +248,9 @@ function MaintenanceContent() {
     return () => unsubscribe();
   }, [isRedirecting, startCountdownRedirect]);
 
-  // Loading state
+  // Loading state - show skeleton
   if (checkingStatus) {
-    return (
-      <div className="fixed inset-0 bg-black-100 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-purple border-t-transparent rounded-full animate-spin" />
-          <p className="text-white text-sm opacity-70">Loading...</p>
-        </div>
-      </div>
-    );
+    return <MaintenancePageSkeleton />;
   }
 
   // Countdown Overlay - show when maintenance ends

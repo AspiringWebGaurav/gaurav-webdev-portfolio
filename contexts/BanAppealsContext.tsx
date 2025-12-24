@@ -15,6 +15,7 @@ import React, {
   ReactNode,
 } from "react";
 import { showToast } from "@/lib/toast";
+import smartPolling from "@/lib/smartPolling";
 
 import { useRecycleBin } from "./RecycleBinContext";
 import {
@@ -25,7 +26,6 @@ import {
 } from "@/types/banAppeal";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import realtimeSyncManager from "@/lib/realtimeSync";
 
 interface BanAppealsContextType {
   appeals: BanAppeal[];
@@ -155,26 +155,30 @@ export const BanAppealsProvider: React.FC<BanAppealsProviderProps> = ({
   }, []);
 
   /**
-   * Load appeals on mount and setup auto-refresh
+   * Load appeals on mount and setup smart polling
    */
   useEffect(() => {
-    // Fetch immediately on mount (for both admin and visitors)
+    // Fetch immediately on mount
     loadAppeals();
 
-    // Setup auto-refresh every 60 seconds for live updates
-    const unsubscribeSync = realtimeSyncManager.subscribe(
-      'ban-appeals-updates',
-      () => loadAppeals(false), // Don't show loading on background refresh
-      { 
-        interval: 60000, // 60 seconds (optimized from 30s)
-        pauseOnHidden: true,
-        enableAdaptive: true,
+    // Smart polling - only poll when admin is viewing dashboard
+    const pollerId = smartPolling.start(
+      async () => {
+        await loadAppeals(false); // Silent background refresh
+      },
+      {
+        intervals: {
+          realtime: 10000,  // 10s when admin actively managing appeals
+          active: 60000,    // 1min when admin on page but idle
+          idle: 180000,     // 3min when admin away from page
+          background: 0,    // Stop when tab hidden (80% cost savings!)
+        },
+        priority: 'high',
+        tag: 'ban-appeals',
       }
     );
 
-    return () => {
-      unsubscribeSync();
-    };
+    return () => smartPolling.stop(pollerId);
   }, [loadAppeals]);
 
   /**

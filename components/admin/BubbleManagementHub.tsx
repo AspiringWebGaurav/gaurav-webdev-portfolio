@@ -21,8 +21,11 @@ interface SubTabOption {
 
 export default function BubbleManagementHub() {
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('messages');
-  const { getUnreadSessionsCount } = useBubbleManagement();
+  const { getUnreadSessionsCount, sessions } = useBubbleManagement();
   const unreadSessionsCount = getUnreadSessionsCount();
+  
+  // Count live/online sessions
+  const liveSessionsCount = sessions.filter(s => !s.deletedAt && s.visitorOnline).length;
 
   const subTabs: SubTabOption[] = [
     { 
@@ -41,10 +44,21 @@ export default function BubbleManagementHub() {
     <div className="space-y-6">
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow-md p-6">
-        <h1 className="text-2xl font-bold text-white mb-2">Bubble Management Hub</h1>
-        <p className="text-blue-100">
-          Real-time visitor chat • Smart polling • Live sync enabled
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white mb-2">Bubble Management Hub</h1>
+            <p className="text-blue-100">
+              Real-time visitor chat • Smart polling • Live sync enabled
+            </p>
+          </div>
+          {liveSessionsCount > 0 && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg shadow-lg animate-pulse">
+              <span className="w-2 h-2 rounded-full bg-white"></span>
+              <span className="font-bold text-lg">{liveSessionsCount}</span>
+              <span className="text-sm font-medium">Live</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Sub-tabs Navigation */}

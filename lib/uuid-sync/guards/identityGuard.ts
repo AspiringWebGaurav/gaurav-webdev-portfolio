@@ -36,7 +36,7 @@ class IdentityGuard {
     );
     
     if (recentDuplicates.length > 0) {
-      console.error('🚨 [Identity Guard] DUPLICATE CREATION DETECTED!', {
+      logger.error('🚨 [Identity Guard] DUPLICATE CREATION DETECTED!', {
         fingerprint: fingerprint.substring(0, 20),
         existingMask: recentDuplicates[0].mask,
         existingSource: recentDuplicates[0].source,
@@ -56,7 +56,7 @@ class IdentityGuard {
     // Cleanup old entries
     this.cleanup();
     
-    console.log('✅ [Identity Guard] New identity registered', {
+    logger.debug('✅ [Identity Guard] New identity registered', {
       fingerprint: fingerprint.substring(0, 20),
       mask,
       source,

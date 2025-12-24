@@ -8,6 +8,9 @@ interface BanInfo {
   category?: string;
   timestamp: string;
   reviewTime: string;
+  banType?: 'temporary' | 'permanent';
+  banExpiresAt?: string;
+  banDuration?: number;
 }
 
 interface TabletScreenProps {
@@ -136,8 +139,12 @@ export default function TabletScreen({ banInfo }: TabletScreenProps) {
               </svg>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white">Access Permanently Restricted</h1>
-              <p className="text-red-300 text-sm">Critical security violation</p>
+              <h1 className="text-xl font-bold text-white">
+                {banInfo.banType === 'temporary' ? 'Access Temporarily Restricted' : 'Access Permanently Restricted'}
+              </h1>
+              <p className="text-red-300 text-xs">
+                {banInfo.banType === 'temporary' ? 'Temporary security restriction' : 'Critical security violation'}
+              </p>
             </div>
           </div>
         </div>

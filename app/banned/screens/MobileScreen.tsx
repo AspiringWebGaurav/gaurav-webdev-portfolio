@@ -8,6 +8,9 @@ interface BanInfo {
   category?: string;
   timestamp: string;
   reviewTime: string;
+  banType?: 'temporary' | 'permanent';
+  banExpiresAt?: string;
+  banDuration?: number;
 }
 
 interface MobileScreenProps {
@@ -132,8 +135,12 @@ export default function MobileScreen({ banInfo }: MobileScreenProps) {
               </svg>
             </div>
             <div className="flex-1">
-              <h1 className="text-sm font-bold text-white">Access Restricted</h1>
-              <p className="text-red-300 text-[10px]">Security violation</p>
+              <h1 className="text-sm font-bold text-white">
+                {banInfo.banType === 'temporary' ? 'Temporary Restriction' : 'Access Restricted'}
+              </h1>
+              <p className="text-red-300 text-[10px]">
+                {banInfo.banType === 'temporary' ? 'Temporary security block' : 'Security violation'}
+              </p>
             </div>
           </div>
         </div>

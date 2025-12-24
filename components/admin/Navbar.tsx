@@ -11,7 +11,11 @@ import {
   RefreshCw,
   Activity,
   Shield,
+  Wrench,
+  Clock,
 } from "lucide-react";
+import { useMaintenanceStatus } from "@/contexts/MaintenanceStatusContext";
+import { isLocalhost } from "@/lib/environmentUtils";
 import BrandLogo from "./BrandLogo";
 import NotificationBell from "./NotificationBell";
 import { signOut } from "@/lib/auth";
@@ -38,11 +42,36 @@ export default function Navbar({
   const [authLoading, setAuthLoading] = useState(true);
   const [refreshProgress, setRefreshProgress] = useState(0);
   const [refreshStatus, setRefreshStatus] = useState("");
+  const [maintenanceTimeLeft, setMaintenanceTimeLeft] = useState<string>("");
+  const [maintenanceElapsed, setMaintenanceElapsed] = useState<string>("");
+  const [isClient, setIsClient] = useState(false);
   
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { stats } = useRecycleBin();
   const { refresh, isRefreshing, lastRefresh, healthStatus } = useRefreshDashboard();
+  const { status: maintenanceStatus } = useMaintenanceStatus();
+  
+  // Check if we should show maintenance marquee (client-side only)
+  const showMaintenanceMarquee = isClient && isLocalhost() && maintenanceStatus.enabled;
+
+  // Set client-side flag
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Debug: Log maintenance status
+  useEffect(() => {
+    if (isClient) {
+      console.log('[Admin Navbar] Maintenance Debug:', {
+        isClient,
+        isLocalhost: isLocalhost(),
+        maintenanceEnabled: maintenanceStatus.enabled,
+        showMarquee: showMaintenanceMarquee,
+        estimatedEndTime: maintenanceStatus.estimatedEndTime,
+      });
+    }
+  }, [isClient, maintenanceStatus.enabled, showMaintenanceMarquee]);
 
   // Update clock every second
   useEffect(() => {
@@ -62,6 +91,57 @@ export default function Navbar({
     const interval = setInterval(updateClock, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Update maintenance countdown timer
+  useEffect(() => {
+    if (!maintenanceStatus.enabled || !maintenanceStatus.estimatedEndTime) {
+      setMaintenanceTimeLeft("");
+      setMaintenanceElapsed("");
+      return;
+    }
+
+    const updateTimer = () => {
+      const now = new Date();
+      const end = new Date(maintenanceStatus.estimatedEndTime!);
+      const diff = end.getTime() - now.getTime();
+
+      // Calculate elapsed time since maintenance started
+      if (maintenanceStatus.enabledAt) {
+        const start = new Date(maintenanceStatus.enabledAt);
+        const elapsedMs = now.getTime() - start.getTime();
+        const elapsedHours = Math.floor(elapsedMs / (60 * 60 * 1000));
+        const elapsedMinutes = Math.floor((elapsedMs % (60 * 60 * 1000)) / (60 * 1000));
+        const elapsedSeconds = Math.floor((elapsedMs % (60 * 1000)) / 1000);
+
+        if (elapsedHours > 0) {
+          setMaintenanceElapsed(`${elapsedHours}h ${elapsedMinutes}m ${elapsedSeconds}s`);
+        } else {
+          setMaintenanceElapsed(`${elapsedMinutes}m ${elapsedSeconds}s`);
+        }
+      }
+
+      // Calculate time remaining
+      if (diff <= 0) {
+        const minutesOver = Math.floor((now.getTime() - end.getTime()) / (60 * 1000));
+        setMaintenanceTimeLeft(`Overdue ${minutesOver}m`);
+        return;
+      }
+
+      const hours = Math.floor(diff / (60 * 60 * 1000));
+      const minutes = Math.floor((diff % (60 * 60 * 1000)) / (60 * 1000));
+      const seconds = Math.floor((diff % (60 * 1000)) / 1000);
+
+      if (hours > 0) {
+        setMaintenanceTimeLeft(`${hours}h ${minutes}m ${seconds}s`);
+      } else {
+        setMaintenanceTimeLeft(`${minutes}m ${seconds}s`);
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [maintenanceStatus.enabled, maintenanceStatus.estimatedEndTime, maintenanceStatus.enabledAt]);
 
   // Get current user
   useEffect(() => {
@@ -162,7 +242,11 @@ export default function Navbar({
 
   return (
     <>
-    <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/95 backdrop-blur-xl shadow-sm">
+    <header className={`sticky top-0 z-50 w-full border-b shadow-sm transition-all duration-500 ${
+      showMaintenanceMarquee 
+        ? 'border-orange-500/20 bg-black/20 backdrop-blur-xl' 
+        : 'border-gray-200 bg-white/95 backdrop-blur-xl'
+    }`}>
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 sm:h-16">
           {/* Left Section - Logo and Brand Name */}
@@ -181,15 +265,33 @@ export default function Navbar({
             </div>
           </button>
 
-          {/* Middle Section - Live Clock (IST) */}
+          {/* Middle Section - Maintenance Marquee or Clock */}
           <div className="hidden md:flex items-center justify-center absolute left-1/2 transform -translate-x-1/2">
-            <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 border border-gray-200">
-              <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
-              <span className="text-sm font-mono text-gray-700">
-                {currentTime}
-                <span className="text-xs text-gray-500 ml-1">IST</span>
-              </span>
-            </div>
+            {showMaintenanceMarquee ? (
+              <div className="relative bg-gradient-to-r from-orange-900/20 via-amber-900/20 to-orange-900/20 backdrop-blur-md rounded-lg border border-orange-500/20 px-4 py-2 animate-pulse">
+                <div className="flex items-center gap-3 whitespace-nowrap">
+                  <Wrench className="w-4 h-4 text-orange-400 flex-shrink-0" style={{ animation: 'pulse 2s ease-in-out infinite' }} />
+                  <span className="text-sm font-bold text-orange-200/90 uppercase tracking-wide">MAINTENANCE ACTIVE</span>
+                  <span className="text-orange-300/60">•</span>
+                  <span className="text-sm text-orange-200/90 font-mono flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-orange-300" />
+                    Elapsed: {maintenanceElapsed}
+                  </span>
+                  <span className="text-orange-300/60">•</span>
+                  <span className="text-sm text-orange-200/90 font-mono flex items-center gap-1.5">
+                    Ends: {maintenanceTimeLeft}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 border border-gray-200">
+                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+                <span className="text-sm font-mono text-gray-700">
+                  {currentTime}
+                  <span className="text-xs text-gray-500 ml-1">IST</span>
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Right Section - Notifications, Recycle Bin, and Profile */}
@@ -203,6 +305,16 @@ export default function Navbar({
               </div>
             ) : (
               <>
+                {/* Clock (left of refresh button when maintenance active) */}
+                {showMaintenanceMarquee && (
+                  <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/20 border border-orange-500/20">
+                    <Clock className="w-3.5 h-3.5 text-slate-300" />
+                    <span className="text-xs font-mono text-slate-300">
+                      {currentTime.split(' ')[0]}
+                    </span>
+                  </div>
+                )}
+                
                 {/* Refresh Button with Progress */}
                 <div className="relative">
                   <button

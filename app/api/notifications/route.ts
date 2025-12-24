@@ -13,6 +13,7 @@ import {
   writeBatch,
   Timestamp,
 } from "firebase/firestore";
+import { deduplicate } from "@/lib/requestDeduplication";
 
 // GET - Fetch notifications for a user
 export async function GET(request: NextRequest) {
@@ -23,7 +24,11 @@ export async function GET(request: NextRequest) {
     const notificationsRef = collection(db, "notifications");
     const q = query(notificationsRef, where("userId", "==", userId), orderBy("createdAt", "desc"));
 
-    const snapshot = await getDocs(q);
+    const snapshot = await deduplicate(
+      `notifications-${userId}`,
+      () => getDocs(q),
+      2000
+    );
     const notifications = snapshot.docs
       .map((doc) => ({
         id: doc.id,

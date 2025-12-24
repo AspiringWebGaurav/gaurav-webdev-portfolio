@@ -11,6 +11,8 @@
  * - Priority-based scheduling
  */
 
+import logger from './logger';
+
 type PollingCallback = () => Promise<void> | void;
 type IntervalMode = 'realtime' | 'active' | 'idle' | 'background' | 'paused';
 type Priority = 'critical' | 'high' | 'normal' | 'low';
@@ -67,11 +69,11 @@ class SmartPollingManager {
       const wasHidden = !this.documentVisible;
       this.documentVisible = !document.hidden;
       
-      console.log('[SmartPolling] 👁️ Visibility:', this.documentVisible ? 'VISIBLE' : 'HIDDEN');
+      logger.debug('[SmartPolling] 👁️ Visibility:', this.documentVisible ? 'VISIBLE' : 'HIDDEN');
       
       if (wasHidden && this.documentVisible) {
         // Tab became visible - instant poll all critical pollers
-        console.log('[SmartPolling] ⚡ Tab focused - instant poll');
+        logger.debug('[SmartPolling] ⚡ Tab focused - instant poll');
         this.timers.forEach((timer, id) => {
           if (timer.priority === 'critical' || timer.priority === 'high') {
             this.trigger(id);
@@ -84,7 +86,7 @@ class SmartPollingManager {
 
     window.addEventListener('focus', () => {
       this.lastUserActivity = Date.now();
-      console.log('[SmartPolling] 🎯 Window focused');
+      logger.debug('[SmartPolling] 🎯 Window focused');
       // Instant poll on focus
       this.timers.forEach((timer, id) => {
         if (timer.priority === 'critical') {
@@ -95,7 +97,7 @@ class SmartPollingManager {
     });
 
     window.addEventListener('blur', () => {
-      console.log('[SmartPolling] 💤 Window blurred');
+      logger.debug('[SmartPolling] 💤 Window blurred');
     });
   }
 
@@ -134,14 +136,14 @@ class SmartPollingManager {
   private setupNetworkListeners() {
     window.addEventListener('online', () => {
       this.isOnline = true;
-      console.log('[SmartPolling] 🌐 Network ONLINE - resuming');
+      logger.debug('[SmartPolling] 🌐 Network ONLINE - resuming');
       // Instant poll all when back online
       this.timers.forEach((_, id) => this.trigger(id));
     });
 
     window.addEventListener('offline', () => {
       this.isOnline = false;
-      console.log('[SmartPolling] 📡 Network OFFLINE - pausing');
+      logger.debug('[SmartPolling] 📡 Network OFFLINE - pausing');
       this.updateAllPollers();
     });
   }
@@ -209,7 +211,7 @@ class SmartPollingManager {
     });
 
     this.start(id);
-    console.log(`[SmartPolling] ✅ Registered: ${fullOptions.tag} (${priority} priority)`);
+    logger.debug(`[SmartPolling] ✅ Registered: ${fullOptions.tag} (${priority} priority)`);
   }
 
   /**
@@ -239,7 +241,7 @@ class SmartPollingManager {
     }
     timer.isRunning = false;
     timer.mode = 'paused';
-    console.log(`[SmartPolling] ⏸️ Stopped: ${timer.options.tag}`);
+    logger.debug(`[SmartPolling] ⏸️ Stopped: ${timer.options.tag}`);
   }
 
   unregister(id: string): void {

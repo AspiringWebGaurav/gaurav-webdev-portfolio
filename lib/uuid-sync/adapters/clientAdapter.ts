@@ -6,6 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import { log, logError } from '../utils';
+import logger from '../../logger';
 
 export interface EnhancedIdentityResult {
   mask: string;
@@ -15,6 +16,9 @@ export interface EnhancedIdentityResult {
   banned: boolean;
   banReason?: string;
   banCategory?: string;
+  banType?: 'temporary' | 'permanent';
+  banDuration?: string;
+  banExpiresAt?: number;
 }
 
 /**
@@ -85,6 +89,9 @@ export async function clientIdentifyVisitorEnhanced(
       banned: data.banned || false,
       banReason: data.banReason,
       banCategory: data.banCategory,
+      banType: data.banType,
+      banDuration: data.banDuration,
+      banExpiresAt: data.banExpiresAt,
     };
   } catch (error) {
     logError('Enhanced client identify visitor failed', error);
@@ -127,7 +134,7 @@ export async function clientCheckBanEnhanced(
     });
 
     if (!response.ok) {
-      console.warn('[BanCheck] Ban check failed, returning not banned (fail-open)');
+      logger.warn('[BanCheck] Ban check failed, returning not banned (fail-open)');
       return { banned: false };
     }
 

@@ -17,6 +17,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { deduplicate } from "@/lib/requestDeduplication";
 import {
   CreateProjectDTO,
   UpdateProjectDTO,
@@ -34,7 +35,11 @@ export async function GET(request: NextRequest) {
   try {
     const projectsRef = collection(db, COLLECTION_NAME);
     const q = query(projectsRef, orderBy("order", "asc"));
-    const snapshot = await getDocs(q);
+    const snapshot = await deduplicate(
+      "projects-list",
+      () => getDocs(q),
+      2000
+    );
 
     const projects = snapshot.docs.map((doc) => {
       const project = firestoreToProject(doc);

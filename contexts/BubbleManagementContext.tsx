@@ -25,6 +25,7 @@ interface BubbleManagementContextType {
   loading: boolean;
   getUnreadSessionsCount: () => number;
   getUnreadMessagesCount: () => number;
+  getLiveSessionsCount: () => number;
   refreshSessions: () => Promise<void>;
   deleteSession: (sessionId: string, silent?: boolean) => Promise<{ success: boolean; error?: string }>;
   batchDeleteSessions: (sessionIds: string[]) => Promise<{ success: boolean; error?: string }>;
@@ -104,6 +105,10 @@ export function BubbleManagementProvider({ children }: { children: React.ReactNo
     return sessions
       .filter(s => !s.deletedAt)
       .reduce((total, s) => total + (s.unreadVisitorMessages || 0), 0);
+  }, [sessions]);
+
+  const getLiveSessionsCount = useCallback(() => {
+    return sessions.filter(s => !s.deletedAt && s.visitorOnline).length;
   }, [sessions]);
 
   const refreshSessions = useCallback(async () => {
@@ -235,6 +240,7 @@ export function BubbleManagementProvider({ children }: { children: React.ReactNo
         loading,
         getUnreadSessionsCount,
         getUnreadMessagesCount,
+        getLiveSessionsCount,
         refreshSessions,
         deleteSession,
         batchDeleteSessions,

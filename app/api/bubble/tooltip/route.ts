@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { collection, query, where, getDocs, updateDoc, doc, serverTimestamp, getDoc, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { deduplicate } from '@/lib/requestDeduplication';
 
 const COLLECTIONS = {
   TOOLTIP_EVENTS: 'bubbleTooltipEvents',
@@ -23,7 +24,13 @@ export async function GET(request: NextRequest) {
       q = query(eventsRef, orderBy('triggeredAt', 'desc'));
     }
 
-    const querySnapshot = await getDocs(q);
+    // Use deduplication to prevent rapid polling reads
+    const deduplicationKey = sessionId ? `tooltip-session-${sessionId}` : 'tooltip-all';
+    const querySnapshot = await deduplicate(
+      deduplicationKey,
+      () => getDocs(q),
+      2000 // 2s TTL
+    );
     let events = querySnapshot.docs.map(docSnapshot => {
       const data = docSnapshot.data() as any;
       return {
@@ -63,7 +70,12 @@ export async function PUT(request: NextRequest) {
     // Remove readAt filter to avoid null query issues
     const q = query(eventsRef, where('sessionId', '==', sessionId));
 
-    const querySnapshot = await getDocs(q);
+    // Use deduplication even for PUT to avoid race conditions
+    const querySnapshot = await deduplicate(
+      `tooltip-update-${sessionId}`,
+      () => getDocs(q),
+      1000 // 1s TTL for updates
+    );
     let updateCount = 0;
 
     for (const eventDoc of querySnapshot.docs) {

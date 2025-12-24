@@ -5,6 +5,7 @@ import { rateLimitMiddleware } from '@/lib/rateLimit';
 import { translateMaskToUUID, firestoreGetVisitorDocument } from '@/lib/uuid-sync/server';
 import { MaskNotFoundError, UUIDValidationError } from '@/lib/uuid-sync/errors';
 import { headers } from 'next/headers';
+import { deduplicate } from '@/lib/requestDeduplication';
 
 const COLLECTIONS = {
   SESSIONS: 'og_uuid_sessions',
@@ -57,7 +58,11 @@ export async function GET(request: NextRequest) {
         orderBy('lastActive', 'desc'),
         limit(100)
       );
-      const querySnapshot = await getDocs(q);
+      const querySnapshot = await deduplicate(
+        "bubble-sessions-all",
+        () => getDocs(q),
+        2000 // 2s TTL for admin panel
+      );
 
       // Map sessions with UUID as id
       const sessionsData = querySnapshot.docs.map(docSnapshot => {

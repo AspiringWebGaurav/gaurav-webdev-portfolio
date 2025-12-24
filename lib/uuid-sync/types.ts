@@ -42,6 +42,10 @@ export interface VisitorDocument {
   banCategory?: string;
   banTimestamp?: Date;
   bannedBy?: string;
+  banType?: 'temporary' | 'permanent';
+  banDuration?: number;
+  banExpiresAt?: Date | number;
+  autoUnbanEnabled?: boolean;
   firstVisit: Date;
   lastVisit: Date;
   createdAt: Date;

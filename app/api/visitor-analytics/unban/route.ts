@@ -189,7 +189,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<UnbanResp
         banCount: visitorData.banCount || 1,
       };
 
-      // Update visitor - remove ban fields
+      // Update visitor - remove ban fields (including temporary ban fields)
       transaction.update(visitorRef, {
         banned: false,
         banReason: FieldValue.delete(),
@@ -197,6 +197,12 @@ export async function POST(request: NextRequest): Promise<NextResponse<UnbanResp
         banTimestamp: FieldValue.delete(),
         bannedBy: FieldValue.delete(),
         bannedByUid: FieldValue.delete(),
+        // NEW: Clean up temporary ban fields
+        banType: FieldValue.delete(),
+        banDuration: FieldValue.delete(),
+        autoUnbanEnabled: FieldValue.delete(),
+        banExpiresAt: FieldValue.delete(),
+        // Set unban metadata
         unbannedAt: now,
         unbannedBy,
         unbannedByUid: decodedToken.uid,

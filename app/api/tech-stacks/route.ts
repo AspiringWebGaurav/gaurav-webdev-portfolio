@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import logger from '@/lib/logger';
 import {
   collection,
   doc,
@@ -17,6 +18,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { deduplicate } from "@/lib/requestDeduplication";
 import {
   CreateTechStackDTO,
   UpdateTechStackDTO,
@@ -34,7 +36,11 @@ export async function GET(request: NextRequest) {
   try {
     const techStacksRef = collection(db, COLLECTION_NAME);
     const q = query(techStacksRef, orderBy("order", "asc"));
-    const snapshot = await getDocs(q);
+    const snapshot = await deduplicate(
+      "tech-stacks-list",
+      () => getDocs(q),
+      2000
+    );
 
     const items = snapshot.docs.map((doc) => {
       const item = firestoreToTechStack(doc);

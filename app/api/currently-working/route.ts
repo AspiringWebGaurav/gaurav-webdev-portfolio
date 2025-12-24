@@ -18,6 +18,7 @@ import {
   limit,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { deduplicate } from "@/lib/requestDeduplication";
 import {
   CreateCurrentlyWorkingDTO,
   UpdateCurrentlyWorkingDTO,
@@ -34,7 +35,11 @@ const COLLECTION_NAME = "portfolio_currentlyWorking";
 export async function GET(request: NextRequest) {
   try {
     const currentlyWorkingRef = collection(db, COLLECTION_NAME);
-    const snapshot = await getDocs(currentlyWorkingRef);
+    const snapshot = await deduplicate(
+      "currently-working-list",
+      () => getDocs(currentlyWorkingRef),
+      2000
+    );
 
     const items = snapshot.docs.map((doc) => {
       const item = firestoreToCurrentlyWorking(doc);

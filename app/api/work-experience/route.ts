@@ -17,6 +17,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { deduplicate } from "@/lib/requestDeduplication";
 import {
   CreateWorkExperienceDTO,
   UpdateWorkExperienceDTO,
@@ -35,7 +36,11 @@ export async function GET(request: NextRequest) {
   try {
     const workExperienceRef = collection(db, COLLECTION_NAME);
     const q = query(workExperienceRef, orderBy("order", "asc"));
-    const snapshot = await getDocs(q);
+    const snapshot = await deduplicate(
+      "work-experience-list",
+      () => getDocs(q),
+      2000
+    );
 
     const workExperiences = snapshot.docs.map((doc) => {
       const experience = firestoreToWorkExperience(doc);

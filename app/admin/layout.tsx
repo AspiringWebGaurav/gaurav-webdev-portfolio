@@ -16,6 +16,7 @@ import { BanAppealsProvider } from "@/contexts/BanAppealsContext";
 import AppLoader from "@/components/admin/AppLoader";
 import { SessionMonitor } from "@/components/SessionMonitor";
 import ConnectionStatusIndicator from "@/components/admin/ConnectionStatusIndicator";
+import MaintenanceMonitor from "@/components/MaintenanceMonitor";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -55,11 +56,13 @@ export default function AdminLayout({
                       <VisitorAnalyticsProvider>
                         <BubbleManagementProvider>
                           <BanAppealsProvider>
-                            <ToastProvider />
-                            <AppLoader />
-                            <SessionMonitor />
-                            <ConnectionStatusIndicator />
-                            {children}
+                            <MaintenanceMonitor>
+                              <ToastProvider />
+                              <AppLoader />
+                              <SessionMonitor />
+                              <ConnectionStatusIndicator />
+                              {children}
+                            </MaintenanceMonitor>
                           </BanAppealsProvider>
                         </BubbleManagementProvider>
                       </VisitorAnalyticsProvider>

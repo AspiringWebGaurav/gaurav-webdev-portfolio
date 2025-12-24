@@ -16,6 +16,9 @@ interface BanInfo {
   category: string;
   timestamp: string;
   reviewTime: string;
+  banType?: 'temporary' | 'permanent';
+  banExpiresAt?: string;
+  banDuration?: number;
 }
 
 const FALLBACK_CHECK_INTERVAL = 10000; // Fallback check every 10 seconds
@@ -49,6 +52,7 @@ function BannedPageContent() {
     timestamp: new Date().toISOString(),
     reviewTime: '72-96 hours',
     category: 'normal',
+    banType: 'permanent',
   });
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [checkingStatus, setCheckingStatus] = useState(true);
@@ -136,8 +140,16 @@ function BannedPageContent() {
             window.location.replace(PORTFOLIO_HOME);
             return;
           } else {
-            // User is still banned - show the banned UI
+            // User is still banned - update ban info with type and expiration
             console.log('[Banned Page] ⛔ User is still banned - Showing ban screen');
+            setBanInfo(prev => ({
+              ...prev,
+              reason: data.banReason || prev.reason,
+              category: data.banCategory || prev.category,
+              banType: data.banType || 'permanent',
+              banExpiresAt: data.banExpiresAt,
+              banDuration: data.banDuration,
+            }));
             setCheckingStatus(false);
           }
         } else {
@@ -160,13 +172,15 @@ function BannedPageContent() {
     const reason = searchParams.get('reason');
     const category = searchParams.get('category');
     const timestamp = searchParams.get('timestamp');
+    const banType = searchParams.get('banType') as 'temporary' | 'permanent' | null;
     
-    if (reason || category || timestamp) {
+    if (reason || category || timestamp || banType) {
       setBanInfo({
         reason: reason || 'Security Violation',
         category: category || 'normal',
         timestamp: timestamp || new Date().toISOString(),
         reviewTime: getCategoryReviewTime(category || 'normal'),
+        banType: banType || 'permanent',
       });
     }
   }, [searchParams]);

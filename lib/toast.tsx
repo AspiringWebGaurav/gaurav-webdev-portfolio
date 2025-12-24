@@ -89,25 +89,8 @@ export async function notifyAction(
   // 1. Show immediate toast
   showToast[type](message, title, options);
 
-  // 2. Save to Firebase via API (for admin notification bell)
-  if (category) {
-    try {
-      await fetch('/api/notifications', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: 'admin',
-          type: category,
-          title: title || '',
-          message,
-          read: false,
-          timestamp: Date.now(),
-        }),
-      });
-    } catch (error) {
-      console.error('Failed to save notification:', error);
-    }
-  }
+  // Note: Notifications are now toast-only (no database saves)
+  // This saves ~100-200 Firebase writes per month
 }
 
 // Export individual toast functions for convenience

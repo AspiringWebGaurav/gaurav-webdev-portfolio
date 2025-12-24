@@ -822,6 +822,33 @@ export function VisitorAnalyticsProvider({ children }: { children: React.ReactNo
     }
   }, [filters, fetchVisitors, visitors?.length]);
 
+  // Smart polling for analytics updates (only when admin viewing analytics page)
+  useEffect(() => {
+    const isAdminPanel = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+    if (!isAdminPanel) return;
+
+    const pollerId = smartPolling.start(
+      async () => {
+        if (auth.currentUser) {
+          await fetchVisitors();
+          await fetchAggregatesWithTracking();
+        }
+      },
+      {
+        intervals: {
+          realtime: 30000,  // 30s when admin actively viewing analytics
+          active: 120000,   // 2min when admin on page but idle
+          idle: 300000,     // 5min when admin away from analytics
+          background: 0,    // Stop when tab hidden (85% savings!)
+        },
+        priority: 'high',
+        tag: 'visitor-analytics',
+      }
+    );
+
+    return () => smartPolling.stop(pollerId);
+  }, [fetchVisitors, fetchAggregatesWithTracking]);
+
   const value: VisitorAnalyticsContextType = {
     visitors,
     aggregates,

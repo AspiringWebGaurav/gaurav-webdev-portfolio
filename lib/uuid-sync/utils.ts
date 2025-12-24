@@ -3,20 +3,21 @@
  */
 
 import { LOG_PREFIX, RETRY_CONFIG } from './constants';
+import logger from '../logger';
 
 /**
  * Log with consistent prefix
  */
 export function log(message: string, data?: any) {
   if (data) {
-    console.log(LOG_PREFIX, message, data);
+    logger.debug(LOG_PREFIX, message, data);
   } else {
-    console.log(LOG_PREFIX, message);
+    logger.debug(LOG_PREFIX, message);
   }
 }
 
 export function logError(message: string, error: any) {
-  console.error(LOG_PREFIX, message, error);
+  logger.error(LOG_PREFIX, message, error);
 }
 
 /**

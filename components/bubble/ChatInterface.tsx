@@ -11,7 +11,7 @@ import TurnstileWidget from '@/components/TurnstileWidget';
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '';
 
 export default function ChatInterface() {
-  const { messages, loading, sending, fetchMessages, sendMessage, markMessagesAsRead, setChatOpen } = useBubbleMessages();
+  const { messages, loading, sending, fetchMessages, sendMessage, markMessagesAsRead, setChatOpen, trackChatActivity } = useBubbleMessages();
   const { visitorId, session, setVisitorEmail } = useBubbleSession();
   const [inputMessage, setInputMessage] = useState('');
   const [email, setEmail] = useState('');
@@ -30,6 +30,11 @@ export default function ChatInterface() {
   const inputRef = useRef<HTMLInputElement>(null);
   const turnstileResetRef = useRef<(() => void) | null>(null);
   const previousMessageIdsRef = useRef<Set<string>>(new Set());
+
+  // Track activity on scroll to keep polling active when user is reading
+  const handleScroll = () => {
+    trackChatActivity();
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -181,13 +186,20 @@ export default function ChatInterface() {
     }
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputMessage(e.target.value);
+    trackChatActivity(); // Track typing to keep polling fast
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    trackChatActivity(); // Track message send activity
     
     if (!inputMessage.trim() || isOffline || !session?.id) return;
 
     const messageContent = inputMessage.trim();
-    setInputMessage('');
+    setInputMessage(''); // Clear input immediately
     setSendError(null);
 
     try {
@@ -196,63 +208,30 @@ export default function ChatInterface() {
         await setVisitorEmail(email);
       }
 
-      // Try sending without captcha first
-      const response = await fetch('/api/bubble/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(captchaToken && { 'X-Turnstile-Token': captchaToken }),
-        },
-        body: JSON.stringify({
-          sessionId: session?.id,
-          role: 'visitor',
-          content: messageContent,
-          visitorEmail: email || undefined,
-        }),
-      });
-
-      if (response.ok) {
-        // Success
-        setRequiresCaptcha(false);
-        setCaptchaToken(null);
-        await fetchMessages();
-        inputRef.current?.focus();
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        
-        // Check if captcha is required
-        if (response.status === 429 && (errorData.requiresCaptcha || errorData.code === 'CAPTCHA_REQUIRED')) {
-          console.log('[ChatInterface] 🔒 Captcha required');
-          setRequiresCaptcha(true);
-          setPendingMessage(messageContent);
-          setSendError(null);
-          
-          // Captcha tracking removed - not part of optimized analytics
-          console.debug('[ChatInterface] Captcha required (not tracked)');
-          
-          /*
-          // OLD CODE - captcha tracking removed
-          fetch('/api/visitor-analytics/track', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              eventType: 'captcha_required',
-              metadata: {
-                sessionId: visitorId,
-                reason: 'rate_limit',
-              },
-            }),
-          }).catch(console.error);
-          */
-        } else {
-          throw new Error(errorData.error || 'Failed to send message');
-        }
-      }
-    } catch (error) {
+      // Use context sendMessage for instant optimistic UI
+      await sendMessage(messageContent, email || undefined);
+      
+      // Success - clear captcha state if any
+      setRequiresCaptcha(false);
+      setCaptchaToken(null);
+      setPendingMessage(null);
+      inputRef.current?.focus();
+      
+    } catch (error: any) {
       console.error('[ChatInterface] Failed to send message:', error);
-      setSendError('Message failed to send. Please try again.');
-      // Restore message to input
-      setInputMessage(messageContent);
+      
+      // Check if it's a captcha requirement (you may need to enhance sendMessage to throw specific errors)
+      if (error?.message?.includes('captcha') || error?.message?.includes('429')) {
+        console.log('[ChatInterface] 🔒 Captcha required');
+        setRequiresCaptcha(true);
+        setPendingMessage(messageContent);
+        setSendError(null);
+      } else {
+        // General error
+        setSendError('Message failed to send. Please try again.');
+        // Restore message to input on failure
+        setInputMessage(messageContent);
+      }
     }
   };
 
@@ -290,10 +269,22 @@ export default function ChatInterface() {
   return (
     <div className="flex flex-col h-full bg-white overflow-hidden">
       {/* Messages Area - Mobile Optimized with proper scrolling */}
-      <div className="flex-1 overflow-y-auto overscroll-contain p-3 sm:p-4 -webkit-overflow-scrolling-touch min-h-0">
+      <div 
+        className="flex-1 overflow-y-auto overscroll-contain p-3 sm:p-4 -webkit-overflow-scrolling-touch min-h-0"
+        onScroll={handleScroll}
+      >
         {loading && messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-gray-500 text-sm sm:text-base">Loading messages...</div>
+          <div className="space-y-4 animate-pulse">
+            {/* Skeleton loaders for loading state */}
+            {[1, 2, 3].map((i) => (
+              <div key={i} className={`flex gap-3 ${i % 2 === 0 ? 'flex-row-reverse' : ''}`}>
+                {i % 2 === 1 && <div className="w-8 h-8 rounded-full bg-gray-200" />}
+                <div className={`flex flex-col ${i % 2 === 0 ? 'items-end' : 'items-start'} flex-1 max-w-[80%]`}>
+                  <div className={`h-16 rounded-xl ${i % 2 === 0 ? 'bg-blue-100' : 'bg-gray-100'} w-full`} />
+                  <div className="h-3 w-16 bg-gray-100 rounded mt-1" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : messages.length === 0 ? (
           <div className="flex items-center justify-center h-full px-4">
@@ -317,26 +308,40 @@ export default function ChatInterface() {
                 <div
                   key={message.id || index}
                   className={`flex gap-2 sm:gap-3 ${isVisitor ? 'flex-row-reverse' : ''} mb-3 sm:mb-4 ${
-                    isNewMessage && index > 0 ? 'animate-in slide-in-from-bottom-3 fade-in duration-400' : ''
+                    isNewMessage ? 'animate-in slide-in-from-bottom-2 fade-in duration-500 ease-out' : 'opacity-100'
                   }`}
+                  style={{
+                    animationDelay: isNewMessage ? `${Math.min(index * 50, 200)}ms` : '0ms'
+                  }}
                 >
                   {!isVisitor && (
-                    <div className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center bg-gray-200">
+                    <div className={`flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center bg-gray-200 ${
+                      isNewMessage ? 'animate-in zoom-in-75 duration-300' : ''
+                    }`}>
                       <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
                     </div>
                   )}
 
                   <div className={`max-w-[75%] sm:max-w-[80%] flex flex-col ${isVisitor ? 'items-end' : 'items-start'}`}>
                     <div
-                      className={`px-3 py-2 rounded-xl ${
+                      className={`px-3 py-2 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 ${
                         isVisitor
                           ? 'bg-blue-600 text-white'
                           : 'bg-gray-100 text-gray-800'
-                      } ${isNewMessage && index > 0 ? 'animate-in scale-in-95 duration-300' : ''}`}
+                      } ${isNewMessage ? 'animate-in zoom-in-95 duration-400 ease-out' : ''}`}
                     >
-                      <p className="whitespace-pre-wrap text-sm sm:text-base leading-relaxed break-words">
-                        {message.content}
-                      </p>
+                      {message.id?.startsWith('temp-') && sending ? (
+                        <div className="flex items-center gap-2">
+                          <p className="whitespace-pre-wrap text-sm sm:text-base leading-relaxed break-words">
+                            {message.content}
+                          </p>
+                          <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin flex-shrink-0" />
+                        </div>
+                      ) : (
+                        <p className="whitespace-pre-wrap text-sm sm:text-base leading-relaxed break-words">
+                          {message.content}
+                        </p>
+                      )}
                     </div>
                     <span className="text-xs text-gray-400 mt-1 px-1">
                       {formatTimestamp(message.timestamp)}
@@ -431,7 +436,7 @@ export default function ChatInterface() {
             ref={inputRef}
             type="text"
             value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
+            onChange={handleInputChange}
             onFocus={() => !session?.visitorEmail && setShowEmailInput(true)}
             placeholder={isOffline ? "Offline - will send when connected" : requiresCaptcha ? "Complete verification to send" : "Type your message..."}
             disabled={sending || requiresCaptcha}

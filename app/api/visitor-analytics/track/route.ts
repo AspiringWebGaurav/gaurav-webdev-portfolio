@@ -10,6 +10,7 @@ import { adminDb, adminAuth } from "@/lib/firebaseAdmin";
 import { Timestamp, FieldValue } from "firebase-admin/firestore";
 import { translateMaskToUUID, isValidMask } from "@/lib/uuid-sync/server";
 import { getClientIPFromRequest, updateVisitorIP } from "@/lib/ipTracking";
+import logger from '@/lib/logger';
 
 const VISITORS_COLLECTION = "og_uuid";
 const SESSIONS_COLLECTION = "visitorSessions";
@@ -51,7 +52,7 @@ export async function POST(request: NextRequest) {
       try {
         // Translate existing mask to UUID
         uuid = await translateMaskToUUID(mask);
-        console.log('[VisitorTracking] Translated mask', mask, 'to UUID', uuid.substring(0, 13));
+        logger.debug('[VisitorTracking] Translated mask', mask, 'to UUID', uuid.substring(0, 13));
       } catch (error: any) {
         // Mask not found - this should not happen if BubbleSessionContext initialized properly
         // Return error instead of creating duplicate identity
@@ -63,11 +64,11 @@ export async function POST(request: NextRequest) {
         }, { status: 404 });
       }
 
-      console.log('[VisitorTracking] Session start for visitor:', uuid.substring(0, 13));
+      logger.debug('[VisitorTracking] Session start for visitor:', uuid.substring(0, 13));
 
       // Extract and track IP address for server-side ban checks
       const clientIP = getClientIPFromRequest(request);
-      console.log('[VisitorTracking] Client IP:', clientIP);
+      logger.debug('[VisitorTracking] Client IP:', clientIP);
 
       // Check if visitor exists
       const visitorRef = adminDb.collection(VISITORS_COLLECTION).doc(uuid);
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
       // This ensures the same visitor gets the same session across tabs
       const sessionId = uuid;
 
-      console.log('[VisitorTracking] Using UUID as session ID:', uuid.substring(0, 13));
+      logger.debug('[VisitorTracking] Using UUID as session ID:', uuid.substring(0, 13));
 
       if (visitorDoc.exists) {
         const existingData = visitorDoc.data();
@@ -89,7 +90,7 @@ export async function POST(request: NextRequest) {
         
         if (isStubRecord) {
           // UUID-sync created a stub - convert it to full visitor profile
-          console.log('[VisitorTracking] Converting UUID-sync stub to full visitor profile');
+          logger.debug('[VisitorTracking] Converting UUID-sync stub to full visitor profile');
           
           await visitorRef.set({
             id: uuid,  // Store UUID as ID
@@ -135,7 +136,7 @@ export async function POST(request: NextRequest) {
           }, { merge: true }); // Use merge to preserve any other fields
         } else {
           // Existing visitor with analytics - check if this is a new visit or just a new session
-          console.log('[VisitorTracking] Existing visitor with analytics detected');
+          logger.debug('[VisitorTracking] Existing visitor with analytics detected');
           
           // Calculate time since last visit
           const lastVisitTime = existingData.lastVisit?.toDate?.() || new Date(0);
@@ -144,8 +145,8 @@ export async function POST(request: NextRequest) {
           // Only increment visit count if visitor has been inactive for more than threshold
           const isNewVisit = minutesSinceLastVisit > VISIT_TIMEOUT_MINUTES;
           
-          console.log(`[VisitorTracking] Time since last visit: ${Math.round(minutesSinceLastVisit)} minutes`);
-          console.log(`[VisitorTracking] Counting as new visit: ${isNewVisit}`);
+          logger.debug(`[VisitorTracking] Time since last visit: ${Math.round(minutesSinceLastVisit)} minutes`);
+          logger.debug(`[VisitorTracking] Counting as new visit: ${isNewVisit}`);
           
           const updateData: any = {
             lastVisit: now,
@@ -183,7 +184,7 @@ export async function POST(request: NextRequest) {
         }
       } else {
         // New visitor - create fresh record
-        console.log('[VisitorTracking] New visitor detected, creating profile');
+        logger.debug('[VisitorTracking] New visitor detected, creating profile');
         
         await visitorRef.set({
           id: uuid,  // Store UUID as ID
@@ -574,7 +575,7 @@ export async function POST(request: NextRequest) {
 
     // Captcha failed tracking
     if ((event === "captcha_failed" || event === "captcha_success" || event === "captcha_required") && visitorId) {
-      console.log(`[VisitorTracking] Captcha event: ${event} for visitor: ${visitorId}`);
+      logger.debug(`[VisitorTracking] Captcha event: ${event} for visitor: ${visitorId}`);
       
       // Track captcha failures in visitor profile for admin analytics
       if (event === "captcha_failed") {
@@ -643,7 +644,7 @@ export async function POST(request: NextRequest) {
 
     // Generic event tracking fallback (for any new event types)
     if (event && visitorId) {
-      console.log(`[VisitorTracking] Generic event: ${event} for visitor: ${visitorId}`);
+      logger.debug(`[VisitorTracking] Generic event: ${event} for visitor: ${visitorId}`);
       
       await adminDb.collection(EVENTS_COLLECTION).add({
         visitorId,

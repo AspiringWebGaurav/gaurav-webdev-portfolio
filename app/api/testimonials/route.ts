@@ -17,6 +17,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { deduplicate } from "@/lib/requestDeduplication";
 import {
   CreateTestimonialDTO,
   UpdateTestimonialDTO,
@@ -34,7 +35,11 @@ export async function GET(request: NextRequest) {
   try {
     const testimonialsRef = collection(db, COLLECTION_NAME);
     const q = query(testimonialsRef, orderBy("order", "asc"));
-    const snapshot = await getDocs(q);
+    const snapshot = await deduplicate(
+      "testimonials-list",
+      () => getDocs(q),
+      2000
+    );
 
     const testimonials = snapshot.docs.map((doc) => {
       const testimonial = firestoreToTestimonial(doc);

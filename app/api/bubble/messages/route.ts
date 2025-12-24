@@ -3,6 +3,8 @@ import { collection, addDoc, query, where, getDocs, orderBy, limit, updateDoc, d
 import { db } from '@/lib/firebase';
 import { v4 as uuidv4 } from 'uuid';
 import { rateLimitMiddleware } from '@/lib/rateLimit';
+import { deduplicate } from '@/lib/requestDeduplication';
+import { withRetry, firebaseQueue } from '@/lib/retry';
 
 const COLLECTIONS = {
   SESSIONS: 'og_uuid_sessions',
@@ -39,7 +41,12 @@ export async function GET(request: NextRequest) {
       limit(limitCount)
     );
 
-    const querySnapshot = await getDocs(q);
+    // Deduplicate frequent polling requests with retry and queue
+    const querySnapshot = await deduplicate(
+      `messages-${sessionId}`,
+      () => firebaseQueue.add(() => withRetry(() => getDocs(q), {}, 'fetch-messages')),
+      1500 // 1.5s TTL for real-time chat
+    );
     const messages = querySnapshot.docs
       .map(docSnapshot => {
         const data = docSnapshot.data();
@@ -92,9 +99,9 @@ export async function GET(request: NextRequest) {
     // Clean _docId from response
     messages.forEach(msg => delete msg._docId);
 
-    // Fetch session typing status and online status using UUID as doc ID
+    // Fetch session typing status and online status using UUID as doc ID with retry
     const sessionDocRef = doc(db, COLLECTIONS.SESSIONS, sessionId);
-    const sessionDoc = await getDoc(sessionDocRef);
+    const sessionDoc = await withRetry(() => getDoc(sessionDocRef), {}, 'fetch-session');
     
     let typingData = {};
     let unreadCounts = { visitorUnread: 0, adminUnread: 0 };
@@ -155,22 +162,35 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { sessionId, role, content, visitorEmail, fingerprint, mask, turnstileToken } = body;
 
+    console.log('[Bubble Messages POST] Request received:', {
+      sessionId,
+      role,
+      contentLength: content?.length,
+      hasFingerprint: !!fingerprint,
+      hasMask: !!mask,
+      hasTurnstileToken: !!turnstileToken
+    });
+
     // ENHANCED: Stricter rate limiting for message sending
     const { response: rateLimitResponse, headers: rateLimitHeaders } = await rateLimitMiddleware(request, 'chatMessage', {
       sessionId,
       fingerprint: fingerprint || mask, // Use mask as fallback identifier
       turnstileToken,
     });
-    if (rateLimitResponse) return rateLimitResponse;
+    if (rateLimitResponse) {
+      console.log('[Bubble Messages POST] Rate limit exceeded');
+      return rateLimitResponse;
+    }
 
     if (!sessionId || !role || !content) {
+      console.log('[Bubble Messages POST] Missing fields:', { sessionId: !!sessionId, role: !!role, content: !!content });
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
     
-    // Validate sessionId format (UUID)
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(sessionId)) {
-      return NextResponse.json({ error: 'Invalid session ID format' }, { status: 400 });
+    // Validate sessionId format (MASK format: device_xxxxxxxxxx)
+    const maskRegex = /^device_[a-z0-9]{10}$/i;
+    if (!maskRegex.test(sessionId)) {
+      return NextResponse.json({ error: 'Invalid session ID format (must be device mask)' }, { status: 400 });
     }
 
     if (role !== 'visitor' && role !== 'admin') {
@@ -201,11 +221,14 @@ export async function POST(request: NextRequest) {
       deletedAt: null,
     };
 
-    await addDoc(collection(db, COLLECTIONS.MESSAGES), messageData);
+    // Queue message creation with retry for robustness
+    await firebaseQueue.add(() => 
+      withRetry(() => addDoc(collection(db, COLLECTIONS.MESSAGES), messageData), {}, 'create-message')
+    );
 
-    // Update session using UUID as doc ID
+    // Update session using UUID as doc ID with retry
     const sessionDocRef = doc(db, COLLECTIONS.SESSIONS, sessionId);
-    const sessionDoc = await getDoc(sessionDocRef);
+    const sessionDoc = await withRetry(() => getDoc(sessionDocRef), {}, 'fetch-session-for-update');
 
     if (sessionDoc.exists()) {
       const updateData: any = {

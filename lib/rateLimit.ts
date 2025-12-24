@@ -19,6 +19,34 @@
 import { NextRequest } from 'next/server';
 import { adminDb } from './firebaseAdmin';
 
+/**
+ * Validate API key for bypass access
+ * For production: Store in environment variable
+ * For testing: Allow test API keys
+ */
+function validateApiKey(apiKey: string | null): boolean {
+  if (!apiKey) return false;
+  
+  // Production API key from environment
+  const productionKey = process.env.API_BYPASS_KEY;
+  if (productionKey && apiKey === productionKey) {
+    return true;
+  }
+  
+  // Test API keys (only in development/test)
+  if (process.env.NODE_ENV !== 'production') {
+    const testKeys = [
+      process.env.TEST_API_KEY,
+      'test-api-key-12345', // Fallback test key
+    ];
+    if (testKeys.includes(apiKey)) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
 interface RateLimitConfig {
   windowMs: number;
   maxRequests: number;
@@ -445,7 +473,22 @@ export async function rateLimitMiddleware(
 ): Promise<{ response: Response | null; headers: Record<string, string> }> {
   const { sessionId, fingerprint, turnstileToken } = options;
 
-  // BYPASS 1: Test mode header
+  // BYPASS 1: API Key Authentication (highest priority)
+  const apiKey = request.headers.get('x-api-key');
+  if (validateApiKey(apiKey)) {
+    console.log('[RateLimit] API key bypass activated');
+    return {
+      response: null,
+      headers: {
+        'X-RateLimit-Limit': '999999',
+        'X-RateLimit-Remaining': '999999',
+        'X-RateLimit-Reset': new Date(Date.now() + 3600000).toISOString(),
+        'X-Bypass-Mode': 'api-key',
+      },
+    };
+  }
+
+  // BYPASS 2: Test mode header
   const isTestMode = request.headers.get('x-test-mode') === 'true';
   if (isTestMode && process.env.NODE_ENV === 'development') {
     console.log('[RateLimit] Test mode bypass activated');
@@ -460,7 +503,7 @@ export async function rateLimitMiddleware(
     };
   }
 
-  // BYPASS 2: Admin authentication - use more generous limits
+  // BYPASS 3: Admin authentication - use more generous limits
   const authHeader = request.headers.get('authorization');
   const isAdmin = authHeader?.startsWith('Bearer ');
   

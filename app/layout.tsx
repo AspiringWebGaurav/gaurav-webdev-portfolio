@@ -15,10 +15,12 @@ import BanGate from "@/components/BanGate";
 import BanMonitor from "@/components/BanMonitor";
 import MaintenanceGate from "@/components/MaintenanceGate";
 import MaintenanceMonitor from "@/components/MaintenanceMonitor";
+import LocalMaintenanceBanner from "@/components/LocalMaintenanceBanner";
 import ToastProvider from "@/components/providers/ToastProvider";
 import AnalyticsHealthMonitor from "@/components/AnalyticsHealthMonitor";
 import VisitorTracker from "@/components/VisitorTracker";
 import ScrollRestoration from "@/hooks/useScrollRestoration";
+import ScrollToTop from "@/components/ScrollToTop";
 // Initialize fingerprint ONCE at app startup to prevent race conditions
 import "@/lib/fingerprintInit";
 // Development: Test utilities for scroll restoration
@@ -61,15 +63,18 @@ export default function RootLayout({
                     <ChatBubbleControlProvider>
                       <BanGate>
                         <MaintenanceGate>
-                          <ScrollRestoration />
-                          <BanMonitor />
-                          <MaintenanceMonitor />
-                          <AnalyticsHealthMonitor />
-                          <VisitorTracker />
-                          {children}
-                          <ConditionalChatBubble />
-                          <BubbleSessionDeletedNotification />
-                          <ToastProvider />
+                          <MaintenanceMonitor>
+                            <ScrollRestoration />
+                            <BanMonitor />
+                            <LocalMaintenanceBanner />
+                            <AnalyticsHealthMonitor />
+                            <VisitorTracker />
+                            {children}
+                            <ScrollToTop />
+                            <ConditionalChatBubble />
+                            <BubbleSessionDeletedNotification />
+                            <ToastProvider />
+                          </MaintenanceMonitor>
                         </MaintenanceGate>
                       </BanGate>
                     </ChatBubbleControlProvider>

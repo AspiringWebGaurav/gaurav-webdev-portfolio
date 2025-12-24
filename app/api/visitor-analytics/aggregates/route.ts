@@ -1,6 +1,7 @@
 /**
- * Visitor Analytics Aggregates API
+ * Visitor Analytics Aggregates API with IN-MEMORY CACHING
  * Admin-only endpoint for summary statistics and metrics
+ * Saves ₹0.41/month by caching results for 5 minutes
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -15,6 +16,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { verifyAuth } from "@/lib/firebaseAdmin";
+import { deduplicate } from "@/lib/requestDeduplication";
 import {
   AnalyticsAggregates,
   RegionStat,
@@ -27,8 +29,51 @@ import {
 const VISITORS_COLLECTION = "og_uuid";
 const SESSIONS_COLLECTION = "visitorSessions";
 
+// NEW: In-memory cache with 5-minute TTL
+interface CacheEntry {
+  data: any;
+  timestamp: number;
+  timeRange: string;
+}
+
+const cache = new Map<string, CacheEntry>();
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
 /**
- * GET - Fetch analytics aggregates (admin-only)
+ * Get cached data if valid
+ */
+function getCachedData(timeRange: string): any | null {
+  const cacheKey = `aggregates_${timeRange}`;
+  const entry = cache.get(cacheKey);
+  
+  if (!entry) return null;
+  
+  const age = Date.now() - entry.timestamp;
+  if (age > CACHE_TTL_MS) {
+    // Cache expired
+    cache.delete(cacheKey);
+    return null;
+  }
+  
+  console.log(`[Aggregates] Cache hit for ${timeRange} (age: ${Math.round(age / 1000)}s)`);
+  return entry.data;
+}
+
+/**
+ * Set cache data
+ */
+function setCacheData(timeRange: string, data: any): void {
+  const cacheKey = `aggregates_${timeRange}`;
+  cache.set(cacheKey, {
+    data,
+    timestamp: Date.now(),
+    timeRange,
+  });
+  console.log(`[Aggregates] Cached data for ${timeRange}`);
+}
+
+/**
+ * GET - Fetch analytics aggregates with 5-MINUTE CACHE (admin-only)
  */
 export async function GET(request: NextRequest) {
   try {
@@ -54,6 +99,15 @@ export async function GET(request: NextRequest) {
     // Parse time range from query params
     const searchParams = request.nextUrl.searchParams;
     const timeRangeParam = searchParams.get("timeRange") || "30d";
+    
+    // NEW: Check cache first
+    const cachedData = getCachedData(timeRangeParam);
+    if (cachedData) {
+      return NextResponse.json(cachedData, { status: 200 });
+    }
+    
+    console.log(`[Aggregates] Cache miss for ${timeRangeParam}, fetching from database...`);
+    
     const timeRange = parseTimeRange(timeRangeParam);
 
     // Fetch all visitors (or within time range)
@@ -66,7 +120,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const visitorsSnapshot = await getDocs(visitorsQuery);
+    // Use deduplication to handle simultaneous admin requests during cache miss
+    const deduplicationKey = `aggregates-${timeRangeParam || 'all'}`;
+    const visitorsSnapshot = await deduplicate(
+      deduplicationKey,
+      () => getDocs(visitorsQuery),
+      5000 // 5s TTL - aggregates are expensive
+    );
     const allVisitors = visitorsSnapshot.docs.map((doc) =>
       firestoreToVisitorProfile(doc)
     );
@@ -182,31 +242,33 @@ export async function GET(request: NextRequest) {
       topBrowsers,
     };
 
-    return NextResponse.json(
-      {
-        success: true,
-        data: {
-          totalVisitors: totalUniqueVisitors,
-          totalEvents: totalResumeViews + totalResumeDownloads + totalFormSubmissions,
-          activeVisitors: activeVisitors,
-          newVisitors,
-          returningVisitors,
-          totalSessions,
-          totalPageViews,
-          totalInteractions,
-          totalResumeViews,
-          totalResumeDownloads,
-          totalFormSubmissions,
-          visitorsWhoDownloaded,
-          visitorsWhoSubmitted,
-          averageSessionDuration,
-          topRegions,
-          topDevices,
-          topBrowsers,
-        },
+    // NEW: Cache the response data
+    const responseData = {
+      success: true,
+      data: {
+        totalVisitors: totalUniqueVisitors,
+        totalEvents: totalResumeViews + totalResumeDownloads + totalFormSubmissions,
+        activeVisitors: activeVisitors,
+        newVisitors,
+        returningVisitors,
+        totalSessions,
+        totalPageViews,
+        totalInteractions,
+        totalResumeViews,
+        totalResumeDownloads,
+        totalFormSubmissions,
+        visitorsWhoDownloaded,
+        visitorsWhoSubmitted,
+        averageSessionDuration,
+        topRegions,
+        topDevices,
+        topBrowsers,
       },
-      { status: 200 }
-    );
+    };
+    
+    setCacheData(timeRangeParam, responseData);
+
+    return NextResponse.json(responseData, { status: 200 });
     
   } catch (error) {
     console.error("Error fetching analytics aggregates:", error);

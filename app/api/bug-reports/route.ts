@@ -19,6 +19,7 @@ import {
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
+import { deduplicate } from "@/lib/requestDeduplication";
 import {
   CreateBugReportDTO,
   UpdateBugReportDTO,
@@ -199,7 +200,13 @@ export async function GET(request: NextRequest) {
     // Fetch all reports (admin only - add auth check here if needed)
     const reportsRef = collection(db, COLLECTION_NAME);
     const q = query(reportsRef, orderBy("createdAt", "desc"));
-    const snapshot = await getDocs(q);
+    
+    // Use deduplication to prevent rapid-fire duplicate calls
+    const snapshot = await deduplicate(
+      "bug-reports-list",
+      () => getDocs(q),
+      2000 // 2s TTL window
+    );
 
     const bugReports = snapshot.docs.map((doc) => firestoreToBugReport(doc));
 

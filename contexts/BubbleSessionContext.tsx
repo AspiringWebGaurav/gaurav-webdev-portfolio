@@ -5,11 +5,14 @@ import { BubbleSession } from '@/types/bubble';
 import { generateDeviceFingerprint } from '@/lib/deviceFingerprint';
 import { logSessionEventSync } from '@/lib/sessionLogger';
 import smartPolling from '@/lib/smartPolling';
-import { clientIdentifyVisitor, clientIdentifyVisitorEnhanced } from '@/lib/uuid-sync';
+import { clientIdentifyVisitor, clientIdentifyVisitorEnhanced, EnhancedIdentityResult } from '@/lib/uuid-sync';
+import { getCachedIdentity, setCachedIdentity } from '@/lib/identityCache';
+import logger from '@/lib/logger';
 
 interface BubbleSessionContextType {
   session: BubbleSession | null;
   visitorId: string | null;  // Public mask (device_**********) from UUID-sync
+  identity: EnhancedIdentityResult | null; // Full identity with ban status
   loading: boolean;
   initializeSession: () => Promise<void>;
   updateSession: (data: Partial<BubbleSession>) => Promise<void>;
@@ -34,6 +37,7 @@ const BubbleSessionContext = createContext<BubbleSessionContextType | undefined>
 export function BubbleSessionProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<BubbleSession | null>(null);
   const [visitorId, setVisitorId] = useState<string | null>(null);
+  const [identity, setIdentity] = useState<EnhancedIdentityResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [isInitializing, setIsInitializing] = useState(false);
 
@@ -59,7 +63,7 @@ export function BubbleSessionProvider({ children }: { children: React.ReactNode 
       
       // Skip visitor tracking for admin panel and banned page
       if (pathname === '/banned' || pathname.startsWith('/admin')) {
-        console.log('[BubbleSession] ⏭️ Skipping session init on', pathname, '(not a visitor)');
+        logger.debug('[BubbleSession] ⏭️ Skipping session init on', pathname, '(not a visitor)');
         setLoading(false);
         return;
       }
@@ -72,19 +76,35 @@ export function BubbleSessionProvider({ children }: { children: React.ReactNode 
       // Get fingerprint and identify visitor using enhanced UUID-sync
       const fingerprint = generateDeviceFingerprint();
       
-      // Use enhanced identification with multi-signal fingerprinting
-      const identity = await clientIdentifyVisitorEnhanced(fingerprint);
+      // Check cache first (0 Firebase reads if hit)
+      let identity = getCachedIdentity(fingerprint);
+      
+      if (identity) {
+        logger.debug('[BubbleSession] 🚀 Using cached identity - 0 Firebase reads!');
+      } else {
+        // Cache miss - call API (2-3 Firebase reads)
+        logger.debug('[BubbleSession] 📡 Cache miss - fetching from API');
+        identity = await clientIdentifyVisitorEnhanced(fingerprint);
+        
+        // Store in cache for future use
+        setCachedIdentity(fingerprint, identity);
+      }
+      
       const mask = identity.mask;
+      
+      // Store identity in state (for BanGate and other consumers)
+      setIdentity(identity);
       
       setVisitorId(mask);
 
       // Check if banned during identification (enhanced check already done)
       if (identity.banned) {
-        console.log('[BubbleSession] ⛔ BANNED VISITOR (during identification) - Redirecting');
+        console.log('[BubbleSession] ⛔ BANNED VISITOR (from identity-enhanced) - Redirecting');
         
         const params = new URLSearchParams({
           reason: identity.banReason || 'Security Violation',
           category: identity.banCategory || 'normal',
+          banType: identity.banType || 'permanent',
           timestamp: new Date().toISOString(),
         });
         
@@ -92,39 +112,13 @@ export function BubbleSessionProvider({ children }: { children: React.ReactNode 
         return;
       }
 
-      // ADDITIONAL: Double-check ban status via realtime endpoint
-      // This catches edge cases where ban was applied after enhanced identification
-      console.log('[BubbleSession] 🔍 Double-checking ban status...');
-      
-      const banCheckResponse = await fetch('/api/visitor-analytics/check-ban-realtime', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mask }),
-        cache: 'no-store',
-      });
-
-      if (banCheckResponse.ok) {
-        const banData = await banCheckResponse.json();
-        
-        if (banData.banned === true) {
-          console.log('[BubbleSession] ⛔ BANNED VISITOR (realtime check) - Redirecting');
-          
-          const params = new URLSearchParams({
-            reason: banData.banReason || 'Security Violation',
-            category: banData.banCategory || 'normal',
-            timestamp: new Date().toISOString(),
-          });
-          
-          window.location.replace(`/banned?${params.toString()}`);
-          return;
-        }
-      }
-
       console.log('[BubbleSession] ✅ Not banned - proceeding with session init');
       console.log('[BubbleSession] 📍 Identity:', { 
         mask: mask?.substring(0, 15), 
         matchedSignal: identity.matchedSignal,
-        isNew: identity.isNewIdentity 
+        isNew: identity.isNewIdentity,
+        banned: identity.banned,
+        cached: !!getCachedIdentity(fingerprint)
       });
 
       // Try to fetch existing session
@@ -246,13 +240,12 @@ export function BubbleSessionProvider({ children }: { children: React.ReactNode 
   }, []);
 
   /**
-   * Poll for tooltip updates - Check if admin has sent new messages
-   * UUID-based polling - no cookies
+   * Smart polling for tooltip - Check if admin has sent new messages
+   * This runs ONLY when chat is closed to show tooltip notifications
+   * When chat opens, BubbleMessageContext takes over with realtime polling
    */
   const checkForTooltipUpdates = useCallback(async () => {
-    if (!visitorId) {
-      return;
-    }
+    if (!visitorId) return;
 
     try {
       const response = await fetch(`/api/session?mask=${visitorId}`, {
@@ -262,7 +255,7 @@ export function BubbleSessionProvider({ children }: { children: React.ReactNode 
       if (response.ok) {
         const data = await response.json();
         if (data.session) {
-          // Update session state
+          // Update session state to trigger tooltip
           setSession(prev => {
             const updated = {
               ...prev,
@@ -270,43 +263,45 @@ export function BubbleSessionProvider({ children }: { children: React.ReactNode 
               startedAt: data.session.startedAt ? new Date(data.session.startedAt) : prev?.startedAt,
               lastActive: data.session.lastActive ? new Date(data.session.lastActive) : prev?.lastActive,
             };
-            
             return updated;
           });
         }
       }
     } catch (error) {
       // Silent fail
+      logger.debug('[BubbleSession] ⚠️ Tooltip poll failed:', error);
     }
   }, [visitorId]);
 
-  // Setup smart polling for tooltip updates
+  // Setup smart polling for tooltip - live reactive notifications
   useEffect(() => {
-    if (!visitorId) {
-      return;
-    }
+    if (!visitorId) return;
 
+    // Register smart polling for tooltip updates
     smartPolling.register(
       'bubble-tooltip-check',
       checkForTooltipUpdates,
       {
         intervals: {
-          realtime: 2000,   // 2s when page is active - fast tooltip detection
-          active: 3000,     // 3s normal - still very responsive
-          idle: 8000,       // 8s when idle
-          background: 15000, // 15s when tab hidden
+          realtime: 5000,   // 5s when page active (fast notifications)
+          active: 10000,    // 10s normal activity
+          idle: 30000,      // 30s when idle
+          background: 60000, // 1min when tab hidden
         },
-        priority: 'critical' as const, // Upgraded to critical for instant focus detection
+        priority: 'normal', // Normal priority for user notifications
         maxIdleTime: 120000, // 2 minutes
-        stopOnHidden: false, // Keep checking even when tab hidden
-        tag: 'BubbleTooltip (UUID-based) - Enhanced',
+        stopOnHidden: false, // Keep polling even when hidden (user wants notifications)
+        tag: 'BubbleTooltip',
       }
     );
 
-    // Trigger initial check immediately
+    // Start polling immediately
+    smartPolling.setMode('bubble-tooltip-check', 'realtime');
+    
+    // Initial check
     setTimeout(() => {
       checkForTooltipUpdates();
-    }, 500); // Reduced from 2000ms to 500ms for faster startup
+    }, 1000);
 
     return () => {
       smartPolling.unregister('bubble-tooltip-check');
@@ -318,6 +313,7 @@ export function BubbleSessionProvider({ children }: { children: React.ReactNode 
       value={{
         session,
         visitorId,
+        identity,
         loading,
         initializeSession,
         updateSession,

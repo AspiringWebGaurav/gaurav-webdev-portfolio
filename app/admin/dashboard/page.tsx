@@ -59,8 +59,9 @@ function DashboardContent() {
   const { activeVisitorCount } = useVisitorAnalytics();
 
   // Get unread bubble sessions count for badge
-  const { getUnreadSessionsCount } = useBubbleManagement();
+  const { getUnreadSessionsCount, getLiveSessionsCount } = useBubbleManagement();
   const unreadBubbleCount = getUnreadSessionsCount();
+  const liveSessionsCount = getLiveSessionsCount();
 
   // Get pending ban appeals count for badge
   const { getPendingCount } = useBanAppeals();
@@ -99,13 +100,14 @@ function DashboardContent() {
     console.log('[Dashboard] 🔔 Badge Update:', {
       contactSubmissions: unreadCount,
       bubbleMessages: unreadBubbleCount,
+      liveSessions: liveSessionsCount,
       activeVisitors: activeVisitorCount,
       banAppeals: pendingAppealsCount,
       bugReports: newBugReportsCount,
       currentTab: activeSection,
       timestamp: new Date().toISOString()
     });
-  }, [unreadCount, unreadBubbleCount, activeVisitorCount, pendingAppealsCount, newBugReportsCount, activeSection]);
+  }, [unreadCount, unreadBubbleCount, liveSessionsCount, activeVisitorCount, pendingAppealsCount, newBugReportsCount, activeSection]);
 
   // Live notifications when new items arrive (only show if not already viewing that section)
   useUnreadCountNotification(unreadCount, 'unread contact submission(s)', { 
@@ -266,6 +268,17 @@ function DashboardContent() {
                 {option.badge && option.badge > 0 && (
                   <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold flex items-center justify-center bg-red-500 text-white">
                     {option.badge > 99 ? "99+" : option.badge}
+                  </span>
+                )}
+                {/* Live indicator for bubble-management and visitor-analytics */}
+                {option.id === 'bubble-management' && liveSessionsCount > 0 && !option.badge && (
+                  <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold flex items-center justify-center bg-green-500 text-white animate-pulse">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
+                  </span>
+                )}
+                {option.id === 'visitor-analytics' && activeVisitorCount > 0 && !option.badge && (
+                  <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold flex items-center justify-center bg-green-500 text-white animate-pulse">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
                   </span>
                 )}
               </button>

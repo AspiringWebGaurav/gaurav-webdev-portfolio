@@ -23,6 +23,8 @@
  */
 
 import { adminDb } from '@/lib/firebaseAdmin';
+import { deduplicate } from '@/lib/requestDeduplication';
+import logger from './logger';
 
 /**
  * Extract IP address from request headers
@@ -53,47 +55,49 @@ export async function checkBanByIP(ip: string): Promise<{
 }> {
   try {
     if (ip === 'unknown') {
-      console.log('[Server Ban Check] IP is unknown, skipping check');
+      logger.debug('[Server Ban Check] IP is unknown, skipping check');
       return { banned: false };
     }
     
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[Server Ban Check] 🔍 Querying Firestore for banned IP:', ip);
-    }
+    logger.debug('[Server Ban Check] 🔍 Querying Firestore for banned IP:', ip);
     
     // Use adminDb from firebaseAdmin (already initialized)
     const db = adminDb;
     
-    // Query for banned visitors from this IP with timeout protection
-    // This is FAST because we filter by isBanned first (indexed field)
-    const queryPromise = db
-      .collection('og_uuid')
-      .where('isBanned', '==', true)
-      .where('lastIP', '==', ip)
-      .limit(1)
-      .get();
-    
-    // Add 3-second timeout to prevent blocking on slow queries
-    const timeoutPromise = new Promise<never>((_, reject) => 
-      setTimeout(() => reject(new Error('Ban check timeout')), 3000)
+    // Query for banned visitors from this IP with DEDUPLICATION
+    // This is CRITICAL because proxy.ts calls this on EVERY request
+    const querySnapshot = await deduplicate(
+      `ban-check-ip-${ip}`,
+      async () => {
+        const queryPromise = db
+          .collection('og_uuid')
+          .where('isBanned', '==', true)
+          .where('lastIP', '==', ip)
+          .limit(1)
+          .get();
+        
+        // Add 3-second timeout to prevent blocking on slow queries
+        const timeoutPromise = new Promise<never>((_, reject) => 
+          setTimeout(() => reject(new Error('Ban check timeout')), 3000)
+        );
+        
+        return Promise.race([queryPromise, timeoutPromise]);
+      },
+      10000 // 10s TTL - ban status doesn't change frequently
     );
     
-    const snapshot = await Promise.race([queryPromise, timeoutPromise]);
+    logger.debug('[Server Ban Check] Query results:', querySnapshot.size, 'documents found');
     
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[Server Ban Check] Query results:', snapshot.size, 'documents found');
-    }
-    
-    if (snapshot.empty) {
+    if (querySnapshot.empty) {
       // No banned visitors from this IP
       return { banned: false };
     }
     
-    const visitorDoc = snapshot.docs[0];
+    const visitorDoc = querySnapshot.docs[0];
     const data = visitorDoc.data();
     
     // Always log banned visitors (security event)
-    console.log('[Server Ban Check] ⛔ BANNED VISITOR BLOCKED:', {
+    logger.info('[Server Ban Check] ⛔ BANNED VISITOR BLOCKED:', {
       mask: data.mask,
       ip: ip,
       reason: data.banReason,

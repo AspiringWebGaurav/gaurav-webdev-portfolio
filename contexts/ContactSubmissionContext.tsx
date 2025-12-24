@@ -9,7 +9,7 @@ import React, {
   useRef,
 } from "react";
 import { showToast } from "@/lib/toast";
-import realtimeSyncManager from "@/lib/realtimeSync";
+import smartPolling from "@/lib/smartPolling";
 import {
   ContactSubmission,
   CreateContactSubmissionDTO,
@@ -414,25 +414,30 @@ export function ContactSubmissionProvider({
     }
   }, [fetchSubmissions]);
 
-  // Setup real-time sync (polls every 30 seconds for new submissions)
-  // ONLY runs in admin routes
+  // Setup smart polling (ONLY runs in admin routes)
   useEffect(() => {
     // Skip polling on non-admin pages to save API calls
     if (typeof window === 'undefined' || !window.location.pathname.startsWith('/admin')) {
       return;
     }
 
-    const unsubscribe = realtimeSyncManager.subscribe(
-      'contact-submissions',
-      () => fetchSubmissions(false), // Don't show loading on background refresh
-      { 
-        interval: 60000, // 60 seconds (optimized from 30s)
-        pauseOnHidden: true, // Pause when tab is hidden
-        enableAdaptive: true, // Adaptive polling based on errors
+    const pollerId = smartPolling.start(
+      async () => {
+        await fetchSubmissions(false); // Silent refresh
+      },
+      {
+        intervals: {
+          realtime: 10000,  // 10s when admin actively managing submissions
+          active: 60000,    // 1min when admin on page but idle
+          idle: 180000,     // 3min when admin away
+          background: 0,    // Stop when tab hidden (80% savings!)
+        },
+        priority: 'high',
+        tag: 'contact-submissions',
       }
     );
 
-    return () => unsubscribe();
+    return () => smartPolling.stop(pollerId);
   }, [fetchSubmissions]);
 
   const value: ContactSubmissionContextType = {

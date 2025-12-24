@@ -24,7 +24,7 @@ export function usePortfolioSync<T>(
   options: PortfolioSyncOptions = {}
 ) {
   const {
-    interval = 120000, // Default 2 minutes (less aggressive than admin)
+    interval = 300000, // Default 5 minutes (much less aggressive - was 2min)
     enabled = true,
     onUpdate,
   } = options;
@@ -65,13 +65,13 @@ export function usePortfolioSync<T>(
     fetchData(true);
   }, [fetchData]);
 
-  // Setup polling
+  // Setup polling - ONLY when page is visible and online
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || !isVisibleRef.current) return;
 
     const intervalId = setInterval(() => {
-      // Only poll if online and visible
-      if (isOnlineRef.current && isVisibleRef.current) {
+      // Only poll if online, visible, AND user hasn't left the page
+      if (isOnlineRef.current && isVisibleRef.current && document.hasFocus()) {
         fetchData(false);
       }
     }, interval);

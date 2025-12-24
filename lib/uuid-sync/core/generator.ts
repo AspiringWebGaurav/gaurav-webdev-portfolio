@@ -6,6 +6,7 @@ import crypto from 'crypto';
 import { MASK_CONFIG, PATTERNS } from '../constants';
 import { VisitorIdentity } from '../types';
 import { log } from '../utils';
+import logger from '../../logger';
 
 /**
  * Generate a cryptographically secure UUID
@@ -34,7 +35,7 @@ export function createVisitorIdentity(fingerprint: string, source: string = 'unk
   const mask = generateMaskFromUUID(uuid);
   
   // Enhanced debug logging to track duplicate creation sources
-  console.log('[UUID-Sync] 🆕 Created new visitor identity', { 
+  logger.debug('[UUID-Sync] 🆕 Created new visitor identity', { 
     mask, 
     fingerprint: fingerprint.substring(0, 20) + '...',
     source,

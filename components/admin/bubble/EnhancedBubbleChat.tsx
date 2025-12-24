@@ -27,6 +27,7 @@ export default function EnhancedBubbleChat() {
   const [visitorTyping, setVisitorTyping] = useState(false);
   const [visitorOnline, setVisitorOnline] = useState(false);
   const [unreadCounts, setUnreadCounts] = useState<Map<string, number>>(new Map());
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   
   // Selection mode state
   const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -42,6 +43,30 @@ export default function EnhancedBubbleChat() {
   const lastMessageCountRef = useRef(0);
   const previousMessageIdsRef = useRef<Set<string>>(new Set());
 
+  // Monitor auth state to prevent "No authenticated user" errors
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        console.log('[AdminChat] ✅ User authenticated:', user.uid);
+        setIsAuthenticated(true);
+        // Refresh token to ensure it's valid
+        try {
+          await user.getIdToken(true); // Force refresh
+        } catch (error) {
+          console.error('[AdminChat] ❌ Token refresh failed:', error);
+          setIsAuthenticated(false);
+        }
+      } else {
+        console.log('[AdminChat] ❌ User not authenticated');
+        setIsAuthenticated(false);
+        showToast.error('Session expired. Please log in again.');
+        router.push('/admin/login');
+      }
+    });
+
+    return () => unsubscribe();
+  }, [router]);
+
   // Auto-scroll to bottom with smooth animation
   const scrollToBottom = useCallback((smooth = true) => {
     messagesEndRef.current?.scrollIntoView({ 
@@ -55,14 +80,28 @@ export default function EnhancedBubbleChat() {
     try {
       if (!silent) setLoading(true);
       
-      // Get auth token
+      // Check auth state first
+      if (!isAuthenticated) {
+        console.log('[AdminChat] ⏭️ Skipping fetch - not authenticated');
+        return;
+      }
+      
+      // Get auth token with retry
       const user = auth.currentUser;
       if (!user) {
         console.error('[AdminChat] ❌ No authenticated user');
-        if (!silent) showToast.error('Please log in to view sessions');
+        if (!silent) showToast.error('Session expired. Please log in again.');
         return;
       }
-      const token = await user.getIdToken();
+      
+      let token;
+      try {
+        token = await user.getIdToken(true); // Force refresh token
+      } catch (error) {
+        console.error('[AdminChat] ❌ Token refresh failed:', error);
+        if (!silent) showToast.error('Authentication failed. Please log in again.');
+        return;
+      }
       
       console.log('[AdminChat] 🔄 Fetching sessions...');
       const response = await fetch('/api/bubble/sessions?allSessions=true', {
@@ -100,7 +139,7 @@ export default function EnhancedBubbleChat() {
     } finally {
       if (!silent) setLoading(false);
     }
-  }, [selectedSession]);
+  }, [selectedSession, isAuthenticated]);
 
   // Fetch messages for selected session
   const fetchMessages = useCallback(async (sessionId: string, silent = false) => {
@@ -767,7 +806,10 @@ export default function EnhancedBubbleChat() {
                                 {displayUUID}
                               </span>
                               {session.visitorOnline && (
-                                <Circle className="w-2 h-2 fill-green-500 text-green-500 flex-shrink-0" />
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                                  Live
+                                </span>
                               )}
                             </div>
                             
@@ -829,12 +871,17 @@ export default function EnhancedBubbleChat() {
               <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3 border-b border-blue-800">
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-white flex items-center gap-2">
-                      {selectedSession.visitorEmail || selectedSession.id.slice(0, 12) || 'Visitor'}
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-white">
+                        {selectedSession.visitorEmail || selectedSession.id.slice(0, 12) || 'Visitor'}
+                      </h3>
                       {visitorOnline && (
-                        <Circle className="w-2 h-2 fill-green-400 text-green-400" />
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-500 text-white">
+                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                          Live
+                        </span>
                       )}
-                    </h3>
+                    </div>
                     <p className="text-xs text-blue-100 mt-0.5">
                       {visitorOnline ? 'Online now' : `Last seen ${formatTime(selectedSession.lastActive)}`}
                     </p>
@@ -854,7 +901,21 @@ export default function EnhancedBubbleChat() {
                 ref={chatContainerRef}
                 className="flex-1 overflow-y-auto p-4 space-y-3 bg-gradient-to-b from-gray-50 to-white"
               >
-                {messages.length === 0 ? (
+                {loading && messages.length === 0 ? (
+                  <div className="space-y-4 animate-pulse">
+                    {/* Skeleton loaders for admin loading state */}
+                    {[1, 2, 3, 4].map((i) => (
+                      <div key={i} className={`flex ${i % 2 === 0 ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`flex flex-col ${i % 2 === 0 ? 'items-end' : 'items-start'} max-w-[70%]`}>
+                          <div className={`h-20 rounded-2xl w-64 ${
+                            i % 2 === 0 ? 'bg-gray-100' : 'bg-blue-100'
+                          }`} />
+                          <div className="h-3 w-20 bg-gray-100 rounded mt-1" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : messages.length === 0 ? (
                   <div className="text-center text-gray-500 mt-12">
                     <Mail className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                     <p className="font-medium">No messages yet</p>
@@ -876,20 +937,30 @@ export default function EnhancedBubbleChat() {
                         <div
                           key={msg.id}
                           className={`flex ${isAdmin ? 'justify-end' : 'justify-start'} ${
-                            isNewMessage && index > 0 ? 'animate-in slide-in-from-bottom-3 fade-in duration-400' : ''
+                            isNewMessage ? 'animate-in slide-in-from-bottom-2 fade-in duration-500 ease-out' : 'opacity-100'
                           }`}
+                          style={{
+                            animationDelay: isNewMessage ? `${Math.min(index * 50, 200)}ms` : '0ms'
+                          }}
                         >
                           <div className={`max-w-[70%] ${isAdmin ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
                             <div
-                              className={`rounded-2xl px-4 py-2.5 shadow-sm ${
+                              className={`rounded-2xl px-4 py-2.5 shadow-sm hover:shadow-md transition-all duration-200 ${
                                 isAdmin
                                   ? 'bg-white text-gray-900 border border-gray-200'
                                   : 'bg-blue-600 text-white'
                               } ${
-                                isNewMessage && index > 0 ? 'animate-in scale-in-95 duration-300' : ''
+                                isNewMessage ? 'animate-in zoom-in-95 duration-400 ease-out' : ''
                               }`}
                             >
-                              <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                              {msg.id?.startsWith('temp-') && sending ? (
+                                <div className="flex items-center gap-2">
+                                  <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                                  <Loader2 className="w-3 h-3 animate-spin flex-shrink-0 text-gray-400" />
+                                </div>
+                              ) : (
+                                <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                              )}
                             </div>
                             
                             <div className={`flex items-center gap-1.5 px-2 ${isAdmin ? 'flex-row' : 'flex-row-reverse'}`}>

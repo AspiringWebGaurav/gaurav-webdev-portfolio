@@ -5,6 +5,7 @@ import { BubbleMessage, ChatMessage } from '@/types/bubble';
 import { useBubbleSession } from './BubbleSessionContext';
 import networkManager from '@/lib/networkManager';
 import smartPolling from '@/lib/smartPolling';
+import logger from '@/lib/logger';
 
 interface BubbleMessageContextType {
   messages: BubbleMessage[];
@@ -19,6 +20,7 @@ interface BubbleMessageContextType {
   markAsDelivered: (messageIds: string[]) => Promise<void>;
   setTyping: (isTyping: boolean) => void;
   setChatOpen: (open: boolean) => void;
+  trackChatActivity: () => void; // Track user interaction to optimize polling
 }
 
 const BubbleMessageContext = createContext<BubbleMessageContextType | undefined>(undefined);
@@ -38,6 +40,16 @@ export function BubbleMessageProvider({ children }: { children: React.ReactNode 
   const lastMessageCountRef = useRef<number>(0);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastFetchRef = useRef<number>(0);
+  const lastChatActivityRef = useRef<number>(Date.now());
+  const activityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isUserActiveRef = useRef<boolean>(false);
+  const isPageVisibleRef = useRef<boolean>(true);
+  const hasMessageHistoryRef = useRef<boolean>(false);
+
+  // Track if user has message history
+  useEffect(() => {
+    hasMessageHistoryRef.current = messages.length > 0;
+  }, [messages.length]);
 
   const fetchMessages = useCallback(async (silent = false) => {
     if (!session?.id) return;
@@ -65,7 +77,7 @@ export function BubbleMessageProvider({ children }: { children: React.ReactNode 
         // Check if new messages arrived
         if (newMessages.length > lastMessageCountRef.current) {
           const newCount = newMessages.length - lastMessageCountRef.current;
-          console.log('[BubbleMessages] 📨 New messages:', newCount);
+          logger.debug('[BubbleMessages] 📨 New messages:', newCount);
           
           // Auto-mark new admin messages as delivered
           const newAdminMessages = newMessages.slice(-newCount).filter((m: BubbleMessage) => m.role === 'admin');
@@ -73,7 +85,7 @@ export function BubbleMessageProvider({ children }: { children: React.ReactNode 
             const undeliveredIds = newAdminMessages.filter((m: BubbleMessage) => !m.delivered).map((m: BubbleMessage) => m.id);
             if (undeliveredIds.length > 0 && isChatOpen) {
               // Messages auto-delivered by API when chat is open
-              console.log('[BubbleMessages] ✅ Auto-delivered:', undeliveredIds.length);
+              logger.debug('[BubbleMessages] ✅ Auto-delivered:', undeliveredIds.length);
             }
           }
         }
@@ -92,21 +104,71 @@ export function BubbleMessageProvider({ children }: { children: React.ReactNode 
           });
         }
       } else {
-        console.error('[BubbleMessages] ❌ Fetch failed:', response.status);
+        logger.error('[BubbleMessages] ❌ Fetch failed:', response.status);
       }
     } catch (error) {
-      console.error('[BubbleMessages] ❌ Error:', error);
+      logger.error('[BubbleMessages] ❌ Error:', error);
     } finally {
       if (!silent) setLoading(false);
     }
   }, [session?.id, isChatOpen]);
 
+  // Page visibility tracking - STOP polling when tab hidden
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      const isVisible = !document.hidden;
+      isPageVisibleRef.current = isVisible;
+      
+      if (!isVisible) {
+        // Page hidden - stop all polling immediately
+        logger.debug('[BubbleMessages] 👁️ Page hidden - pausing polling to save costs');
+        smartPolling.setMode('bubble-messages', 'paused');
+      } else {
+        // Page visible again
+        logger.debug('[BubbleMessages] 👁️ Page visible - resuming polling');
+        
+        // If user has message history, do instant sync
+        if (hasMessageHistoryRef.current && isChatOpen) {
+          logger.debug('[BubbleMessages] 🔥 User has message history - instant sync!');
+          fetchMessages(true); // Instant fetch
+          smartPolling.setMode('bubble-messages', 'realtime');
+        } else if (isChatOpen) {
+          smartPolling.setMode('bubble-messages', 'realtime');
+        } else {
+          smartPolling.setMode('bubble-messages', 'background');
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [isChatOpen, fetchMessages]);
+
+  // Track user activity in chat - defined early to avoid initialization errors
+  const trackChatActivity = useCallback(() => {
+    lastChatActivityRef.current = Date.now();
+    isUserActiveRef.current = true;
+    
+    // Clear existing timeout
+    if (activityTimeoutRef.current) {
+      clearTimeout(activityTimeoutRef.current);
+    }
+    
+    // After 15 seconds of no activity, mark as idle
+    activityTimeoutRef.current = setTimeout(() => {
+      isUserActiveRef.current = false;
+    }, 15000);
+  }, []);
+
   const sendMessage = useCallback(async (content: string, visitorEmail?: string) => {
     if (!session?.id) return;
 
+    // Track activity when sending message
+    trackChatActivity();
+    
     setSending(true);
     
-    // Optimistic UI update
+    // Instant optimistic UI update - message appears immediately
     const tempId = `temp-${Date.now()}`;
     const optimisticMessage: BubbleMessage = {
       id: tempId,
@@ -119,6 +181,7 @@ export function BubbleMessageProvider({ children }: { children: React.ReactNode 
       visitorEmail,
     };
     
+    // Add to UI IMMEDIATELY - no waiting
     setMessages(prev => [...prev, optimisticMessage]);
     lastMessageCountRef.current++;
     
@@ -137,21 +200,17 @@ export function BubbleMessageProvider({ children }: { children: React.ReactNode 
       if (response.ok) {
         const newMessage = await response.json();
         
-        // Replace optimistic message with real one
+        // Replace optimistic message with real one from server
         setMessages(prev => prev.map(msg => 
           msg.id === tempId ? newMessage : msg
         ));
         
-        // Boost polling for faster admin response
-        smartPolling.boost('bubble-messages', 15000); // 15s realtime
-        
-        // Trigger immediate poll after 1s
-        setTimeout(() => smartPolling.trigger('bubble-messages'), 1000);
+        // Message already in UI - no polling needed
       } else {
         throw new Error(`Send failed: ${response.status}`);
       }
     } catch (error) {
-      console.error('[BubbleMessages] ❌ Send failed:', error);
+      logger.error('[BubbleMessages] ❌ Send failed:', error);
       
       // Remove optimistic message on failure
       setMessages(prev => prev.filter(msg => msg.id !== tempId));
@@ -160,7 +219,7 @@ export function BubbleMessageProvider({ children }: { children: React.ReactNode 
     } finally {
       setSending(false);
     }
-  }, [session?.id]);
+  }, [session?.id, trackChatActivity]);
 
   const markMessagesAsRead = useCallback(async (messageIds?: string[]) => {
     if (!session?.id) return;
@@ -187,7 +246,7 @@ export function BubbleMessageProvider({ children }: { children: React.ReactNode 
         setUnreadCount(0);
       }
     } catch (error) {
-      console.error('[BubbleMessages] ❌ Mark read failed:', error);
+      logger.error('[BubbleMessages] ❌ Mark read failed:', error);
     }
   }, [session?.id]);
 
@@ -205,6 +264,11 @@ export function BubbleMessageProvider({ children }: { children: React.ReactNode 
   const setTyping = useCallback((isTyping: boolean) => {
     if (!session?.id) return;
 
+    // Track activity when typing
+    if (isTyping) {
+      trackChatActivity();
+    }
+
     // Send typing indicator to backend
     networkManager.fetch('/api/bubble/messages/typing', {
       method: 'POST',
@@ -214,7 +278,7 @@ export function BubbleMessageProvider({ children }: { children: React.ReactNode 
         isTyping,
         role: 'visitor',
       }),
-    }, 2).catch(err => console.error('[BubbleMessages] ❌ Typing failed:', err));
+    }, 2).catch(err => logger.error('[BubbleMessages] ❌ Typing failed:', err));
 
     // Auto-clear typing after 3 seconds
     if (typingTimeoutRef.current) {
@@ -226,15 +290,29 @@ export function BubbleMessageProvider({ children }: { children: React.ReactNode 
         setTyping(false);
       }, 3000);
     }
-  }, [session?.id]);
+  }, [session?.id, trackChatActivity]);
 
   const setChatOpen = useCallback((open: boolean) => {
     setIsChatOpen(open);
     
     if (open) {
-      // Chat opened - switch to realtime and fetch immediately
-      smartPolling.setMode('bubble-messages', 'realtime');
-      fetchMessages(true);
+      // Chat opened - check if user has message history for instant sync
+      isUserActiveRef.current = true;
+      
+      if (hasMessageHistoryRef.current) {
+        // User has message history - do instant sync first!
+        logger.debug('[BubbleMessages] 🔥 User has message history - instant sync on open!');
+        fetchMessages(true).then(() => {
+          // Then switch to realtime polling
+          smartPolling.setMode('bubble-messages', 'realtime');
+        });
+      } else {
+        // No history, just fetch normally
+        fetchMessages(true);
+        smartPolling.setMode('bubble-messages', 'realtime');
+      }
+      
+      trackChatActivity();
       
       // Mark all admin messages as read when opening chat
       const unreadAdminMessages = messages.filter(m => m.role === 'admin' && !m.read);
@@ -242,32 +320,53 @@ export function BubbleMessageProvider({ children }: { children: React.ReactNode 
         markMessagesAsRead(unreadAdminMessages.map(m => m.id));
       }
     } else {
-      // Chat closed - switch to active mode
-      smartPolling.setMode('bubble-messages', 'active');
+      // Chat closed - STOP polling completely to save costs
+      isUserActiveRef.current = false;
+      smartPolling.setMode('bubble-messages', 'paused'); // PAUSED = no polling at all!
+      
+      // Clear activity timeout
+      if (activityTimeoutRef.current) {
+        clearTimeout(activityTimeoutRef.current);
+        activityTimeoutRef.current = null;
+      }
+      
+      logger.debug('[BubbleMessages] 🚫 Chat closed - STOPPED all polling to save costs!');
     }
-  }, [messages, fetchMessages, markMessagesAsRead]);
+  }, [messages, fetchMessages, markMessagesAsRead, trackChatActivity]);
 
-  // Setup ultra-optimized smart polling
+  // Setup smart polling with reasonable intervals
   useEffect(() => {
     if (!session?.id) return;
 
-    // Register with critical priority for instant messaging
+    // Register with ultra-smart cost-saving intervals
+    // STARTS PAUSED - only polls when chat is actually open
     smartPolling.register(
       'bubble-messages',
-      () => fetchMessages(true), // Always silent polls
+      () => {
+        // Only fetch if page is visible
+        if (isPageVisibleRef.current) {
+          return fetchMessages(true);
+        }
+        logger.debug('[BubbleMessages] ⏭️ Skipping fetch - page hidden');
+        return Promise.resolve();
+      },
       {
         intervals: {
-          realtime: 1500,  // 1.5s - Ultra fast when chat is open (faster than before)
-          active: 3000,    // 3s - Fast when tab active (faster response)
-          idle: 15000,     // 15s - Moderate when idle
-          background: 30000, // 30s - Minimal when hidden
+          realtime: parseInt(process.env.NEXT_PUBLIC_POLL_REALTIME || '3000', 10),   // 3s - When actively chatting
+          active: parseInt(process.env.NEXT_PUBLIC_POLL_ACTIVE || '15000', 10),      // 15s - Tab active but no chat activity
+          idle: parseInt(process.env.NEXT_PUBLIC_POLL_IDLE || '45000', 10),          // 45s - User idle (SAVES COSTS)
+          background: parseInt(process.env.NEXT_PUBLIC_POLL_BACKGROUND || '300000', 10), // 5min - Not used (we use paused instead)
         },
-        priority: 'critical',
-        maxIdleTime: 30000,
-        stopOnHidden: false,
+        priority: 'normal',
+        maxIdleTime: 120000, // 2 minutes before going to idle
+        stopOnHidden: true, // CRITICAL: Stop completely when tab hidden
         tag: 'BubbleMessages',
       }
     );
+    
+    // Start in PAUSED mode (no polling at all) - saves maximum costs
+    smartPolling.setMode('bubble-messages', 'paused');
+    logger.debug('[BubbleMessages] 🚨 Started in PAUSED mode - no polling until chat opens');
 
     // Initial fetch
     fetchMessages();
@@ -276,6 +375,9 @@ export function BubbleMessageProvider({ children }: { children: React.ReactNode 
       smartPolling.unregister('bubble-messages');
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
+      }
+      if (activityTimeoutRef.current) {
+        clearTimeout(activityTimeoutRef.current);
       }
     };
   }, [session?.id, fetchMessages]);
@@ -287,7 +389,7 @@ export function BubbleMessageProvider({ children }: { children: React.ReactNode 
       setIsOnline(status.isOnline);
       
       if (wasOffline && status.isOnline && session?.id) {
-        console.log('[BubbleMessages] Back online - fetching messages');
+        logger.debug('[BubbleMessages] Back online - fetching messages');
         fetchMessages();
       }
     });
@@ -309,6 +411,7 @@ export function BubbleMessageProvider({ children }: { children: React.ReactNode 
         markAsDelivered,
         setTyping,
         setChatOpen,
+        trackChatActivity,
       }}
     >
       {children}

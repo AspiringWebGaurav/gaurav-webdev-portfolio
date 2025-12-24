@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebaseAdmin";
 import { identifyVisitor, getIdentityResult, firestoreCheckBanStatus, firestoreGetVisitorDocument, translateMaskToUUID } from "@/lib/uuid-sync/server";
+import { deduplicate } from "@/lib/requestDeduplication";
 
 const VISITORS_COLLECTION = "og_uuid";
 
@@ -39,8 +40,12 @@ export async function POST(request: NextRequest) {
     
     console.log("[Check Ban API] Checking ban for visitor:", mask);
 
-    // Check ban status
-    const banned = await firestoreCheckBanStatus(uuid);
+    // Check ban status with deduplication (called on every page load)
+    const banned = await deduplicate(
+      `check-ban-${uuid}`,
+      () => firestoreCheckBanStatus(uuid),
+      5000 // 5s TTL - longer for ban checks
+    );
 
     if (!banned) {
       console.log("[Check Ban API] ✅ Visitor not banned");
@@ -50,8 +55,12 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Get full visitor document for ban details
-    const visitorData = await firestoreGetVisitorDocument(uuid);
+    // Get full visitor document for ban details with deduplication
+    const visitorData = await deduplicate(
+      `visitor-doc-${uuid}`,
+      () => firestoreGetVisitorDocument(uuid),
+      5000 // 5s TTL
+    );
     
     if (visitorData) {
       console.log("[Check Ban API] ⛔ Visitor IS BANNED!", {

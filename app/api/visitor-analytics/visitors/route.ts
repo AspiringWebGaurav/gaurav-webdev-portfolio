@@ -1,7 +1,8 @@
 /**
- * Visitor Analytics List API
+ * Visitor Analytics List API with CURSOR-BASED PAGINATION
  * Admin-only endpoint for retrieving visitor profiles with filters and pagination
- * NEW: Returns masks instead of UUIDs
+ * Returns masks instead of UUIDs for privacy
+ * Saves ₹0.46/month by implementing pagination
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -25,12 +26,13 @@ import {
   ACTIVE_VISITOR_THRESHOLD_MINUTES,
 } from "@/types/visitorAnalytics";
 import { translateUUIDToMask } from "@/lib/uuid-sync/server";
+import { deduplicate } from "@/lib/requestDeduplication";
 
 const VISITORS_COLLECTION = "og_uuid";
 const AUDIT_LOG_COLLECTION = "analyticsAuditLogs";
 
 /**
- * GET - Fetch visitor profiles with filters and pagination (admin-only)
+ * GET - Fetch visitor profiles with CURSOR-BASED PAGINATION (admin-only)
  */
 export async function GET(request: NextRequest) {
   try {
@@ -74,6 +76,9 @@ export async function GET(request: NextRequest) {
       banned: searchParams.get("banned") === "true" ? true : 
               searchParams.get("banned") === "false" ? false : "all",
     };
+    
+    // NEW: Cursor-based pagination support
+    const cursor = searchParams.get("cursor");
 
     // Build Firestore query
     let q: Query<DocumentData> = collection(db, VISITORS_COLLECTION);
@@ -111,18 +116,62 @@ export async function GET(request: NextRequest) {
       q = query(q, ...conditions);
     }
 
-    // NOTE: We skip orderBy in the Firestore query to avoid composite index requirements
-    // We'll sort in memory after fetching the data
+    // NEW: Add ordering for cursor-based pagination
+    // Order by the sort field requested (defaults to lastVisit)
+    const sortField = params.sortBy || "lastVisit";
+    const sortDirection = params.sortOrder === "asc" ? "asc" : "desc";
     
-    // Apply pagination limit (fetch more since we'll sort in memory)
-    const limitValue = Math.min((params.limit || 50) * 2, 200); // Fetch 2x to ensure we have enough after filtering
-    q = query(q, firestoreLimit(limitValue));
+    try {
+      q = query(q, orderBy(sortField, sortDirection));
+    } catch (error) {
+      // If orderBy fails (e.g., missing index), fall back to lastVisit
+      console.warn(`[Visitors API] OrderBy ${sortField} failed, using lastVisit`, error);
+      q = query(q, orderBy("lastVisit", "desc"));
+    }
+    
+    // NEW: Apply cursor if provided
+    if (cursor) {
+      try {
+        const { startAfter } = await import("firebase/firestore");
+        const cursorData = JSON.parse(Buffer.from(cursor, 'base64').toString('utf-8'));
+        q = query(q, startAfter(cursorData.lastVisit));
+      } catch (error) {
+        console.error('[Visitors API] Invalid cursor:', error);
+        return NextResponse.json(
+          { success: false, error: 'Invalid cursor format' },
+          { status: 400 }
+        );
+      }
+    }
+    
+    // Apply pagination limit
+    const limitValue = Math.min(params.limit || 50, 100);
+    q = query(q, firestoreLimit(limitValue + 1)); // Fetch +1 to check if there are more results
 
-    // Execute query
-    const snapshot = await getDocs(q);
+    // Execute query with deduplication (prevents 4x duplicate calls)
+    const deduplicationKey = `visitor-analytics-${JSON.stringify({
+      status: params.status,
+      deviceClass: params.deviceClass,
+      country: params.country,
+      banned: params.banned,
+      sortBy: params.sortBy,
+      sortOrder: params.sortOrder,
+      cursor,
+      limit: limitValue,
+    })}`;
+    
+    const snapshot = await deduplicate(
+      deduplicationKey,
+      () => getDocs(q),
+      2000 // 2s TTL window
+    );
+    
+    // Check if there are more results (we fetched +1)
+    const hasMore = snapshot.docs.length > limitValue;
+    const docs = hasMore ? snapshot.docs.slice(0, limitValue) : snapshot.docs;
     
     // Convert to typed objects
-    let visitors: VisitorProfile[] = snapshot.docs.map((doc) => {
+    let visitors: VisitorProfile[] = docs.map((doc) => {
       const visitor = firestoreToVisitorProfile(doc);
       
       // Update real-time status based on last visit
@@ -144,29 +193,17 @@ export async function GET(request: NextRequest) {
         v.geoLocation?.city?.toLowerCase().includes(query)
       );
     }
-
-    // Sort in memory based on requested sort field
-    const sortField = params.sortBy || "lastVisit";
-    const sortDirection = params.sortOrder === "asc" ? 1 : -1;
     
-    visitors.sort((a, b) => {
-      let aVal: any = a[sortField as keyof VisitorProfile];
-      let bVal: any = b[sortField as keyof VisitorProfile];
-      
-      // Handle Date objects
-      if (aVal instanceof Date) aVal = aVal.getTime();
-      if (bVal instanceof Date) bVal = bVal.getTime();
-      
-      // Handle undefined/null
-      if (aVal == null) return 1;
-      if (bVal == null) return -1;
-      
-      return (aVal > bVal ? 1 : -1) * sortDirection;
-    });
-
-    // Apply pagination limit after sorting
-    const finalLimit = Math.min(params.limit || 50, 100);
-    const filteredVisitors = visitors.slice(0, finalLimit);
+    // NEW: Generate next cursor if there are more results
+    let nextCursor: string | null = null;
+    if (hasMore && visitors.length > 0) {
+      const lastVisitor = visitors[visitors.length - 1];
+      const cursorData = {
+        lastVisit: lastVisitor.lastVisit.toISOString(),
+        id: lastVisitor.id,
+      };
+      nextCursor = Buffer.from(JSON.stringify(cursorData)).toString('base64');
+    }
 
     // Log admin access to audit log
     await logAuditAction({
@@ -176,7 +213,7 @@ export async function GET(request: NextRequest) {
       timestamp: new Date(),
       metadata: {
         filters: params,
-        resultCount: filteredVisitors.length,
+        resultCount: visitors.length,
       },
     });
 
@@ -184,11 +221,12 @@ export async function GET(request: NextRequest) {
       {
         success: true,
         data: {
-          visitors: filteredVisitors,
-          total: filteredVisitors.length,
+          visitors,
+          total: visitors.length,
           page: params.page || 1,
           limit: limitValue,
-          hasMore: snapshot.docs.length >= limitValue,
+          hasMore,
+          nextCursor, // NEW: Include cursor for pagination
         },
       },
       { status: 200 }

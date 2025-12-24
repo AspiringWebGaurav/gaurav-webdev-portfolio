@@ -8,6 +8,7 @@ import React, {
   useCallback,
 } from "react";
 import { auth } from "@/lib/firebase";
+import smartPolling from "@/lib/smartPolling";
 import {
   Notification,
   CreateNotificationInput,
@@ -53,16 +54,6 @@ export function NotificationProvider({
     return () => unsubscribe();
   }, []);
 
-  // Fetch notifications when user changes
-  useEffect(() => {
-    if (userId) {
-      refreshNotifications();
-    } else {
-      setNotifications([]);
-      setUnreadCount(0);
-    }
-  }, [userId]);
-
   const refreshNotifications = useCallback(async () => {
     if (!userId) return;
 
@@ -96,6 +87,39 @@ export function NotificationProvider({
       setLoading(false);
     }
   }, [userId]);
+
+  // Fetch notifications when user changes
+  useEffect(() => {
+    if (userId) {
+      refreshNotifications();
+    } else {
+      setNotifications([]);
+      setUnreadCount(0);
+    }
+  }, [userId, refreshNotifications]);
+
+  // Smart polling for realtime notifications (only when admin is active)
+  useEffect(() => {
+    if (!userId) return;
+
+    const pollerId = smartPolling.start(
+      async () => {
+        await refreshNotifications();
+      },
+      {
+        intervals: {
+          realtime: 5000,  // 5s when admin is actively using dashboard
+          active: 30000,   // 30s when admin is on page but idle
+          idle: 120000,    // 2min when tab visible but admin away
+          background: 0,   // Stop when tab hidden (saves 100%!)
+        },
+        priority: 'critical', // Notifications are critical for admin
+        tag: 'admin-notifications',
+      }
+    );
+
+    return () => smartPolling.stop(pollerId);
+  }, [userId, refreshNotifications]);
 
   const createNotification = useCallback(
     async (input: Omit<CreateNotificationInput, "userId">) => {

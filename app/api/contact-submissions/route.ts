@@ -19,6 +19,7 @@ import {
   limit,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { deduplicate } from "@/lib/requestDeduplication";
 import {
   CreateContactSubmissionDTO,
   UpdateContactSubmissionDTO,
@@ -135,7 +136,13 @@ export async function GET(request: NextRequest) {
   try {
     const submissionsRef = collection(db, COLLECTION_NAME);
     const q = query(submissionsRef, orderBy("createdAt", "desc"));
-    const snapshot = await getDocs(q);
+    
+    // Use deduplication to prevent rapid-fire duplicate calls (3x in 67ms)
+    const snapshot = await deduplicate(
+      "contact-submissions-list",
+      () => getDocs(q),
+      2000 // 2s TTL window
+    );
 
     const submissions = snapshot.docs.map((doc) => {
       const submission = firestoreToContactSubmission(doc);

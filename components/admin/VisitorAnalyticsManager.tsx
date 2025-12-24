@@ -94,7 +94,7 @@ function SummaryCard({ title, value, icon, trend, color = "blue" }: SummaryCardP
   );
 }
 
-// Visitor detail modal
+// Visitor detail modal - REDESIGNED FULL SCREEN SINGLE VIEW
 interface VisitorDetailModalProps {
   visitorId: string;
   onClose: () => void;
@@ -105,7 +105,6 @@ function VisitorDetailModal({ visitorId, onClose }: VisitorDetailModalProps) {
   const [detailData, setDetailData] = useState<VisitorDetailData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'sessions' | 'activity'>('overview');
   const [isClosing, setIsClosing] = useState(false);
 
   useEffect(() => {
@@ -150,323 +149,441 @@ function VisitorDetailModal({ visitorId, onClose }: VisitorDetailModalProps) {
     setIsClosing(true);
     setTimeout(() => {
       onClose();
-    }, 200); // Match animation duration
+    }, 200);
   };
 
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      handleClose();
-    }
-  };
-
-  // Get the latest session data or provide defaults
+  // Get the latest session data
   const latestSession: any = detailData?.sessions[0] || {};
-  const deviceData = {
-    hardwareConcurrency: latestSession.hardwareConcurrency || (typeof navigator !== 'undefined' ? navigator.hardwareConcurrency : null) || 'N/A',
-    deviceMemory: latestSession.deviceMemory || (typeof navigator !== 'undefined' ? (navigator as any).deviceMemory : null) || null,
-    maxTouchPoints: latestSession.maxTouchPoints ?? (typeof navigator !== 'undefined' ? navigator.maxTouchPoints : 0) ?? 0,
-    battery: latestSession.battery || null,
-    screen: latestSession.screen || (typeof screen !== 'undefined' ? { width: screen.width, height: screen.height } : null),
-    connection: latestSession.connection || (typeof navigator !== 'undefined' ? (navigator as any).connection : null) || null,
-    platform: latestSession.platform || (typeof navigator !== 'undefined' ? navigator.platform : 'Unknown') || 'Unknown',
-  };
+  const deviceSnapshot = latestSession.deviceSnapshot || {};
 
   return (
     <div 
-      className={`fixed inset-0 bg-white z-50 overflow-hidden flex flex-col transition-opacity duration-200 ${
+      className={`fixed inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 z-50 overflow-hidden transition-opacity duration-300 ${
         isClosing ? 'opacity-0' : 'opacity-100'
       }`}
-      onClick={(e) => e.stopPropagation()}
     >
       <div 
-        className={`flex-1 flex flex-col transition-all duration-200 ${
+        className={`h-full flex flex-col transition-all duration-300 ${
           isClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'
         }`}
       >
-        {/* Header */}
-        <div className="px-8 py-6 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-purple-600 flex-shrink-0">
-          <div className="flex items-center justify-between max-w-[1800px] mx-auto">
-            <div className="flex-1 min-w-0">
-              <h2 className="text-3xl font-bold text-white flex items-center gap-3">
-                <Eye className="w-8 h-8" />
-                Visitor Profile - Full Details
-              </h2>
-              <div className="flex items-center gap-2 mt-3">
-                <span className="text-sm text-blue-100 font-medium">UUID:</span>
-                <code className="text-base text-white font-mono bg-white/20 px-4 py-1.5 rounded-lg">
-                  {visitorId}
-                </code>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigator.clipboard.writeText(visitorId);
-                    showToast.success('UUID copied to clipboard');
-                  }}
-                  className="flex-shrink-0 p-2 hover:bg-white/20 rounded-lg transition-colors"
-                  title="Copy UUID"
-                >
-                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                </button>
+        {/* Ultra Compact Header */}
+        <div className="px-4 py-2.5 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 shadow-2xl flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-white/20 rounded backdrop-blur-sm">
+                <Users className="w-4 h-4 text-white" />
               </div>
-              {detailData?.profile.mask && (
-                <div className="flex items-center gap-2 mt-2">
-                  <span className="text-sm text-blue-100 font-medium">Mask (Portfolio):</span>
-                  <code className="text-base text-blue-300 font-mono bg-white/20 px-4 py-1.5 rounded-lg">
-                    {detailData.profile.mask}
+              <div>
+                <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-white">Visitor Profile - Complete Overview</h2>
+                <div className="flex flex-wrap items-center gap-2 mt-1">
+                  <code className="text-xs md:text-sm text-blue-100 font-mono bg-white/20 px-2 py-1 rounded">
+                    {visitorId.substring(0, 13)}...
                   </code>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigator.clipboard.writeText(detailData.profile.mask);
-                      showToast.success('Mask copied to clipboard');
-                    }}
-                    className="flex-shrink-0 p-2 hover:bg-white/20 rounded-lg transition-colors"
-                    title="Copy mask for portfolio reference"
-                  >
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                    </svg>
-                  </button>
+                  {detailData?.profile.mask && (
+                    <code className="text-xs md:text-sm text-purple-100 font-mono bg-white/20 px-2 py-1 rounded">
+                      Mask: {detailData.profile.mask}
+                    </code>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
             <button
               onClick={handleClose}
-              className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-all shadow-md hover:shadow-lg"
+              className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white rounded transition-all border border-white/30 text-sm md:text-base"
               title="Close (ESC)"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4 md:w-5 md:h-5" />
               <span className="hidden sm:inline">Close</span>
             </button>
           </div>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto bg-gray-50">
-          <div className="max-w-[1800px] mx-auto px-8 py-6">
+        {/* Main Content - Maximum Density Grid */}
+        <div className="flex-1 overflow-hidden p-2">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-20">
-              <Loader2 className="w-10 h-10 text-blue-600 animate-spin mb-3" />
-              <p className="text-gray-600">Loading visitor details...</p>
+            <div className="h-full flex flex-col items-center justify-center">
+              <Loader2 className="w-12 h-12 md:w-16 md:h-16 text-blue-400 animate-spin mb-4" />
+              <p className="text-white text-lg md:text-xl">Loading visitor data...</p>
             </div>
           ) : error ? (
-            <div className="flex flex-col items-center justify-center py-20">
-              <AlertCircle className="w-16 h-16 text-red-400 mb-4" />
-              <p className="text-gray-900 font-medium mb-2">Unable to Load Visitor Details</p>
-              <p className="text-gray-600 text-sm mb-6">{error}</p>
+            <div className="h-full flex flex-col items-center justify-center">
+              <AlertCircle className="w-16 h-16 md:w-20 md:h-20 text-red-400 mb-4" />
+              <p className="text-white font-semibold text-xl md:text-2xl mb-2">Unable to Load Data</p>
+              <p className="text-gray-300 text-base md:text-lg mb-6">{error}</p>
               <button
                 onClick={handleClose}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
               >
                 Close
               </button>
             </div>
           ) : detailData ? (
-            <>
-              {/* Quick Stats Bar - Simplified */}
-              <div className="bg-gradient-to-r from-gray-50 to-blue-50 px-6 py-4 border-b border-gray-200">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-blue-100 rounded-lg">
-                      <MapPin className="w-5 h-5 text-blue-600" />
+            <div className="h-full flex flex-col gap-2 md:gap-3">
+              {/* TOP ROW - Status & Key Metrics */}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-3">
+                {/* Status & Key Metrics - Horizontal */}
+                <div className={`p-3 md:p-4 rounded-lg border flex items-center justify-center ${
+                  detailData.profile.banned 
+                    ? 'bg-red-900/20 border-red-500/50' 
+                    : 'bg-green-900/20 border-green-500/50'
+                }`}>
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-2 mb-1">
+                      {detailData.profile.banned ? (
+                        <Ban className="w-5 h-5 md:w-6 md:h-6 text-red-400" />
+                      ) : (
+                        <CheckCircle className="w-5 h-5 md:w-6 md:h-6 text-green-400" />
+                      )}
+                      <span className={`text-base md:text-lg font-bold ${detailData.profile.banned ? 'text-red-300' : 'text-green-300'}`}>
+                        {detailData.profile.banned ? 'BANNED' : 'ACTIVE'}
+                      </span>
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-600 font-medium">Location</p>
-                      <p className="text-sm font-bold text-gray-900">{isLocalVisitor ? 'Local' : detailData.profile.geoLocation?.country}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-purple-100 rounded-lg">
-                      <Monitor className="w-5 h-5 text-purple-600" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-600 font-medium">Device</p>
-                      <p className="text-sm font-bold text-gray-900 capitalize">{detailData.profile.deviceClass}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-green-100 rounded-lg">
-                      <Eye className="w-5 h-5 text-green-600" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-600 font-medium">Resume Views</p>
-                      <p className="text-xl font-bold text-gray-900">{detailData.profile.resumeDownloads * 3}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-orange-100 rounded-lg">
-                      <FileDown className="w-5 h-5 text-orange-600" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-600 font-medium">Downloads</p>
-                      <p className="text-xl font-bold text-gray-900">{detailData.profile.resumeDownloads}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Tabs - Simplified */}
-              <div className="border-b border-gray-200 bg-white px-6">
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => setActiveTab('overview')}
-                    className={`px-4 py-3 text-sm font-medium transition-all relative ${
-                      activeTab === 'overview'
-                        ? 'text-blue-600 border-b-2 border-blue-600'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <BarChart3 className="w-4 h-4" />
-                      Overview
+                    <span className={`text-xs md:text-sm px-2.5 py-1 rounded-full inline-block ${
+                      detailData.profile.currentStatus === 'active' 
+                        ? 'bg-green-500/30 text-green-200' 
+                        : 'bg-gray-500/30 text-gray-300'
+                    }`}>
+                      {detailData.profile.currentStatus}
                     </span>
-                  </button>
+                    {detailData.profile.banned && detailData.profile.banReason && (
+                      <p className="text-xs md:text-sm text-red-300 mt-1">Reason: {detailData.profile.banReason}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 md:p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Eye className="w-5 h-5 md:w-6 md:h-6 text-blue-400" />
+                    <span className="text-xs md:text-sm text-blue-300 font-medium">Total Visits</span>
+                  </div>
+                  <p className="text-2xl md:text-3xl lg:text-4xl font-bold text-white">{detailData.profile.totalVisits}</p>
+                </div>
+
+                <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3 md:p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Activity className="w-5 h-5 md:w-6 md:h-6 text-purple-400" />
+                    <span className="text-xs md:text-sm text-purple-300 font-medium">Sessions</span>
+                  </div>
+                  <p className="text-2xl md:text-3xl lg:text-4xl font-bold text-white">{detailData.profile.totalSessions}</p>
+                </div>
+
+                <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 md:p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Eye className="w-5 h-5 md:w-6 md:h-6 text-green-400" />
+                    <span className="text-xs md:text-sm text-green-300 font-medium">Resume Views</span>
+                  </div>
+                  <p className="text-2xl md:text-3xl lg:text-4xl font-bold text-white">{detailData.profile.resumeViews}</p>
+                </div>
+
+                <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-3 md:p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Download className="w-5 h-5 md:w-6 md:h-6 text-orange-400" />
+                    <span className="text-xs md:text-sm text-orange-300 font-medium">Resume Downloads</span>
+                  </div>
+                  <p className="text-2xl md:text-3xl lg:text-4xl font-bold text-white">{detailData.profile.resumeDownloads}</p>
                 </div>
               </div>
 
-              {/* Tab Content - Simplified */}
-              <div className="p-6">
-                {activeTab === 'overview' && (
-                  <div className="space-y-6">
-                    {/* Core 4 Metrics Info */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Geographic Location */}
-                      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-5 border border-blue-200">
-                        <h4 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                          <MapPin className="w-5 h-5 text-blue-600" />
-                          Visitor Location
-                        </h4>
-                        <div className="space-y-3">
-                          {detailData.profile.geoLocation?.isBot && (
-                            <div className="flex justify-between items-center py-2 border-b border-purple-200 bg-purple-50 px-3 rounded">
-                              <span className="text-sm text-purple-700 font-medium">Bot Detected:</span>
-                              <span className="text-sm font-bold text-purple-900">
-                                {detailData.profile.geoLocation.botName || 'Crawler'}
+              {/* SECOND ROW - Location, Device, Engagement, Timeline */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
+                {/* Location */}
+                <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-lg p-3 md:p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <MapPin className="w-5 h-5 md:w-6 md:h-6 text-blue-400" />
+                    <h3 className="text-sm md:text-base font-bold text-white">Geographic Location</h3>
+                  </div>
+                  {detailData.profile.geoLocation?.isBot && (
+                    <div className="bg-purple-500/20 rounded p-2 mb-2">
+                      <p className="text-xs md:text-sm text-purple-300 font-semibold">
+                        🤖 {detailData.profile.geoLocation.botName || 'Bot'}
+                      </p>
+                    </div>
+                  )}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between py-1.5 border-b border-slate-700">
+                      <span className="text-xs md:text-sm text-gray-400">Country</span>
+                      <span className={`text-xs md:text-sm font-semibold ${isLocalVisitor ? 'text-orange-400' : 'text-white'}`}>
+                        {isLocalVisitor ? '🏠 Local' : detailData.profile.geoLocation?.country || 'Unknown'}
+                      </span>
+                    </div>
+                    {!isLocalVisitor && (
+                      <>
+                        <div className="flex items-center justify-between py-1.5 border-b border-slate-700">
+                          <span className="text-xs md:text-sm text-gray-400">City</span>
+                          <span className="text-xs md:text-sm font-semibold text-white">
+                            {detailData.profile.geoLocation?.city || 'Unknown'}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between py-1.5">
+                          <span className="text-xs md:text-sm text-gray-400">Timezone</span>
+                          <span className="text-xs md:text-sm font-semibold text-white">
+                            {detailData.profile.geoLocation?.timezone || 'UTC'}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Device */}
+                <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-lg p-3 md:p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    {detailData.profile.deviceClass === 'desktop' && <Monitor className="w-5 h-5 md:w-6 md:h-6 text-green-400" />}
+                    {detailData.profile.deviceClass === 'mobile' && <Smartphone className="w-5 h-5 md:w-6 md:h-6 text-green-400" />}
+                    {detailData.profile.deviceClass === 'tablet' && <Tablet className="w-5 h-5 md:w-6 md:h-6 text-green-400" />}
+                    <h3 className="text-sm md:text-base font-bold text-white">Device Information</h3>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between py-1.5 border-b border-slate-700">
+                      <span className="text-xs md:text-sm text-gray-400">Type</span>
+                      <span className="text-xs md:text-sm font-semibold text-white capitalize">
+                        {detailData.profile.deviceClass}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between py-1.5 border-b border-slate-700">
+                      <span className="text-xs md:text-sm text-gray-400">Browser</span>
+                      <span className="text-xs md:text-sm font-semibold text-white">
+                        {deviceSnapshot.browser || latestSession.browser?.name || 'Unknown'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between py-1.5 border-b border-slate-700">
+                      <span className="text-xs md:text-sm text-gray-400">OS</span>
+                      <span className="text-xs md:text-sm font-semibold text-white">
+                        {deviceSnapshot.os || latestSession.os?.name || 'Unknown'}
+                      </span>
+                    </div>
+                    {deviceSnapshot.viewportWidth && (
+                      <div className="flex items-center justify-between py-1.5">
+                        <span className="text-xs md:text-sm text-gray-400">Screen</span>
+                        <span className="text-xs md:text-sm font-semibold text-white">
+                          {deviceSnapshot.viewportWidth} × {deviceSnapshot.viewportHeight}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Engagement Metrics */}
+                <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-lg p-3 md:p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Target className="w-5 h-5 md:w-6 md:h-6 text-orange-400" />
+                    <h3 className="text-sm md:text-base font-bold text-white">Engagement</h3>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-slate-900/50 rounded p-2">
+                      <p className="text-xs md:text-sm text-gray-400 mb-1">Page Views</p>
+                      <p className="text-lg md:text-xl lg:text-2xl font-bold text-white">{detailData.profile.totalPageViews}</p>
+                    </div>
+                    <div className="bg-slate-900/50 rounded p-2">
+                      <p className="text-xs md:text-sm text-gray-400 mb-1">Bubbles</p>
+                      <p className="text-lg md:text-xl lg:text-2xl font-bold text-white">{detailData.profile.totalBubbleOpens}</p>
+                    </div>
+                    <div className="bg-slate-900/50 rounded p-2">
+                      <p className="text-xs md:text-sm text-gray-400 mb-1">Clicks</p>
+                      <p className="text-lg md:text-xl lg:text-2xl font-bold text-white">{detailData.profile.totalInteractions}</p>
+                    </div>
+                    <div className="bg-slate-900/50 rounded p-2">
+                      <p className="text-xs md:text-sm text-gray-400 mb-1">Forms</p>
+                      <p className="text-lg md:text-xl lg:text-2xl font-bold text-white">{detailData.profile.formSubmissions}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Visit Timeline */}
+                <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-lg p-3 md:p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Clock className="w-5 h-5 md:w-6 md:h-6 text-purple-400" />
+                    <h3 className="text-sm md:text-base font-bold text-white">Visit Timeline</h3>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-slate-900/50 rounded p-2">
+                      <p className="text-xs md:text-sm text-gray-400 mb-1">First Visit</p>
+                      <p className="text-xs md:text-sm font-semibold text-white">
+                        {new Date(detailData.profile.firstVisit).toLocaleString('en-US', { 
+                          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                        })}
+                      </p>
+                    </div>
+                    <div className="bg-slate-900/50 rounded p-2">
+                      <p className="text-xs md:text-sm text-gray-400 mb-1">Last Visit</p>
+                      <p className="text-xs md:text-sm font-semibold text-white">
+                        {new Date(detailData.profile.lastVisit).toLocaleString('en-US', { 
+                          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                        })}
+                      </p>
+                    </div>
+                    <div className="bg-slate-900/50 rounded p-2">
+                      <p className="text-xs md:text-sm text-gray-400 mb-1">Avg Session</p>
+                      <p className="text-base md:text-lg font-semibold text-blue-400">
+                        {formatDuration(detailData.profile.averageSessionDuration)}
+                      </p>
+                    </div>
+                    <div className="bg-slate-900/50 rounded p-2">
+                      <p className="text-xs md:text-sm text-gray-400 mb-1">Total Active</p>
+                      <p className="text-base md:text-lg font-semibold text-green-400">
+                        {formatDuration(detailData.profile.totalActiveTime)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* THIRD ROW - Recent Events, Top Pages, Sessions, Captcha */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 md:gap-3 flex-1 min-h-0">
+                {/* Recent Events */}
+                {detailData.recentEvents && detailData.recentEvents.length > 0 && (
+                  <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-lg p-3 md:p-4 flex flex-col min-h-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Activity className="w-5 h-5 md:w-6 md:h-6 text-yellow-400" />
+                      <h3 className="text-sm md:text-base font-bold text-white">Recent Activity</h3>
+                      <span className="ml-auto text-xs md:text-sm bg-yellow-500/20 text-yellow-300 px-2 py-1 rounded-full font-bold">
+                        {detailData.recentEvents.length}
+                      </span>
+                    </div>
+                    <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-1">
+                      {detailData.recentEvents.slice(0, 20).map((event, index) => (
+                        <div key={event.id || index} className="bg-slate-900/50 rounded p-2 md:p-3 border-l-2 border-blue-500">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs md:text-sm font-semibold text-blue-300 uppercase tracking-wide truncate">
+                                {event.eventType.replace(/_/g, ' ')}
+                              </p>
+                              <p className="text-xs md:text-sm text-gray-400">
+                                {new Date(event.timestamp).toLocaleString('en-US', { 
+                                  month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                                })}
+                              </p>
+                            </div>
+                            {event.eventType === 'resume_download' && (
+                              <FileDown className="w-4 h-4 md:w-5 md:h-5 text-orange-400 flex-shrink-0" />
+                            )}
+                            {event.eventType === 'resume_view' && (
+                              <Eye className="w-4 h-4 md:w-5 md:h-5 text-green-400 flex-shrink-0" />
+                            )}
+                            {event.eventType === 'form_submit' && (
+                              <Mail className="w-4 h-4 md:w-5 md:h-5 text-purple-400 flex-shrink-0" />
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Combined Top Pages & Captcha Column */}
+                <div className="flex flex-col gap-2 min-h-0">
+                  {/* Page Visit Counts */}
+                  {detailData.pageVisitCounts && Object.keys(detailData.pageVisitCounts).length > 0 && (
+                    <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-lg p-3 md:p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Globe className="w-5 h-5 md:w-6 md:h-6 text-pink-400" />
+                        <h3 className="text-sm md:text-base font-bold text-white">Top Pages</h3>
+                      </div>
+                      <div className="space-y-2">
+                        {Object.entries(detailData.pageVisitCounts)
+                          .sort(([, a], [, b]) => (b as number) - (a as number))
+                          .slice(0, 8)
+                          .map(([page, count]) => (
+                            <div key={page} className="flex items-center justify-between py-2 px-3 bg-slate-900/50 rounded">
+                              <span className="text-xs md:text-sm text-gray-300 truncate flex-1 pr-2" title={page}>
+                                {page === '/' ? 'Home' : page.split('/').pop() || page}
+                              </span>
+                              <span className="text-sm md:text-base font-bold text-blue-400">{count}</span>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Captcha - if exists */}
+                  {(detailData.profile.captchaFailureCount && detailData.profile.captchaFailureCount > 0) && (
+                    <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3 md:p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Shield className="w-5 h-5 md:w-6 md:h-6 text-red-400" />
+                        <h3 className="text-sm md:text-base font-bold text-white">Captcha Failures</h3>
+                      </div>
+                      <p className="text-2xl md:text-3xl lg:text-4xl font-bold text-red-400 mb-2">{detailData.profile.captchaFailureCount}</p>
+                      {detailData.profile.lastCaptchaFailure && (
+                        <p className="text-xs md:text-sm text-red-300">
+                          Last: {new Date(detailData.profile.lastCaptchaFailure).toLocaleString('en-US', { 
+                            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                          })}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Sessions List */}
+                {detailData.sessions && detailData.sessions.length > 0 && (
+                  <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-lg p-3 md:p-4 flex flex-col min-h-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Clock className="w-5 h-5 md:w-6 md:h-6 text-cyan-400" />
+                      <h3 className="text-sm md:text-base font-bold text-white">Sessions</h3>
+                      <span className="ml-auto text-xs md:text-sm bg-cyan-500/20 text-cyan-300 px-2 py-1 rounded-full font-bold">
+                        {detailData.sessions.length}
+                      </span>
+                    </div>
+                    <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-1">
+                      {detailData.sessions.map((session, index) => (
+                        <div key={session.sessionId || index} className="bg-slate-900/50 rounded p-2 md:p-3 border-l-2 border-cyan-500">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs md:text-sm text-cyan-300 font-bold">Session #{detailData.sessions.length - index}</span>
+                            <span className={`text-xs md:text-sm px-2 py-1 rounded-full font-medium ${
+                              session.isActive 
+                                ? 'bg-green-500/30 text-green-200' 
+                                : 'bg-gray-500/30 text-gray-300'
+                            }`}>
+                              {session.isActive ? '● Live' : 'Ended'}
+                            </span>
+                          </div>
+                          <div className="space-y-1 text-xs md:text-sm">
+                            <div className="flex items-center justify-between">
+                              <span className="text-gray-400">Started</span>
+                              <span className="text-white font-medium">
+                                {new Date(session.startTime).toLocaleString('en-US', { 
+                                  month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                                })}
                               </span>
                             </div>
-                          )}
-                          <div className="flex justify-between items-center py-2 border-b border-blue-100">
-                            <span className="text-sm text-gray-600">Country:</span>
-                            <span className={`text-sm font-semibold ${isLocalVisitor ? 'text-orange-700' : 'text-gray-900'}`}>
-                              {isLocalVisitor ? 'Local/Private Network' : detailData.profile.geoLocation?.country}
-                            </span>
-                          </div>
-                          {!isLocalVisitor && (
-                            <>
-                              <div className="flex justify-between items-center py-2 border-b border-blue-100">
-                                <span className="text-sm text-gray-600">City:</span>
-                                <span className="text-sm font-semibold text-gray-900">
-                                  {detailData.profile.geoLocation?.city || 'Unknown'}
+                            <div className="flex items-center justify-between">
+                              <span className="text-gray-400">Duration</span>
+                              <span className="text-white font-medium">{formatDuration(session.duration)}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-gray-400">Pages</span>
+                              <span className="text-blue-400 font-bold">{session.pageViews}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-gray-400">Bubbles</span>
+                              <span className="text-purple-400 font-bold">{session.bubbleOpens}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-gray-400">Clicks</span>
+                              <span className="text-green-400 font-bold">{session.interactions}</span>
+                            </div>
+                            {session.referrerSource && (
+                              <div className="flex items-center justify-between mt-1 pt-1 border-t border-slate-700">
+                                <span className="text-gray-400">Source</span>
+                                <span className="text-orange-300 font-medium text-xs md:text-sm truncate ml-2" title={session.referrerSource}>
+                                  {session.referrerSource}
                                 </span>
                               </div>
-                              <div className="flex justify-between items-center py-2">
-                                <span className="text-sm text-gray-600">Timezone:</span>
-                                <span className="text-sm font-semibold text-gray-900">
-                                  {detailData.profile.geoLocation?.timezone || 'UTC'}
-                                </span>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Device Information */}
-                      <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-5 border border-green-200">
-                        <h4 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                          <Monitor className="w-5 h-5 text-green-600" />
-                          Device Type
-                        </h4>
-                        <div className="space-y-3">
-                          <div className="flex justify-between items-center py-2 border-b border-green-100">
-                            <span className="text-sm text-gray-600">Device:</span>
-                            <span className="text-sm font-semibold text-gray-900 capitalize flex items-center gap-2">
-                              {detailData.profile.deviceClass === 'desktop' && <Monitor className="w-4 h-4" />}
-                              {detailData.profile.deviceClass === 'mobile' && <Smartphone className="w-4 h-4" />}
-                              {detailData.profile.deviceClass === 'tablet' && <Tablet className="w-4 h-4" />}
-                              {detailData.profile.deviceClass}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center py-2 border-b border-green-100">
-                            <span className="text-sm text-gray-600">Browser:</span>
-                            <span className="text-sm font-semibold text-gray-900">
-                              {latestSession.browser?.name || 'Unknown'}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center py-2">
-                            <span className="text-sm text-gray-600">OS:</span>
-                            <span className="text-sm font-semibold text-gray-900">
-                              {latestSession.os?.name || deviceData.platform}
-                            </span>
+                            )}
                           </div>
                         </div>
-                      </div>
-                    </div>
-
-                    {/* Resume Analytics */}
-                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-5 border border-purple-200">
-                      <h4 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <FileDown className="w-5 h-5 text-purple-600" />
-                        Resume Activity
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="bg-white rounded-lg p-4">
-                          <div className="flex items-center gap-3 mb-2">
-                            <Eye className="w-5 h-5 text-purple-600" />
-                            <span className="text-sm text-gray-600">Resume Viewed</span>
-                          </div>
-                          <p className="text-3xl font-bold text-gray-900">{detailData.profile.resumeDownloads * 3}</p>
-                          <p className="text-xs text-gray-500 mt-1">Times opened in viewer</p>
-                        </div>
-                        <div className="bg-white rounded-lg p-4">
-                          <div className="flex items-center gap-3 mb-2">
-                            <FileDown className="w-5 h-5 text-orange-600" />
-                            <span className="text-sm text-gray-600">Resume Downloaded</span>
-                          </div>
-                          <p className="text-3xl font-bold text-gray-900">{detailData.profile.resumeDownloads}</p>
-                          <p className="text-xs text-gray-500 mt-1">Total downloads</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Visit History (if needed) */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-5">
-                      <h4 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <Clock className="w-5 h-5 text-gray-600" />
-                        Visit Timeline
-                      </h4>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
-                          <span className="text-sm text-gray-700">First Visit</span>
-                          <span className="text-sm font-semibold text-gray-900">
-                            {new Date(detailData.profile.firstVisit).toLocaleString()}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
-                          <span className="text-sm text-gray-700">Last Visit</span>
-                          <span className="text-sm font-semibold text-gray-900">
-                            {new Date(detailData.profile.lastVisit).toLocaleString()}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
-                          <span className="text-sm text-gray-700">Total Visits</span>
-                          <span className="text-sm font-semibold text-blue-600">
-                            {detailData.profile.totalVisits}
-                          </span>
-                        </div>
-                      </div>
+                      ))}
                     </div>
                   </div>
                 )}
               </div>
-            </>
+            </div>
           ) : (
-            <div className="text-center py-12 text-gray-500">
-              Failed to load visitor details
+            <div className="h-full flex items-center justify-center">
+              <p className="text-white text-lg md:text-xl">No data available</p>
             </div>
           )}
-          </div>
         </div>
       </div>
     </div>
@@ -1228,6 +1345,41 @@ function VisitorDataTable({ visitorIdParam }: { visitorIdParam?: string | null }
     }
   };
 
+  // Calculate countdown for temporary bans
+  const getbanCountdown = (banExpiresAt: any): string | null => {
+    if (!banExpiresAt) return null;
+    
+    try {
+      const expirationTime = banExpiresAt.toDate ? banExpiresAt.toDate() : new Date(banExpiresAt);
+      const now = new Date();
+      const diff = expirationTime.getTime() - now.getTime();
+      
+      if (diff <= 0) return "Expired";
+      
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      
+      if (days > 0) return `${days}d ${hours}h`;
+      if (hours > 0) return `${hours}h ${minutes}m`;
+      if (minutes > 0) return `${minutes}m ${seconds}s`;
+      return `${seconds}s`;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  // Live countdown update for temp bans
+  const [, forceUpdate] = useState({});
+  useEffect(() => {
+    // Update countdown every second for temp bans
+    const interval = setInterval(() => {
+      forceUpdate({});
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Render content (filters, table, modals)
   const renderContent = () => (
     <>
@@ -1546,7 +1698,23 @@ function VisitorDataTable({ visitorIdParam }: { visitorIdParam?: string | null }
                             }
                           </span>
                           {isNew && <span className="flex-shrink-0 text-xs font-semibold text-blue-600">✨</span>}
-                          {visitor.banned && <Ban className="w-3.5 h-3.5 text-red-600 flex-shrink-0" />}
+                          {visitor.banned && (
+                            <div className="flex items-center gap-1">
+                              <Ban className="w-3.5 h-3.5 text-red-600 flex-shrink-0" />
+                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                                (visitor as any).banType === 'temporary' 
+                                  ? 'bg-orange-100 text-orange-700' 
+                                  : 'bg-red-100 text-red-700'
+                              }`}>
+                                {(visitor as any).banType === 'temporary' ? 'TEMP' : 'PERM'}
+                              </span>
+                              {(visitor as any).banType === 'temporary' && (visitor as any).banExpiresAt && (
+                                <span className="text-[10px] font-mono text-orange-600">
+                                  {getbanCountdown((visitor as any).banExpiresAt)}
+                                </span>
+                              )}
+                            </div>
+                          )}
                         </div>
 
                         {/* Status */}
@@ -1815,13 +1983,66 @@ function VisitorDataTable({ visitorIdParam }: { visitorIdParam?: string | null }
 
                           {/* Ban Info */}
                           {visitor.banned && visitor.banReason && (
-                            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                              <p className="text-xs font-semibold text-red-800 mb-1">Ban Reason:</p>
-                              <p className="text-sm text-red-700">{visitor.banReason}</p>
+                            <div className={`border rounded-lg p-3 ${
+                              (visitor as any).banType === 'temporary' 
+                                ? 'bg-orange-50 border-orange-200' 
+                                : 'bg-red-50 border-red-200'
+                            }`}>
+                              <div className="flex items-center gap-2 mb-2">
+                                <p className={`text-xs font-semibold ${
+                                  (visitor as any).banType === 'temporary' 
+                                    ? 'text-orange-800' 
+                                    : 'text-red-800'
+                                }`}>
+                                  {(visitor as any).banType === 'temporary' ? '⏱️ Temporary Ban' : '🚫 Permanent Ban'}
+                                </p>
+                                {(visitor as any).banType === 'temporary' && (
+                                  <span className="text-xs font-bold px-2 py-0.5 rounded bg-orange-100 text-orange-700">
+                                    TEMP
+                                  </span>
+                                )}
+                                {(visitor as any).banType === 'permanent' && (
+                                  <span className="text-xs font-bold px-2 py-0.5 rounded bg-red-100 text-red-700">
+                                    PERM
+                                  </span>
+                                )}
+                              </div>
+                              <p className={`text-sm ${
+                                (visitor as any).banType === 'temporary' 
+                                  ? 'text-orange-700' 
+                                  : 'text-red-700'
+                              }`}>
+                                <strong>Reason:</strong> {visitor.banReason}
+                              </p>
                               {visitor.banTimestamp && (
-                                <p className="text-xs text-red-600 mt-1">
+                                <p className={`text-xs mt-1 ${
+                                  (visitor as any).banType === 'temporary' 
+                                    ? 'text-orange-600' 
+                                    : 'text-red-600'
+                                }`}>
                                   Banned on: {new Date(visitor.banTimestamp).toLocaleString()}
                                 </p>
+                              )}
+                              {(visitor as any).banType === 'temporary' && (visitor as any).banDuration && (
+                                <p className="text-xs text-orange-600 mt-1">
+                                  <strong>Duration:</strong> {(visitor as any).banDuration} minutes
+                                </p>
+                              )}
+                              {(visitor as any).banType === 'temporary' && (visitor as any).banExpiresAt && (
+                                <div className="mt-2 p-2 bg-orange-100 rounded border border-orange-300">
+                                  <p className="text-xs text-orange-800">
+                                    <strong>Expires in:</strong>{" "}
+                                    <span className="font-mono font-bold">
+                                      {getbanCountdown((visitor as any).banExpiresAt) || "Calculating..."}
+                                    </span>
+                                  </p>
+                                  <p className="text-[10px] text-orange-600 mt-1">
+                                    {(visitor as any).autoUnbanEnabled 
+                                      ? "✅ Auto-unban enabled (server-side)" 
+                                      : "⚠️ Manual unban required"
+                                    }
+                                  </p>
+                                </div>
                               )}
                             </div>
                           )}

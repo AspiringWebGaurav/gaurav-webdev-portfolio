@@ -155,6 +155,7 @@ export default function ChatBubble() {
       <button
         onClick={handleToggle}
         disabled={loading}
+        data-chat-bubble
         className={`
           fixed z-50 flex items-center gap-2 justify-center shadow-lg 
           transition-all duration-500 hover:scale-105 active:scale-95

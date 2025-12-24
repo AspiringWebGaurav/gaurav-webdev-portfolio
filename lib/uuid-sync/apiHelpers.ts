@@ -5,6 +5,7 @@
 
 import { translateMaskToUUID, translateUUIDToMask } from './services/maskTranslator';
 import { isValidMask } from './core/generator';
+import logger from '../logger';
 
 /**
  * Extract visitor identifier from request body
@@ -32,7 +33,7 @@ export async function resolveToMask(uuid: string): Promise<string> {
   try {
     return await translateUUIDToMask(uuid);
   } catch (error) {
-    console.error('Failed to resolve mask for UUID:', uuid.substring(0, 13));
+    logger.error('Failed to resolve mask for UUID:', uuid.substring(0, 13));
     return `device_unknown`;
   }
 }

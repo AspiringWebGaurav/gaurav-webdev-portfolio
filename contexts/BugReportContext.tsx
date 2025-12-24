@@ -10,6 +10,7 @@ import React, {
 } from "react";
 import { usePathname } from "next/navigation";
 import { showToast } from "@/lib/toast";
+import smartPolling from "@/lib/smartPolling";
 import {
   BugReport,
   CreateBugReportDTO,
@@ -47,6 +48,7 @@ export function BugReportProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const previousNewCountRef = useRef<number>(0);
   const hasInitializedRef = useRef(false);
+  const lastFetchRef = useRef<number>(0); // Track last fetch timestamp
 
   // Only fetch bug reports on admin pages (requires authentication)
   const isAdminPage = pathname?.startsWith('/admin');
@@ -58,10 +60,17 @@ export function BugReportProvider({ children }: { children: React.ReactNode }) {
    * to avoid Firebase permission errors on public pages.
    * Non-admin pages can still submit bug reports via createBugReport.
    */
-  const fetchBugReports = useCallback(async (showLoading = true) => {
+  const fetchBugReports = useCallback(async (showLoading = true, force = false) => {
     // Skip fetching on non-admin pages to avoid permission errors
     if (!isAdminPage) {
       setLoading(false);
+      return;
+    }
+
+    // Cache age check: Skip fetch if data is less than 30s old (unless forced)
+    const cacheAge = Date.now() - lastFetchRef.current;
+    if (!force && cacheAge < 30000 && bugReports.length > 0) {
+      console.log(`[BugReports] ⚡ Using cached data (age: ${Math.floor(cacheAge / 1000)}s)`);
       return;
     }
 
@@ -105,6 +114,7 @@ export function BugReportProvider({ children }: { children: React.ReactNode }) {
       const currentNew = reports.filter((r: BugReport) => r.status === "new").length;
 
       setBugReports(reports);
+      lastFetchRef.current = Date.now(); // Update last fetch timestamp
 
       // Update ref for next comparison
       previousNewCountRef.current = currentNew;
@@ -128,7 +138,7 @@ export function BugReportProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [isAdminPage]);
+  }, [isAdminPage, bugReports.length]);
 
   /**
    * Initial load - only on admin pages
@@ -146,17 +156,30 @@ export function BugReportProvider({ children }: { children: React.ReactNode }) {
   }, [fetchBugReports, isAdminPage]);
 
   /**
-   * Polling for updates (every 30 seconds) - only on admin pages
+   * Smart polling for updates - only on admin pages
+   * Polls only when admin is actively viewing dashboard
    */
   useEffect(() => {
     // Only poll on admin pages
     if (!isAdminPage) return;
 
-    const interval = setInterval(() => {
-      fetchBugReports(false);
-    }, 30000);
+    const pollerId = smartPolling.start(
+      async () => {
+        await fetchBugReports(false); // Silent refresh
+      },
+      {
+        intervals: {
+          realtime: 15000,  // 15s when admin actively managing bugs
+          active: 60000,    // 1min when admin on page but idle
+          idle: 180000,     // 3min when admin away
+          background: 0,    // Stop when tab hidden (80% savings!)
+        },
+        priority: 'high',
+        tag: 'bug-reports',
+      }
+    );
 
-    return () => clearInterval(interval);
+    return () => smartPolling.stop(pollerId);
   }, [fetchBugReports, isAdminPage]);
 
   /**

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
 import { PredefinedQuestion } from '@/types/bubble';
 
@@ -22,6 +22,10 @@ export default function PredefinedQuestions({ title }: PredefinedQuestionsProps)
   const [loading, setLoading] = useState(true);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [maintenanceSettings, setMaintenanceSettings] = useState<MaintenanceBubbleSettings | null>(null);
+  
+  // Refs for scrolling and auto-close timer
+  const questionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const autoCloseTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Check maintenance status
   useEffect(() => {
@@ -66,8 +70,44 @@ export default function PredefinedQuestions({ title }: PredefinedQuestionsProps)
   }, []);
 
   const toggleQuestion = (id: string) => {
+    const isExpanding = expandedId !== id;
+    
+    // Clear existing timer
+    if (autoCloseTimerRef.current) {
+      clearTimeout(autoCloseTimerRef.current);
+      autoCloseTimerRef.current = null;
+    }
+    
     setExpandedId(expandedId === id ? null : id);
+    
+    // If expanding, scroll into view and start auto-close timer
+    if (isExpanding) {
+      setTimeout(() => {
+        const element = questionRefs.current.get(id);
+        if (element) {
+          element.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'nearest',
+            inline: 'nearest'
+          });
+        }
+      }, 100); // Small delay to let expansion animation start
+      
+      // Auto-close after 1 minute of idle time
+      autoCloseTimerRef.current = setTimeout(() => {
+        setExpandedId(null);
+      }, 60000); // 60 seconds
+    }
   };
+  
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (autoCloseTimerRef.current) {
+        clearTimeout(autoCloseTimerRef.current);
+      }
+    };
+  }, []);
 
   // Check if predefined questions are disabled during maintenance
   const isPredefinedQuestionsDisabled = maintenanceMode && maintenanceSettings && !maintenanceSettings.allowPredefinedQuestions;
@@ -111,6 +151,10 @@ export default function PredefinedQuestions({ title }: PredefinedQuestionsProps)
         {questions.map(question => (
           <div
             key={question.id}
+            ref={(el) => {
+              if (el) questionRefs.current.set(question.id, el);
+              else questionRefs.current.delete(question.id);
+            }}
             className="rounded-lg border border-gray-200 overflow-hidden transition-all hover:border-gray-300 hover:shadow-sm"
           >
             <button

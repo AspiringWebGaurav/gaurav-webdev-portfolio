@@ -64,6 +64,7 @@ export default function BanChecker() {
         const params = new URLSearchParams({
           reason: status.banReason || "Security Violation",
           category: status.banCategory || "normal",
+          banType: status.banType || "permanent",
           timestamp: new Date().toISOString(),
         });
         window.location.href = `/banned?${params.toString()}`;
@@ -117,6 +118,7 @@ export default function BanChecker() {
           const params = new URLSearchParams({
             reason: data.banReason || "Security Violation",
             category: data.banCategory || "normal",
+            banType: data.banType || "permanent",
             timestamp: new Date().toISOString(),
           });
           
@@ -187,6 +189,7 @@ export default function BanChecker() {
             const params = new URLSearchParams({
               reason,
               category,
+              banType: data.banType || "permanent",
               timestamp: data.banInfo?.timestamp || new Date().toISOString(),
             });
             window.location.href = `/banned?${params.toString()}`;

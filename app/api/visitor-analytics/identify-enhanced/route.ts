@@ -13,6 +13,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebaseAdmin';
 import { Timestamp, FieldValue } from 'firebase-admin/firestore';
+import { deduplicate } from '@/lib/requestDeduplication';
+import logger from '@/lib/logger';
 
 const COLLECTIONS = {
   VISITOR_PROFILES: 'og_uuid',
@@ -22,7 +24,17 @@ const COLLECTIONS = {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    // Handle empty body (OPTIONS requests, etc.)
+    let body;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      return NextResponse.json({
+        success: false,
+        error: 'Invalid JSON body',
+      }, { status: 400 });
+    }
+    
     const {
       fingerprint,
       userAgent,
@@ -46,44 +58,89 @@ export async function POST(request: NextRequest) {
     const now = Timestamp.now();
     const fpHash = hashFingerprint(fingerprint);
     
-    // Use transaction to prevent race conditions
-    const result = await adminDb.runTransaction(async (transaction) => {
-      // Step 1: Check if fingerprint already exists
-      const fpRef = adminDb.collection(COLLECTIONS.FINGERPRINTS).doc(fpHash);
-      const fpDoc = await transaction.get(fpRef);
-      
-      if (fpDoc.exists) {
-        // Existing identity found - update visit count
-        const fpData = fpDoc.data()!;
-        const visitorRef = adminDb.collection(COLLECTIONS.VISITOR_PROFILES).doc(fpData.uuid);
-        const visitorDoc = await transaction.get(visitorRef);
-        const visitorData = visitorDoc.data();
+    logger.debug('[IdentifyEnhanced] Processing fingerprint:', fpHash);
+    
+    // CRITICAL: Deduplicate by fingerprint to prevent multiple identities
+    // from being created when client makes concurrent requests
+    const result = await deduplicate(
+      `identify-${fpHash}`,
+      async () => {
+        // OPTIMIZATION: Pre-transaction check for existing fingerprint
+        // This prevents expensive transactions for 99% of requests (returning visitors)
+        const fpRef = adminDb.collection(COLLECTIONS.FINGERPRINTS).doc(fpHash);
+        const preCheckDoc = await fpRef.get();
         
-        // Update last seen
-        transaction.update(visitorRef, {
-          lastSeenAt: now,
-          updatedAt: now,
-          visitCount: FieldValue.increment(1),
-          ipAddress: ip,
-        });
+        if (preCheckDoc.exists) {
+          logger.debug('[IdentifyEnhanced] Pre-check: Fingerprint exists, skipping transaction');
+          const fpData = preCheckDoc.data()!;
+          const visitorRef = adminDb.collection(COLLECTIONS.VISITOR_PROFILES).doc(fpData.uuid);
+          const visitorSnap = await visitorRef.get();
+          const visitorData = visitorSnap.data();
+          
+          // Update last seen without transaction (faster)
+          await visitorRef.update({
+            lastSeenAt: now,
+            updatedAt: now,
+            visitCount: FieldValue.increment(1),
+            ipAddress: ip,
+          });
+          
+          return {
+            uuid: fpData.uuid,
+            mask: fpData.mask,
+            isNewIdentity: false,
+            matchedSignal: 'fingerprint',
+            banned: visitorData?.banned || false,
+            banReason: visitorData?.banReason || null,
+            banCategory: visitorData?.banCategory || null,
+            visitCount: (visitorData?.visitCount || 0) + 1,
+            firstSeenAt: visitorData?.firstSeenAt,
+            lastSeenAt: now,
+          };
+        }
         
-        return {
-          uuid: fpData.uuid,
-          mask: fpData.mask,
-          isNewIdentity: false,
-          matchedSignal: 'fingerprint',
-          banned: visitorData?.banned || false,
-          banReason: visitorData?.banReason || null,
-          banCategory: visitorData?.banCategory || null,
-          visitCount: (visitorData?.visitCount || 0) + 1,
-          firstSeenAt: visitorData?.firstSeenAt,
-          lastSeenAt: now,
-        };
-      }
+        logger.debug('[IdentifyEnhanced] Pre-check: New fingerprint, starting transaction');
+        
+        // Use transaction to prevent race conditions for NEW visitors only
+        return await adminDb.runTransaction(async (transaction) => {
+          // Step 1: Double-check if fingerprint exists (another request might have created it)
+          const fpDoc = await transaction.get(fpRef);
+          
+          if (fpDoc.exists) {
+            // Identity was created by another concurrent request - return it
+            logger.debug('[IdentifyEnhanced] Transaction: Fingerprint now exists (concurrent creation)');
+            const fpData = fpDoc.data()!;
+            const visitorRef = adminDb.collection(COLLECTIONS.VISITOR_PROFILES).doc(fpData.uuid);
+            const visitorDoc = await transaction.get(visitorRef);
+            const visitorData = visitorDoc.data();
+            
+            // Update last seen
+            transaction.update(visitorRef, {
+              lastSeenAt: now,
+              updatedAt: now,
+              visitCount: FieldValue.increment(1),
+              ipAddress: ip,
+            });
+            
+            return {
+              uuid: fpData.uuid,
+              mask: fpData.mask,
+              isNewIdentity: false,
+              matchedSignal: 'fingerprint',
+              banned: visitorData?.banned || false,
+              banReason: visitorData?.banReason || null,
+              banCategory: visitorData?.banCategory || null,
+              visitCount: (visitorData?.visitCount || 0) + 1,
+              firstSeenAt: visitorData?.firstSeenAt,
+              lastSeenAt: now,
+            };
+          }
       
       // Step 2: Create new identity (inside transaction to prevent duplicates)
       const uuid = crypto.randomUUID();
       const mask = `device_${Math.random().toString(36).substring(2, 12)}`;
+      
+      logger.debug('[IdentifyEnhanced] Creating new identity:', mask, 'for fingerprint:', fpHash);
       
       const visitorRef = adminDb.collection(COLLECTIONS.VISITOR_PROFILES).doc(uuid);
       const maskRef = adminDb.collection(COLLECTIONS.MASKS).doc(mask);
@@ -122,7 +179,7 @@ export async function POST(request: NextRequest) {
         createdAt: now,
       });
       
-      console.log('[IdentifyEnhanced] Created new identity', { mask, fpHash });
+      logger.debug('[IdentifyEnhanced] ✅ New identity created successfully:', mask);
       
       return {
         uuid,
@@ -136,6 +193,15 @@ export async function POST(request: NextRequest) {
         firstSeenAt: now,
         lastSeenAt: now,
       };
+    });
+  },
+  2000 // 2s TTL - prevent concurrent identity creation
+);
+
+    logger.debug('[IdentifyEnhanced] Result:', { 
+      mask: result.mask, 
+      isNew: result.isNewIdentity, 
+      matchedSignal: result.matchedSignal 
     });
     
     return NextResponse.json({
