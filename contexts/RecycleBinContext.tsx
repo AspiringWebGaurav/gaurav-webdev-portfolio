@@ -15,6 +15,7 @@ import {
   RecycleBinStats,
   RecycleBinFilters,
 } from "@/types/recycleBin";
+import { broadcastCacheClear } from "@/lib/cacheInvalidation";
 
 /**
  * Mapping configuration for data source operations
@@ -367,6 +368,19 @@ export const RecycleBinProvider: React.FC<RecycleBinProviderProps> = ({
             `${label} restored successfully`,
             "Item Restored"
           );
+          
+          // Broadcast cache clear if restoring visitor-related data
+          if (item.source === 'bubbleSession' || item.source === 'banAppeal') {
+            try {
+              await broadcastCacheClear('visitor-restore', { 
+                source: item.source, 
+                id: recycleBinId 
+              });
+              console.log('[RecycleBin] Cache clear broadcasted after restore');
+            } catch (broadcastError) {
+              console.error('[RecycleBin] Failed to broadcast cache clear:', broadcastError);
+            }
+          }
           
           return result.item.data;
         } else {

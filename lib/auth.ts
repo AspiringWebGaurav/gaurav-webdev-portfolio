@@ -4,6 +4,7 @@ import type { User } from "firebase/auth";
 import {
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithCustomToken,
   GoogleAuthProvider,
   onAuthStateChanged,
   signOut as fbSignOut,
@@ -12,6 +13,7 @@ import {
 import { auth } from "./firebase";
 import { showToast } from "./toast";
 import { createAuthNotification } from "./notificationHelpers";
+import { encryptDevAuth, generateDevAuthChallenge } from "./devAuthCrypto";
 
 export { auth };
 
@@ -173,4 +175,117 @@ export function initAuthListener(cb: (user: User | null) => void) {
   });
 
   return unsub;
+}
+
+/**
+ * Development one-click login
+ * HIGH PRIORITY: Secure encrypted authentication for fast dev access
+ */
+export async function devQuickLogin(options?: { silent?: boolean; password?: string }): Promise<boolean> {
+  try {
+    // Generate challenge (timestamp + random)
+    const challenge = generateDevAuthChallenge();
+    const password = options?.password || "";
+    
+    if (!password) {
+      throw new Error("Password is required");
+    }
+    
+    // Create payload: "password:timestamp:random"
+    const payload = `${password}:${challenge}`;
+    console.log("Client: Creating payload...");
+    console.log("Client: Password length:", password.length);
+    console.log("Client: Challenge:", challenge.substring(0, 20) + "...");
+    
+    // Encrypt the payload
+    const encryptedPayload = await encryptDevAuth(payload);
+    console.log("Client: Encrypted payload:", encryptedPayload.substring(0, 40) + "...");
+    
+    // Make secure API call
+    const response = await fetch("/api/auth/dev-login", {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "X-Dev-Auth": "encrypted"
+      },
+      body: JSON.stringify({ encryptedPayload }),
+    });
+
+    if (!response.ok) {
+      let error: any = {};
+      try {
+        error = await response.json();
+      } catch (e) {
+        // If JSON parsing fails, create error from status
+        error = { error: `HTTP ${response.status}: ${response.statusText}` };
+      }
+      
+      // User-friendly error messages
+      let errorMessage = "Authentication failed";
+      if (error.error === "Invalid credentials") {
+        errorMessage = "Incorrect password. Please check and try again.";
+      } else if (error.error === "Challenge expired or invalid") {
+        errorMessage = "Request expired. Please try again.";
+      } else if (error.error) {
+        errorMessage = error.error;
+      } else if (response.status === 401) {
+        errorMessage = "Incorrect password. Please check and try again.";
+      } else if (response.status === 503) {
+        errorMessage = "Development login not available. Please contact administrator.";
+      }
+      
+      if (!options?.silent) {
+        showToast.error(errorMessage, "Login Failed", { autoClose: 4000 });
+      }
+      
+      // Return false instead of throwing to avoid console errors
+      return false;
+    }
+
+    const data = await response.json();
+    
+    if (!data.success || !data.customToken) {
+      const errorMessage = "Authentication unsuccessful. Please try again.";
+      if (!options?.silent) {
+        showToast.error(errorMessage, "Login Failed", { autoClose: 4000 });
+      }
+      // Return false instead of throwing to avoid console errors
+      return false;
+    }
+
+    console.log("Client: Got custom token, signing in to Firebase...");
+
+    // Sign in to Firebase with custom token
+    const credential = await signInWithCustomToken(auth, data.customToken);
+    const user = credential.user;
+
+    console.log("Client: Firebase sign-in successful");
+    console.log("Client: User UID:", user.uid);
+    console.log("Client: User Email:", user.email);
+
+    // Wait a moment for auth state to stabilize
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Create login notification
+    if (!options?.silent) {
+      await createAuthNotification("login", user);
+    } else {
+      createAuthNotification("login", user, { silent: true }).catch(err => 
+        console.error("Failed to create login notification:", err)
+      );
+    }
+
+    return true;
+  } catch (err: unknown) {
+    const message = (err as Error).message || "Authentication failed. Please try again.";
+    
+    // Only show toast if not already shown above
+    const isNetworkError = message.includes("fetch") || message.includes("network");
+    if (!options?.silent && isNetworkError) {
+      showToast.error("Network error. Please check your connection.", "Connection Error");
+    }
+    
+    console.error("Dev login error:", err);
+    throw err;
+  }
 }

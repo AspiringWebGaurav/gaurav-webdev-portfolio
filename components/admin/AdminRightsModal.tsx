@@ -1,7 +1,8 @@
 "use client";
 import React from "react";
-import { X, Shield, Wrench } from "lucide-react";
+import { X, Shield, Wrench, Trash2 } from "lucide-react";
 import MaintenanceControl from "./MaintenanceControl";
+import CacheClearControl from "./CacheClearControl";
 
 interface AdminRightsModalProps {
   isOpen: boolean;
@@ -38,6 +39,15 @@ export default function AdminRightsModal({ isOpen, onClose }: AdminRightsModalPr
               <h3 className="text-lg font-semibold text-gray-800">Maintenance Mode</h3>
             </div>
             <MaintenanceControl />
+          </div>
+
+          {/* Cache Clear Section */}
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <Trash2 className="w-5 h-5 text-red-600" />
+              <h3 className="text-lg font-semibold text-gray-800">Cache Management</h3>
+            </div>
+            <CacheClearControl />
           </div>
 
           {/* Future Features Placeholder */}

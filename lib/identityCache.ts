@@ -23,6 +23,9 @@ const CACHE_TTL = 5 * 60 * 1000; // 5 minutes (300 seconds)
 // In-memory cache (session-scoped, cleared on page refresh)
 let identityCache: CachedIdentity | null = null;
 
+// Cache version for invalidation tracking
+let CACHE_VERSION = 1;
+
 /**
  * Get cached identity if valid
  * Returns null if cache miss or expired
@@ -86,6 +89,22 @@ export function setCachedIdentity(fingerprint: string, identity: EnhancedIdentit
 export function clearIdentityCache(): void {
   console.log('[Identity Cache] 🗑️ Cache cleared');
   identityCache = null;
+  CACHE_VERSION++;
+}
+
+/**
+ * Bump cache version to invalidate all caches globally
+ */
+export function bumpCacheVersion(): void {
+  CACHE_VERSION++;
+  console.log('[Identity Cache] 📈 Cache version bumped to:', CACHE_VERSION);
+}
+
+/**
+ * Get current cache version
+ */
+export function getCacheVersion(): number {
+  return CACHE_VERSION;
 }
 
 /**
@@ -105,7 +124,13 @@ export function hasCachedIdentity(fingerprint: string): boolean {
  */
 export function getCacheStats() {
   if (!identityCache) {
-    return { cached: false, age: null, ttl: CACHE_TTL };
+    return { 
+      cached: false, 
+      age: null, 
+      ttl: CACHE_TTL, 
+      version: CACHE_VERSION,
+      entries: 0,
+    };
   }
 
   const age = Date.now() - identityCache.timestamp;
@@ -118,5 +143,7 @@ export function getCacheStats() {
     ttl: Math.round(CACHE_TTL / 1000), // seconds
     fingerprint: identityCache.fingerprint.substring(0, 15),
     mask: identityCache.mask?.substring(0, 15),
+    version: CACHE_VERSION,
+    entries: 1,
   };
 }

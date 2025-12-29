@@ -17,7 +17,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, AlertTriangle, Clock } from 'lucide-react';
+import { X, AlertTriangle, Clock, Check } from 'lucide-react';
 import { useMaintenanceStatus } from '@/contexts/MaintenanceStatusContext';
 import { isLocalhost } from '@/lib/environmentUtils';
 
@@ -34,6 +34,9 @@ export default function LocalMaintenanceBanner() {
 
   // Check if we're on admin page
   const isAdminPage = pathname?.startsWith('/admin');
+  
+  // Track if we should auto-dismiss after showing auto-ended message
+  const [autoEndedShown, setAutoEndedShown] = useState(false);
 
   // Check if we're on localhost (client-side only)
   useEffect(() => {
@@ -117,21 +120,31 @@ export default function LocalMaintenanceBanner() {
     const shouldShow = (
       isLocalhost() &&
       !isAdminPage &&  // Don't show on admin pages
-      status.enabled &&
+      (status.enabled || status.autoEndTriggered) && // Show for active OR auto-ended
       !isLoading &&
       !isDismissed
     );
 
     setIsVisible(shouldShow);
-  }, [isClient, isAdminPage, status.enabled, isLoading, isDismissed]);
+    
+    // Auto-dismiss after 10 seconds if showing auto-ended state
+    if (status.autoEndTriggered && shouldShow) {
+      const timeout = setTimeout(() => {
+        setIsDismissed(true);
+        localStorage.setItem(STORAGE_KEY, Date.now().toString());
+      }, 10000); // 10 seconds to read the message
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [isClient, isAdminPage, status.enabled, status.autoEndTriggered, isLoading, isDismissed]);
 
-  // Clear storage when maintenance is disabled
+  // Clear storage when maintenance is disabled (not auto-ended)
   useEffect(() => {
-    if (!status.enabled && isClient) {
+    if (!status.enabled && !status.autoEndTriggered && isClient) {
       localStorage.removeItem(STORAGE_KEY);
       setIsDismissed(false);
     }
-  }, [status.enabled, isClient]);
+  }, [status.enabled, status.autoEndTriggered, isClient]);
 
   // Handle dismiss
   const handleDismiss = useCallback(() => {
@@ -164,27 +177,55 @@ export default function LocalMaintenanceBanner() {
                   </div>
                   
                   <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-orange-100/90 uppercase tracking-wider">
-                        🌐 Production: Maintenance Mode Active
-                      </span>
-                      <span className="hidden sm:inline text-orange-200/50">•</span>
-                    </div>
-                    
-                    {/* Timer */}
-                    {status.estimatedEndTime && (
-                      <div className="flex items-center gap-2 text-sm text-orange-100/90">
-                        <Clock className="w-4 h-4 text-orange-300" />
-                        <span className="font-mono font-semibold">
-                          {status.isOverdue ? (
-                            <span className="text-yellow-300">
-                              Overdue by {status.overdueBy}m
+                    {status.autoEndTriggered ? (
+                      // AUTO-ENDED STATE - Clear message
+                      <>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-green-100 uppercase tracking-wider">
+                            ✅ Production: Maintenance Ended Automatically
+                          </span>
+                          <span className="hidden sm:inline text-green-200/50">•</span>
+                        </div>
+                        {status.autoEndDetectedAt && (
+                          <div className="flex items-center gap-2 text-sm text-green-100/90">
+                            <Clock className="w-4 h-4 text-green-300" />
+                            <span className="font-mono font-semibold">
+                              Ended: {new Date(status.autoEndDetectedAt).toLocaleString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
                             </span>
-                          ) : (
-                            <span className="text-orange-200">Ends in: {timeLeft}</span>
-                          )}
-                        </span>
-                      </div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      // ACTIVE STATE
+                      <>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-orange-100/90 uppercase tracking-wider">
+                            🌐 Production: Maintenance Mode Active
+                          </span>
+                          <span className="hidden sm:inline text-orange-200/50">•</span>
+                        </div>
+                        
+                        {/* Timer */}
+                        {status.estimatedEndTime && (
+                          <div className="flex items-center gap-2 text-sm text-orange-100/90">
+                            <Clock className="w-4 h-4 text-orange-300" />
+                            <span className="font-mono font-semibold">
+                              {status.isOverdue ? (
+                                <span className="text-yellow-300">
+                                  Overdue by {status.overdueBy}m
+                                </span>
+                              ) : (
+                                <span className="text-orange-200">Ends in: {timeLeft}</span>
+                              )}
+                            </span>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -192,17 +233,32 @@ export default function LocalMaintenanceBanner() {
                 {/* Close Button */}
                 <button
                   onClick={handleDismiss}
-                  className="flex-shrink-0 p-1.5 rounded-md hover:bg-orange-500/20 transition-all duration-300 group"
+                  className={`flex-shrink-0 p-1.5 rounded-md transition-all duration-300 group ${
+                    status.autoEndTriggered
+                      ? 'hover:bg-green-500/20'
+                      : 'hover:bg-orange-500/20'
+                  }`}
                   aria-label="Dismiss banner"
                 >
-                  <X className="w-5 h-5 text-orange-300 group-hover:text-orange-100 transition-colors" />
+                  <X className={`w-5 h-5 transition-colors ${
+                    status.autoEndTriggered
+                      ? 'text-green-300 group-hover:text-green-100'
+                      : 'text-orange-300 group-hover:text-orange-100'
+                  }`} />
                 </button>
               </div>
 
               {/* Helper Text */}
               <div className="px-4 pb-3 pt-1">
-                <p className="text-xs text-orange-200/70">
-                  You&apos;re on localhost - this won&apos;t affect your development. Production visitors see the maintenance page.
+                <p className={`text-xs ${
+                  status.autoEndTriggered
+                    ? 'text-green-200/70'
+                    : 'text-orange-200/70'
+                }`}>
+                  {status.autoEndTriggered
+                    ? "Maintenance has ended. Production site is now accessible. This message will auto-dismiss."
+                    : "You're on localhost - this won't affect your development. Production visitors see the maintenance page."
+                  }
                 </p>
               </div>
             </div>

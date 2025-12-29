@@ -8,10 +8,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { translateMaskToUUID, firestoreGetVisitorDocument } from '@/lib/uuid-sync/server';
+import { translateMaskToUUIDNoCache, firestoreGetVisitorDocument } from '@/lib/uuid-sync/server';
 import { checkRateLimit } from '@/lib/rateLimit';
 import { adminDb } from '@/lib/firebaseAdmin';
 import { FieldValue } from 'firebase-admin/firestore';
+import { broadcastCacheClear } from '@/lib/cacheInvalidation';
 
 /**
  * Helper function to auto-unban visitor when temporary ban expires
@@ -78,8 +79,8 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      // Translate mask to UUID
-      const uuid = await translateMaskToUUID(mask);
+      // Translate mask to UUID (NO CACHE - fresh lookup for ban checks)
+      const uuid = await translateMaskToUUIDNoCache(mask);
       
       // Get visitor document to check ban status
       const visitorDoc = await firestoreGetVisitorDocument(uuid);
@@ -99,13 +100,28 @@ export async function POST(request: NextRequest) {
               const success = await autoUnbanVisitor(uuid);
               
               if (success) {
+                // Broadcast cache clear after auto-unban
+                try {
+                  await broadcastCacheClear('auto-unban', { mask, uuid });
+                  console.log('[Real-Time Ban Check] Cache clear broadcasted after auto-unban');
+                } catch (broadcastError) {
+                  console.error('[Real-Time Ban Check] Failed to broadcast cache clear:', broadcastError);
+                }
+                
                 // Return unbanned status
-                return NextResponse.json({
-                  banned: false,
-                  autoUnbanned: true,  // Flag to indicate auto-unban occurred
-                  mask,
-                  uuid,
-                });
+                return NextResponse.json(
+                  {
+                    banned: false,
+                    autoUnbanned: true,  // Flag to indicate auto-unban occurred
+                    mask,
+                    uuid,
+                  },
+                  {
+                    headers: {
+                      'Cache-Control': 'no-store, must-revalidate',
+                    },
+                  }
+                );
               }
               
               // If auto-unban failed, continue with banned status (fail-safe)
@@ -128,28 +144,51 @@ export async function POST(request: NextRequest) {
           banExpiresAt: visitorDoc.banExpiresAt?.toDate?.()?.toISOString(),  // NEW: Include expiration
           uuid,
           mask,
-        });
+        },
+        {
+          headers: {
+            'Cache-Control': 'no-store, must-revalidate',
+          },
+        }
+      );
       }
       
       // Not banned
-      return NextResponse.json({
-        banned: false,
-        mask,
-        uuid,
-      });
+      return NextResponse.json(
+        {
+          banned: false,
+          mask,
+          uuid,
+        },
+        {
+          headers: {
+            'Cache-Control': 'no-store, must-revalidate',
+          },
+        }
+      );
     } catch (error: any) {
       // Mask not found or error
       console.error('[Real-Time Ban Check] Error:', error.message);
       return NextResponse.json(
         { error: 'Failed to check ban status', details: error.message },
-        { status: 500 }
+        { 
+          status: 500,
+          headers: {
+            'Cache-Control': 'no-store, must-revalidate',
+          },
+        }
       );
     }
   } catch (error: any) {
     console.error('[Real-Time Ban Check] Request error:', error);
     return NextResponse.json(
       { error: 'Invalid request' },
-      { status: 400 }
+      { 
+        status: 400,
+        headers: {
+          'Cache-Control': 'no-store, must-revalidate',
+        },
+      }
     );
   }
 }

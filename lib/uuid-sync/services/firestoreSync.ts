@@ -120,7 +120,7 @@ export async function firestoreSaveIdentity(identity: VisitorIdentity): Promise<
  */
 export async function firestoreGetUUIDByMask(mask: string): Promise<string> {
   try {
-    // Query mask lookup collection (faster than querying main collection)
+    // Query mask lookup collection (faster than querying main collection)  
     const maskDoc = await db
       .collection(COLLECTIONS.MASK_MAP)
       .doc(mask)
@@ -185,15 +185,27 @@ export async function firestoreUpdateLastVisit(uuid: string): Promise<void> {
  */
 export async function firestoreCheckBanStatus(uuid: string): Promise<boolean> {
   try {
+    console.log('[FirestoreSync] Checking ban status for UUID:', uuid);
+    
     const docRef = db.collection(COLLECTIONS.VISITOR_PROFILES).doc(uuid);
     const doc = await docRef.get();
 
     if (!doc.exists) {
+      console.log('[FirestoreSync] Document does not exist');
       return false;
     }
 
     const data = doc.data() as VisitorDocument;
-    return data.banned === true;
+    const banned = data.banned === true;
+    
+    console.log('[FirestoreSync] Ban status check result:', {
+      uuid,
+      banned,
+      banReason: data.banReason,
+      rawBanned: data.banned
+    });
+    
+    return banned;
   } catch (error) {
     logError('Failed to check ban status', error);
     return false; // Fail open - don't block on errors
@@ -215,6 +227,6 @@ export async function firestoreGetVisitorDocument(uuid: string): Promise<Visitor
     return doc.data() as VisitorDocument;
   } catch (error) {
     logError('Failed to get visitor document', error);
-    throw error;
+    return null;
   }
 }

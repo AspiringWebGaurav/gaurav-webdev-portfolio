@@ -61,8 +61,8 @@ export function BubbleSessionProvider({ children }: { children: React.ReactNode 
     if (typeof window !== 'undefined') {
       const pathname = window.location.pathname;
       
-      // Skip visitor tracking for admin panel and banned page
-      if (pathname === '/banned' || pathname.startsWith('/admin')) {
+      // Skip visitor tracking for admin panel, banned page, and 404
+      if (pathname === '/banned' || pathname.startsWith('/admin') || !pathname || pathname === '/_not-found') {
         logger.debug('[BubbleSession] ⏭️ Skipping session init on', pathname, '(not a visitor)');
         setLoading(false);
         return;
@@ -273,7 +273,7 @@ export function BubbleSessionProvider({ children }: { children: React.ReactNode 
     }
   }, [visitorId]);
 
-  // Setup smart polling for tooltip - live reactive notifications
+  // Setup smart polling for tooltip - COST-OPTIMIZED: Only poll when actually needed
   useEffect(() => {
     if (!visitorId) return;
 
@@ -283,27 +283,29 @@ export function BubbleSessionProvider({ children }: { children: React.ReactNode 
       checkForTooltipUpdates,
       {
         intervals: {
-          realtime: 5000,   // 5s when page active (fast notifications)
-          active: 10000,    // 10s normal activity
-          idle: 30000,      // 30s when idle
-          background: 60000, // 1min when tab hidden
+          realtime: 10000,   // 10s when page active (reduced from 2s to save costs)
+          active: 30000,     // 30s normal activity (reduced from 5s)
+          idle: 120000,      // 2min when idle (reduced from 30s) - MAJOR COST SAVING
+          background: 0,     // STOP when tab hidden - NO POLLING = ZERO COST!
         },
-        priority: 'normal', // Normal priority for user notifications
-        maxIdleTime: 120000, // 2 minutes
-        stopOnHidden: false, // Keep polling even when hidden (user wants notifications)
+        priority: 'low',    // Low priority - not critical for user experience
+        maxIdleTime: 300000, // 5 minutes - stop completely after this
+        stopOnHidden: true,  // ✅ STOP polling when tab hidden - SAVES MONEY!
+        stopOnIdle: true,    // ✅ STOP polling when user is idle - SAVES MONEY!
         tag: 'BubbleTooltip',
       }
     );
 
-    // Start polling immediately
-    smartPolling.setMode('bubble-tooltip-check', 'realtime');
+    // Start in active mode (not realtime) to save costs
+    smartPolling.setMode('bubble-tooltip-check', 'active');
     
-    // Initial check
-    setTimeout(() => {
+    // Initial check only once (removed aggressive 1s check)
+    const initialCheck = setTimeout(() => {
       checkForTooltipUpdates();
-    }, 1000);
+    }, 5000); // Delayed to 5s to reduce initial load
 
     return () => {
+      clearTimeout(initialCheck);
       smartPolling.unregister('bubble-tooltip-check');
     };
   }, [visitorId, checkForTooltipUpdates]);

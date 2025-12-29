@@ -16,6 +16,10 @@ export const metadata: Metadata = {
   },
 };
 
+// Force dynamic rendering - NO caching of maintenance page
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default function MaintenanceLayout({
   children,
 }: {

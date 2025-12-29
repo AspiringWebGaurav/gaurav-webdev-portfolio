@@ -10,6 +10,26 @@ import { log } from '../utils';
 import { MaskNotFoundError, UUIDNotFoundError } from '../errors';
 
 /**
+ * Translate mask to UUID (NO CACHE)
+ * Use for security-critical ban checks that must always read fresh data
+ */
+export async function translateMaskToUUIDNoCache(mask: string): Promise<string> {
+  validateMask(mask);
+  
+  log('Translating mask to UUID (NO CACHE)', { mask });
+  
+  // Query Firestore directly - skip cache
+  try {
+    const uuid = await firestoreGetUUIDByMask(mask);
+    log('UUID translated from Firestore (fresh read)', { mask, uuid: uuid.substring(0, 13) });
+    return uuid;
+  } catch (error) {
+    log('UUID not found for mask', { mask });
+    throw new MaskNotFoundError(mask);
+  }
+}
+
+/**
  * Translate mask to UUID
  */
 export async function translateMaskToUUID(mask: string): Promise<string> {

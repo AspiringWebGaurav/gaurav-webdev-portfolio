@@ -188,12 +188,19 @@ class EventBatcher {
    */
   private async sendBatch(batch: BatchedEvent[], retryCount = 0): Promise<void> {
     try {
+      // Extract mask from first event (all events in batch should have same mask)
+      const mask = batch.length > 0 ? batch[0].visitorMask : undefined;
+      
       const response = await fetch('/api/visitor-analytics/events/batch', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ events: batch }),
+        body: JSON.stringify({ 
+          events: batch,
+          mask: mask,
+          sessionId: mask, // Also send as sessionId for backward compatibility
+        }),
       });
 
       if (!response.ok) {

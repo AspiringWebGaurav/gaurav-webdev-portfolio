@@ -7,6 +7,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from 'next/navigation';
 import { getAnalyticsReliability } from "@/lib/analyticsReliability";
 
 interface HealthMetrics {
@@ -21,8 +22,14 @@ interface HealthMetrics {
 }
 
 export default function AnalyticsHealthMonitor() {
+  const pathname = usePathname();
   const [metrics, setMetrics] = useState<HealthMetrics | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+
+  // Skip monitoring on 404 pages
+  if (!pathname || pathname === '/_not-found') {
+    return null;
+  }
 
   useEffect(() => {
     // Update metrics every 5 seconds

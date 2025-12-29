@@ -26,7 +26,9 @@ export default function MaintenanceGate({ children }: { children: React.ReactNod
   const shouldSkipGate = 
     pathname?.startsWith("/admin") || 
     pathname?.startsWith("/banned") ||
-    pathname?.startsWith("/maintenance");
+    pathname?.startsWith("/maintenance") ||
+    !pathname || // 404 - no pathname
+    pathname === "/_not-found"; // Next.js internal 404 route
   
   // Skip maintenance blocking on localhost (banner will show status instead)
   const isLocalhostEnv = !isProduction();
@@ -51,7 +53,8 @@ export default function MaintenanceGate({ children }: { children: React.ReactNod
 
     async function checkMaintenanceStatus() {
       try {
-        const response = await fetch('/api/maintenance/status', {
+        // Add cache-busting timestamp to ensure fresh response
+        const response = await fetch(`/api/maintenance/status?_t=${Date.now()}`, {
           method: 'GET',
           cache: 'no-store',
         });

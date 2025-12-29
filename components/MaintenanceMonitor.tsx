@@ -46,8 +46,11 @@ export default function MaintenanceMonitor({ children }: { children: React.React
     overdueBy: 0,
     estimatedDuration: null,
     enabledAt: null,
+    autoEndTriggered: false,
+    autoEndDetectedAt: null,
   });
   const [isLoadingStatus, setIsLoadingStatus] = useState(true);
+  const autoEndCheckTriggered = useRef(false);
   
   // Check if on production
   const isProductionEnv = isProduction();
@@ -93,6 +96,8 @@ export default function MaintenanceMonitor({ children }: { children: React.React
             overdueBy: 0,
             estimatedDuration: null,
             enabledAt: null,
+            autoEndTriggered: false,
+            autoEndDetectedAt: null,
           });
           setIsLoadingStatus(false);
           
@@ -121,6 +126,52 @@ export default function MaintenanceMonitor({ children }: { children: React.React
           }
         }
         
+        // AUTO-END DETECTION: Check if auto-end time has passed but maintenance still enabled
+        // This handles the case where auto-end happened but API was never called
+        if (isEnabled && data?.autoEndEnabled === true && data?.autoEndAt && !autoEndCheckTriggered.current) {
+          const autoEndTime = data.autoEndAt.toDate();
+          const now = new Date();
+          
+          if (now >= autoEndTime) {
+            console.log('[Maintenance Monitor] 🔍 DETECTED: Auto-end time has passed but maintenance still enabled');
+            console.log('[Maintenance Monitor] Auto-end was:', autoEndTime.toISOString());
+            console.log('[Maintenance Monitor] Current time:', now.toISOString());
+            console.log('[Maintenance Monitor] Triggering cleanup via status API...');
+            
+            autoEndCheckTriggered.current = true;
+            
+            // Trigger the status API to perform auto-disable
+            fetch('/api/maintenance/status', { cache: 'no-store' })
+              .then(async (response) => {
+                const result = await response.json();
+                console.log('[Maintenance Monitor] ✅ Cleanup API called, maintenance should now be disabled');
+                
+                // Update context to reflect auto-ended state
+                setMaintenanceStatus({
+                  enabled: false,
+                  estimatedEndTime: null,
+                  isOverdue: false,
+                  overdueBy: 0,
+                  estimatedDuration: data.estimatedDuration || null,
+                  enabledAt: data.enabledAt?.toDate() || null,
+                  title: data.title,
+                  message: data.message,
+                  autoEndTriggered: true,
+                  autoEndDetectedAt: autoEndTime,
+                });
+                setIsLoadingStatus(false);
+              })
+              .catch((error) => {
+                console.error('[Maintenance Monitor] ⚠️ Failed to trigger cleanup:', error);
+                // Continue with normal flow even if API call fails
+                autoEndCheckTriggered.current = false;
+              });
+            
+            // Return early to prevent showing stale "enabled" state
+            return;
+          }
+        }
+        
         // Update shared context (for localhost banner)
         setMaintenanceStatus({
           enabled: isEnabled,
@@ -131,8 +182,15 @@ export default function MaintenanceMonitor({ children }: { children: React.React
           enabledAt: data?.enabledAt?.toDate() || null,
           title: data?.title,
           message: data?.message,
+          autoEndTriggered: false,
+          autoEndDetectedAt: null,
         });
         setIsLoadingStatus(false);
+        
+        // Reset auto-end check if maintenance is now properly disabled
+        if (!isEnabled && autoEndCheckTriggered.current) {
+          autoEndCheckTriggered.current = false;
+        }
 
         // IGNORE the very first update (initial state from Firestore)
         if (!hasReceivedFirstUpdate.current) {
@@ -178,6 +236,7 @@ export default function MaintenanceMonitor({ children }: { children: React.React
       hasReceivedFirstUpdate.current = false;
       initialMaintenanceStatus.current = null;
       isRedirecting.current = false;
+      autoEndCheckTriggered.current = false;
       unsubscribe();
     };
   }, [pathname, router, shouldSkipRedirect, isProductionEnv]);

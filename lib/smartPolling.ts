@@ -27,6 +27,7 @@ interface PollingOptions {
   priority?: Priority;
   maxIdleTime?: number;
   stopOnHidden?: boolean;
+  stopOnIdle?: boolean; // NEW: Stop completely when user is idle
   enableBatching?: boolean;
   tag?: string;
 }
@@ -190,6 +191,7 @@ class SmartPollingManager {
       priority,
       maxIdleTime: options.maxIdleTime ?? 45000,
       stopOnHidden: options.stopOnHidden ?? (priority === 'low'),
+      stopOnIdle: options.stopOnIdle ?? false, // NEW: Default to keep polling when idle unless specified
       enableBatching: options.enableBatching ?? false,
       tag: options.tag ?? id,
     };
@@ -348,18 +350,29 @@ class SmartPollingManager {
     // Determine mode based on context
     let currentMode = timer.mode;
     const timeSinceActivity = Date.now() - timer.lastActivity;
+    const isUserIdle = timeSinceActivity > timer.options.maxIdleTime;
 
     if (currentMode !== 'realtime' && currentMode !== 'paused') {
-      // Tab hidden
+      // Tab hidden - STOP if configured
+      if (!this.documentVisible && timer.options.stopOnHidden) {
+        timer.mode = 'paused';
+        console.log(`[SmartPolling] 💤 ${timer.options.tag} STOPPED (tab hidden, stopOnHidden=true) - SAVING COSTS 💰`);
+        return; // Don't restart interval
+      }
+      
+      // User idle - STOP if configured
+      if (isUserIdle && timer.options.stopOnIdle) {
+        timer.mode = 'paused';
+        console.log(`[SmartPolling] 😴 ${timer.options.tag} STOPPED (user idle ${Math.round(timeSinceActivity/1000)}s, stopOnIdle=true) - SAVING COSTS 💰`);
+        return; // Don't restart interval
+      }
+      
+      // Tab hidden but still polling
       if (!this.documentVisible) {
-        if (timer.options.stopOnHidden) {
-          console.log(`[SmartPolling] 💤 ${timer.options.tag} stopped (tab hidden)`);
-          return;
-        }
         currentMode = 'background';
       }
       // User idle
-      else if (timeSinceActivity > timer.options.maxIdleTime) {
+      else if (isUserIdle) {
         currentMode = 'idle';
       }
       // Active

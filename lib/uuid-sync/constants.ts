@@ -25,11 +25,12 @@ export const COLLECTIONS = {
 } as const;
 
 // Cache TTL (Time To Live) in milliseconds
+// CRITICAL: Ban-related caches must be short for security
 export const CACHE_TTL = {
   FINGERPRINT_TO_UUID: 5 * 60 * 1000,      // 5 minutes
-  MASK_TO_UUID: 10 * 60 * 1000,            // 10 minutes
-  UUID_TO_MASK: 10 * 60 * 1000,            // 10 minutes
-  BAN_STATUS: 30 * 1000,                    // 30 seconds
+  MASK_TO_UUID: 500,                        // 500ms - must be responsive for ban checks
+  UUID_TO_MASK: 500,                        // 500ms - must be responsive for ban checks  
+  BAN_STATUS: 500,                          // 500ms - critical security feature
 } as const;
 
 // Regex Patterns

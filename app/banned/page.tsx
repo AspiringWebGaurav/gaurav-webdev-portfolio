@@ -2,12 +2,16 @@
 
 import { useState, useEffect, Suspense, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
+
+// Note: dynamic and revalidate configs are set in layout.tsx (server component)
+// Client components cannot export revalidate - it causes runtime errors
 import { showToast } from '@/lib/toast';
 import MobileScreen from './screens/MobileScreen';
 import TabletScreen from './screens/TabletScreen';
 import DesktopScreen from './screens/DesktopScreen';
 import { banStatusManager } from '@/lib/banStatusManager';
 import { generateDeviceFingerprint } from '@/lib/deviceFingerprint';
+import { clearIdentityCache } from '@/lib/cacheInvalidation';
 // REMOVED: clientIdentifyVisitor - DO NOT call identify APIs on banned page!
 // This was causing new UUIDs to be created when banned users visited this page
 
@@ -135,9 +139,19 @@ function BannedPageContent() {
           
           if (data.banned === false) {
             // User is NOT banned - redirect immediately without toast
-            console.log('[Banned Page] ✅ User is not banned - Silent redirect to portfolio');
+            console.log('[Banned Page] ✅ User is not banned - Clearing cache before redirect');
             setIsRedirecting(true);
-            window.location.replace(PORTFOLIO_HOME);
+            
+            // Clear cache before redirect to ensure fresh data
+            try {
+              await clearIdentityCache();
+              console.log('[Banned Page] Cache cleared successfully');
+            } catch (error) {
+              console.error('[Banned Page] Failed to clear cache:', error);
+            }
+            
+            // Add cache-busting parameter to ensure BanGate clears cache
+            window.location.replace(`${PORTFOLIO_HOME}?unbanRedirect=true&_t=${Date.now()}`);
             return;
           } else {
             // User is still banned - update ban info with type and expiration
@@ -215,15 +229,23 @@ function BannedPageContent() {
         // Subscribe to real-time updates
         unsubscribe = await banStatusManager.subscribe(
           'banned-page-unban-monitor',
-          (status) => {
+          async (status) => {
             // If not banned anymore, redirect silently (admin unbanned while user on this page)
             if (status.banned === false && !isRedirecting) {
-              console.log('[Banned Page] ✅ User has been unbanned (real-time) - Silent redirect');
+              console.log('[Banned Page] ✅ User has been unbanned (real-time) - Clearing cache');
               setIsRedirecting(true);
               
-              // Silent redirect without toast
+              // Clear cache before redirect
+              try {
+                await clearIdentityCache();
+                console.log('[Banned Page] Cache cleared successfully');
+              } catch (error) {
+                console.error('[Banned Page] Failed to clear cache:', error);
+              }
+              
+              // Silent redirect with cache-busting parameter
               banStatusManager.reset();
-              window.location.replace(PORTFOLIO_HOME);
+              window.location.replace(`${PORTFOLIO_HOME}?unbanRedirect=true&_t=${Date.now()}`);
             }
           },
           (error) => {
@@ -297,6 +319,49 @@ function BannedPageContent() {
     const interval = setInterval(checkUnbanStatus, FALLBACK_CHECK_INTERVAL);
 
     return () => clearInterval(interval);
+  }, [isRedirecting, mask]);
+
+  /**
+   * Visibility change detection - recheck ban status when user returns to tab
+   * Prevents cached page from showing stale ban state
+   */
+  useEffect(() => {
+    if (isRedirecting || !mask) return;
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('[Banned Page] Tab became visible - rechecking ban status with cache-busting');
+        
+        // Re-check ban status with timestamp cache-busting
+        fetch(`/api/visitor-analytics/check-ban?t=${Date.now()}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mask }),
+          cache: 'no-store',
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.banned === false && !isRedirecting) {
+              console.log('[Banned Page] ✅ Visibility check - user unbanned, redirecting');
+              setIsRedirecting(true);
+              
+              // Clear browser caches before redirect
+              if ('caches' in window) {
+                caches.keys().then(names => {
+                  names.forEach(name => caches.delete(name));
+                });
+              }
+              
+              banStatusManager.reset();
+              window.location.replace(PORTFOLIO_HOME);
+            }
+          })
+          .catch(err => console.error('[Banned Page] Visibility check failed:', err));
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [isRedirecting, mask]);
 
   // Detect screen size

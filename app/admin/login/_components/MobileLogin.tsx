@@ -2,16 +2,53 @@
 
 import React, { useState } from "react";
 import BrandLogo from "@/components/admin/BrandLogo";
-import { signInWithGoogle } from "@/lib/auth";
+import { signInWithGoogle, devQuickLogin } from "@/lib/auth";
 import { useRouter } from "next/navigation";
-import { Shield } from "lucide-react";
+import { Shield, CheckCircle, AlertCircle } from "lucide-react";
+import { showToast } from "@/lib/toast";
 import { AnimatePresence } from "framer-motion";
 import LoginTransition from "@/components/admin/LoginTransition";
+import LoginSuccessLoader from "@/components/admin/LoginSuccessLoader";
+import TurnstileWidget from "@/components/TurnstileWidget";
+
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "1x00000000000000000000AA";
 
 export default function MobileLogin() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [devLoading, setDevLoading] = useState(false);
   const [showTransition, setShowTransition] = useState(false);
+  const [devPassword, setDevPassword] = useState("");
+  const [showSuccessLoader, setShowSuccessLoader] = useState(false);
+  const [passwordError, setPasswordError] = useState(false);
+  
+  // Turnstile Captcha State
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaStatus, setCaptchaStatus] = useState<'loading' | 'success' | 'required' | 'error'>('loading');
+  const [showCaptchaWidget, setShowCaptchaWidget] = useState(false);
+
+  // Turnstile Captcha Handlers
+  const handleCaptchaVerify = (token: string) => {
+    setCaptchaToken(token);
+    setCaptchaStatus('success');
+    setShowCaptchaWidget(false);
+  };
+
+  const handleCaptchaError = () => {
+    setCaptchaStatus('error');
+    setShowCaptchaWidget(true);
+    showToast.error(
+      "Bot verification failed. Please try again.",
+      "Verification Error",
+      { autoClose: 3000 }
+    );
+  };
+
+  const handleCaptchaExpire = () => {
+    setCaptchaToken(null);
+    setCaptchaStatus('required');
+    setShowCaptchaWidget(true);
+  };
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
@@ -31,10 +68,100 @@ export default function MobileLogin() {
       // Silently handle popup closed by user
       const errorCode = err?.code || '';
       if (errorCode !== 'auth/popup-closed-by-user' && !err?.message?.includes('popup-closed-by-user')) {
-        console.error(err);
+        // Only log in development mode to avoid console errors in production
+        if (process.env.NODE_ENV === 'development') {
+          console.error(err);
+        }
+        showToast.error(
+          "Authentication failed. Please try again or contact support.",
+          "Login Failed",
+          { autoClose: 4000 }
+        );
       }
       setLoading(false);
       setShowTransition(false);
+    }
+  };
+
+  const handleDevLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!devPassword.trim()) {
+      return;
+    }
+
+    // Check captcha token for password login
+    if (!captchaToken && captchaStatus !== 'error') {
+      setCaptchaStatus('required');
+      setShowCaptchaWidget(true);
+      showToast.warning(
+        "Please complete the bot verification to continue.",
+        "Verification Required",
+        { autoClose: 3000 }
+      );
+      return;
+    }
+
+    setDevLoading(true);
+    setPasswordError(false);
+    
+    try {
+      // Perform dev login
+      const success = await devQuickLogin({ silent: false, password: devPassword });
+      
+      // Only proceed if login was successful
+      if (!success) {
+        setPasswordError(true);
+        setDevLoading(false);
+        setShowSuccessLoader(false);
+        
+        // Show professional toast notification
+        showToast.error(
+          "Incorrect password. Please verify your credentials and try again.",
+          "Login Failed",
+          { autoClose: 4000 }
+        );
+        
+        // Clear password field after showing error
+        setTimeout(() => {
+          setPasswordError(false);
+          setDevPassword("");
+        }, 3000);
+        return;
+      }
+      
+      // Show success loader
+      setShowSuccessLoader(true);
+      sessionStorage.setItem('justLoggedIn', 'true');
+      
+      // Prefetch dashboard in parallel
+      router.prefetch("/admin/dashboard");
+      
+      // Navigate after 1.5s
+      setTimeout(() => {
+        router.push("/admin/dashboard");
+      }, 1500);
+    } catch (err: any) {
+      // Only log in development mode
+      if (process.env.NODE_ENV === 'development') {
+        console.error("Dev login failed:", err);
+      }
+      setPasswordError(true);
+      setDevLoading(false);
+      setShowSuccessLoader(false);
+      
+      // Show professional toast notification
+      showToast.error(
+        "Incorrect password. Please verify your credentials and try again.",
+        "Login Failed",
+        { autoClose: 4000 }
+      );
+      
+      // Clear password field after showing error
+      setTimeout(() => {
+        setPasswordError(false);
+        setDevPassword("");
+      }, 3000);
     }
   };
 
@@ -44,26 +171,28 @@ export default function MobileLogin() {
         {showTransition && <LoginTransition />}
       </AnimatePresence>
       
+      <LoginSuccessLoader show={showSuccessLoader} />
+      
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-      <div className="flex-1 flex items-center justify-center p-6">
+      <div className="flex-1 flex items-center justify-center px-4 py-8 sm:p-6">
         <div className="w-full max-w-md">
           {/* Logo and Title */}
-          <div className="text-center mb-8">
-            <div className="flex justify-center mb-4">
-              <BrandLogo className="w-16 h-16" />
+          <div className="text-center mb-6 sm:mb-8">
+            <div className="flex justify-center mb-3 sm:mb-4">
+              <BrandLogo className="w-14 h-14 sm:w-16 sm:h-16" />
             </div>
-            <h1 className="text-2xl font-bold text-white mb-2">
+            <h1 className="text-xl sm:text-2xl font-bold text-white mb-2">
               Portfolio Admin
             </h1>
-            <p className="text-sm text-gray-400">
+            <p className="text-xs sm:text-sm text-gray-400">
               Sign in to access your admin panel
             </p>
           </div>
 
           {/* Login Card */}
-          <div className="bg-gray-800/50 backdrop-blur-xl rounded-2xl p-6 shadow-2xl border border-gray-700/50">
-            <div className="text-center mb-6">
-              <h2 className="text-xl font-bold mb-1 bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-400">
+          <div className="bg-gray-800/50 backdrop-blur-xl rounded-2xl p-5 sm:p-6 shadow-2xl border border-gray-700/50">
+            <div className="text-center mb-5 sm:mb-5 sm:mb-6">
+              <h2 className="text-lg sm:text-xl font-bold mb-1 bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-400">
                 Welcome Back
               </h2>
               <p className="text-xs text-gray-300">
@@ -73,8 +202,8 @@ export default function MobileLogin() {
 
             <button
               onClick={handleGoogleSignIn}
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-white hover:bg-gray-50 text-gray-800 rounded-xl font-medium transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+              disabled={loading || devLoading}
+              className="w-full flex items-center justify-center gap-3 px-6 py-3.5 sm:py-4 bg-white hover:bg-gray-50 text-gray-800 rounded-xl font-medium transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-lg hover:shadow-xl active:scale-[0.98]"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
@@ -97,7 +226,90 @@ export default function MobileLogin() {
               {loading ? "Signing in..." : "Continue with Google"}
             </button>
 
-            <div className="mt-4 text-center">
+            {/* Admin Password Login */}
+            <div className="relative my-5 sm:my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-600"></div>
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="px-2 bg-gray-800/50 text-gray-400">
+                  Or use password
+                </span>
+              </div>
+            </div>
+
+            <form onSubmit={handleDevLogin} className="space-y-4">
+              <div>
+                <input
+                  type="password"
+                  value={devPassword}
+                  onChange={(e) => {
+                    setDevPassword(e.target.value);
+                    setPasswordError(false);
+                  }}
+                  placeholder="Enter admin password"
+                  disabled={loading || devLoading}
+                  className={`w-full px-4 py-3.5 sm:py-3 bg-gray-700/50 border rounded-xl text-white placeholder-gray-400 focus:outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed text-base ${
+                    passwordError
+                      ? 'border-red-500 focus:ring-2 focus:ring-red-500 animate-shake'
+                      : 'border-gray-600 focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+                  }`}
+                />
+              </div>
+
+              {/* Turnstile Widget - Shows when needed */}
+              {showCaptchaWidget && (
+                <div className="flex flex-col items-center gap-3 p-4 bg-orange-500/10 border border-orange-500/30 rounded-xl">
+                  <div className="flex items-center gap-2 text-orange-400 text-sm font-medium">
+                    <AlertCircle className="w-4 h-4" />
+                    <span>Bot Protection Required</span>
+                  </div>
+                  <div className="w-full flex justify-center">
+                    <TurnstileWidget
+                      siteKey={TURNSTILE_SITE_KEY}
+                      onVerify={handleCaptchaVerify}
+                      onError={handleCaptchaError}
+                      onExpire={handleCaptchaExpire}
+                      theme="dark"
+                      size="normal"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Success Indicator */}
+              {captchaStatus === 'success' && !showCaptchaWidget && (
+                <div className="flex items-center justify-center gap-2 p-2 bg-green-500/10 border border-green-500/30 rounded-lg">
+                  <CheckCircle className="w-4 h-4 text-green-400" />
+                  <span className="text-sm text-green-400 font-medium">Bot Protection Verified</span>
+                </div>
+              )}
+
+              {/* Hidden Turnstile for invisible auto-verification */}
+              {!showCaptchaWidget && captchaStatus === 'loading' && (
+                <div className="hidden">
+                  <TurnstileWidget
+                    siteKey={TURNSTILE_SITE_KEY}
+                    onVerify={handleCaptchaVerify}
+                    onError={handleCaptchaError}
+                    onExpire={handleCaptchaExpire}
+                    theme="dark"
+                    size="invisible"
+                  />
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading || devLoading || !devPassword.trim()}
+                className="w-full flex items-center justify-center gap-3 px-6 py-3.5 sm:py-3.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl font-medium transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-lg hover:shadow-xl active:scale-[0.98]"
+              >
+                <Shield className="w-5 h-5" />
+                {devLoading ? "Signing in..." : "Sign in with Password"}
+              </button>
+            </form>
+
+            <div className="mt-6 text-center">
               <p className="text-xs text-gray-400">
                 By signing in, you agree to the terms of this personal-use
                 application.

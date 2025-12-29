@@ -41,6 +41,7 @@ export {
 
 export {
   translateMaskToUUID,
+  translateMaskToUUIDNoCache,
   translateUUIDToMask,
   batchTranslateMasksToUUIDs,
   batchTranslateUUIDsToMasks

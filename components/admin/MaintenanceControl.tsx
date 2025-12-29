@@ -333,6 +333,23 @@ export default function MaintenanceControl() {
               <p className={`text-sm ${settings?.enabled ? 'text-red-600' : 'text-green-600'}`}>
                 {settings?.enabled ? '🔧 Currently ENABLED' : '✅ Currently DISABLED'}
               </p>
+              {/* Show auto-end history when disabled by system */}
+              {!settings?.enabled && settings.disabledBy === 'System (Auto-End)' && settings.disabledAt && (
+                <div className="mt-2 flex items-start gap-2 text-xs text-green-700 bg-green-100 px-2 py-1.5 rounded">
+                  <RotateCcw className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <div className="font-semibold">Auto-ended by System</div>
+                    <div className="text-green-600">
+                      {formatDate(settings.disabledAt)}
+                      {settings.estimatedDuration && (
+                        <span className="ml-1">
+                          ({formatDuration(settings.estimatedDuration)})
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           

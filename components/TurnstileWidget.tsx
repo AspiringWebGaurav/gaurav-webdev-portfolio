@@ -58,8 +58,8 @@ export default function TurnstileWidget({
 
     const script = document.createElement('script');
     script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
-    script.async = true;
-    script.defer = true;
+    // NOTE: async/defer removed as required by Cloudflare when using turnstile.ready()
+    // See: https://developers.cloudflare.com/turnstile/get-started/client-side-rendering/
     
     script.onload = () => {
       setLoaded(true);
@@ -85,43 +85,40 @@ export default function TurnstileWidget({
       return;
     }
 
-    window.turnstile.ready(() => {
-      if (!containerRef.current) return;
-
-      try {
-        widgetIdRef.current = window.turnstile!.render(containerRef.current, {
-          sitekey: siteKey,
-          theme,
-          size,
-          action,
-          callback: (token: string) => {
-            console.log('[Turnstile] ✓ Verification successful');
-            onVerify(token);
-            
-            if (autoReset) {
-              setTimeout(() => {
-                if (widgetIdRef.current) {
-                  window.turnstile?.reset(widgetIdRef.current);
-                }
-              }, 1000);
-            }
-          },
-          'error-callback': (error: string) => {
-            console.error('[Turnstile] ✗ Error:', error);
-            setError(error);
-            onError?.(error);
-          },
-          'expired-callback': () => {
-            console.warn('[Turnstile] ⏱️ Token expired');
-            onExpire?.();
-          },
-        });
-      } catch (err) {
-        console.error('[Turnstile] Failed to render:', err);
-        setError('Failed to initialize verification');
-        onError?.('Failed to initialize');
-      }
-    });
+    // Render immediately without turnstile.ready() since we already waited for script.onload
+    try {
+      widgetIdRef.current = window.turnstile.render(containerRef.current, {
+        sitekey: siteKey,
+        theme,
+        size,
+        action,
+        callback: (token: string) => {
+          console.log('[Turnstile] ✓ Verification successful');
+          onVerify(token);
+          
+          if (autoReset) {
+            setTimeout(() => {
+              if (widgetIdRef.current) {
+                window.turnstile?.reset(widgetIdRef.current);
+              }
+            }, 1000);
+          }
+        },
+        'error-callback': (error: string) => {
+          console.error('[Turnstile] ✗ Error:', error);
+          setError(error);
+          onError?.(error);
+        },
+        'expired-callback': () => {
+          console.warn('[Turnstile] ⏱️ Token expired');
+          onExpire?.();
+        },
+      });
+    } catch (err) {
+      console.error('[Turnstile] Failed to render:', err);
+      setError('Failed to initialize verification');
+      onError?.('Failed to initialize');
+    }
 
     // Cleanup
     return () => {

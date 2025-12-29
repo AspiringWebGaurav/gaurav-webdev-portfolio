@@ -12,11 +12,20 @@
  * If autoEndEnabled is true and autoEndAt timestamp has passed,
  * automatically disables maintenance mode in Firestore and returns enabled: false.
  * This allows maintenance to end automatically without a cron job.
+ * 
+ * CACHE STRATEGY (Updated to fix stale page bug):
+ * - Enabled state: 10s cache (was 30s) - allows quick updates
+ * - Disabled state: 5s cache (was 30s) - prevents stale "maintenance active" pages
+ * - Localhost: 0s cache (no cache) - immediate testing
+ * - All responses: must-revalidate - forces revalidation on stale cache
+ * This fixes the bug where browsers cache the maintenance page and show
+ * countdown animation even after maintenance has ended.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebaseAdmin';
 import { Timestamp, FieldValue } from 'firebase-admin/firestore';
+import { broadcastCacheClear } from '@/lib/cacheInvalidation';
 
 /**
  * Detect if request is from localhost
@@ -93,10 +102,11 @@ export async function GET(request: NextRequest) {
         bubbleSettings: null,
       });
       
-      // Cache at edge for 30 seconds (reduces Firebase reads by 95%)
+      // REDUCED cache time - maintenance OFF state should be fresh
+      // This prevents cached "maintenance active" responses from persisting
       response.headers.set(
         'Cache-Control',
-        'public, s-maxage=30, stale-while-revalidate=60'
+        'no-store, must-revalidate'
       );
       
       return response;
@@ -118,6 +128,14 @@ export async function GET(request: NextRequest) {
           const success = await autoDisableMaintenance(docRef);
           
           if (success) {
+            // Broadcast cache clear after auto-ending maintenance
+            try {
+              await broadcastCacheClear('maintenance-auto-end', { autoEndAt: autoEndTime.toISOString() });
+              console.log('[Maintenance Status] Cache clear broadcasted after auto-end');
+            } catch (broadcastError) {
+              console.error('[Maintenance Status] Failed to broadcast cache clear:', broadcastError);
+            }
+            
             // Return disabled status - maintenance has ended
             const response = NextResponse.json({
               enabled: false,
@@ -132,10 +150,10 @@ export async function GET(request: NextRequest) {
               bubbleSettings: null,
             });
             
-            // Cache at edge for 30 seconds
+            // NO CACHE for maintenance end to prevent stale data
             response.headers.set(
               'Cache-Control',
-              'public, s-maxage=30, stale-while-revalidate=60'
+              'no-store, must-revalidate'
             );
             
             return response;
@@ -172,12 +190,15 @@ export async function GET(request: NextRequest) {
       }) : null,
     });
     
-    // Cache at edge - shorter TTL for localhost for faster testing
-    const cacheTTL = isLocalhost ? 5 : 30;
-    response.headers.set(
-      'Cache-Control',
-      `public, s-maxage=${cacheTTL}, stale-while-revalidate=60`
-    );
+    // REDUCED cache TTL to prevent stale maintenance page issues
+    // When maintenance changes state, cache should expire quickly
+    // NO CACHE when disabled to prevent stale "maintenance active" pages
+    const cacheTTL = isLocalhost ? 0 : (data?.enabled ? 10 : 0);
+    const cacheControl = data?.enabled 
+      ? `public, s-maxage=${cacheTTL}, stale-while-revalidate=10, must-revalidate`
+      : 'no-store, must-revalidate';
+    
+    response.headers.set('Cache-Control', cacheControl);
     
     return response;
     
@@ -189,10 +210,10 @@ export async function GET(request: NextRequest) {
       error: 'Failed to check maintenance status',
     });
     
-    // Still cache error responses (shorter TTL)
+    // Don't cache error responses
     response.headers.set(
       'Cache-Control',
-      'public, s-maxage=10, stale-while-revalidate=30'
+      'no-cache, no-store, must-revalidate'
     );
     
     return response;

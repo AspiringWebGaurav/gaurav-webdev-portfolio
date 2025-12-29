@@ -146,6 +146,13 @@ export function ContactSubmissionProvider({
       // Add to state
       setSubmissions((prev) => [submission, ...prev]);
 
+      // Force cache refresh to ensure fresh data
+      setTimeout(() => {
+        fetchSubmissions(false).catch(err => {
+          console.error('[ContactSubmissions] Failed to refresh after submission:', err);
+        });
+      }, 500);
+
       return { success: true, data: submission };
     } catch (err) {
       const errorMessage =

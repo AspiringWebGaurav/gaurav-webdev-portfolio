@@ -48,3 +48,12 @@ next-env.d.ts
 
 # Backups directory (contains Firebase database & storage backups)
 /backups
+
+# Ignore Firebase service account credentials and config files
+serviceAccountKey.json
+firebaseConfig.json
+
+# Ignore any JSON files with credentials or keys in the name
+*credential*.json
+*secret*.json
+*private*.json

@@ -5,9 +5,19 @@
  * Real-time listener: redirects to home when maintenance disabled.
  * Responsive screens for Desktop, Tablet, Mobile.
  * Dynamic message when estimated time is exceeded.
+ * 
+ * CACHE PREVENTION:
+ * - No static generation (dynamic)
+ * - Revalidate every 0 seconds
+ * - Visibility change detection to re-check status
+ * - Hard refresh on maintenance end
  */
 
 'use client';
+
+// Force dynamic rendering - NO caching
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
@@ -50,13 +60,23 @@ function MaintenanceContent() {
   const [screenSize, setScreenSize] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
   const [showCountdown, setShowCountdown] = useState(false);
   const [countdownNumber, setCountdownNumber] = useState(3);
+  const [lastVisibilityCheck, setLastVisibilityCheck] = useState(Date.now());
 
   // Handle countdown and redirect - defined early with useCallback for use in effects
   const startCountdownRedirect = useCallback(() => {
     if (isRedirecting) return;
+    
+    console.log('[Maintenance Page] Starting countdown redirect - clearing cache');
     setIsRedirecting(true);
     setShowCountdown(true);
     setCountdownNumber(5); // Start from 5
+    
+    // Clear browser cache immediately
+    if ('caches' in window) {
+      caches.keys().then(names => {
+        names.forEach(name => caches.delete(name));
+      });
+    }
     
     // Countdown: 5, 4, 3, 2, 1, then redirect (1 sec per number = 5 sec total)
     setTimeout(() => setCountdownNumber(4), 1000);
@@ -65,7 +85,8 @@ function MaintenanceContent() {
     setTimeout(() => setCountdownNumber(1), 4000);
     setTimeout(() => {
       setCountdownNumber(0);
-      window.location.replace('/');
+      // Hard reload with cache bypass
+      window.location.href = '/?clearCache=' + Date.now();
     }, 5000); // Total 5 seconds
   }, [isRedirecting]);
 
@@ -87,16 +108,66 @@ function MaintenanceContent() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Re-check maintenance status when page becomes visible (user returns to tab)
+  useEffect(() => {
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible' && !isRedirecting) {
+        console.log('[Maintenance Page] Tab became visible - checking current status...');
+        
+        try {
+          // Add timestamp to prevent cache
+          const response = await fetch(`/api/maintenance/status?t=${Date.now()}`, { 
+            cache: 'no-store',
+            headers: { 'Cache-Control': 'no-cache' }
+          });
+          const data = await response.json();
+          
+          if (data.enabled === false) {
+            console.log('[Maintenance Page] Maintenance ended while tab was hidden - redirecting');
+            // Clear any cached data
+            if ('caches' in window) {
+              caches.keys().then(names => {
+                names.forEach(name => caches.delete(name));
+              });
+            }
+            window.location.replace('/');
+            return;
+          }
+          
+          setLastVisibilityCheck(Date.now());
+        } catch (error) {
+          console.error('[Maintenance Page] Visibility check error:', error);
+        }
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isRedirecting]);
+
   // Initial check: if maintenance is OFF, redirect immediately
   useEffect(() => {
     const checkStatus = async () => {
       try {
-        const response = await fetch('/api/maintenance/status', { cache: 'no-store' });
+        // Add timestamp to bust cache + no-cache headers
+        const response = await fetch(`/api/maintenance/status?t=${Date.now()}`, { 
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache' }
+        });
         const data = await response.json();
         
         if (data.enabled === false) {
           console.log('[Maintenance Page] Maintenance is OFF - redirecting to home');
           setIsRedirecting(true);
+          // Clear browser cache before redirect
+          if ('caches' in window) {
+            caches.keys().then(names => {
+              names.forEach(name => caches.delete(name));
+            });
+          }
           window.location.replace('/');
           return;
         }
@@ -154,7 +225,11 @@ function MaintenanceContent() {
         // If auto-end is NOT enabled, admin will manually disable via Firestore (real-time listener handles that)
         if (maintenanceInfo.autoEndEnabled) {
           try {
-            const response = await fetch('/api/maintenance/status', { cache: 'no-store' });
+            // Cache-bust with timestamp
+            const response = await fetch(`/api/maintenance/status?t=${Date.now()}`, { 
+              cache: 'no-store',
+              headers: { 'Cache-Control': 'no-cache' }
+            });
             const data = await response.json();
             
             // If maintenance is now disabled (auto-ended), start redirect

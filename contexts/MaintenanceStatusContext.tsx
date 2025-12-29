@@ -19,6 +19,8 @@ export interface MaintenanceStatusData {
   enabledAt: Date | null;
   title?: string;
   message?: string;
+  autoEndTriggered?: boolean;
+  autoEndDetectedAt?: Date | null;
 }
 
 interface MaintenanceStatusContextType {
@@ -66,6 +68,8 @@ export function useMaintenanceStatus(): MaintenanceStatusContextType {
         overdueBy: 0,
         estimatedDuration: null,
         enabledAt: null,
+        autoEndTriggered: false,
+        autoEndDetectedAt: null,
       },
       isLoading: true,
     };

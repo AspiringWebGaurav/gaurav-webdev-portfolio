@@ -11,6 +11,7 @@
  */
 
 import { useEffect, useRef, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 import { useBubbleSession } from '@/contexts/BubbleSessionContext';
 import { generateDeviceFingerprint } from '@/lib/deviceFingerprint';
 import { getAnalyticsReliability } from '@/lib/analyticsReliability';
@@ -113,9 +114,16 @@ async function getBatteryInfo(): Promise<any> {
 }
 
 export default function VisitorTracker() {
+  const pathname = usePathname();
   const sessionIdRef = useRef<string | null>(null);
   const { visitorId: maskFromContext } = useBubbleSession();
   const analyticsRef = useRef(getAnalyticsReliability());
+
+  // Skip tracking on 404 pages
+  if (!pathname || pathname === '/_not-found') {
+    console.log('[VisitorTracker] Skipping 404 page');
+    return null;
+  }
 
   /**
    * Initialize visitor tracking session - RUNS ONLY ONCE PER PAGE LOAD
@@ -301,7 +309,7 @@ export default function VisitorTracker() {
       console.error("[VisitorTracker] Initialization error:", error);
       globalSessionInitializing = false;
     }
-  }, [maskFromContext]);
+  }, [maskFromContext, pathname]);
 
   /**
    * Initialize tracking session when mask becomes available

@@ -226,8 +226,15 @@ export function BugReportProvider({ children }: { children: React.ReactNode }) {
           throw new Error(result.error || "Failed to create bug report");
         }
 
-        // Refresh bug reports
-        await fetchBugReports(false);
+        // Refresh bug reports - force immediate cache clear
+        await fetchBugReports(false, true);
+
+        // Force additional refresh after 500ms to catch any delayed updates
+        setTimeout(() => {
+          fetchBugReports(false, true).catch(err => {
+            console.error('[BugReports] Failed to refresh after submission:', err);
+          });
+        }, 500);
 
         showToast.success("Bug report submitted successfully!");
 

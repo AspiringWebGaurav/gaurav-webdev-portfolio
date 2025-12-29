@@ -6,8 +6,11 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebaseAdmin";
-import { identifyVisitor, getIdentityResult, firestoreCheckBanStatus, firestoreGetVisitorDocument, translateMaskToUUID } from "@/lib/uuid-sync/server";
-import { deduplicate } from "@/lib/requestDeduplication";
+import { identifyVisitor, getIdentityResult, firestoreCheckBanStatus, firestoreGetVisitorDocument, translateMaskToUUIDNoCache } from "@/lib/uuid-sync/server";
+
+// Force dynamic rendering - never cache ban check responses
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 const VISITORS_COLLECTION = "og_uuid";
 
@@ -20,10 +23,11 @@ export async function POST(request: NextRequest) {
     let uuid: string;
 
     // If client provides mask, use it (preferred - avoids dual identity)
+    // Use NO CACHE version for ban checks - must always be fresh
     if (clientMask) {
       mask = clientMask;
-      uuid = await translateMaskToUUID(mask);
-      console.log("[Check Ban API] Using client-provided mask:", mask);
+      uuid = await translateMaskToUUIDNoCache(mask);
+      console.log("[Check Ban API] Using client-provided mask (fresh lookup):", mask, "-> UUID:", uuid);
     } else {
       // Fallback: Generate from headers (for server-side calls)
       const userAgent = request.headers.get("user-agent") || "";
@@ -40,27 +44,27 @@ export async function POST(request: NextRequest) {
     
     console.log("[Check Ban API] Checking ban for visitor:", mask);
 
-    // Check ban status with deduplication (called on every page load)
-    const banned = await deduplicate(
-      `check-ban-${uuid}`,
-      () => firestoreCheckBanStatus(uuid),
-      5000 // 5s TTL - longer for ban checks
-    );
+    // CRITICAL: NO CACHING for ban status checks - security-critical feature
+    // Must always get fresh data from Firestore for accurate ban enforcement
+    const banned = await firestoreCheckBanStatus(uuid);
 
     if (!banned) {
       console.log("[Check Ban API] ✅ Visitor not banned");
-      return NextResponse.json({
-        banned: false,
-        mask,
-      });
+      return NextResponse.json(
+        {
+          banned: false,
+          mask,
+        },
+        {
+          headers: {
+            'Cache-Control': 'no-store, must-revalidate',
+          },
+        }
+      );
     }
 
-    // Get full visitor document for ban details with deduplication
-    const visitorData = await deduplicate(
-      `visitor-doc-${uuid}`,
-      () => firestoreGetVisitorDocument(uuid),
-      5000 // 5s TTL
-    );
+    // Get full visitor document for ban details - NO CACHING
+    const visitorData = await firestoreGetVisitorDocument(uuid);
     
     if (visitorData) {
       console.log("[Check Ban API] ⛔ Visitor IS BANNED!", {
@@ -70,31 +74,52 @@ export async function POST(request: NextRequest) {
         bannedBy: visitorData.bannedBy || "system",
       });
       
-      return NextResponse.json({
-        banned: true,
-        mask,
-        banInfo: {
-          reason: visitorData.banReason || "Security Violation",
-          category: visitorData.banCategory || "normal",
-          timestamp: visitorData.banTimestamp?.toDate?.()?.toISOString() || new Date().toISOString(),
-          bannedBy: visitorData.bannedBy,
+      return NextResponse.json(
+        {
+          banned: true,
+          mask,
+          banInfo: {
+            reason: visitorData.banReason || "Security Violation",
+            category: visitorData.banCategory || "normal",
+            timestamp: visitorData.banTimestamp?.toDate?.()?.toISOString() || new Date().toISOString(),
+            bannedBy: visitorData.bannedBy,
+          },
         },
-      });
+        {
+          headers: {
+            'Cache-Control': 'no-store, must-revalidate',
+          },
+        }
+      );
     }
 
     // Visitor exists but NOT banned
     console.log("[Check Ban API] ✅ Visitor exists but NOT banned:", mask);
-    return NextResponse.json({
-      banned: false,
-      mask,
-    });
+    return NextResponse.json(
+      {
+        banned: false,
+        mask,
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-store, must-revalidate',
+        },
+      }
+    );
 
   } catch (error) {
     console.error("[Ban Check API] Error:", error);
     // On error, allow access (fail open for better UX)
-    return NextResponse.json({
-      banned: false,
-    });
+    return NextResponse.json(
+      {
+        banned: false,
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-store, must-revalidate',
+        },
+      }
+    );
   }
 }
 
