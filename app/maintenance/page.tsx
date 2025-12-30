@@ -15,10 +15,6 @@
 
 'use client';
 
-// Force dynamic rendering - NO caching
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -27,6 +23,7 @@ import DesktopScreen from './screens/DesktopScreen';
 import TabletScreen from './screens/TabletScreen';
 import MobileScreen from './screens/MobileScreen';
 import MaintenancePageSkeleton from '@/components/skeletons/sections/MaintenancePageSkeleton';
+import MaintenanceErrorBoundary from '@/components/MaintenanceErrorBoundary';
 
 const COLLECTION = 'siteSettings';
 const DOC_ID = 'maintenance';
@@ -266,61 +263,73 @@ function MaintenanceContent() {
   useEffect(() => {
     if (isRedirecting) return;
 
-    const docRef = doc(db, COLLECTION, DOC_ID);
-    
-    const unsubscribe = onSnapshot(
-      docRef,
-      (snapshot) => {
-        if (!snapshot.exists()) {
-          console.log('[Maintenance Page] Document deleted - starting countdown redirect');
-          startCountdownRedirect();
-          return;
-        }
+    let unsubscribe: (() => void) | undefined;
 
-        const data = snapshot.data();
-        
-        if (data?.enabled === false && !isRedirecting) {
-          console.log('[Maintenance Page] Maintenance disabled by admin - starting countdown redirect');
-          startCountdownRedirect();
-          return;
-        }
-        
-        // Update info if still in maintenance
-        if (data?.enabled) {
-          let estimatedEndTime: Date | null = null;
-          let isOverdue = false;
-          let enabledAt: Date | null = null;
-          let overdueBy = 0;
+    try {
+      const docRef = doc(db, COLLECTION, DOC_ID);
+      
+      unsubscribe = onSnapshot(
+        docRef,
+        (snapshot) => {
+          if (!snapshot.exists()) {
+            console.log('[Maintenance Page] Document deleted - starting countdown redirect');
+            startCountdownRedirect();
+            return;
+          }
+
+          const data = snapshot.data();
           
-          if (data.estimatedDuration && data.enabledAt) {
-            enabledAt = data.enabledAt.toDate ? data.enabledAt.toDate() : new Date(data.enabledAt);
-            estimatedEndTime = new Date(enabledAt.getTime() + data.estimatedDuration * 60 * 1000);
-            const now = new Date();
-            isOverdue = now > estimatedEndTime;
-            if (isOverdue) {
-              overdueBy = Math.floor((now.getTime() - estimatedEndTime.getTime()) / (60 * 1000));
-            }
+          if (data?.enabled === false && !isRedirecting) {
+            console.log('[Maintenance Page] Maintenance disabled by admin - starting countdown redirect');
+            startCountdownRedirect();
+            return;
           }
           
-          setMaintenanceInfo({
-            title: data.title || 'Under Maintenance',
-            message: data.message || 'We\'ll be back soon!',
-            showContactForm: data.showContactForm ?? true,
-            estimatedEndTime,
-            isOverdue,
-            estimatedDuration: data.estimatedDuration || null,
-            enabledAt,
-            overdueBy,
-            autoEndEnabled: data.autoEndEnabled ?? false,
-          });
+          // Update info if still in maintenance
+          if (data?.enabled) {
+            let estimatedEndTime: Date | null = null;
+            let isOverdue = false;
+            let enabledAt: Date | null = null;
+            let overdueBy = 0;
+            
+            if (data.estimatedDuration && data.enabledAt) {
+              enabledAt = data.enabledAt.toDate ? data.enabledAt.toDate() : new Date(data.enabledAt);
+              estimatedEndTime = new Date(enabledAt.getTime() + data.estimatedDuration * 60 * 1000);
+              const now = new Date();
+              isOverdue = now > estimatedEndTime;
+              if (isOverdue) {
+                overdueBy = Math.floor((now.getTime() - estimatedEndTime.getTime()) / (60 * 1000));
+              }
+            }
+            
+            setMaintenanceInfo({
+              title: data.title || 'Under Maintenance',
+              message: data.message || 'We\'ll be back soon!',
+              showContactForm: data.showContactForm ?? true,
+              estimatedEndTime,
+              isOverdue,
+              estimatedDuration: data.estimatedDuration || null,
+              enabledAt,
+              overdueBy,
+              autoEndEnabled: data.autoEndEnabled ?? false,
+            });
+          }
+        },
+        (error) => {
+          console.error('[Maintenance Page] Listener error:', error);
+          // Fall back to periodic API polling if Firebase fails
+          console.log('[Maintenance Page] Switching to API polling fallback');
         }
-      },
-      (error) => {
-        console.error('[Maintenance Page] Listener error:', error);
-      }
-    );
+      );
+    } catch (error) {
+      console.error('[Maintenance Page] Failed to set up listener:', error);
+      // If Firebase completely fails, rely on API polling
+      console.log('[Maintenance Page] Using API polling only');
+    }
 
-    return () => unsubscribe();
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, [isRedirecting, startCountdownRedirect]);
 
   // Loading state - show skeleton
@@ -611,12 +620,14 @@ function MaintenanceContent() {
 
 export default function MaintenancePage() {
   return (
-    <Suspense fallback={
-      <div className="fixed inset-0 bg-black-100 flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-purple border-t-transparent rounded-full animate-spin" />
-      </div>
-    }>
-      <MaintenanceContent />
-    </Suspense>
+    <MaintenanceErrorBoundary>
+      <Suspense fallback={
+        <div className="fixed inset-0 bg-black-100 flex items-center justify-center">
+          <div className="w-12 h-12 border-4 border-purple border-t-transparent rounded-full animate-spin" />
+        </div>
+      }>
+        <MaintenanceContent />
+      </Suspense>
+    </MaintenanceErrorBoundary>
   );
 }

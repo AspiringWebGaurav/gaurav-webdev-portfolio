@@ -97,8 +97,14 @@ export interface VisitorProfile {
   lastCaptchaFailure?: Date; // Most recent captcha failure
   banned: boolean; // Future ban/unban support
   banReason?: string;
+  banCategory?: string; // Ban severity category
+  banType?: 'temporary' | 'permanent'; // Ban type
+  banDuration?: number; // Duration in minutes (for temporary bans)
+  banExpiresAt?: Date; // Expiration timestamp (for temporary bans)
+  autoUnbanEnabled?: boolean; // Auto-unban feature flag
   banTimestamp?: Date;
   bannedBy?: string; // Admin ID who banned
+  bannedByUid?: string; // Admin UID who banned
   createdAt: Date;
   updatedAt: Date;
 }
@@ -298,6 +304,12 @@ export function firestoreToVisitorProfile(doc: any): VisitorProfile {
     banReason: data.banReason,
     banTimestamp: data.banTimestamp?.toDate(),
     bannedBy: data.bannedBy,
+    banCategory: data.banCategory,
+    banType: data.banType,
+    banDuration: data.banDuration,
+    banExpiresAt: data.banExpiresAt?.toDate(),
+    autoUnbanEnabled: data.autoUnbanEnabled,
+    bannedByUid: data.bannedByUid,
     createdAt: data.createdAt?.toDate() || new Date(),
     updatedAt: data.updatedAt?.toDate() || new Date(),
   };

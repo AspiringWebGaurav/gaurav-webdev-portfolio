@@ -1,0 +1,27 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "og_uuid",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "banned",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "banType",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "autoUnbanEnabled",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "banExpiresAt",
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

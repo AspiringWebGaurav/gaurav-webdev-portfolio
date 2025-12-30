@@ -85,11 +85,19 @@ export function setCachedIdentity(fingerprint: string, identity: EnhancedIdentit
 
 /**
  * Clear cache (useful for logout/testing)
+ * Returns: number of entries cleared
  */
-export function clearIdentityCache(): void {
-  console.log('[Identity Cache] 🗑️ Cache cleared');
-  identityCache = null;
-  CACHE_VERSION++;
+export async function clearIdentityCache(): Promise<number> {
+  try {
+    const hadCache = identityCache !== null;
+    console.log('[Identity Cache] 🗑️ Cache cleared');
+    identityCache = null;
+    CACHE_VERSION++;
+    return hadCache ? 1 : 0;
+  } catch (error) {
+    console.error('[Identity Cache] Error clearing cache:', error);
+    return 0;
+  }
 }
 
 /**

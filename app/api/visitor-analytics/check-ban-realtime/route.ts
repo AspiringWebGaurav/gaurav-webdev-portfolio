@@ -118,7 +118,9 @@ export async function POST(request: NextRequest) {
                   },
                   {
                     headers: {
-                      'Cache-Control': 'no-store, must-revalidate',
+                      'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+                      'Pragma': 'no-cache',
+                      'Expires': '0',
                     },
                   }
                 );
@@ -147,7 +149,9 @@ export async function POST(request: NextRequest) {
         },
         {
           headers: {
-            'Cache-Control': 'no-store, must-revalidate',
+            'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma': 'no-cache',
+            'Expires': '0',
           },
         }
       );
@@ -162,7 +166,9 @@ export async function POST(request: NextRequest) {
         },
         {
           headers: {
-            'Cache-Control': 'no-store, must-revalidate',
+            'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma': 'no-cache',
+            'Expires': '0',
           },
         }
       );
@@ -174,7 +180,9 @@ export async function POST(request: NextRequest) {
         { 
           status: 500,
           headers: {
-            'Cache-Control': 'no-store, must-revalidate',
+            'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma': 'no-cache',
+            'Expires': '0',
           },
         }
       );
@@ -186,7 +194,9 @@ export async function POST(request: NextRequest) {
       { 
         status: 400,
         headers: {
-          'Cache-Control': 'no-store, must-revalidate',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+          'Pragma': 'no-cache',
+          'Expires': '0',
         },
       }
     );

@@ -98,55 +98,100 @@ export default function BanModal({ visitorId, onClose, onBanSuccess }: BanModalP
 
     setLoading(true);
 
-    try {
-      const user = auth.currentUser;
-      if (!user) {
-        showToast.error("Authentication required");
-        return;
+    // Retry logic for network failures
+    const maxRetries = 3;
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const user = auth.currentUser;
+        if (!user) {
+          showToast.error("Authentication required - please login again");
+          setLoading(false);
+          return;
+        }
+
+        let token: string;
+        try {
+          token = await user.getIdToken();
+        } catch (tokenError) {
+          throw new Error("Failed to get authentication token");
+        }
+
+        // Calculate total duration in minutes
+        const totalMinutes = banType === "temporary" 
+          ? (durationDays * 24 * 60) + (durationHours * 60) + durationMinutes 
+          : null;
+
+        console.log(`[Ban Modal] Attempting ban (attempt ${attempt}/${maxRetries})...`);
+
+        const response = await fetch("/api/visitor-analytics/ban", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            mask: visitorId,
+            reason: selectedReason,
+            category: selectedCategory,
+            customReason: selectedReason === "Custom Reason" ? customReason : undefined,
+            banType,
+            banDuration: totalMinutes,
+            autoUnbanEnabled: banType === "temporary" ? autoUnbanEnabled : false,
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          
+          // Don't retry auth errors
+          if (response.status === 401 || response.status === 403) {
+            throw new Error(error.error || "Authentication failed - please login again");
+          }
+          
+          throw new Error(error.error || "Failed to ban visitor");
+        }
+
+        // Success!
+        console.log('[Ban Modal] Ban successful');
+        showToast.success(
+          banType === "temporary" 
+            ? `Visitor temporarily banned for ${formatDuration(totalMinutes!)}` 
+            : "Visitor permanently banned"
+        );
+        onBanSuccess();
+        onClose();
+        return; // Exit on success
+
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error("Unknown error");
+        console.error(`[Ban Modal] Attempt ${attempt} failed:`, lastError.message);
+
+        // Don't retry auth errors
+        if (lastError.message.includes("Authentication") || lastError.message.includes("login")) {
+          showToast.error(lastError.message);
+          setLoading(false);
+          return;
+        }
+
+        // If not the last attempt, wait before retrying
+        if (attempt < maxRetries) {
+          const delay = Math.pow(2, attempt - 1) * 1000; // Exponential backoff: 1s, 2s, 4s
+          console.log(`[Ban Modal] Retrying in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
       }
-
-      const token = await user.getIdToken();
-
-      // Calculate total duration in minutes
-      const totalMinutes = banType === "temporary" 
-        ? (durationDays * 24 * 60) + (durationHours * 60) + durationMinutes 
-        : null;
-
-      const response = await fetch("/api/visitor-analytics/ban", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          mask: visitorId,  // Admin sends mask (visitorId is actually mask from VisitorAnalyticsManager)
-          reason: selectedReason,
-          category: selectedCategory,
-          customReason: selectedReason === "Custom Reason" ? customReason : undefined,
-          banType,
-          banDuration: totalMinutes,
-          autoUnbanEnabled: banType === "temporary" ? autoUnbanEnabled : false,
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to ban visitor");
-      }
-
-      showToast.success(
-        banType === "temporary" 
-          ? `Visitor temporarily banned for ${formatDuration(totalMinutes!)}` 
-          : "Visitor permanently banned"
-      );
-      onBanSuccess();
-      onClose();
-    } catch (error) {
-      console.error("[Ban Modal] Error:", error);
-      showToast.error(error instanceof Error ? error.message : "Failed to ban visitor");
-    } finally {
-      setLoading(false);
     }
+
+    // All retries failed
+    setLoading(false);
+    const errorMessage = lastError?.message || "Failed to ban visitor after multiple attempts";
+    console.error("[Ban Modal] All retry attempts failed:", errorMessage);
+    showToast.error(
+      `${errorMessage}. Please check your connection and try again.`,
+      { autoClose: 5000 }
+    );
   };
 
   const formatDuration = (minutes: number): string => {

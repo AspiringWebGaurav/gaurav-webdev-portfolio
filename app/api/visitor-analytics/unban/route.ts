@@ -14,7 +14,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminDb, verifyAuth } from "@/lib/firebaseAdmin";
 import { Timestamp, FieldValue } from "firebase-admin/firestore";
 import { translateMaskToUUID } from "@/lib/uuid-sync/server";
-import { broadcastCacheClear } from "@/lib/cacheInvalidation";
 
 const VISITORS_COLLECTION = "og_uuid";
 const BAN_LOGS_COLLECTION = "banLogs";
@@ -292,14 +291,9 @@ export async function POST(request: NextRequest): Promise<NextResponse<UnbanResp
 
     console.log(`[Unban API] ✅ Visitor ${resolvedMask || uuid.substring(0, 13)} unbanned successfully (${duration}ms)`);
 
-    // Broadcast cache clear to all clients to invalidate stale ban data
-    try {
-      await broadcastCacheClear('unban', { mask: resolvedMask, uuid });
-      console.log('[Unban API] Cache clear broadcasted successfully');
-    } catch (broadcastError) {
-      console.error('[Unban API] Failed to broadcast cache clear:', broadcastError);
-      // Don't fail the unban operation if broadcast fails
-    }
+    // No cache broadcasting needed - Firestore real-time listeners automatically
+    // notify all connected clients when ban status changes
+    console.log('[Unban API] Real-time listeners will sync ban status to all clients automatically');
 
     return NextResponse.json({
       success: true,

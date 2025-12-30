@@ -21,7 +21,6 @@
 import { useEffect, useRef, useMemo, Suspense } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useBubbleSession } from "@/contexts/BubbleSessionContext";
-import { clearIdentityCache } from "@/lib/cacheInvalidation";
 
 function BanGateInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -46,11 +45,19 @@ function BanGateInner({ children }: { children: React.ReactNode }) {
     // Check for unban redirect parameter first
     const unbanRedirect = searchParams?.get('unbanRedirect');
     if (unbanRedirect === 'true' && !hasClearedCache.current) {
-      console.log('[Ban Gate] 🔄 Clearing cache after unban...');
+      console.log('[Ban Gate] 🔄 Unban detected - Firestore real-time listener will sync automatically');
       hasClearedCache.current = true;
-      clearIdentityCache().catch(err => {
-        console.error('[Ban Gate] Failed to clear identity cache:', err);
-      });
+      
+      // Clean URL by removing unbanRedirect and _t parameters
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('unbanRedirect');
+        url.searchParams.delete('_t');
+        window.history.replaceState({}, '', url.pathname + url.search);
+        console.log('[Ban Gate] ✨ Cleaned URL parameters');
+      }
+      // No cache clearing needed - BubbleSessionContext uses real-time Firestore listeners
+      // and will automatically update when ban status changes on the server
     }
 
     // IMMEDIATE SKIP: Admin, banned, and maintenance pages bypass completely

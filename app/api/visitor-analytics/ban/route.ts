@@ -136,6 +136,22 @@ export async function POST(request: NextRequest): Promise<NextResponse<BanRespon
     // Extract mask or uuid
     const { mask, uuid: providedUuid, reason, category, customReason, notifyUser = false, banType = "permanent", banDuration, autoUnbanEnabled = false } = body;
 
+    // Validate temporary ban duration
+    if (banType === "temporary") {
+      if (banDuration === undefined || banDuration === null) {
+        return NextResponse.json(
+          { success: false, error: "Ban duration is required for temporary bans" },
+          { status: 400 }
+        );
+      }
+      if (banDuration <= 0) {
+        return NextResponse.json(
+          { success: false, error: "Ban duration must be greater than 0 minutes" },
+          { status: 400 }
+        );
+      }
+    }
+
     // Determine UUID (either provided directly by admin, or translate from mask)
     let uuid: string;
     let resolvedMask: string | undefined;

@@ -83,6 +83,17 @@ export default function CacheClearControl() {
     setPhase('client');
     setLoading(true);
 
+    // FIRST: Log current cache state BEFORE clearing
+    console.log('[Cache Clear] 📊 Current cache state BEFORE clear:');
+    try {
+      const beforeStats = await getCacheStats();
+      console.log('[Cache Clear] Identity entries:', beforeStats.identity.entries);
+      console.log('[Cache Clear] UUID entries:', beforeStats.uuid.entries);
+      console.log('[Cache Clear] Browser caches:', beforeStats.browser.routes);
+    } catch (err) {
+      console.log('[Cache Clear] Could not read pre-clear stats:', err);
+    }
+
     // Initialize operations
     const initialOps: Operation[] = [
       {
@@ -166,11 +177,19 @@ export default function CacheClearControl() {
       // Complete
       setPhase('complete');
       
-      // Transform result to match expected UI format
+      // Use ACTUAL detailed counts from clearResult
+      const counts = clearResult.counts || {
+        identityCleared: 0,
+        uuidCleared: 0,
+        browserCachesCleared: 0,
+      };
+      
       setResults({
-        identityCleared: clearResult.stats.entriesCleared,
-        uuidCleared: 0, // Will be included in entriesCleared
-        browserCachesCleared: clearResult.phases.client.success ? ['cache-storage'] : [],
+        identityCleared: counts.identityCleared,
+        uuidCleared: counts.uuidCleared,
+        browserCachesCleared: counts.browserCachesCleared > 0 
+          ? Array(counts.browserCachesCleared).fill('cache-storage') 
+          : [],
         broadcastSuccess: clearResult.phases.broadcast.success,
         notifiedTabs: connectedClients,
         databaseVerified: clearResult.phases.verification.success,

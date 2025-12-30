@@ -55,9 +55,14 @@ export interface CacheClearResult {
   };
   errors: CacheClearError[];
   stats: {
-    memoryFreed: number;
-    entriesCleared: number;
+    memoryFreed: number; // Browser caches cleared
+    entriesCleared: number; // Identity + UUID entries cleared
     duration: number;
+  };
+  counts?: {
+    identityCleared: number;
+    uuidCleared: number;
+    browserCachesCleared: number;
   };
 }
 
@@ -199,49 +204,66 @@ function releaseClearLock(): void {
 
 /**
  * Clear identity cache (in-memory only)
+ * Returns: number of entries cleared
  */
-export function clearIdentityCache(): void {
+export async function clearIdentityCache(): Promise<number> {
   try {
     // Identity cache can work on both client and server
     const { clearIdentityCache: clear } = require('./identityCache');
-    clear();
-    console.log('[Cache Clear] ✅ Identity cache cleared');
+    const count = await clear();
+    console.log('[Cache Clear] ✅ Identity cache cleared:', count, 'entries');
+    return count;
   } catch (error) {
     console.error('[Cache Clear] Failed to clear identity cache:', error);
-    // Don't throw - this is non-critical
+    return 0;
   }
 }
 
 /**
  * Clear UUID-sync cache (in-memory only)
+ * Returns: number of entries cleared
  */
-export function clearUUIDCache(): void {
+export function clearUUIDCache(): number {
   try {
     // UUID cache can work on both client and server
-    const { cacheClear } = require('./uuid-sync/services/cacheManager');
-    cacheClear();
-    console.log('[Cache Clear] ✅ UUID cache cleared');
+    const cacheModule = require('./uuid-sync/services/cacheManager');
+    const cacheManager = cacheModule.cacheManager || cacheModule.default;
+    
+    if (!cacheManager || typeof cacheManager.getStats !== 'function') {
+      console.log('[Cache Clear] ⚠️ UUID cache manager not available');
+      return 0;
+    }
+    
+    const stats = cacheManager.getStats();
+    const count = stats.size || 0;
+    cacheManager.clear();
+    console.log('[Cache Clear] ✅ UUID cache cleared:', count, 'entries');
+    return count;
   } catch (error) {
     console.error('[Cache Clear] Failed to clear UUID cache:', error);
-    // Don't throw - this is non-critical
+    return 0;
   }
 }
 
 /**
  * Clear browser caches (Cache Storage API, LocalStorage, SessionStorage)
+ * Returns: number of caches cleared
  */
-export async function clearBrowserCache(): Promise<void> {
+export async function clearBrowserCache(): Promise<number> {
   // Skip on server-side
   if (typeof window === 'undefined') {
     console.log('[Cache Clear] ⏭️ Skipping browser cache clear on server-side');
-    return;
+    return 0;
   }
 
   try {
+    let totalCleared = 0;
+
     // Clear Cache Storage API
     if ('caches' in window) {
       const cacheNames = await caches.keys();
       await Promise.all(cacheNames.map((name) => caches.delete(name)));
+      totalCleared += cacheNames.length;
       console.log('[Cache Clear] ✅ Browser cache cleared:', cacheNames.length, 'caches');
     }
 
@@ -255,6 +277,8 @@ export async function clearBrowserCache(): Promise<void> {
     // Clear SessionStorage
     sessionStorage.clear();
     console.log('[Cache Clear] ✅ SessionStorage cleared');
+
+    return totalCleared;
   } catch (error) {
     console.error('[Cache Clear] Failed to clear browser cache:', error);
     throw error;
@@ -263,15 +287,26 @@ export async function clearBrowserCache(): Promise<void> {
 
 /**
  * Clear all client-side caches (memory + browser)
+ * Returns: object with counts for each cache type
  */
-export async function clearAllClientCache(): Promise<void> {
+export async function clearAllClientCache(): Promise<{
+  identityCleared: number;
+  uuidCleared: number;
+  browserCachesCleared: number;
+}> {
   console.log('[Cache Clear] 🗑️ Clearing client caches...');
 
-  clearIdentityCache();
-  clearUUIDCache();
-  await clearBrowserCache();
+  const identityCleared = await clearIdentityCache();
+  const uuidCleared = clearUUIDCache();
+  const browserCachesCleared = await clearBrowserCache();
 
-  console.log('[Cache Clear] 🎉 All client caches cleared');
+  console.log('[Cache Clear] 🎉 All client caches cleared:', {
+    identity: identityCleared,
+    uuid: uuidCleared,
+    browser: browserCachesCleared,
+  });
+
+  return { identityCleared, uuidCleared, browserCachesCleared };
 }
 
 /**
@@ -289,39 +324,61 @@ export async function broadcastCacheClear(
   type: 'manual' | 'auto-scheduled' | 'unban' | 'auto-unban' | 'admin-unban' | 'maintenance-auto-end' | 'visitor-restore',
   metadata?: any
 ): Promise<void> {
+  // Dynamically import Firebase RTDB to avoid SSR issues
+  if (typeof window === 'undefined') {
+    console.log('[Cache Clear] Skipping broadcast on server-side');
+    return;
+  }
+
   try {
-    // Dynamically import Firebase RTDB to avoid SSR issues
-    if (typeof window === 'undefined') {
-      console.log('[Cache Clear] Skipping broadcast on server-side');
-      return;
+    // Add timeout to prevent hanging (3 seconds)
+    const timeoutPromise = new Promise<'timeout'>((resolve) =>
+      setTimeout(() => resolve('timeout'), 3000)
+    );
+
+    const broadcastPromise = (async () => {
+      try {
+        const { rtdb } = await import('./firebase');
+        const { ref, push } = await import('firebase/database');
+        const cacheInvalidationRef = ref(rtdb, 'cacheInvalidation');
+
+        await push(cacheInvalidationRef, {
+          type,
+          timestamp: new Date().toISOString(),
+          metadata: metadata || {},
+          clearClient: true,
+          clearServer: true,
+          databaseProtected: true,
+          reason:
+            type === 'auto-scheduled'
+              ? 'Scheduled maintenance'
+              : type === 'unban' || type === 'auto-unban' || type === 'admin-unban'
+              ? 'User unbanned'
+              : type === 'maintenance-auto-end'
+              ? 'Maintenance mode ended'
+              : type === 'visitor-restore'
+              ? 'Visitor restored from recycle bin'
+              : 'Manual cache clear',
+        });
+        return 'success';
+      } catch (err) {
+        console.warn('[Cache Broadcast] Firebase RTDB error:', err);
+        return 'error';
+      }
+    })();
+
+    const result = await Promise.race([broadcastPromise, timeoutPromise]);
+    
+    if (result === 'success') {
+      console.log('[Cache Broadcast] ✅ Signal sent to all clients');
+    } else if (result === 'timeout') {
+      console.log('[Cache Broadcast] ⏱️ Broadcast timed out - skipping (non-critical)');
+    } else {
+      console.log('[Cache Broadcast] ⚠️ Broadcast failed - skipping (non-critical)');
     }
-
-    const { rtdb } = await import('./firebase');
-    const cacheInvalidationRef = ref(rtdb, 'cacheInvalidation');
-
-    await push(cacheInvalidationRef, {
-      type,
-      timestamp: new Date().toISOString(),
-      metadata: metadata || {},
-      clearClient: true,
-      clearServer: true,
-      databaseProtected: true,
-      reason:
-        type === 'auto-scheduled'
-          ? 'Scheduled maintenance'
-          : type === 'unban' || type === 'auto-unban' || type === 'admin-unban'
-          ? 'User unbanned'
-          : type === 'maintenance-auto-end'
-          ? 'Maintenance mode ended'
-          : type === 'visitor-restore'
-          ? 'Visitor restored from recycle bin'
-          : 'Manual cache clear',
-    });
-
-    console.log('[Cache Broadcast] 📡 Signal sent to all clients');
   } catch (error) {
-    console.error('[Cache Broadcast] Failed to send signal:', error);
-    throw error;
+    // This shouldn't happen with the new structure, but just in case
+    console.log('[Cache Broadcast] ℹ️ Skipping broadcast due to error (non-critical)');
   }
 }
 
@@ -403,20 +460,41 @@ export function getCacheStats(): CacheStats {
     const { getCacheStats: getIdentityStats } = require('./identityCache');
     const identityStats = getIdentityStats();
 
+    // Try to get UUID cache stats
+    let uuidEntries = 0;
+    try {
+      const cacheModule = require('./uuid-sync/services/cacheManager');
+      const cacheManager = cacheModule.cacheManager || cacheModule.default;
+      if (cacheManager && typeof cacheManager.getStats === 'function') {
+        const uuidStats = cacheManager.getStats();
+        uuidEntries = uuidStats.size || 0;
+      }
+    } catch (err) {
+      // UUID cache not available
+    }
+
+    // Try to get browser cache count
+    let browserCacheCount = 0;
+    if (typeof window !== 'undefined' && 'caches' in window) {
+      // This is async, so we can't get it synchronously
+      // We'll use a placeholder
+      browserCacheCount = 0; // Will be updated during clear
+    }
+
     return {
       identity: {
-        entries: identityStats.cached ? 1 : 0,
+        entries: identityStats.entries || 0,
         age: identityStats.age,
-        size: identityStats.cached ? 45 : 0, // Approximate KB
-        hitRate: 0, // Would need tracking to calculate
+        size: identityStats.cached ? 45 : 0,
+        hitRate: 0,
       },
       uuid: {
-        entries: 0, // Would need to query cache manager
+        entries: uuidEntries,
         age: null,
         hitRate: 0,
       },
       browser: {
-        routes: 0,
+        routes: browserCacheCount,
         size: 0,
       },
       server: {
@@ -456,6 +534,11 @@ export async function clearAllCacheWithErrorHandling(): Promise<CacheClearResult
       entriesCleared: 0,
       duration: 0,
     },
+    counts: {
+      identityCleared: 0,
+      uuidCleared: 0,
+      browserCachesCleared: 0,
+    },
   };
 
   const startTime = Date.now();
@@ -465,10 +548,17 @@ export async function clearAllCacheWithErrorHandling(): Promise<CacheClearResult
     // Phase 1: Client Cache
     try {
       console.log('[Cache Clear] Phase 1: Client cache...');
-      await clearAllClientCache();
+      const counts = await clearAllClientCache();
       results.phases.client.success = true;
-      results.stats.entriesCleared += 10; // Estimate
-      console.log('[Cache Clear] ✅ Phase 1 complete');
+      results.stats.entriesCleared = counts.identityCleared + counts.uuidCleared;
+      results.stats.memoryFreed = counts.browserCachesCleared;
+      // Store detailed counts
+      results.counts = {
+        identityCleared: counts.identityCleared,
+        uuidCleared: counts.uuidCleared,
+        browserCachesCleared: counts.browserCachesCleared,
+      };
+      console.log('[Cache Clear] ✅ Phase 1 complete -', results.stats.entriesCleared, 'entries');
     } catch (error) {
       const classified = await errorHandler.handleError(error, 'client-cache', {});
       results.phases.client.error = classified;

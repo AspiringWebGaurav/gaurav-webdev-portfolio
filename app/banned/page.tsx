@@ -1,5 +1,27 @@
 'use client';
 
+/**
+ * BANNED PAGE - AUTO-UNBAN TIMING EXPLAINED
+ * 
+ * HOW AUTO-UNBAN WORKS:
+ * 1. Ban is created with expiration time (e.g., 1 minute from now)
+ * 2. Client countdown shows real-time remaining time (updates every 1 second)
+ * 3. Firebase Cloud Function checks for expired bans every 1 minute
+ * 4. When countdown reaches 00:00, status shows "Unbanning..." (up to 90 seconds)
+ * 5. Server unbans when Cloud Function runs (happens within next 1-minute interval)
+ * 6. Page detects unban via Firestore real-time listener and redirects
+ * 
+ * EXPECTED TIMING:
+ * - 1 minute ban = Countdown ends at exactly 1:00, unban happens within 1:00-1:90
+ * - The delay is normal and expected due to Cloud Function schedule
+ * - User sees "Unbanning..." state during the sync window
+ * 
+ * SYNC ARCHITECTURE:
+ * - Client: Real-time countdown (JavaScript Date math)
+ * - Server: Scheduled unban check (Firebase Cloud Function - every 1 minute)
+ * - Detection: Firestore real-time listener (instant notification when unbanned)
+ */
+
 import { useState, useEffect, Suspense, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 
@@ -62,6 +84,9 @@ function BannedPageContent() {
   const [checkingStatus, setCheckingStatus] = useState(true);
   const verificationTimeout = useRef<NodeJS.Timeout | null>(null);
   const hasStartedCheck = useRef(false);
+  const immediateUnbanAttempted = useRef(false);
+  const immediateUnbanRetryCount = useRef(0);
+  const MAX_IMMEDIATE_UNBAN_RETRIES = 3;
 
   // Safety timeout: Always show banned UI after MAX_VERIFICATION_TIME
   // This prevents infinite "checking" state
@@ -150,8 +175,8 @@ function BannedPageContent() {
               console.error('[Banned Page] Failed to clear cache:', error);
             }
             
-            // Add cache-busting parameter to ensure BanGate clears cache
-            window.location.replace(`${PORTFOLIO_HOME}?unbanRedirect=true&_t=${Date.now()}`);
+            // Redirect to clean portfolio URL (BanGate will handle unban detection via real-time listeners)
+            window.location.replace(PORTFOLIO_HOME);
             return;
           } else {
             // User is still banned - update ban info with type and expiration
@@ -200,6 +225,142 @@ function BannedPageContent() {
   }, [searchParams]);
 
   /**
+   * HYBRID APPROACH: On-demand unban check when ban expires
+   * Attempts immediate unban when countdown reaches 0:00
+   * Falls back to scheduled Cloud Function if API fails
+   */
+  useEffect(() => {
+    // Skip if already redirecting, no mask, or not a temporary ban
+    if (isRedirecting || !mask || banInfo.banType !== 'temporary' || !banInfo.banExpiresAt) {
+      return;
+    }
+
+    // Skip if already attempted
+    if (immediateUnbanAttempted.current) {
+      return;
+    }
+
+    console.log('[Banned Page] 🕐 Setting up on-demand unban check for temporary ban');
+
+    const checkInterval = setInterval(() => {
+      const now = new Date();
+      const expiresAt = new Date(banInfo.banExpiresAt!);
+      const timeUntilExpiry = expiresAt.getTime() - now.getTime();
+
+      // Check if ban has expired (with 2-second buffer to account for processing time)
+      if (timeUntilExpiry <= 2000 && !immediateUnbanAttempted.current) {
+        console.log('[Banned Page] ⏰ Ban expiration detected - attempting immediate unban');
+        immediateUnbanAttempted.current = true;
+        clearInterval(checkInterval);
+
+        // Call immediate unban API
+        attemptImmediateUnban();
+      }
+    }, 1000); // Check every second
+
+    return () => clearInterval(checkInterval);
+  }, [mask, banInfo.banType, banInfo.banExpiresAt, isRedirecting]);
+
+  /**
+   * Attempt immediate unban via API with retry logic
+   */
+  const attemptImmediateUnban = async () => {
+    if (immediateUnbanRetryCount.current >= MAX_IMMEDIATE_UNBAN_RETRIES) {
+      console.log('[Banned Page] ⚠️ Max immediate unban retries reached - falling back to scheduled function');
+      return;
+    }
+
+    immediateUnbanRetryCount.current++;
+    const attempt = immediateUnbanRetryCount.current;
+
+    try {
+      console.log(`[Banned Page] 🚀 Immediate unban attempt ${attempt}/${MAX_IMMEDIATE_UNBAN_RETRIES}`);
+
+      const fingerprint = generateDeviceFingerprint();
+      const response = await fetch('/api/visitor-analytics/check-unban', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          visitorId: mask,
+          fingerprint 
+        }),
+        cache: 'no-store',
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success && data.unbanned) {
+        console.log('[Banned Page] ✅ Immediate unban successful!');
+        setIsRedirecting(true);
+
+        // Show success toast
+        showToast.success(
+          'Your access has been restored',
+          'Welcome back!',
+          { autoClose: TOAST_DURATION }
+        );
+
+        // Clear cache
+        try {
+          await clearIdentityCache();
+          banStatusManager.reset();
+        } catch (error) {
+          console.error('[Banned Page] Failed to clear cache:', error);
+        }
+
+        // Redirect after short delay
+        setTimeout(() => {
+          window.location.replace(PORTFOLIO_HOME);
+        }, REDIRECT_DELAY);
+
+      } else if (response.status === 429 && data.rateLimited) {
+        // Rate limited - wait and retry
+        console.log(`[Banned Page] ⏳ Rate limited - retrying in ${data.retryAfter}s`);
+        setTimeout(() => {
+          attemptImmediateUnban();
+        }, (data.retryAfter || 5) * 1000);
+
+      } else if (data.expired === false && data.remainingSeconds) {
+        // Ban not expired yet - retry after remaining time
+        console.log(`[Banned Page] ⏰ Ban not expired yet - ${data.remainingSeconds}s remaining`);
+        setTimeout(() => {
+          attemptImmediateUnban();
+        }, data.remainingSeconds * 1000 + 1000); // Add 1s buffer
+
+      } else if (data.fallback || !data.success) {
+        // API failed - fallback to scheduled function
+        console.log('[Banned Page] ⚠️ Immediate unban failed - relying on scheduled function');
+        console.log('[Banned Page] 📡 Scheduled function will unban within 60 seconds');
+
+        // Show informative message
+        showToast.info(
+          'Your ban is expiring...',
+          'Access will be restored within 60 seconds',
+          { autoClose: 5000 }
+        );
+      }
+
+    } catch (error) {
+      console.error('[Banned Page] ❌ Immediate unban error:', error);
+      
+      // Retry on network error
+      if (attempt < MAX_IMMEDIATE_UNBAN_RETRIES) {
+        console.log(`[Banned Page] 🔄 Retrying in 5 seconds (attempt ${attempt + 1}/${MAX_IMMEDIATE_UNBAN_RETRIES})`);
+        setTimeout(() => {
+          attemptImmediateUnban();
+        }, 5000);
+      } else {
+        console.log('[Banned Page] ⚠️ All retry attempts exhausted - falling back to scheduled function');
+        showToast.warning(
+          'Unban in progress...',
+          'Automated unban will occur within 60 seconds',
+          { autoClose: 5000 }
+        );
+      }
+    }
+  };
+
+  /**
    * Handle unban via real-time listener
    */
   useEffect(() => {
@@ -245,7 +406,7 @@ function BannedPageContent() {
               
               // Silent redirect with cache-busting parameter
               banStatusManager.reset();
-              window.location.replace(`${PORTFOLIO_HOME}?unbanRedirect=true&_t=${Date.now()}`);
+              window.location.replace(PORTFOLIO_HOME);
             }
           },
           (error) => {
