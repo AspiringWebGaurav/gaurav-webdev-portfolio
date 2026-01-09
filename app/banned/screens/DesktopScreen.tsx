@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { banStatusManager } from '@/lib/banStatusManager';
+import Logo from '@/components/Logo';
 
 interface BanInfo {
   reason: string;
@@ -151,12 +152,12 @@ export default function DesktopScreen({ banInfo }: DesktopScreenProps) {
         {/* Top branding bar */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-700/30 flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-gradient-to-br from-red-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-base">G</span>
-            </div>
+            <Logo variant="small" />
             <div>
-              <h2 className="text-white font-semibold text-sm">Gaurav Portfolio</h2>
-              <p className="text-slate-400 text-xs">Security Services Active</p>
+              <h2 className="text-white font-semibold text-sm font-mono">
+                <span className="text-purple">&gt;</span> access_restricted
+              </h2>
+              <p className="text-slate-400 text-xs font-mono">security_services_active</p>
             </div>
           </div>
           

@@ -88,11 +88,20 @@ export default function CurtainTransition({
       // Small delay for visual feedback
       await new Promise(resolve => setTimeout(resolve, 300));
       
+      // Set flag to signal maintenance page we're transitioning
+      // This prevents flash by keeping curtain visible during navigation
+      sessionStorage.setItem('maintenanceTransitionActive', 'true');
+      console.log('[CurtainTransition] Set transition flag, redirecting...');
+      
       // Attempt redirect
       router.replace("/maintenance");
       
-      // Call completion callback
-      onComplete?.();
+      // DON'T call onComplete immediately - keep curtain visible
+      // Maintenance page will clear the flag when it's ready
+      // After 800ms safety timeout, fade out anyway
+      setTimeout(() => {
+        onComplete?.();
+      }, 800);
     } catch (error) {
       console.error("[CurtainTransition] Redirect error:", error);
       setHasError(true);
@@ -159,6 +168,7 @@ export default function CurtainTransition({
   }, [isActive]);
 
   // Don't render if not active and idle
+  // BUT keep rendering during redirect phase to prevent flash
   if (!isActive && phase === "idle") return null;
 
   const CurrentIcon = CURTAIN_ICONS[iconIndex];

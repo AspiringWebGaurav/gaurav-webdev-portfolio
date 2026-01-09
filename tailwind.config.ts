@@ -25,6 +25,14 @@ const config = {
         "2xl": "1400px",
       },
     },
+    screens: {
+      'xs': '375px',   // Extra small devices (small phones)
+      'sm': '640px',   // Small devices (phones)
+      'md': '768px',   // Medium devices (tablets)
+      'lg': '1024px',  // Large devices (desktops)
+      'xl': '1280px',  // Extra large devices
+      '2xl': '1536px', // 2X Extra large devices
+    },
     extend: {
       colors: {
         black: {

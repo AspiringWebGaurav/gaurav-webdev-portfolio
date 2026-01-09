@@ -25,81 +25,41 @@ export default function UnbanModal({ visitorId, banReason, onClose, onUnbanSucce
   const handleUnban = async () => {
     setLoading(true);
 
-    // Retry logic for network failures
-    const maxRetries = 3;
-    let lastError: Error | null = null;
-
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        const user = auth.currentUser;
-        if (!user) {
-          showToast.error("Authentication required - please login again");
-          setLoading(false);
-          return;
-        }
-
-        const token = await user.getIdToken();
-
-        console.log(`[Unban Modal] Attempting unban (attempt ${attempt}/${maxRetries})...`);
-
-        const response = await fetch("/api/visitor-analytics/unban", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            mask: visitorId,
-            unbanReason: unbanReason || "Unbanned by admin",
-          }),
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          
-          // Don't retry auth errors
-          if (response.status === 401 || response.status === 403) {
-            throw new Error(error.error || "Authentication failed - please login again");
-          }
-          
-          throw new Error(error.error || "Failed to unban visitor");
-        }
-
-        // Success!
-        console.log('[Unban Modal] Unban successful');
-        showToast.success("Visitor unbanned successfully - real-time listeners will sync automatically");
-        onUnbanSuccess();
-        onClose();
-        return; // Exit on success
-
-      } catch (error) {
-        lastError = error instanceof Error ? error : new Error("Unknown error");
-        console.error(`[Unban Modal] Attempt ${attempt} failed:`, lastError.message);
-
-        // Don't retry auth errors
-        if (lastError.message.includes("Authentication") || lastError.message.includes("login")) {
-          showToast.error(lastError.message);
-          setLoading(false);
-          return;
-        }
-
-        // If not the last attempt, wait before retrying
-        if (attempt < maxRetries) {
-          const delay = Math.pow(2, attempt - 1) * 1000; // Exponential backoff: 1s, 2s, 4s
-          console.log(`[Unban Modal] Retrying in ${delay}ms...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
-        }
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        showToast.error("Authentication required");
+        return;
       }
-    }
 
-    // All retries failed
-    setLoading(false);
-    const errorMessage = lastError?.message || "Failed to unban visitor after multiple attempts";
-    console.error("[Unban Modal] All retry attempts failed:", errorMessage);
-    showToast.error(
-      `${errorMessage}. Please check your connection and try again.`,
-      { autoClose: 5000 }
-    );
+      const token = await user.getIdToken();
+
+      const response = await fetch("/api/visitor-analytics/unban", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          mask: visitorId,  // Admin sends mask (visitorId is actually mask from VisitorAnalyticsManager)
+          unbanReason: unbanReason || "Unbanned by admin",
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to unban visitor");
+      }
+
+      showToast.success("Visitor unbanned successfully");
+      onUnbanSuccess();
+      onClose();
+    } catch (error) {
+      console.error("[Unban Modal] Error:", error);
+      showToast.error(error instanceof Error ? error.message : "Failed to unban visitor");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

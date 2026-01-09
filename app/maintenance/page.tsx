@@ -24,6 +24,7 @@ import TabletScreen from './screens/TabletScreen';
 import MobileScreen from './screens/MobileScreen';
 import MaintenancePageSkeleton from '@/components/skeletons/sections/MaintenancePageSkeleton';
 import MaintenanceErrorBoundary from '@/components/MaintenanceErrorBoundary';
+import Logo from '@/components/Logo';
 
 const COLLECTION = 'siteSettings';
 const DOC_ID = 'maintenance';
@@ -58,6 +59,23 @@ function MaintenanceContent() {
   const [showCountdown, setShowCountdown] = useState(false);
   const [countdownNumber, setCountdownNumber] = useState(3);
   const [lastVisibilityCheck, setLastVisibilityCheck] = useState(Date.now());
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  // Check for curtain transition on mount
+  useEffect(() => {
+    const transitionFlag = sessionStorage.getItem('maintenanceTransitionActive');
+    if (transitionFlag === 'true') {
+      console.log('[Maintenance Page] Detected curtain transition - coordinating handoff');
+      setIsTransitioning(true);
+      
+      // Clear flag after a moment to signal curtain can fade
+      setTimeout(() => {
+        sessionStorage.removeItem('maintenanceTransitionActive');
+        setIsTransitioning(false);
+        console.log('[Maintenance Page] Transition complete, curtain can fade');
+      }, 300);
+    }
+  }, []);
 
   // Handle countdown and redirect - defined early with useCallback for use in effects
   const startCountdownRedirect = useCallback(() => {
@@ -607,15 +625,59 @@ function MaintenanceContent() {
     );
   }
 
-  // Render screen based on size
-  switch (screenSize) {
-    case 'mobile':
-      return <MobileScreen maintenanceInfo={maintenanceInfo} />;
-    case 'tablet':
-      return <TabletScreen maintenanceInfo={maintenanceInfo} />;
-    default:
-      return <DesktopScreen maintenanceInfo={maintenanceInfo} />;
-  }
+  // Render screen based on size with smooth fade-in
+  const renderScreen = () => {
+    switch (screenSize) {
+      case 'mobile':
+        return <MobileScreen maintenanceInfo={maintenanceInfo} />;
+      case 'tablet':
+        return <TabletScreen maintenanceInfo={maintenanceInfo} />;
+      default:
+        return <DesktopScreen maintenanceInfo={maintenanceInfo} />;
+    }
+  };
+
+  return (
+    <AnimatePresence mode="wait">
+      {showCountdown ? (
+        <motion.div
+          key="countdown"
+          className="fixed inset-0 z-[9998] flex items-center justify-center bg-black-100"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <motion.div
+            className="text-center"
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+          >
+            <motion.div
+              className="text-9xl font-bold bg-gradient-to-r from-purple via-blue-500 to-cyan-400 bg-clip-text text-transparent"
+              key={countdownNumber}
+              initial={{ scale: 1.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.5, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {countdownNumber}
+            </motion.div>
+            <p className="text-white/60 mt-4 text-lg">Redirecting to home...</p>
+          </motion.div>
+        </motion.div>
+      ) : (
+        <motion.div
+          key="maintenance"
+          initial={{ opacity: isTransitioning ? 1 : 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: isTransitioning ? 0 : 0.3 }}
+        >
+          {renderScreen()}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 }
 
 export default function MaintenancePage() {

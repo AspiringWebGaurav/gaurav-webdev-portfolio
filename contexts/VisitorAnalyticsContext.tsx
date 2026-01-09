@@ -251,7 +251,23 @@ export function VisitorAnalyticsProvider({ children }: { children: React.ReactNo
         console.log('📡 Response status:', response.status, response.statusText);
 
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          // Get raw response text first for better error debugging
+          const responseText = await response.text();
+          console.error('❌ Raw error response:', responseText);
+          
+          let errorData: any;
+          try {
+            errorData = responseText ? JSON.parse(responseText) : {};
+          } catch (parseError) {
+            console.error('⚠️ Failed to parse error response as JSON:', parseError);
+            errorData = { 
+              error: 'Invalid response format', 
+              rawResponse: responseText.substring(0, 200),
+              status: response.status,
+              statusText: response.statusText 
+            };
+          }
+          
           console.error('❌ API error response:', errorData);
           
           // Retry on 5xx errors or network issues
@@ -261,7 +277,7 @@ export function VisitorAnalyticsProvider({ children }: { children: React.ReactNo
             return fetchVisitors(params, retryCount + 1);
           }
           
-          throw new Error(errorData.error || `Failed to fetch visitors (${response.status})`);
+          throw new Error(errorData.error || `Failed to fetch visitors (${response.status}: ${response.statusText})`);
         }
 
         const apiResponse = await response.json();

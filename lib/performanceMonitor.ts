@@ -87,9 +87,27 @@ class PerformanceMonitor {
 
 export const performanceMonitor = new PerformanceMonitor();
 
-// Log summary every 5 minutes in development
+// Log summary every 5 minutes in development using burn-aware interval
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-  setInterval(() => {
-    performanceMonitor.logSummary();
-  }, 5 * 60 * 1000);
+  // Import dynamically to avoid circular dependencies
+  import('./burnPrevention/adapters/intervalAdapter').then(({ burnAwareInterval }) => {
+    burnAwareInterval(
+      () => performanceMonitor.logSummary(),
+      5 * 60 * 1000,
+      {
+        id: 'performance-monitor-summary',
+        criticality: 'low',
+        owner: 'system',
+        description: 'Performance Monitor Summary Log',
+        canPause: true,
+        canThrottle: true,
+      }
+    );
+  }).catch((err) => {
+    // Fallback to regular interval if burn prevention not available
+    console.warn('[PerformanceMonitor] Burn prevention not available, using regular interval');
+    setInterval(() => {
+      performanceMonitor.logSummary();
+    }, 5 * 60 * 1000);
+  });
 }

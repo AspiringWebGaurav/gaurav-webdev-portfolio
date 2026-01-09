@@ -17,10 +17,11 @@ import VisitorAnalyticsManager from "@/components/admin/VisitorAnalyticsManager"
 import VisitorAnalyticsErrorBoundary from "@/components/admin/VisitorAnalyticsErrorBoundary";
 import BanAppealsManager from "@/components/admin/BanAppealsManager";
 import BugHuntManager from "@/components/admin/BugHuntManager";
+import CrashReportsManager from "@/crash-report-mechanism/components/admin/CrashReportsManager";
 import VersionNotesModal from "@/components/admin/VersionNotesModal";
-import AdminRightsModal from "@/components/admin/AdminRightsModal";
 import { useContactSubmissions } from "@/contexts/ContactSubmissionContext";
 import { useBugReports } from "@/contexts/BugReportContext";
+import { useCrashReports } from "@/crash-report-mechanism/contexts/CrashReportContext";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { useVisitorAnalytics } from "@/contexts/VisitorAnalyticsContext";
 import { useBubbleManagement } from "@/contexts/BubbleManagementContext";
@@ -34,6 +35,7 @@ export interface PanelOption {
   label: string;
   icon: string;
   badge?: number;
+  badgeType?: 'normal' | 'critical' | 'urgent'; // NEW: Badge styling
 }
 
 // Component that uses useSearchParams - wrapped in Suspense
@@ -45,7 +47,6 @@ function DashboardContent() {
   const [authorized, setAuthorized] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [showVersionNotes, setShowVersionNotes] = useState(false);
-  const [showAdminRights, setShowAdminRights] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
@@ -71,6 +72,18 @@ function DashboardContent() {
   const { getNewBugReportsCount } = useBugReports();
   const newBugReportsCount = getNewBugReportsCount();
 
+  // Get crash reports counts for smart badge system
+  const { 
+    getUnreadCount: getCrashUnreadCount,
+    getUrgentCount: getCrashUrgentCount,
+    getImmediateActionCount: getCrashImmediateCount,
+    getCriticalCount: getCrashCriticalCount 
+  } = useCrashReports();
+  const crashUnreadCount = getCrashUnreadCount();
+  const crashUrgentCount = getCrashUrgentCount(); // Critical + unread
+  const crashImmediateCount = getCrashImmediateCount(); // Critical + new (< 1 hour)
+  const crashCriticalCount = getCrashCriticalCount();
+
   // Panel options configuration with dynamic badges (excluding recycle bin - it's in navbar)
   const panelOptions: PanelOption[] = [
     { id: "tech-stacks", label: "My Tech Stacks", icon: "⚡" },
@@ -83,6 +96,7 @@ function DashboardContent() {
     { id: "visitor-analytics", label: "Visitor Analytics", icon: "📊", badge: activeVisitorCount > 0 ? activeVisitorCount : undefined },
     { id: "ban-appeals", label: "Ban Appeals", icon: "🛡️", badge: pendingAppealsCount > 0 ? pendingAppealsCount : undefined },
     { id: "bug-hunt", label: "Bug Hunt", icon: "🐛", badge: newBugReportsCount > 0 ? newBugReportsCount : undefined },
+    { id: "crash-reports", label: "Crash Reports", icon: "⚠️", badge: crashImmediateCount > 0 ? crashImmediateCount : (crashUrgentCount > 0 ? crashUrgentCount : (crashUnreadCount > 0 ? crashUnreadCount : undefined)), badgeType: crashImmediateCount > 0 ? 'urgent' : (crashUrgentCount > 0 ? 'critical' : 'normal') },
   ];
 
   // Get active section from URL params, default to "tech-stacks"
@@ -104,10 +118,16 @@ function DashboardContent() {
       activeVisitors: activeVisitorCount,
       banAppeals: pendingAppealsCount,
       bugReports: newBugReportsCount,
+      crashReports: {
+        unread: crashUnreadCount,
+        urgent: crashUrgentCount,
+        immediate: crashImmediateCount,
+        critical: crashCriticalCount,
+      },
       currentTab: activeSection,
       timestamp: new Date().toISOString()
     });
-  }, [unreadCount, unreadBubbleCount, liveSessionsCount, activeVisitorCount, pendingAppealsCount, newBugReportsCount, activeSection]);
+  }, [unreadCount, unreadBubbleCount, liveSessionsCount, activeVisitorCount, pendingAppealsCount, newBugReportsCount, crashUnreadCount, crashUrgentCount, crashImmediateCount, crashCriticalCount, activeSection]);
 
   // Live notifications when new items arrive (only show if not already viewing that section)
   useUnreadCountNotification(unreadCount, 'unread contact submission(s)', { 
@@ -133,6 +153,18 @@ function DashboardContent() {
   useUnreadCountNotification(newBugReportsCount, 'new bug report(s)', { 
     enabled: activeSection !== 'bug-hunt',
     soundEnabled: true, // Enable sound for new bug reports
+  });
+
+  // Critical crash notifications (URGENT - always show with sound)
+  useUnreadCountNotification(crashImmediateCount, '🚨 CRITICAL CRASH(ES) - IMMEDIATE ACTION REQUIRED', { 
+    enabled: activeSection !== 'crash-reports',
+    soundEnabled: true,
+  });
+
+  // Urgent crash notifications (high priority)
+  useUnreadCountNotification(crashUrgentCount > crashImmediateCount ? crashUrgentCount - crashImmediateCount : 0, 'urgent crash report(s)', { 
+    enabled: activeSection !== 'crash-reports' && crashImmediateCount === 0,
+    soundEnabled: true,
   });
 
   // Detect mobile screen size
@@ -242,7 +274,6 @@ function DashboardContent() {
       <div className="shrink-0">
         <Navbar 
           onVersionNotesClick={() => setShowVersionNotes(true)}
-          onAdminRightsClick={() => setShowAdminRights(true)}
         />
 
         {/* Tab Grid - 2 rows layout */}
@@ -266,8 +297,15 @@ function DashboardContent() {
                 <span className="hidden sm:inline truncate">{option.label}</span>
                 <span className="sm:hidden truncate text-xs">{option.label.split(' ')[0]}</span>
                 {option.badge && option.badge > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold flex items-center justify-center bg-red-500 text-white">
+                  <span className={`absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold flex items-center justify-center text-white ${
+                    option.badgeType === 'urgent' 
+                      ? 'bg-gradient-to-r from-red-600 to-red-700 animate-pulse shadow-lg shadow-red-500/50' 
+                      : option.badgeType === 'critical' 
+                        ? 'bg-orange-500 shadow-md shadow-orange-500/30' 
+                        : 'bg-red-500'
+                  }`}>
                     {option.badge > 99 ? "99+" : option.badge}
+                    {option.badgeType === 'urgent' && <span className="ml-0.5">🚨</span>}
                   </span>
                 )}
                 {/* Live indicator for bubble-management and visitor-analytics */}
@@ -313,6 +351,7 @@ function DashboardContent() {
           )}
           {activeSection === "ban-appeals" && <BanAppealsManager />}
           {activeSection === "bug-hunt" && <BugHuntManager />}
+          {activeSection === "crash-reports" && <CrashReportsManager />}
         </div>
       </main>
 
@@ -324,12 +363,6 @@ function DashboardContent() {
       <VersionNotesModal 
         isOpen={showVersionNotes} 
         onClose={() => setShowVersionNotes(false)} 
-      />
-
-      {/* Admin Rights Modal */}
-      <AdminRightsModal 
-        isOpen={showAdminRights} 
-        onClose={() => setShowAdminRights(false)} 
       />
 
       {/* Hide scrollbar styles */}

@@ -188,10 +188,24 @@ class NetworkManager {
       // Persist to storage
       this.saveQueueToStorage();
       
-      console.log(`[NetworkManager] Request queued: ${url} (queue size: ${this.requestQueue.length})`);
+      console.log(`[NetworkManager] 📦 Request queued for retry: ${url} (queue: ${this.requestQueue.length})`);
       
-      // Return a rejected promise with custom error
-      reject(new Error('Request queued for retry when connection is restored'));
+      // Return a mock 202 Accepted response indicating request is queued
+      // This prevents unhandled rejection errors while maintaining queue functionality
+      const mockResponse = new Response(
+        JSON.stringify({ 
+          queued: true, 
+          message: 'Request queued for retry when connection is restored',
+          requestId 
+        }),
+        {
+          status: 202,
+          statusText: 'Accepted (Queued)',
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+      
+      resolve(mockResponse);
     });
   }
 

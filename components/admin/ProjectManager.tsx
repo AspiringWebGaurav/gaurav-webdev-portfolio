@@ -35,7 +35,6 @@ import {
 import { showToast } from "@/lib/toast";
 import IconPicker from "./IconPicker";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
-import { syncImagesWithCloud, deleteMultipleImages } from "@/lib/imageSync";
 
 export default function ProjectManager() {
   const {
@@ -78,8 +77,6 @@ export default function ProjectManager() {
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [tempUrl, setTempUrl] = useState("");
   const [showIconPicker, setShowIconPicker] = useState(false);
-  const [syncingImages, setSyncingImages] = useState(false);
-  const [storageImages, setStorageImages] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sort projects by order
@@ -124,70 +121,6 @@ export default function ProjectManager() {
     } catch (error) {
       console.error("Failed to delete image from cloud:", error);
       // Don't show error to user as this is cleanup
-    }
-  };
-
-  /**
-   * Sync images from Firebase Storage
-   */
-  const syncWithCloud = async () => {
-    setSyncingImages(true);
-    try {
-      const result = await syncImagesWithCloud({
-        folder: "projects/images",
-        existingImages: formData.images || [],
-      });
-
-      if (result.success) {
-        setStorageImages(result.storageImages);
-        
-        // Auto-cleanup orphaned images if desired
-        if (result.orphanedImages.length > 0) {
-          console.log(`Found ${result.orphanedImages.length} orphaned images:`, result.orphanedImages);
-          
-          // Ask user if they want to clean up orphaned images
-          const shouldCleanup = window.confirm(
-            `Found ${result.orphanedImages.length} unused image(s) in cloud storage that are not linked to any project.\n\nDo you want to delete them?`
-          );
-          
-          if (shouldCleanup) {
-            showToast.info("Cleaning up orphaned images...", "Cleanup");
-            const cleanupResult = await deleteMultipleImages(result.orphanedImages);
-            
-            if (cleanupResult.success) {
-              showToast.success(
-                `Deleted ${cleanupResult.deletedCount} orphaned image(s)`,
-                "Cleanup Complete"
-              );
-              // Refresh the storage images list
-              const refreshResult = await syncImagesWithCloud({
-                folder: "projects/images",
-                existingImages: formData.images || [],
-              });
-              if (refreshResult.success) {
-                setStorageImages(refreshResult.storageImages);
-              }
-            } else {
-              showToast.error(
-                `Deleted ${cleanupResult.deletedCount} images, but ${cleanupResult.errors.length} failed`,
-                "Cleanup Partial"
-              );
-            }
-          }
-        }
-        
-        showToast.success(
-          `Found ${result.storageImages.length} images in cloud storage`,
-          "Sync Complete"
-        );
-      } else {
-        showToast.error(result.error || "Failed to sync with cloud", "Sync Failed");
-      }
-    } catch (error) {
-      console.error("Error syncing with cloud:", error);
-      showToast.error("Failed to sync images", "Sync Error");
-    } finally {
-      setSyncingImages(false);
     }
   };
 
@@ -621,7 +554,7 @@ export default function ProjectManager() {
   /**
    * Start editing a project
    */
-  const startEdit = async (id: string) => {
+  const startEdit = (id: string) => {
     const project = projects.find((p) => p.id === id);
     if (!project) return;
 
@@ -656,20 +589,6 @@ export default function ProjectManager() {
       setEditingId(id);
       setFormData(newForm);
       setFormErrors({});
-
-      // Sync with cloud to get latest images
-      try {
-        const result = await syncImagesWithCloud({
-          folder: "projects/images",
-          existingImages: images,
-        });
-        
-        if (result.success) {
-          setStorageImages(result.storageImages);
-        }
-      } catch (error) {
-        console.error("Error syncing images during edit:", error);
-      }
 
       // Smooth scroll form into view and focus first input for better UX
       setTimeout(() => {
@@ -1080,83 +999,13 @@ export default function ProjectManager() {
 
             {/* Multiple Images Gallery */}
             <div className="md:col-span-2">
-              <div className="flex items-center justify-between mb-2">
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                  <ImageIcon className="w-4 h-4" />
-                  Project Images Gallery (Optional - for slideshow)
-                  <span className="text-xs text-gray-500 font-normal">
-                    (Max 10 images)
-                  </span>
-                </label>
-                <button
-                  type="button"
-                  onClick={syncWithCloud}
-                  disabled={syncingImages}
-                  className="flex items-center gap-2 px-3 py-1 text-sm border border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors disabled:opacity-50"
-                >
-                  {syncingImages ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Syncing...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="w-4 h-4" />
-                      <span>Sync with Cloud</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {/* Available images from storage */}
-              {storageImages.length > 0 && (
-                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-medium text-blue-900">
-                      Available in Cloud Storage ({storageImages.length})
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-3 md:grid-cols-5 gap-2 max-h-40 overflow-y-auto">
-                    {storageImages.map((img, idx) => {
-                      const isUsed = formData.images?.includes(img);
-                      return (
-                        <div key={idx} className="relative group">
-                          <div
-                            className={`relative w-full h-20 rounded border-2 overflow-hidden cursor-pointer transition-all ${
-                              isUsed
-                                ? "border-green-500 opacity-50"
-                                : "border-gray-300 hover:border-blue-500"
-                            }`}
-                            onClick={() => {
-                              if (!isUsed && (formData.images?.length || 0) < 10) {
-                                handleFieldChange("images", [...(formData.images || []), img]);
-                                if (!formData.img) handleFieldChange("img", img);
-                                showToast.success("Image added from cloud", "Added");
-                              }
-                            }}
-                          >
-                            <Image
-                              src={img}
-                              alt={`Storage ${idx + 1}`}
-                              fill
-                              sizes="100px"
-                              className="object-cover"
-                            />
-                            {isUsed && (
-                              <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center">
-                                <span className="text-white text-xs bg-green-600 px-2 py-1 rounded">✓ Used</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <p className="text-xs text-blue-700 mt-2">
-                    Click on an image to add it to your gallery
-                  </p>
-                </div>
-              )}
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <ImageIcon className="w-4 h-4" />
+                Project Images Gallery (Optional - for slideshow)
+                <span className="text-xs text-gray-500 font-normal">
+                  (Max 10 images)
+                </span>
+              </label>
 
               {/* Images Grid */}
               {(formData.images || []).length > 0 && (

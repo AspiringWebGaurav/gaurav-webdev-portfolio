@@ -1,20 +1,6 @@
 /**
  * Visitor Analytics Manager Component
  * Admin panel component for viewing and managing visitor analytics
- * 
- * AUTO-UNBAN HYBRID SYSTEM:
- * - Primary: On-demand API call when countdown reaches 0:00 (1-2s delay)
- * - Fallback: Firebase Function runs every 1 minute (scheduled backup)
- * - Client countdown: Real-time JavaScript (updates every 1 second)
- * - Expected delay: 1-5 seconds (best case), up to 60 seconds (fallback)
- * - States: [Countdown] → [Unbanning...] → [Unbanned]
- * 
- * COST-OPTIMIZED AUTO-REFRESH:
- * - Only polls when countdown enters "Unbanning..." state
- * - 5-second minimum interval between API calls
- * - Max 15 refresh attempts (75 seconds total polling)
- * - Stops automatically after max attempts to prevent excessive costs
- * - Manual refresh button always available
  */
 
 "use client";
@@ -1359,135 +1345,40 @@ function VisitorDataTable({ visitorIdParam }: { visitorIdParam?: string | null }
     }
   };
 
-  // Calculate countdown for temporary bans with real-time updates
+  // Calculate countdown for temporary bans
   const getbanCountdown = (banExpiresAt: any): string | null => {
     if (!banExpiresAt) return null;
     
     try {
-      // Handle both Firestore Timestamp and Date objects
       const expirationTime = banExpiresAt.toDate ? banExpiresAt.toDate() : new Date(banExpiresAt);
-      
-      // Validate date
-      if (isNaN(expirationTime.getTime())) {
-        console.warn('[Ban Countdown] Invalid date:', banExpiresAt);
-        return "--:--";
-      }
-      
       const now = new Date();
       const diff = expirationTime.getTime() - now.getTime();
       
-      // Show "Unbanning..." for up to 90 seconds after expiry (Cloud Function runs every 1 min)
-      if (diff <= 0) {
-        const timeSinceExpiry = Math.abs(diff);
-        if (timeSinceExpiry < 90000) { // 90 seconds buffer
-          return "Unbanning...";
-        }
-        return "EXPIRED";
-      }
+      if (diff <= 0) return "Expired";
       
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
       const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
       
-      // Fixed-width formatting to prevent UI shake
-      if (days > 0) return `${days}d ${String(hours).padStart(2, '0')}h`;
-      if (hours > 0) return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-      if (minutes > 0) return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-      return `00:${String(seconds).padStart(2, '0')}`;
+      if (days > 0) return `${days}d ${hours}h`;
+      if (hours > 0) return `${hours}h ${minutes}m`;
+      if (minutes > 0) return `${minutes}m ${seconds}s`;
+      return `${seconds}s`;
     } catch (e) {
-      console.error('[Ban Countdown] Error calculating countdown:', e);
-      return "--:--";
+      return null;
     }
   };
 
-  // Live countdown update for temp bans - updates every second
-  const [countdownTick, setCountdownTick] = useState(0);
-  const [isCountdownActive, setIsCountdownActive] = useState(false);
-  const lastRefreshTime = useRef<number>(0);
-  const refreshAttemptCount = useRef<number>(0);
-  const MAX_REFRESH_ATTEMPTS = 15; // Max 15 refreshes during "Unbanning..." state (75 seconds)
-  const MIN_REFRESH_INTERVAL = 5000; // Minimum 5 seconds between refreshes
-  
+  // Live countdown update for temp bans
+  const [, forceUpdate] = useState({});
   useEffect(() => {
-    // Only run countdown if there are temporary bans
-    const hasTempBans = visitors.some(v => v.banned && v.banType === 'temporary' && v.banExpiresAt);
-    setIsCountdownActive(hasTempBans);
-    
-    if (!hasTempBans) {
-      // Reset counters when no temp bans
-      refreshAttemptCount.current = 0;
-      return;
-    }
-    
-    // Update countdown every second for real-time display
+    // Update countdown every second for temp bans
     const interval = setInterval(() => {
-      setCountdownTick(prev => prev + 1);
+      forceUpdate({});
     }, 1000);
     return () => clearInterval(interval);
-  }, [visitors]);
-
-  // Auto-refresh visitor list when any ban expires (COST-OPTIMIZED)
-  useEffect(() => {
-    const expiredBans = visitors.filter(visitor => {
-      if (visitor.banType === 'temporary' && visitor.banExpiresAt) {
-        const countdown = getbanCountdown(visitor.banExpiresAt);
-        return countdown === "Unbanning..." || countdown === "EXPIRED";
-      }
-      return false;
-    });
-
-    if (expiredBans.length > 0) {
-      // Cost-saving checks
-      const now = Date.now();
-      const timeSinceLastRefresh = now - lastRefreshTime.current;
-      
-      // 1. Respect minimum refresh interval (prevent spam)
-      if (timeSinceLastRefresh < MIN_REFRESH_INTERVAL) {
-        console.log(`[Admin UI] ⏳ Throttled: Last refresh was ${Math.round(timeSinceLastRefresh / 1000)}s ago (min: 5s)`);
-        return;
-      }
-      
-      // 2. Limit max refresh attempts (prevent infinite polling)
-      if (refreshAttemptCount.current >= MAX_REFRESH_ATTEMPTS) {
-        console.log(`[Admin UI] 🛑 Max refresh attempts reached (${MAX_REFRESH_ATTEMPTS}). Stop polling to save costs.`);
-        console.log(`[Admin UI] 💡 Tip: Manual refresh button still available if needed.`);
-        return;
-      }
-      
-      // 3. Only poll aggressively when actually in "Unbanning..." state
-      const hasUnbanningState = expiredBans.some(v => {
-        const countdown = getbanCountdown(v.banExpiresAt);
-        return countdown === "Unbanning...";
-      });
-      
-      if (!hasUnbanningState) {
-        // Just expired, wait 2 seconds then do ONE refresh
-        console.log(`[Admin UI] Detected ${expiredBans.length} expired ban(s), scheduling single refresh...`);
-        const refreshTimer = setTimeout(() => {
-          lastRefreshTime.current = Date.now();
-          refreshAttemptCount.current++;
-          handleRefresh();
-        }, 2000);
-        return () => clearTimeout(refreshTimer);
-      }
-      
-      // In "Unbanning..." state - poll every 5 seconds (max 15 times = 75 seconds)
-      console.log(`[Admin UI] 🔄 Unbanning state detected (attempt ${refreshAttemptCount.current + 1}/${MAX_REFRESH_ATTEMPTS})`);
-      const refreshTimer = setTimeout(() => {
-        lastRefreshTime.current = Date.now();
-        refreshAttemptCount.current++;
-        handleRefresh();
-      }, 5000);
-      return () => clearTimeout(refreshTimer);
-    } else {
-      // No expired bans - reset counter for next time
-      if (refreshAttemptCount.current > 0) {
-        console.log(`[Admin UI] ✅ All bans resolved. Reset refresh counter (used ${refreshAttemptCount.current}/${MAX_REFRESH_ATTEMPTS} attempts)`);
-        refreshAttemptCount.current = 0;
-      }
-    }
-  }, [countdownTick, visitors]);
+  }, []);
 
   // Render content (filters, table, modals)
   const renderContent = () => (
@@ -1810,27 +1701,18 @@ function VisitorDataTable({ visitorIdParam }: { visitorIdParam?: string | null }
                           {visitor.banned && (
                             <div className="flex items-center gap-1">
                               <Ban className="w-3.5 h-3.5 text-red-600 flex-shrink-0" />
-                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0 ${
-                                visitor.banType === 'temporary' 
+                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                                (visitor as any).banType === 'temporary' 
                                   ? 'bg-orange-100 text-orange-700' 
                                   : 'bg-red-100 text-red-700'
                               }`}>
-                                {visitor.banType === 'temporary' ? 'TEMP' : 'PERM'}
+                                {(visitor as any).banType === 'temporary' ? 'TEMP' : 'PERM'}
                               </span>
-                              {visitor.banType === 'temporary' && visitor.banExpiresAt && (() => {
-                                const countdown = getbanCountdown(visitor.banExpiresAt);
-                                const isUnbanning = countdown === "Unbanning...";
-                                return (
-                                  <span className={`inline-flex items-center gap-0.5 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded min-w-[65px] justify-center flex-shrink-0 ${
-                                    isUnbanning 
-                                      ? 'bg-green-50 text-green-700 border border-green-200 animate-pulse' 
-                                      : 'bg-orange-50 text-orange-700 border border-orange-200'
-                                  }`}>
-                                    <span className={isUnbanning ? 'text-green-600' : 'text-orange-600'}>⏱</span>
-                                    <span className="tabular-nums">{countdown || "--:--"}</span>
-                                  </span>
-                                );
-                              })()}
+                              {(visitor as any).banType === 'temporary' && (visitor as any).banExpiresAt && (
+                                <span className="text-[10px] font-mono text-orange-600">
+                                  {getbanCountdown((visitor as any).banExpiresAt)}
+                                </span>
+                              )}
                             </div>
                           )}
                         </div>
@@ -2102,31 +1984,31 @@ function VisitorDataTable({ visitorIdParam }: { visitorIdParam?: string | null }
                           {/* Ban Info */}
                           {visitor.banned && visitor.banReason && (
                             <div className={`border rounded-lg p-3 ${
-                              visitor.banType === 'temporary' 
+                              (visitor as any).banType === 'temporary' 
                                 ? 'bg-orange-50 border-orange-200' 
                                 : 'bg-red-50 border-red-200'
                             }`}>
                               <div className="flex items-center gap-2 mb-2">
                                 <p className={`text-xs font-semibold ${
-                                  visitor.banType === 'temporary' 
+                                  (visitor as any).banType === 'temporary' 
                                     ? 'text-orange-800' 
                                     : 'text-red-800'
                                 }`}>
-                                  {visitor.banType === 'temporary' ? '⏱️ Temporary Ban' : '🚫 Permanent Ban'}
+                                  {(visitor as any).banType === 'temporary' ? '⏱️ Temporary Ban' : '🚫 Permanent Ban'}
                                 </p>
-                                {visitor.banType === 'temporary' && (
+                                {(visitor as any).banType === 'temporary' && (
                                   <span className="text-xs font-bold px-2 py-0.5 rounded bg-orange-100 text-orange-700">
                                     TEMP
                                   </span>
                                 )}
-                                {visitor.banType === 'permanent' && (
+                                {(visitor as any).banType === 'permanent' && (
                                   <span className="text-xs font-bold px-2 py-0.5 rounded bg-red-100 text-red-700">
                                     PERM
                                   </span>
                                 )}
                               </div>
                               <p className={`text-sm ${
-                                visitor.banType === 'temporary' 
+                                (visitor as any).banType === 'temporary' 
                                   ? 'text-orange-700' 
                                   : 'text-red-700'
                               }`}>
@@ -2134,47 +2016,34 @@ function VisitorDataTable({ visitorIdParam }: { visitorIdParam?: string | null }
                               </p>
                               {visitor.banTimestamp && (
                                 <p className={`text-xs mt-1 ${
-                                  visitor.banType === 'temporary' 
+                                  (visitor as any).banType === 'temporary' 
                                     ? 'text-orange-600' 
                                     : 'text-red-600'
                                 }`}>
                                   Banned on: {new Date(visitor.banTimestamp).toLocaleString()}
                                 </p>
                               )}
-                              {visitor.banType === 'temporary' && visitor.banDuration && (
+                              {(visitor as any).banType === 'temporary' && (visitor as any).banDuration && (
                                 <p className="text-xs text-orange-600 mt-1">
-                                  <strong>Duration:</strong> {visitor.banDuration} minutes
+                                  <strong>Duration:</strong> {(visitor as any).banDuration} minutes
                                 </p>
                               )}
-                              {visitor.banType === 'temporary' && visitor.banExpiresAt && (() => {
-                                const countdown = getbanCountdown(visitor.banExpiresAt);
-                                const isUnbanning = countdown === "Unbanning...";
-                                return (
-                                  <div className="mt-2 p-2 bg-orange-100 rounded border border-orange-300">
-                                    <p className="text-xs text-orange-800">
-                                      <strong>Expires in:</strong>{" "}
-                                      <span className={`inline-flex items-center gap-1 font-mono font-bold px-2 py-0.5 rounded border ${
-                                        isUnbanning 
-                                          ? 'bg-green-50 text-green-700 border-green-200 animate-pulse' 
-                                          : 'bg-orange-50 text-orange-700 border-orange-200'
-                                      }`}>
-                                        <span className={isUnbanning ? 'text-green-600' : 'text-orange-600'}>⏱</span>
-                                        <span className="tabular-nums min-w-[50px] text-center">
-                                          {countdown || "--:--"}
-                                        </span>
-                                      </span>
-                                    </p>
-                                    <p className="text-[10px] text-orange-600 mt-1">
-                                      {isUnbanning 
-                                        ? "🔄 Hybrid unban: Client tries immediate, server as backup" 
-                                        : visitor.autoUnbanEnabled 
-                                          ? "✅ Hybrid unban: Immediate API + scheduled backup (1-60s delay)" 
-                                          : "⚠️ Manual unban required"
-                                      }
-                                    </p>
-                                  </div>
-                                );
-                              })()}
+                              {(visitor as any).banType === 'temporary' && (visitor as any).banExpiresAt && (
+                                <div className="mt-2 p-2 bg-orange-100 rounded border border-orange-300">
+                                  <p className="text-xs text-orange-800">
+                                    <strong>Expires in:</strong>{" "}
+                                    <span className="font-mono font-bold">
+                                      {getbanCountdown((visitor as any).banExpiresAt) || "Calculating..."}
+                                    </span>
+                                  </p>
+                                  <p className="text-[10px] text-orange-600 mt-1">
+                                    {(visitor as any).autoUnbanEnabled 
+                                      ? "✅ Auto-unban enabled (server-side)" 
+                                      : "⚠️ Manual unban required"
+                                    }
+                                  </p>
+                                </div>
+                              )}
                             </div>
                           )}
 

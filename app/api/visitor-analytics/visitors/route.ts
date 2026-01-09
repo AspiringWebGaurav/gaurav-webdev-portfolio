@@ -39,18 +39,28 @@ export async function GET(request: NextRequest) {
     // Verify admin authentication
     const authHeader = request.headers.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) {
+      console.warn('[Visitors API] Missing or invalid Authorization header');
       return NextResponse.json(
-        { success: false, error: "Unauthorized" },
+        { success: false, error: "Unauthorized - Missing or invalid authorization header" },
         { status: 401 }
       );
     }
 
     const idToken = authHeader.split("Bearer ")[1];
+    if (!idToken || idToken.trim() === '') {
+      console.warn('[Visitors API] Empty bearer token');
+      return NextResponse.json(
+        { success: false, error: "Unauthorized - Empty authentication token" },
+        { status: 401 }
+      );
+    }
+
     const decodedToken = await verifyAuth(idToken);
     
     if (!decodedToken) {
+      console.warn('[Visitors API] Token verification failed');
       return NextResponse.json(
-        { success: false, error: "Invalid authentication token" },
+        { success: false, error: "Invalid authentication token - Verification failed" },
         { status: 401 }
       );
     }
@@ -233,12 +243,16 @@ export async function GET(request: NextRequest) {
     );
     
   } catch (error) {
-    console.error("Error fetching visitor profiles:", error);
+    console.error("[Visitors API] Error fetching visitor profiles:", error);
+    console.error("[Visitors API] Error stack:", error instanceof Error ? error.stack : 'N/A');
+    console.error("[Visitors API] Error type:", error instanceof Error ? error.constructor.name : typeof error);
+    
     return NextResponse.json(
       {
         success: false,
         error: "Failed to fetch visitor profiles",
         details: error instanceof Error ? error.message : "Unknown error",
+        errorType: error instanceof Error ? error.constructor.name : 'UnknownError',
       },
       { status: 500 }
     );

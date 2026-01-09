@@ -11,6 +11,7 @@ import ContactFormModal from "./ContactFormModal";
 import BugReportIntro from "./BugReportIntro";
 import BugReportForm from "./BugReportForm";
 import { useBubbleSession } from "@/contexts/BubbleSessionContext";
+import Logo from "./Logo";
 
 const Footer = () => {
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
@@ -106,9 +107,36 @@ const Footer = () => {
       
       {/* Footer Bottom Section - 3 Column Layout */}
       <div className="flex mt-16 md:flex-row flex-col justify-between items-center py-6 gap-6">
-        {/* Left Section - Copyright */}
-        <div className="md:text-base text-sm md:font-normal font-light">
-          <span className="text-white-100">Copyright © 2025 Gaurav Patil</span>
+        {/* Left Section - Copyright with Logo */}
+        <div className="flex items-center gap-3 md:text-base text-sm md:font-normal font-light">
+          <Logo variant="small" className="hover:scale-110 transition-transform" />
+          <div className="flex flex-col">
+            <span className="text-white-100 font-mono">
+              <span className="text-purple">&gt;</span> Built by gaurav_
+            </span>
+            <span className="text-white-100 text-xs opacity-70">
+              Copyright © {new Date().getFullYear()} Gaurav Patil
+            </span>
+            <div className="flex gap-2 mt-1 text-xs">
+              <a 
+                href="https://www.gauravpatil.online" 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-purple hover:underline"
+              >
+                🔗 Portfolio
+              </a>
+              <span className="text-white-100 opacity-50">|</span>
+              <a 
+                href="https://www.gauravworkspace.store" 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white-100 opacity-70 hover:text-purple hover:opacity-100 transition-colors"
+              >
+                💼 Workspace
+              </a>
+            </div>
+          </div>
         </div>
 
         {/* Center Section - Three Links */}

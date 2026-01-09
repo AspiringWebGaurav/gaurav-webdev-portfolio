@@ -25,7 +25,8 @@ import {
   PHASE_INFO,
   getPhaseFromOverdue 
 } from '@/data/maintenanceContent';
-import Image from 'next/image';
+import NextImage from 'next/image';
+import Logo from '@/components/Logo';
 
 interface MaintenanceInfo {
   title: string;
@@ -219,8 +220,10 @@ export default function DesktopScreen({ maintenanceInfo }: DesktopScreenProps) {
         
         {/* Top bar - Navbar */}
         <div className="flex items-center justify-between py-2 border-b border-white/10 flex-shrink-0">
-          {/* Left spacer for balance */}
-          <div className="w-8" />
+          {/* Left: Logo */}
+          <div className="pl-2">
+            <Logo variant="small" className="hover:scale-110 transition-transform cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} />
+          </div>
           
           {/* Center: Time & Date */}
           <div className="flex items-center gap-4 text-white/70 text-base">
@@ -231,8 +234,8 @@ export default function DesktopScreen({ maintenanceInfo }: DesktopScreenProps) {
               </span>
             </div>
             <div className="h-4 w-px bg-white/20" />
-            <span suppressHydrationWarning>
-              {currentTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+            <span className="font-mono" suppressHydrationWarning>
+              <span className="text-purple">&gt;</span> system_under_maintenance
             </span>
           </div>
           
@@ -504,7 +507,7 @@ export default function DesktopScreen({ maintenanceInfo }: DesktopScreenProps) {
                   whileHover={{ scale: 1.1, borderColor: 'rgba(139,92,246,0.5)' }}
                   className="w-9 h-9 flex items-center justify-center bg-black-200 rounded-lg border border-white/10 cursor-pointer transition-all"
                 >
-                  <Image src={info.img} alt="social" width={18} height={18} />
+                  <NextImage src={info.img} alt="social" width={18} height={18} />
                 </motion.div>
               ))}
             </div>

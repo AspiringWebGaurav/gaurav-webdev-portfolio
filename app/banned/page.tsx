@@ -24,6 +24,7 @@
 
 import { useState, useEffect, Suspense, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Logo from '@/components/Logo';
 
 // Note: dynamic and revalidate configs are set in layout.tsx (server component)
 // Client components cannot export revalidate - it causes runtime errors

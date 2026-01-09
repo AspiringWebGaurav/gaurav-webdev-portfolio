@@ -114,25 +114,34 @@ export function useScrollRestoration() {
         let savedPosition: string | null = null
         
         try {
-          savedPosition = sessionStorage.getItem(KEY)
-          
-          // If sessionStorage is empty, check localStorage backup (for hard refresh)
-          if (!savedPosition) {
-            const backup = localStorage.getItem(KEY + '_backup')
-            if (backup) {
-              try {
-                const data = JSON.parse(backup)
-                // Only use backup if it's VERY recent (within last 2 seconds for hard refresh only)
-                // This prevents cross-tab interference while supporting hard refresh
-                if (data && Date.now() - data.timestamp < 2000) {
-                  savedPosition = String(data.position)
-                  if (isDev) console.log('[ScrollRestore] Using localStorage backup after hard refresh')
+          // PRIORITY 1: Check for force update scroll position (from admin update)
+          savedPosition = sessionStorage.getItem('preUpdateScrollPosition')
+          if (savedPosition) {
+            if (isDev) console.log('📍 [ScrollRestore] Force update scroll position found:', savedPosition)
+            // Clean up immediately after reading
+            sessionStorage.removeItem('preUpdateScrollPosition')
+          } else {
+            // PRIORITY 2: Regular scroll restoration
+            savedPosition = sessionStorage.getItem(KEY)
+            
+            // PRIORITY 3: If sessionStorage is empty, check localStorage backup (for hard refresh)
+            if (!savedPosition) {
+              const backup = localStorage.getItem(KEY + '_backup')
+              if (backup) {
+                try {
+                  const data = JSON.parse(backup)
+                  // Only use backup if it's VERY recent (within last 2 seconds for hard refresh only)
+                  // This prevents cross-tab interference while supporting hard refresh
+                  if (data && Date.now() - data.timestamp < 2000) {
+                    savedPosition = String(data.position)
+                    if (isDev) console.log('[ScrollRestore] Using localStorage backup after hard refresh')
+                  }
+                  // Always clean up backup immediately
+                  localStorage.removeItem(KEY + '_backup')
+                } catch {
+                  // Clean up corrupted backup
+                  try { localStorage.removeItem(KEY + '_backup') } catch {}
                 }
-                // Always clean up backup immediately
-                localStorage.removeItem(KEY + '_backup')
-              } catch {
-                // Clean up corrupted backup
-                try { localStorage.removeItem(KEY + '_backup') } catch {}
               }
             }
           }

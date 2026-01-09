@@ -5,7 +5,7 @@
 
 'use client';
 
-import Image, { ImageProps } from 'next/image';
+import NextImage, { ImageProps } from 'next/image';
 import { useState } from 'react';
 
 interface SafeImageProps extends Omit<ImageProps, 'onError'> {
@@ -35,7 +35,7 @@ export default function SafeImage({
   };
 
   return (
-    <Image
+    <NextImage
       {...props}
       src={imgSrc}
       alt={alt}

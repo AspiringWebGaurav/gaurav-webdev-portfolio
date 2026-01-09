@@ -280,11 +280,22 @@ export function isValidDeviceClass(device: string): device is DeviceClass {
 // Helper to convert Firestore data to typed objects
 export function firestoreToVisitorProfile(doc: any): VisitorProfile {
   const data = doc.data();
+  
+  // Helper to safely convert Firestore Timestamp to Date
+  const toDate = (val: any): Date | undefined => {
+    if (!val) return undefined;
+    if (val instanceof Date) return val;
+    if (typeof val?.toDate === 'function') return val.toDate();
+    if (typeof val === 'number') return new Date(val);
+    if (typeof val === 'string') return new Date(val);
+    return undefined;
+  };
+  
   return {
     id: doc.id,
     mask: data.mask, // Include mask for admin reference
-    firstVisit: data.firstVisit?.toDate() || new Date(),
-    lastVisit: data.lastVisit?.toDate() || new Date(),
+    firstVisit: toDate(data.firstVisit) || new Date(),
+    lastVisit: toDate(data.lastVisit) || new Date(),
     totalVisits: data.totalVisits || 0,
     totalSessions: data.totalSessions || 0,
     averageSessionDuration: data.averageSessionDuration || 0,
@@ -302,26 +313,37 @@ export function firestoreToVisitorProfile(doc: any): VisitorProfile {
     geoHistory: data.geoHistory || [],
     banned: data.banned || false,
     banReason: data.banReason,
-    banTimestamp: data.banTimestamp?.toDate(),
+    banTimestamp: toDate(data.banTimestamp),
     bannedBy: data.bannedBy,
     banCategory: data.banCategory,
     banType: data.banType,
     banDuration: data.banDuration,
-    banExpiresAt: data.banExpiresAt?.toDate(),
+    banExpiresAt: toDate(data.banExpiresAt),
     autoUnbanEnabled: data.autoUnbanEnabled,
     bannedByUid: data.bannedByUid,
-    createdAt: data.createdAt?.toDate() || new Date(),
-    updatedAt: data.updatedAt?.toDate() || new Date(),
+    createdAt: toDate(data.createdAt) || new Date(),
+    updatedAt: toDate(data.updatedAt) || new Date(),
   };
 }
 
 export function firestoreToVisitorSession(doc: any): VisitorSession {
   const data = doc.data();
+  
+  // Helper to safely convert Firestore Timestamp to Date
+  const toDate = (val: any): Date | undefined => {
+    if (!val) return undefined;
+    if (val instanceof Date) return val;
+    if (typeof val?.toDate === 'function') return val.toDate();
+    if (typeof val === 'number') return new Date(val);
+    if (typeof val === 'string') return new Date(val);
+    return undefined;
+  };
+  
   return {
     id: doc.id,
     visitorId: data.visitorId,
-    startTime: data.startTime?.toDate() || new Date(),
-    endTime: data.endTime?.toDate(),
+    startTime: toDate(data.startTime) || new Date(),
+    endTime: toDate(data.endTime),
     duration: data.duration,
     pageViews: data.pageViews || 0,
     bubbleOpens: data.bubbleOpens || 0,

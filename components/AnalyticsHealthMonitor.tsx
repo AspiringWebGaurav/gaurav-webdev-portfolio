@@ -9,6 +9,7 @@
 import { useEffect, useState } from "react";
 import { usePathname } from 'next/navigation';
 import { getAnalyticsReliability } from "@/lib/analyticsReliability";
+import { burnAwareInterval } from "@/lib/burnPrevention/adapters/intervalAdapter";
 
 interface HealthMetrics {
   totalEvents: number;
@@ -32,7 +33,7 @@ export default function AnalyticsHealthMonitor() {
   }
 
   useEffect(() => {
-    // Update metrics every 5 seconds
+    // Update metrics every 5 seconds using burn-aware interval
     const updateMetrics = () => {
       const analytics = getAnalyticsReliability();
       const health = analytics.getHealthMetrics();
@@ -40,7 +41,20 @@ export default function AnalyticsHealthMonitor() {
     };
 
     updateMetrics();
-    const interval = setInterval(updateMetrics, 5000);
+    
+    // Use burn-aware interval instead of regular setInterval
+    const cleanup = burnAwareInterval(
+      updateMetrics,
+      5000,
+      {
+        id: 'analytics-health-monitor',
+        criticality: 'low',
+        owner: 'system',
+        description: 'Analytics Health Monitor Update',
+        canPause: true,
+        canThrottle: true,
+      }
+    );
 
     // Listen for keyboard shortcut (Ctrl+Shift+A) to toggle visibility
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -52,7 +66,7 @@ export default function AnalyticsHealthMonitor() {
     window.addEventListener('keydown', handleKeyPress);
 
     return () => {
-      clearInterval(interval);
+      cleanup(); // Cleanup burn-aware interval
       window.removeEventListener('keydown', handleKeyPress);
     };
   }, []);

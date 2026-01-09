@@ -34,7 +34,6 @@ import {
 } from "lucide-react";
 import { showToast } from "@/lib/toast";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
-import { syncImagesWithCloud, deleteMultipleImages } from "@/lib/imageSync";
 
 export default function TestimonialManager() {
   const {
@@ -74,8 +73,6 @@ export default function TestimonialManager() {
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [deleteProgress, setDeleteProgress] = useState<number>(0);
   const [deletingImage, setDeletingImage] = useState(false);
-  const [syncingImages, setSyncingImages] = useState(false);
-  const [storageImages, setStorageImages] = useState<string[]>([]);
 
   // Batch creation state
   const [showBatchCreate, setShowBatchCreate] = useState(false);
@@ -206,70 +203,6 @@ export default function TestimonialManager() {
   };
 
   /**
-   * Sync images from Firebase Storage
-   */
-  const syncWithCloud = async () => {
-    setSyncingImages(true);
-    try {
-      const result = await syncImagesWithCloud({
-        folder: "testimonials/avatars",
-        existingImages: formData.img ? [formData.img] : [],
-      });
-
-      if (result.success) {
-        setStorageImages(result.storageImages);
-        
-        // Auto-cleanup orphaned images if desired
-        if (result.orphanedImages.length > 0) {
-          console.log(`Found ${result.orphanedImages.length} orphaned images:`, result.orphanedImages);
-          
-          // Ask user if they want to clean up orphaned images
-          const shouldCleanup = window.confirm(
-            `Found ${result.orphanedImages.length} unused avatar(s) in cloud storage that are not linked to any testimonial.\n\nDo you want to delete them?`
-          );
-          
-          if (shouldCleanup) {
-            showToast.info("Cleaning up orphaned images...", "Cleanup");
-            const cleanupResult = await deleteMultipleImages(result.orphanedImages);
-            
-            if (cleanupResult.success) {
-              showToast.success(
-                `Deleted ${cleanupResult.deletedCount} orphaned image(s)`,
-                "Cleanup Complete"
-              );
-              // Refresh the storage images list
-              const refreshResult = await syncImagesWithCloud({
-                folder: "testimonials/avatars",
-                existingImages: formData.img ? [formData.img] : [],
-              });
-              if (refreshResult.success) {
-                setStorageImages(refreshResult.storageImages);
-              }
-            } else {
-              showToast.error(
-                `Deleted ${cleanupResult.deletedCount} images, but ${cleanupResult.errors.length} failed`,
-                "Cleanup Partial"
-              );
-            }
-          }
-        }
-        
-        showToast.success(
-          `Found ${result.storageImages.length} avatars in cloud storage`,
-          "Sync Complete"
-        );
-      } else {
-        showToast.error(result.error || "Failed to sync with cloud", "Sync Failed");
-      }
-    } catch (error) {
-      console.error("Error syncing with cloud:", error);
-      showToast.error("Failed to sync images", "Sync Error");
-    } finally {
-      setSyncingImages(false);
-    }
-  };
-
-  /**
    * Remove uploaded image
    */
   const removeImage = async () => {
@@ -378,7 +311,7 @@ export default function TestimonialManager() {
   /**
    * Start editing a testimonial
    */
-  const startEdit = async (id: string) => {
+  const startEdit = (id: string) => {
     const testimonial = testimonials.find((t) => t.id === id);
     if (!testimonial) return;
 
@@ -394,20 +327,6 @@ export default function TestimonialManager() {
     });
     setFormErrors({});
     setImagePreview(testimonial.img || "");
-
-    // Sync with cloud to get latest images
-    try {
-      const result = await syncImagesWithCloud({
-        folder: "testimonials/avatars",
-        existingImages: testimonial.img ? [testimonial.img] : [],
-      });
-      
-      if (result.success) {
-        setStorageImages(result.storageImages);
-      }
-    } catch (error) {
-      console.error("Error syncing images during edit:", error);
-    }
 
     // Scroll form into view
     setTimeout(() => {
@@ -757,79 +676,10 @@ export default function TestimonialManager() {
 
             {/* Person Image/Avatar Upload */}
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                  <UserCircle className="w-4 h-4" />
-                  Profile Picture (Optional)
-                </label>
-                <button
-                  type="button"
-                  onClick={syncWithCloud}
-                  disabled={syncingImages}
-                  className="flex items-center gap-2 px-3 py-1 text-sm border border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors disabled:opacity-50"
-                >
-                  {syncingImages ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Syncing...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="w-4 h-4" />
-                      <span>Sync with Cloud</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {/* Available images from storage */}
-              {storageImages.length > 0 && (
-                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-medium text-blue-900">
-                      Available in Cloud Storage ({storageImages.length})
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-4 md:grid-cols-6 gap-2 max-h-40 overflow-y-auto">
-                    {storageImages.map((img, idx) => {
-                      const isUsed = formData.img === img;
-                      return (
-                        <div key={idx} className="relative group">
-                          <div
-                            className={`relative w-full h-20 rounded-full overflow-hidden border-2 cursor-pointer transition-all ${
-                              isUsed
-                                ? "border-green-500 opacity-50"
-                                : "border-gray-300 hover:border-blue-500"
-                            }`}
-                            onClick={() => {
-                              if (!isUsed) {
-                                handleFieldChange("img", img);
-                                setImagePreview(img);
-                                showToast.success("Avatar added from cloud", "Added");
-                              }
-                            }}
-                          >
-                            <Image
-                              src={img}
-                              alt={`Storage ${idx + 1}`}
-                              fill
-                              className="object-cover"
-                            />
-                            {isUsed && (
-                              <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center">
-                                <span className="text-white text-xs bg-green-600 px-2 py-1 rounded">✓</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <p className="text-xs text-blue-700 mt-2">
-                    Click on an avatar to use it
-                  </p>
-                </div>
-              )}
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                <UserCircle className="w-4 h-4" />
+                Profile Picture (Optional)
+              </label>
 
               {/* Image Preview or Upload Button */}
               {imagePreview || formData.img ? (

@@ -14,7 +14,7 @@ import { Spotlight } from '@/components/ui/Spotlight';
 import FlipCountdown from '@/components/ui/FlipCountdown';
 import ContactFormModal from '@/components/ContactFormModal';
 import { socialMedia } from '@/data';
-import Image from 'next/image';
+import NextImage from 'next/image';
 
 interface MaintenanceInfo {
   title: string;
@@ -262,7 +262,7 @@ export default function TabletScreen({ maintenanceInfo }: TabletScreenProps) {
                   key={info.id}
                   className="w-10 h-10 flex items-center justify-center bg-black-200 rounded-lg border border-white/10 hover:border-purple/50 transition-all cursor-pointer"
                 >
-                  <Image src={info.img} alt="social" width={20} height={20} />
+                  <NextImage src={info.img} alt="social" width={20} height={20} />
                 </div>
               ))}
             </div>

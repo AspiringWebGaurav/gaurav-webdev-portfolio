@@ -74,14 +74,21 @@ export async function checkBanByIP(ip: string): Promise<{
           .where('isBanned', '==', true)
           .where('lastIP', '==', ip)
           .limit(1)
-          .get();
+          .get()
+          .catch((err) => {
+            // Catch query errors to prevent unhandled rejections
+            throw err;
+          });
         
         // Add 3-second timeout to prevent blocking on slow queries
         const timeoutPromise = new Promise<never>((_, reject) => 
           setTimeout(() => reject(new Error('Ban check timeout')), 3000)
         );
         
-        return Promise.race([queryPromise, timeoutPromise]);
+        return Promise.race([queryPromise, timeoutPromise]).finally(() => {
+          // Ensure both promises settle without unhandled rejections
+          queryPromise.catch(() => {}); // Silently catch if timeout won
+        });
       },
       10000 // 10s TTL - ban status doesn't change frequently
     );

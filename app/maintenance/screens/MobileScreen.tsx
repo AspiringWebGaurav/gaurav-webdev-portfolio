@@ -14,7 +14,7 @@ import { Spotlight } from '@/components/ui/Spotlight';
 import FlipCountdown from '@/components/ui/FlipCountdown';
 import ContactFormModal from '@/components/ContactFormModal';
 import { socialMedia } from '@/data';
-import Image from 'next/image';
+import NextImage from 'next/image';
 
 interface MaintenanceInfo {
   title: string;
@@ -255,7 +255,7 @@ export default function MobileScreen({ maintenanceInfo }: MobileScreenProps) {
                   key={info.id}
                   className="w-9 h-9 flex items-center justify-center bg-black-200 rounded-lg border border-white/10 cursor-pointer"
                 >
-                  <Image src={info.img} alt="social" width={18} height={18} />
+                  <NextImage src={info.img} alt="social" width={18} height={18} />
                 </div>
               ))}
             </div>

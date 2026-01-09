@@ -1,0 +1,41 @@
+{
+  "name": "Gaurav Patil - Full Stack Developer & Software Engineer",
+  "short_name": "Gaurav Patil",
+  "description": "Professional portfolio showcasing full-stack development expertise in Next.js, React, TypeScript, Firebase & modern web technologies. Explore projects, skills & technical innovations.",
+  "start_url": "/?source=pwa",
+  "display": "standalone",
+  "background_color": "#0B0B0F",
+  "theme_color": "#CBACF9",
+  "icons": [],
+  "categories": ["portfolio", "technology", "developer", "software", "web-development"],
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "id": "/",
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "View Portfolio",
+      "short_name": "Home",
+      "description": "Explore Gaurav's portfolio and projects",
+      "url": "/?source=pwa-shortcut",
+      "icons": []
+    },
+    {
+      "name": "View Projects",
+      "short_name": "Projects",
+      "description": "Browse technical projects and work",
+      "url": "/#projects",
+      "icons": []
+    },
+    {
+      "name": "Contact",
+      "short_name": "Contact",
+      "description": "Get in touch with Gaurav",
+      "url": "/#contact",
+      "icons": []
+    }
+  ],
+  "dir": "ltr",
+  "lang": "en-US",
+  "display_override": ["window-controls-overlay", "standalone"]
+}
