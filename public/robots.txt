@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # Sitemaps
-Sitemap: https://www.gauravpatil.online/sitemap.xml
+Sitemap: https://portfoliio-www.gauravpatil.online/sitemap.xml
 
 # Disallow admin and API routes
 Disallow: /admin/

@@ -2,10 +2,8 @@
 import React from "react";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
-
-const World = dynamic(() => import("./Globe").then((m) => m.World), {
-  ssr: false,
-});
+// Restore: dynamically import named World export from Globe.tsx
+const World = dynamic(() => import("./Globe").then((m) => m.World), { ssr: false });
 
 const GridGlobe = () => {
   const globeConfig = {

@@ -119,7 +119,7 @@ const Footer = () => {
             </span>
             <div className="flex gap-2 mt-1 text-xs">
               <a 
-                href="https://www.gauravpatil.online" 
+                href="https://portfoliio-www.gauravpatil.online" 
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-purple hover:underline"
@@ -128,7 +128,7 @@ const Footer = () => {
               </a>
               <span className="text-white-100 opacity-50">|</span>
               <a 
-                href="https://www.gauravworkspace.store" 
+                href="https://workspace-www.gauravworkspace.store" 
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white-100 opacity-70 hover:text-purple hover:opacity-100 transition-colors"

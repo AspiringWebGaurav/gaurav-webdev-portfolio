@@ -2,9 +2,9 @@
 
 # 🚀 Enterprise Portfolio Platform
 
-### **Built by [Gaurav Patil](https://www.linkedin.com/in/gauravpatil)** 
+### **Built by [Gaurav Patil](https://www.linkedin.com/in/gaurav-patil-335402234/)** 
 
-[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-Visit_Site-00C853?style=for-the-badge)](https://www.gauravpatil.online)
+[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-Visit_Site-00C853?style=for-the-badge)](https://portfoliio-www.gauravpatil.online)
 [![License](https://img.shields.io/badge/License-Proprietary-red?style=for-the-badge)](LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js_16-black?style=for-the-badge&logo=next.js)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
@@ -13,7 +13,7 @@
 
 **Production-ready, self-healing portfolio system with autonomous operations, intelligent decision-making, and failure recovery built-in.**
 
-[🌐 Live Demo](https://www.gauravpatil.online) • [📘 Documentation](./docs) • [🐛 Report Bug](https://www.gauravpatil.online/contact) • [✨ Request Feature](https://www.gauravpatil.online/contact)
+[🌐 Live Demo](https://portfoliio-www.gauravpatil.online) • [📘 Documentation](./docs) • [🐛 Report Bug](https://portfoliio-www.gauravpatil.online/contact) • [✨ Request Feature](https://portfoliio-www.gauravpatil.online/contact)
 
 </div>
 
@@ -25,21 +25,21 @@
 <tr>
 <td width="33%" align="center">
 <h3>🌐 Production</h3>
-<a href="https://www.gauravpatil.online">
+<a href="https://portfoliio-www.gauravpatil.online">
 <img src="https://img.shields.io/badge/Live_Site-Visit_Now-00C853?style=flat-square&logo=vercel" alt="Live Site"/>
 </a><br>
 <sub>Fully deployed on Vercel</sub>
 </td>
 <td width="33%" align="center">
 <h3>👨‍💻 Developer</h3>
-<a href="https://www.linkedin.com/in/gauravpatil">
+<a href="https://www.linkedin.com/in/gaurav-patil-335402234/">
 <img src="https://img.shields.io/badge/LinkedIn-Gaurav_Patil-0077B5?style=flat-square&logo=linkedin" alt="LinkedIn"/>
 </a><br>
 <sub>Connect on LinkedIn</sub>
 </td>
 <td width="33%" align="center">
 <h3>📧 Contact</h3>
-<a href="https://www.gauravpatil.online/contact">
+<a href="https://portfoliio-www.gauravpatil.online/contact">
 <img src="https://img.shields.io/badge/Contact_Form-Send_Message-FF6B6B?style=flat-square&logo=gmail" alt="Contact"/>
 </a><br>
 <sub>Get in touch via website</sub>
@@ -889,7 +889,7 @@ npm run verify:apis              # Verify all API endpoints
 # Utilities
 npm run list:users               # List Firebase users
 npm run quick-reset              # Quick reset guide
-npm run generate:cron-secret     # Generate CRON secret key
+npm run generate:cron-secret     # Generate CRON secret key (legacy - for manual endpoint access)
 ```
 
 ### Support
@@ -918,7 +918,7 @@ This project is proprietary software. All rights reserved © 2026 Gaurav Patil.
 <tr>
 <td width="33%" align="center">
 <h3>📧 Contact Form</h3>
-<a href="https://www.gauravpatil.online/contact">
+<a href="https://portfoliio-www.gauravpatil.online/contact">
 Send a message through the website
 </a>
 </td>
@@ -930,7 +930,7 @@ Submit bug reports or feature requests
 </td>
 <td width="33%" align="center">
 <h3>💼 Professional Network</h3>
-<a href="https://www.linkedin.com/in/gauravpatil">
+<a href="https://www.linkedin.com/in/gaurav-patil-335402234/">
 Connect on LinkedIn
 </a>
 </td>
@@ -976,7 +976,7 @@ Built with modern web technologies and best practices from the enterprise softwa
 
 ### 🚀 Live Platform Links
 
-[🌐 **Visit Live Site**](https://www.gauravpatil.online) | [📧 **Contact Gaurav**](https://www.gauravpatil.online/contact) | [💼 **LinkedIn Profile**](https://www.linkedin.com/in/gauravpatil) | [📘 **Documentation**](./docs)
+[🌐 **Visit Live Site**](https://portfoliio-www.gauravpatil.online) | [📧 **Contact Gaurav**](https://portfoliio-www.gauravpatil.online/contact) | [💼 **LinkedIn Profile**](https://www.linkedin.com/in/gaurav-patil-335402234/) | [📘 **Documentation**](./docs)
 
 ---
 
@@ -986,6 +986,6 @@ Built with modern web technologies and best practices from the enterprise softwa
 
 ---
 
-**Built with ❤️ by [Gaurav Patil](https://www.linkedin.com/in/gauravpatil)**
+**Built with ❤️ by [Gaurav Patil](https://www.linkedin.com/in/gaurav-patil-335402234/)**
 
 </div>

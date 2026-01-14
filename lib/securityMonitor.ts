@@ -600,10 +600,6 @@ export function respondToPatterns(): void {
     }
   }
 }
-// Auto-cleanup every hour
-if (typeof setInterval !== 'undefined') {
-  setInterval(cleanupOldData, 3600000);
-}
 
 // Export stores for testing/monitoring
 export { threatProfiles, securityEvents, autoBlockList };

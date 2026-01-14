@@ -3,6 +3,7 @@ import { useState } from "react";
 import { IoCopyOutline } from "react-icons/io5";
 import { FaLocationArrow } from "react-icons/fa6";
 import { MessageCircle } from "lucide-react";
+import dynamic from "next/dynamic";
 
 // Using lottie-react instead of deprecated react-lottie
 import Lottie from "lottie-react";
@@ -11,7 +12,15 @@ import { cn } from "@/lib/utils";
 import { useChatBubbleControl } from "@/contexts/ChatBubbleControlContext";
 
 import { BackgroundGradientAnimation } from "./GradientBg";
-import GridGlobe from "./GridGlobe";
+// Dynamic import for 3D globe to prevent HMR issues
+const GridGlobe = dynamic(() => import("./GridGlobe"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-full w-full">
+      <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  ),
+});
 import animationData from "@/data/confetti.json";
 import MagicButton from "./MagicButton";
 

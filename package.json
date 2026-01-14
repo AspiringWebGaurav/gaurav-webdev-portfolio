@@ -4,9 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev --turbo",
+    "dev": "set NEXT_DISABLE_TURBOPACK=1 && next dev",
     "build": "next build",
-    "build:local": "echo 'Note: Local Windows builds may fail with Turbopack error - this is a known Next.js 16.1.1 Windows bug. Vercel builds will work fine.' && next build",
     "start": "next start",
     "lint": "next lint"
   },

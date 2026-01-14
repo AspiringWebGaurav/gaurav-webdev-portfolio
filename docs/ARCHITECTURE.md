@@ -558,7 +558,7 @@ ADMIN_PASSWORD=<REDACTED>
 
 # API Keys
 API_BYPASS_KEY=<REDACTED>
-CRON_SECRET_KEY=<REDACTED>
+CRON_SECRET=<REDACTED>  # Legacy - used for manual security-cron endpoint access only
 
 # Deployment
 NEXT_PUBLIC_BASE_URL=https://your-domain.com
@@ -594,9 +594,16 @@ NEXT_PUBLIC_BASE_URL=https://your-domain.com
    - Admin dashboard for review
 
 4. **Real-Time Logs**
-   - Firebase Functions logs (auto-unban scheduler)
+   - Security monitoring scheduler (internal, runs every 60s)
+   - Firebase Functions logs
    - Vercel deployment logs
    - Client-side console logs (development only)
+
+5. **Scheduler Health**
+   - Internal job scheduler monitors all periodic tasks
+   - Status endpoint: `/api/scheduler-status`
+   - Automatic failover and recovery
+   - No external cron dependencies
 
 **Recommended External Monitoring:**
 - Vercel Analytics (built-in)

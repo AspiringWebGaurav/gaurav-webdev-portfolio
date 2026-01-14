@@ -37,7 +37,7 @@ This platform implements **defense-in-depth security** with multiple overlapping
 - Validate all inputs at multiple layers
 - Fail securely (deny by default)
 - Log all security-relevant events
-- Never trust client-side data.
+- Never trust client-side data
 
 ---
 
