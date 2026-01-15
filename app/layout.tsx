@@ -11,11 +11,9 @@ import { BubbleSessionProvider } from "@/contexts/BubbleSessionContext";
 import { BubbleMessageProvider } from "@/contexts/BubbleMessageContext";
 import { ChatBubbleControlProvider } from "@/contexts/ChatBubbleControlContext";
 
-import {
-  GlobalCrashHandler,
-  BrowserCrashListeners,
-} from "@/crash-report-mechanism/components/GlobalCrashHandler";
+import { GlobalCrashHandler, BrowserCrashListeners } from "@/crash-report-mechanism/components/GlobalCrashHandler";
 import { CrashReportProvider } from "@/crash-report-mechanism/contexts/CrashReportContext";
+import CrashReportingInitializer from "@/crash-report-mechanism/components/CrashReportingInitializer";
 
 import ConditionalChatBubble from "@/components/ConditionalChatBubble";
 import BubbleSessionDeletedNotification from "@/components/BubbleSessionDeletedNotification";
@@ -46,9 +44,13 @@ import StructuredData from "@/components/StructuredData";
 // Vercel Analytics
 import { Analytics } from "@vercel/analytics/react";
 
-// Init once at app startup
-import "@/lib/fingerprintInit";
-import "@/lib/schedulerInit";
+import FingerprintInitializer from "@/components/FingerprintInitializer";
+
+// TURBOPACK-SAFE: Removed module-level side effect imports
+// These are now initialized in client components:
+// - FingerprintInitializer (replaces @/lib/fingerprintInit)
+// - BurnPreventionInitializer (already exists, will be updated)
+// - Server schedulers are initialized via middleware (not layout.tsx)
 
 /* -------------------------------------------------- */
 /* FONTS                                              */
@@ -175,6 +177,8 @@ export default function RootLayout({
                               <MaintenanceMonitor>
                                 <SuspensionMonitor>
                                   <SuspensionGate>
+                                    <CrashReportingInitializer />
+                                    <FingerprintInitializer />
                                     <BurnPreventionInitializer />
                                     <ScrollRestoration />
                                     <BanMonitor />

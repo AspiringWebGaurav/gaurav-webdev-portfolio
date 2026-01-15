@@ -60,7 +60,7 @@ export async function GET() {
 
   // Check animation API (non-critical)
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/suspension/animation-state`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_PORTFOLIO_URL || 'http://localhost:3000'}/api/suspension/animation-state`, {
       method: 'GET',
       cache: 'no-store',
     });

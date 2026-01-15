@@ -1,12 +1,15 @@
 /**
- * SERVER-SIDE SCHEDULER INITIALIZATION
+ * SERVER-SIDE SCHEDULER INITIALIZATION - DEPRECATED
  * 
- * This module initializes all scheduled tasks when the server starts.
- * It ensures tasks run within the server process lifecycle, eliminating
- * the need for external cron services.
+ * This file is kept for backwards compatibility but should not be imported directly
+ * in layout.tsx or other files that are processed during build.
  * 
- * IMPORTANT: This file is imported in the root layout to guarantee
- * initialization occurs exactly once at server startup.
+ * Use lib/schedulerInit.server.ts instead for Turbopack-safe initialization.
+ * 
+ * TURBOPACK WARNING: This file has module-level side effects and may cause
+ * build issues with Turbopack.
+ * 
+ * @deprecated Use lib/schedulerInit.server.ts or initialize via middleware/API route
  */
 
 import { initializeSecurityScheduler } from './securityScheduler';
@@ -39,8 +42,6 @@ export function initializeSchedulers(): void {
   console.log("✅ All schedulers initialized successfully");
 }
 
-// Auto-initialize when module is imported
-// This ensures schedulers start as soon as the server process begins
-initializeSchedulers();
-
-export default initializeSchedulers;
+// TURBOPACK WARNING: Module-level side effect
+// This is executed at import time, which can cause issues with Turbopack
+// Server schedulers should be initialized in middleware or API routes, not layout.tsx

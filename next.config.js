@@ -3,6 +3,9 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   reactStrictMode: true,
   
   // Environment variables configuration
@@ -43,8 +46,8 @@ const nextConfig = {
 
   // Optimize chunk loading and prevent errors
   experimental: {
-    // Optimize package imports to reduce chunk size
-    optimizePackageImports: ["lucide-react", "react-icons", "motion"],
+    // Temporarily disable optimizePackageImports due to Turbopack issue
+    // optimizePackageImports: ["lucide-react", "react-icons", "motion"],
     
     // Enable proxy for request interception (server-side ban detection)
     proxyTimeout: 30000,

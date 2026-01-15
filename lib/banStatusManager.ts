@@ -278,8 +278,13 @@ class BanStatusManager {
 // Export singleton instance
 export const banStatusManager = new BanStatusManager();
 
-// Auto-cleanup on page unload
-if (typeof window !== 'undefined') {
+/**
+ * Initialize ban status manager cleanup handlers
+ * TURBOPACK-SAFE: Call from client component, not at module-level
+ */
+export function initializeBanStatusManagerCleanup(): void {
+  if (typeof window === 'undefined') return;
+  
   window.addEventListener('beforeunload', () => {
     banStatusManager.unsubscribeAll();
   });

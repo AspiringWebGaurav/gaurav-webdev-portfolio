@@ -261,10 +261,16 @@ export class CrashDelivery {
 }
 
 // ============================================================================
-// AUTO-START RETRY PROCESSOR ON PAGE LOAD
+// CRASH DELIVERY INITIALIZATION
 // ============================================================================
 
-if (typeof window !== "undefined") {
+/**
+ * Initialize crash delivery system
+ * TURBOPACK-SAFE: Call from client component, not at module-level
+ */
+export function initializeCrashDelivery(): void {
+  if (typeof window === 'undefined') return;
+  
   // Process queued reports when page loads
   window.addEventListener("load", () => {
     console.log("[CrashDelivery] Page loaded, processing queue...");

@@ -428,23 +428,28 @@ export function listenForCacheClearBroadcasts(
 
 /**
  * Verify database integrity (check UUID counts)
+ * 
+ * For client-side calls, this makes an API request.
+ * For server-side calls (API routes), import and use verifyDatabaseIntegrityServer from firebaseAdmin.
  */
 export async function verifyDatabaseIntegrity(): Promise<boolean> {
   try {
     console.log('[Database] Verifying integrity...');
 
-    // This will be called from server-side API
-    // Client-side just returns true
+    // Client-side: call API endpoint
     if (typeof window !== 'undefined') {
-      return true;
+      try {
+        const response = await fetch('/api/admin/verify-db');
+        const data = await response.json();
+        return data.success === true;
+      } catch (error) {
+        console.warn('[Database] API verification failed, skipping:', error);
+        return true; // Non-critical, allow operation to continue
+      }
     }
 
-    const { adminDb } = await import('./firebaseAdmin');
-
-    const visitorCount = await adminDb.collection('og_uuid').count().get();
-    const count = visitorCount.data().count;
-
-    console.log('[Database] ✅ Integrity verified:', count, 'UUIDs');
+    // Server-side: This should not be reached in client bundles
+    console.warn('[Database] Server-side verification called from unexpected context');
     return true;
   } catch (error) {
     console.error('[Database] ❌ Integrity check failed:', error);

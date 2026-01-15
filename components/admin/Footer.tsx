@@ -60,7 +60,7 @@ export default function Footer() {
                 <Github className="w-4 h-4 text-gray-700 group-hover:text-white transition-colors" />
               </a>
               <a
-                href="https://linkedin.com/in/your-profile"
+                href={process.env.NEXT_PUBLIC_LINKEDIN_URL || "https://www.linkedin.com/in/gaurav-patil-335402234"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2.5 bg-gray-100 hover:bg-blue-600 hover:text-white rounded-lg transition-all duration-200 border border-gray-200 group hover:scale-105"

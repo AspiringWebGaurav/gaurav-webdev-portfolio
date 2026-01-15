@@ -45,15 +45,20 @@ class BurnPreventionCore {
   private isInitialized = false;
 
   constructor() {
-    if (typeof window !== 'undefined') {
-      this.initialize();
-    }
+    // TURBOPACK-SAFE: Do NOT auto-initialize at construction
+    // Must be explicitly initialized from a client component
   }
 
   /**
    * Initialize the burn prevention system
+   * TURBOPACK-SAFE: Should be called from useEffect or client component
    */
-  private initialize(): void {
+  public initialize(): void {
+    if (typeof window === 'undefined') {
+      console.warn('[BurnPrevention] Cannot initialize in server environment');
+      return;
+    }
+    
     if (this.isInitialized) return;
     
     console.log('═══════════════════════════════════════════════════════');
@@ -354,11 +359,26 @@ class BurnPreventionCore {
   }
 }
 
-// Singleton instance
+// Singleton instance - TURBOPACK-SAFE
 export const burnPreventionCore = new BurnPreventionCore();
 
-// Expose to window for debugging (development only)
-if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+/**
+ * Initialize burn prevention system
+ * TURBOPACK-SAFE: Call this from a client component's useEffect
+ */
+export function initializeBurnPrevention(): void {
+  burnPreventionCore.initialize();
+}
+
+/**
+ * Initialize debug tools (development only)
+ * TURBOPACK-SAFE: Call from client component
+ */
+export function initializeBurnPreventionDebugTools(): void {
+  if (typeof window === 'undefined' || process.env.NODE_ENV !== 'development') {
+    return;
+  }
+
   (window as any).__burnPrevention = {
     core: burnPreventionCore,
     observer: runtimeObserver,

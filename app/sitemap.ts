@@ -8,7 +8,7 @@ import { MetadataRoute } from 'next'
  * Submit to: Google Search Console -> Sitemaps
  */
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://www.gauravpatil.online'
+  const baseUrl = process.env.NEXT_PUBLIC_PORTFOLIO_URL || 'https://www.gauravpatil.online'
   const currentDate = new Date()
   
   return [

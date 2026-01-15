@@ -463,7 +463,13 @@ class SmartPollingManager {
 
 const smartPolling = new SmartPollingManager();
 
-if (typeof window !== 'undefined') {
+/**
+ * Initialize smart polling cleanup and debug tools
+ * TURBOPACK-SAFE: Call from client component, not at module-level
+ */
+export function initializeSmartPolling(): void {
+  if (typeof window === 'undefined') return;
+  
   window.addEventListener('beforeunload', () => smartPolling.destroy());
   
   // Debug helper

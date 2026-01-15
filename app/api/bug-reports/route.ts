@@ -357,7 +357,7 @@ export async function POST(request: NextRequest) {
 
     // Send notification for high/critical severity (fire and forget)
     if (sanitized.severity === "high" || sanitized.severity === "critical") {
-      fetch(`${process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'}/api/bug-reports/notify`, {
+      fetch(`${process.env.NEXT_PUBLIC_PORTFOLIO_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')}/api/bug-reports/notify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

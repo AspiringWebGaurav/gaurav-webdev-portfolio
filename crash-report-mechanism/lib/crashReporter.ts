@@ -263,8 +263,15 @@ export function testCrashReporting(): void {
   CrashReporter.reportCrash(randomError);
 }
 
-// Expose test function in development
-if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
+/**
+ * Initialize crash reporter debug tools (development only)
+ * TURBOPACK-SAFE: Call from client component, not at module-level
+ */
+export function initializeCrashReporterDebugTools(): void {
+  if (typeof window === 'undefined' || process.env.NODE_ENV !== 'development') {
+    return;
+  }
+
   (window as any).__testCrashReporting = testCrashReporting;
   console.log("💡 Crash reporting test available: window.__testCrashReporting()");
 }

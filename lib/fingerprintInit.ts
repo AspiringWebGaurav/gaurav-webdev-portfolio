@@ -1,7 +1,13 @@
 /**
- * Fingerprint Initializer
- * MUST be called ONCE at app startup to generate and cache fingerprint
- * Prevents race conditions from multiple components
+ * Fingerprint Initializer - DEPRECATED
+ * 
+ * This file is kept for backwards compatibility but should not be used directly.
+ * Use lib/fingerprintInit.client.ts instead for Turbopack-safe initialization.
+ * 
+ * TURBOPACK WARNING: This file has module-level side effects and may cause
+ * build issues with Turbopack. Prefer using FingerprintInitializer component.
+ * 
+ * @deprecated Use lib/fingerprintInit.client.ts instead
  */
 
 import { generateDeviceFingerprint } from './deviceFingerprint';
@@ -19,7 +25,6 @@ export function initializeFingerprint(): void {
   console.log('[FingerprintInit] Initialized at app startup:', fp);
 }
 
-// Auto-initialize on module load (runs once per page load)
-if (typeof window !== 'undefined') {
-  initializeFingerprint();
-}
+// TURBOPACK WARNING: Module-level side effect
+// This is executed at import time, which can cause issues with Turbopack
+// Prefer using the FingerprintInitializer component instead

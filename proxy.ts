@@ -2,11 +2,31 @@
  * Next.js Proxy - Server-Side Request Handler
  * Authentication and admin route protection
  * Server-side ban detection (instant, no client delay)
+ * 
+ * TURBOPACK-SAFE: Server-side initialization point for schedulers
  */
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getClientIP, checkBanByIP } from "./lib/server-ban-check";
+
+// Server-side scheduler initialization (lazy-loaded)
+let schedulersInitialized = false;
+
+function initializeServerSchedulers() {
+  if (schedulersInitialized || typeof window !== 'undefined') {
+    return; // Already initialized or in browser
+  }
+  
+  schedulersInitialized = true;
+  
+  // Dynamic import to ensure server-only execution
+  import('./lib/schedulerInit.server').then((module) => {
+    module.initializeSchedulers();
+  }).catch((error) => {
+    console.error('[Proxy] Failed to initialize schedulers:', error);
+  });
+}
 
 const PROTECTED_ROUTES = [
   "/admin/dashboard",
@@ -48,6 +68,9 @@ async function checkBanStatus(request: NextRequest): Promise<{
 }
 
 export async function proxy(request: NextRequest) {
+  // Initialize server schedulers on first request (idempotent)
+  initializeServerSchedulers();
+  
   const { pathname, search } = request.nextUrl;
 
   // Skip ban check for these paths
