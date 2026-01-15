@@ -10,6 +10,7 @@ import { BugReportProvider } from "@/contexts/BugReportContext";
 import { BubbleSessionProvider } from "@/contexts/BubbleSessionContext";
 import { BubbleMessageProvider } from "@/contexts/BubbleMessageContext";
 import { ChatBubbleControlProvider } from "@/contexts/ChatBubbleControlContext";
+import { AbusePolicyProvider } from "@/contexts/AbusePolicyContext";
 
 import { GlobalCrashHandler, BrowserCrashListeners } from "@/crash-report-mechanism/components/GlobalCrashHandler";
 import { CrashReportProvider } from "@/crash-report-mechanism/contexts/CrashReportContext";
@@ -21,6 +22,9 @@ import BubbleSessionDeletedNotification from "@/components/BubbleSessionDeletedN
 import BanChecker from "@/components/BanChecker";
 import BanGate from "@/components/BanGate";
 import BanMonitor from "@/components/BanMonitor";
+
+import AbusePolicyGate from "@/components/AbusePolicyGate";
+import AbusePolicyMonitor from "@/components/AbusePolicyMonitor";
 
 import MaintenanceGate from "@/components/MaintenanceGate";
 import MaintenanceMonitor from "@/components/MaintenanceMonitor";
@@ -172,31 +176,36 @@ export default function RootLayout({
                     <BubbleSessionProvider>
                       <BubbleMessageProvider>
                         <ChatBubbleControlProvider>
-                          <BanGate>
-                            <MaintenanceGate>
-                              <MaintenanceMonitor>
-                                <SuspensionMonitor>
-                                  <SuspensionGate>
-                                    <CrashReportingInitializer />
-                                    <FingerprintInitializer />
-                                    <BurnPreventionInitializer />
-                                    <ScrollRestoration />
-                                    <BanMonitor />
-                                    <LocalMaintenanceBanner />
-                                    <AnalyticsHealthMonitor />
-                                    <VisitorTracker />
+                          <AbusePolicyProvider>
+                            <BanGate>
+                              <MaintenanceGate>
+                                <MaintenanceMonitor>
+                                  <SuspensionMonitor>
+                                    <SuspensionGate>
+                                      <AbusePolicyGate>
+                                        <CrashReportingInitializer />
+                                        <FingerprintInitializer />
+                                        <BurnPreventionInitializer />
+                                        <ScrollRestoration />
+                                        <BanMonitor />
+                                        <AbusePolicyMonitor />
+                                        <LocalMaintenanceBanner />
+                                        <AnalyticsHealthMonitor />
+                                        <VisitorTracker />
 
-                                    {children}
+                                        {children}
 
-                                    <ScrollToTop />
-                                    <ConditionalChatBubble />
-                                    <BubbleSessionDeletedNotification />
-                                    <ToastProvider />
-                                  </SuspensionGate>
-                                </SuspensionMonitor>
-                              </MaintenanceMonitor>
-                            </MaintenanceGate>
-                          </BanGate>
+                                        <ScrollToTop />
+                                        <ConditionalChatBubble />
+                                        <BubbleSessionDeletedNotification />
+                                        <ToastProvider />
+                                      </AbusePolicyGate>
+                                    </SuspensionGate>
+                                  </SuspensionMonitor>
+                                </MaintenanceMonitor>
+                              </MaintenanceGate>
+                            </BanGate>
+                          </AbusePolicyProvider>
                         </ChatBubbleControlProvider>
                       </BubbleMessageProvider>
                     </BubbleSessionProvider>

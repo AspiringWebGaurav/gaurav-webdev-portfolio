@@ -90,41 +90,16 @@ function BanGateInner({ children }: { children: React.ReactNode }) {
     console.log('[Ban Gate] ✅ NOT BANNED - Allowing access (0 duplicate Firebase reads!)');
   }, [pathname, router, shouldSkipGate, loading, identity]);
 
-  // RENDER LOGIC:
-  // 1. Skip gate routes - render children immediately
-  if (shouldSkipGate) {
-    return <>{children}</>;
-  }
-  
-  // 2. While BubbleSessionContext is loading - show loading state
-  if (loading) {
-    return (
-      <div className="fixed inset-0 bg-black-100 flex items-center justify-center z-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-purple border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-white text-sm opacity-70">Verifying access...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // 3. Identity loaded and not banned - render portfolio
+  // BLAZING FAST RENDER:
+  // Always render children immediately - ban check happens in background
+  // If banned, redirect will happen asynchronously (no blocking)
   return <>{children}</>;
 }
 
 // Wrapper component with Suspense boundary for useSearchParams()
 export default function BanGate({ children }: { children: React.ReactNode }) {
   return (
-    <Suspense
-      fallback={
-        <div className="fixed inset-0 bg-black-100 flex items-center justify-center z-50">
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-12 h-12 border-4 border-purple border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-white text-sm opacity-70">Verifying access...</p>
-          </div>
-        </div>
-      }
-    >
+    <Suspense fallback={null}>
       <BanGateInner>{children}</BanGateInner>
     </Suspense>
   );

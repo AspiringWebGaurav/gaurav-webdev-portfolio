@@ -1,54 +1,32 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, Mail, Shield, CheckCircle, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, Mail, Moon, Sun, Shield, CheckCircle, AlertCircle } from "lucide-react";
 import { AnimatedCharactersLoginLayout } from "@/components/ui/AnimatedCharactersLoginLayout";
+import { useTheme } from "next-themes";
 import { signInWithGoogle } from "@/lib/auth";
 import { secureDevLogin } from "@/lib/secureAuth";
 import { useRouter } from "next/navigation";
 import { showToast } from "@/lib/toast";
 import TurnstileWidget from "@/components/TurnstileWidget";
-import LoginTransition from "@/components/admin/LoginTransition";
-import LoginSuccessLoader from "@/components/admin/LoginSuccessLoader";
-import { AnimatePresence } from "motion/react";
-import { abusePolicyManager } from "@/lib/abusePolicyManager";
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "1x00000000000000000000AA";
 
-export default function LoginPage() {
+export default function LoginDemoPage() {
+  const { theme, setTheme } = useTheme();
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [devPassword, setDevPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [devLoading, setDevLoading] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
-  const [showTransition, setShowTransition] = useState(false);
-  const [showSuccessLoader, setShowSuccessLoader] = useState(false);
   
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaStatus, setCaptchaStatus] = useState<'loading' | 'success' | 'required' | 'error'>('loading');
   const [showCaptchaWidget, setShowCaptchaWidget] = useState(false);
-
-  // Check for abuse policy on mount
-  useEffect(() => {
-    const isBanned = abusePolicyManager.isBanned();
-    const state = abusePolicyManager.getState();
-    
-    console.log('[Login Mount] Checking abuse policy:', {
-      isBanned,
-      failedAttempts: state.failedAttempts,
-      banExpiresAt: state.banExpiresAt ? new Date(state.banExpiresAt).toISOString() : null,
-      remainingTime: abusePolicyManager.getRemainingTime(),
-    });
-    
-    if (isBanned) {
-      console.log('[Login] Abuse Policy active, redirecting...');
-      router.replace('/abuse-policy-active');
-    }
-  }, [router]);
 
   const handleCaptchaVerify = (token: string) => {
     setCaptchaToken(token);
@@ -70,49 +48,16 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
-    setShowTransition(true);
-    
     try {
       await signInWithGoogle({ silent: true });
-      
-      // Success: Reset abuse policy counter
-      abusePolicyManager.recordSuccessfulLogin();
-      
-      console.log("✅ Google login successful");
-      setShowTransition(false);
-      setShowSuccessLoader(true);
       sessionStorage.setItem('justLoggedIn', 'true');
-      router.prefetch("/admin/dashboard");
-      
-      setTimeout(() => {
-        router.push("/admin/dashboard");
-      }, 1500);
+      router.push("/admin/dashboard");
     } catch (err: any) {
       const errorCode = err?.code || '';
-      
-      // Only track as failed attempt if it's an actual auth failure (not user cancellation)
       if (errorCode !== 'auth/popup-closed-by-user' && !err?.message?.includes('popup-closed-by-user')) {
-        // Record failed attempt
-        const abusePolicyTriggered = abusePolicyManager.recordFailedAttempt();
-        
-        if (abusePolicyTriggered) {
-          console.log('[Login] Abuse Policy activated after Google OAuth failure');
-          setLoading(true);
-          setShowTransition(true);
-          showToast.error("Too many failed attempts. Temporary ban activated. Redirecting...", "Access Restricted", { autoClose: 5000 });
-          setTimeout(() => {
-            router.replace('/abuse-policy-active');
-          }, 5000);
-          return;
-        }
-        
-        if (process.env.NODE_ENV === 'development') {
-          console.error(err);
-        }
         showToast.error("Authentication failed. Please try again or contact support.", "Login Failed", { autoClose: 4000 });
       }
       setLoading(false);
-      setShowTransition(false);
     }
   };
 
@@ -129,38 +74,13 @@ export default function LoginPage() {
 
     setDevLoading(true);
     setPasswordError(false);
-    setShowTransition(true);
     
     try {
-      console.log("🔒 Starting enterprise-grade secure login...");
       const result = await secureDevLogin(devPassword, captchaToken);
       
       if (!result.success) {
-        // Record failed attempt
-        console.log('[Login] Password login failed, recording attempt...');
-        const abusePolicyTriggered = abusePolicyManager.recordFailedAttempt();
-        
-        console.log('[Login] After recording:', {
-          triggered: abusePolicyTriggered,
-          state: abusePolicyManager.getState(),
-        });
-        
         setPasswordError(true);
         setDevLoading(false);
-        setShowTransition(false);
-        setShowSuccessLoader(false);
-        
-        if (abusePolicyTriggered) {
-          console.log('[Login] Abuse Policy activated after password failure');
-          setDevLoading(true);
-          setShowTransition(true);
-          showToast.error("Too many failed attempts. Temporary ban activated. Redirecting...", "Access Restricted", { autoClose: 5000 });
-          setTimeout(() => {
-            router.replace('/abuse-policy-active');
-          }, 5000);
-          return;
-        }
-        
         showToast.error(result.error || "Authentication failed. Please verify your credentials.", "Login Failed", { autoClose: 4000 });
         
         setTimeout(() => {
@@ -173,39 +93,13 @@ export default function LoginPage() {
         return;
       }
       
-      // Success: Reset abuse policy counter
-      abusePolicyManager.recordSuccessfulLogin();
-      
-      console.log("✅ Admin login successful");
-      setShowSuccessLoader(true);
       sessionStorage.setItem('justLoggedIn', 'true');
       router.prefetch("/admin/dashboard");
-      
-      setTimeout(() => {
-        router.push("/admin/dashboard");
-      }, 1500);
+      setTimeout(() => router.push("/admin/dashboard"), 1500);
     } catch (err) {
       console.error("Admin login error:", err);
-      
-      // Record failed attempt on exception
-      const abusePolicyTriggered = abusePolicyManager.recordFailedAttempt();
-      
       setPasswordError(true);
       setDevLoading(false);
-      setShowTransition(false);
-      setShowSuccessLoader(false);
-      
-      if (abusePolicyTriggered) {
-        console.log('[Login] Abuse Policy activated after login exception');
-        setDevLoading(true);
-        setShowTransition(true);
-        showToast.error("Too many failed attempts. Temporary ban activated. Redirecting...", "Access Restricted", { autoClose: 5000 });
-        setTimeout(() => {
-          router.replace('/abuse-policy-active');
-        }, 5000);
-        return;
-      }
-      
       showToast.error("Authentication failed. Please check your connection and try again.", "Login Failed", { autoClose: 4000 });
       
       setTimeout(() => {
@@ -220,11 +114,15 @@ export default function LoginPage() {
 
   return (
     <>
-      <AnimatePresence>
-        {showTransition && <LoginTransition />}
-      </AnimatePresence>
-      
-      <LoginSuccessLoader show={showSuccessLoader} />
+      <div className="fixed top-4 right-4 z-50">
+        <button
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          className="p-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+          aria-label="Toggle theme"
+        >
+          {theme === "dark" ? <Sun className="size-5 text-yellow-500" /> : <Moon className="size-5 text-gray-700" />}
+        </button>
+      </div>
 
       <AnimatedCharactersLoginLayout
         passwordLength={devPassword.length}
@@ -233,7 +131,7 @@ export default function LoginPage() {
         showFooterLinks={true}
         privacyPolicyLink="/privacy"
         termsOfServiceLink="/terms"
-        contactLink="/contact"
+        contactLink="/admin/login-demo/contact"
       >
         <div className="text-center mb-10">
           <h1 className="text-3xl font-bold tracking-tight mb-2 text-gray-900 dark:text-white">Sign in to Admin</h1>
@@ -297,7 +195,7 @@ export default function LoginPage() {
                 onVerify={handleCaptchaVerify}
                 onError={handleCaptchaError}
                 onExpire={handleCaptchaExpire}
-                theme="dark"
+                theme={theme as "light" | "dark"}
                 size="normal"
               />
             </div>
@@ -317,7 +215,7 @@ export default function LoginPage() {
                 onVerify={handleCaptchaVerify}
                 onError={handleCaptchaError}
                 onExpire={handleCaptchaExpire}
-                theme="dark"
+                theme={theme as "light" | "dark"}
                 size="invisible"
               />
             </div>
