@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowUp, Bot, AlertCircle, RefreshCw, Shield } from 'lucide-react';
+import { ArrowUp, Bot, AlertCircle, RefreshCw, Shield, Loader2 } from 'lucide-react';
 import { useBubbleMessages } from '@/contexts/BubbleMessageContext';
 import { useBubbleSession } from '@/contexts/BubbleSessionContext';
 import networkManager from '@/lib/networkManager';

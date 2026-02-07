@@ -38,7 +38,7 @@ export function BubbleSessionProvider({ children }: { children: React.ReactNode 
   const [session, setSession] = useState<BubbleSession | null>(null);
   const [visitorId, setVisitorId] = useState<string | null>(null);
   const [identity, setIdentity] = useState<EnhancedIdentityResult | null>(null);
-  const [loading, setLoading] = useState(false); // FALSE for instant render - ban check happens async
+  const [loading, setLoading] = useState(true);
   const [isInitializing, setIsInitializing] = useState(false);
 
   /**
@@ -71,7 +71,7 @@ export function BubbleSessionProvider({ children }: { children: React.ReactNode 
 
     try {
       setIsInitializing(true);
-      // Loading stays false - render immediately, check async
+      setLoading(true);
       
       // Get fingerprint and identify visitor using enhanced UUID-sync
       const fingerprint = generateDeviceFingerprint();

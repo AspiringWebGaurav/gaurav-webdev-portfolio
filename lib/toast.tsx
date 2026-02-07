@@ -11,7 +11,7 @@ interface ToastOptions {
 
 /**
  * Centralized toast notification system
- * Fast come (1s), fast go (1s), top-right position
+ * Increased timing to 1.5s to prevent race conditions
  */
 export const showToast = {
   success: (message: string, title?: string, options?: ToastOptions) => {
@@ -21,7 +21,7 @@ export const showToast = {
         <div className="toast-message">{message}</div>
       </div>,
       {
-        autoClose: options?.autoClose ?? 1000,
+        autoClose: options?.autoClose ?? 1500,
         closeButton: options?.closeButton ?? true,
         icon: options?.icon ?? '✓',
         ...options,
@@ -36,7 +36,7 @@ export const showToast = {
         <div className="toast-message">{message}</div>
       </div>,
       {
-        autoClose: options?.autoClose ?? 1000,
+        autoClose: options?.autoClose ?? 1500,
         closeButton: options?.closeButton ?? true,
         icon: options?.icon ?? '✕',
         ...options,
@@ -51,7 +51,7 @@ export const showToast = {
         <div className="toast-message">{message}</div>
       </div>,
       {
-        autoClose: options?.autoClose ?? 1000,
+        autoClose: options?.autoClose ?? 1500,
         closeButton: options?.closeButton ?? true,
         icon: options?.icon ?? '⚠',
         ...options,
@@ -66,7 +66,7 @@ export const showToast = {
         <div className="toast-message">{message}</div>
       </div>,
       {
-        autoClose: options?.autoClose ?? 1000,
+        autoClose: options?.autoClose ?? 1500,
         closeButton: options?.closeButton ?? true,
         icon: options?.icon ?? 'ℹ',
         ...options,

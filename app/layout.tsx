@@ -87,7 +87,7 @@ export const viewport = {
 /* -------------------------------------------------- */
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://workspace-www.gauravworkspace.store"),
+  metadataBase: new URL("https://www.gauravpatil.online"),
   title: {
     default:
       "Gaurav Patil - Full Stack Developer & Software Engineer | Professional Portfolio",
@@ -108,7 +108,7 @@ export const metadata: Metadata = {
     "Enterprise Web Applications",
   ],
   authors: [
-    { name: "Gaurav Patil", url: "https://workspace-www.gauravworkspace.store" },
+    { name: "Gaurav Patil", url: "https://www.gauravpatil.online" },
   ],
   creator: "Gaurav Patil",
   publisher: "Gaurav Workspace",
@@ -121,23 +121,35 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://portfoliio-www.gauravpatil.online",
+    url: "https://www.gauravpatil.online",
     title:
       "Gaurav Patil - Full Stack Developer & Software Engineer | Portfolio",
     description:
       "Expert Full Stack Developer specializing in Next.js, React, TypeScript & Firebase.",
     siteName: "Gaurav Patil Portfolio",
+    images: [
+      {
+        url: "https://www.gauravpatil.online/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Gaurav Patil - Full Stack Developer",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     creator: "@gauravpatil",
+    title: "Gaurav Patil - Full Stack Developer & Software Engineer",
+    description:
+      "Expert Full Stack Developer specializing in Next.js, React, TypeScript & Firebase.",
+    images: ["https://www.gauravpatil.online/twitter-image.png"],
   },
   robots: {
     index: true,
     follow: true,
   },
   alternates: {
-    canonical: "https://portfoliio-www.gauravpatil.online",
+    canonical: "https://www.gauravpatil.online",
   },
 };
 
@@ -216,7 +228,15 @@ export default function RootLayout({
           </ChunkErrorBoundary>
         </GlobalCrashHandler>
 
-        <Analytics />
+        {/* Analytics wrapped in try-catch to prevent OpenTelemetry errors */}
+        {(() => {
+          try {
+            return <Analytics />;
+          } catch (error) {
+            console.error('[Layout] Analytics initialization failed:', error);
+            return null;
+          }
+        })()}
       </body>
     </html>
   );

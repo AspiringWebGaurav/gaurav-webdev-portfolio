@@ -59,6 +59,48 @@ export default function CrashDetailModal({ crashId, onClose }: Props) {
     }
   };
 
+  const copyFullReport = async () => {
+    try {
+      const fullReport = `
+=== CRASH REPORT ===
+ID: ${report.id}
+Title: ${report.title || report.errorName}
+Severity: ${report.severity.toUpperCase()}
+Status: ${report.status}
+Occurrences: ${report.occurenceCount}
+First Seen: ${new Date(report.firstSeen).toLocaleString()}
+Last Seen: ${new Date(report.lastSeen).toLocaleString()}
+
+=== ERROR DETAILS ===
+${report.errorName}: ${report.errorMessage}
+
+=== STACK TRACE ===
+${report.errorStack}
+
+${report.componentStack ? `=== COMPONENT STACK ===\n${report.componentStack}\n` : ''}
+
+=== CONTEXT ===
+URL: ${report.url || 'N/A'}
+User Agent: ${report.userAgent || 'N/A'}
+Session ID: ${report.sessionId || 'N/A'}
+Visitor ID: ${report.visitorId || 'N/A'}
+
+=== RUNTIME ===
+React: ${report.reactVersion || 'N/A'}
+Next.js: ${report.nextVersion || 'N/A'}
+Environment: ${report.environment || 'N/A'}
+
+${report.adminNotes.length > 0 ? `=== ADMIN NOTES ===\n${report.adminNotes.map(note => `[${new Date(note.createdAt).toLocaleString()}] ${note.createdBy}: ${note.content}`).join('\n')}\n` : ''}
+`.trim();
+
+      await navigator.clipboard.writeText(fullReport);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy full report:", err);
+    }
+  };
+
   const handleStatusChange = async (status: string) => {
     try {
       await updateCrashReport(report.id, { status: status as any });
@@ -155,6 +197,25 @@ export default function CrashDetailModal({ crashId, onClose }: Props) {
           </div>
 
           <div className="flex items-center gap-2 ml-4">
+            {/* Copy Full Report Button */}
+            <button
+              onClick={copyFullReport}
+              className="flex items-center gap-2 px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors"
+              title="Copy full crash report"
+            >
+              {copied ? (
+                <>
+                  <CheckCircle className="w-4 h-4" />
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4" />
+                  Copy Full Report
+                </>
+              )}
+            </button>
+
             {/* Open in Full Page Button */}
             <a
               href={`/admin/crash-reports/${report.id}`}

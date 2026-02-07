@@ -93,7 +93,7 @@ export function CrashReportProvider({ children }: { children: React.ReactNode })
    * Fetch all crash reports from server
    */
   const fetchCrashReports = useCallback(
-    async (showLoading = true, force = false) => {
+    async (showLoading = true, force = false, retryCount = 0) => {
       // Skip if not on admin page
       if (!isAdminPage) {
         console.log("[CrashReports] ⏭️ Skipping fetch - not on admin page");
@@ -103,14 +103,14 @@ export function CrashReportProvider({ children }: { children: React.ReactNode })
 
       // Cache check (30 seconds) - SKIP cache check on force or initial load
       const cacheAge = Date.now() - lastFetchRef.current;
-      if (!force && cacheAge < 30000 && crashReports.length > 0) {
+      if (!force && cacheAge < 30000 && crashReports.length > 0 && hasInitializedRef.current) {
         console.log(
           `[CrashReports] ⚡ Using cached data (age: ${Math.floor(cacheAge / 1000)}s)`
         );
         return;
       }
 
-      console.log(`[CrashReports] 🔄 Starting fetch (force=${force}, showLoading=${showLoading}, cacheAge=${Math.floor(cacheAge / 1000)}s)`);
+      console.log(`[CrashReports] 🔄 Starting fetch (force=${force}, showLoading=${showLoading}, cacheAge=${Math.floor(cacheAge / 1000)}s), retry=${retryCount}`);
 
       try {
         if (showLoading) {
@@ -118,18 +118,41 @@ export function CrashReportProvider({ children }: { children: React.ReactNode })
         }
         setError(null);
 
-        // Get auth token
-        const user = auth.currentUser;
-        console.log("[CrashReports] 🔐 Current user:", user ? user.email : "NO USER");
-        
+        // Wait for auth to be ready
+        let user = auth.currentUser;
         if (!user) {
-          console.log("[CrashReports] ❌ No authenticated user - cannot fetch");
-          setLoading(false);
-          return;
+          console.log("[CrashReports] ⏳ Waiting for auth...");
+          
+          // Wait up to 5 seconds for auth
+          const authReady = await new Promise<boolean>((resolve) => {
+            let attempts = 0;
+            const maxAttempts = 10; // 5 seconds total
+            
+            const checkAuth = setInterval(() => {
+              attempts++;
+              if (auth.currentUser) {
+                clearInterval(checkAuth);
+                resolve(true);
+              } else if (attempts >= maxAttempts) {
+                clearInterval(checkAuth);
+                resolve(false);
+              }
+            }, 500);
+          });
+
+          if (!authReady) {
+            console.log("[CrashReports] ❌ Auth timeout - cannot fetch");
+            setLoading(false);
+            return;
+          }
+          
+          user = auth.currentUser;
         }
+        
+        console.log("[CrashReports] 🔐 Current user:", user ? user.email : "NO USER");
 
         console.log("[CrashReports] 🔑 Getting ID token...");
-        const token = await user.getIdToken();
+        const token = await user!.getIdToken();
         console.log("[CrashReports] ✅ Token obtained, fetching from API...");
 
         // Fetch from API
@@ -201,6 +224,23 @@ export function CrashReportProvider({ children }: { children: React.ReactNode })
           name: err.name,
           stack: err.stack
         });
+        
+        // Check if it's a network error and retry
+        const isNetworkError =
+          err.message?.includes('network') ||
+          err.message?.includes('fetch') ||
+          err.code === 'auth/network-request-failed';
+        
+        if (isNetworkError && retryCount < 3) {
+          console.log(`[CrashReports] 🔄 Network error, retrying (${retryCount + 1}/3)...`);
+          
+          // Exponential backoff: 1s, 2s, 4s
+          const delay = Math.pow(2, retryCount) * 1000;
+          await new Promise(resolve => setTimeout(resolve, delay));
+          
+          return fetchCrashReports(showLoading, force, retryCount + 1);
+        }
+        
         setError(err.message || "Failed to fetch crash reports");
         if (!crashReports.length) {
           setCrashReports([]);
@@ -236,24 +276,34 @@ export function CrashReportProvider({ children }: { children: React.ReactNode })
   }, [isAdminPage, fetchCrashReports]);
 
   /**
-   * Initial fetch on mount - MORE AGGRESSIVE
+   * Initial fetch on mount - MORE AGGRESSIVE with multiple retries
    */
   useEffect(() => {
-    if (isAdminPage) {
-      console.log("[CrashReports] 🚀 Initial mount effect - fetching immediately");
+    if (isAdminPage && !hasInitializedRef.current) {
+      console.log("[CrashReports] 🚀 Initial mount - starting aggressive fetch");
       
-      // Try immediate fetch
+      // Immediate attempt
       fetchCrashReports(true, true);
       
-      // Also set a backup timer in case auth isn't ready
-      const backupTimer = setTimeout(() => {
-        if (!hasInitializedRef.current) {
-          console.log("[CrashReports] ⏰ Backup timer - trying fetch again");
-          fetchCrashReports(true, true);
+      // Retry every second for up to 5 seconds if not initialized
+      let retryCount = 0;
+      const retryInterval = setInterval(() => {
+        if (hasInitializedRef.current) {
+          clearInterval(retryInterval);
+          return;
         }
-      }, 1000); // Retry after 1 second if not initialized
+        
+        retryCount++;
+        console.log(`[CrashReports] 🔄 Retry attempt ${retryCount}`);
+        fetchCrashReports(true, true);
+        
+        if (retryCount >= 5) {
+          clearInterval(retryInterval);
+          console.log("[CrashReports] ⏹️ Max retries reached");
+        }
+      }, 1000);
       
-      return () => clearTimeout(backupTimer);
+      return () => clearInterval(retryInterval);
     }
   }, [isAdminPage, fetchCrashReports]);
 
