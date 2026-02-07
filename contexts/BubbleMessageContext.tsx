@@ -228,8 +228,8 @@ export function BubbleMessageProvider({ children }: { children: React.ReactNode 
       const response = await networkManager.fetch('/api/bubble/messages', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          sessionId: session.id, 
+        body: JSON.stringify({
+          sessionId: session.id,
           messageIds,
           role: 'visitor', // Mark as read by visitor
         }),
@@ -239,11 +239,22 @@ export function BubbleMessageProvider({ children }: { children: React.ReactNode 
         setMessages(prev =>
           prev.map(msg => {
             const shouldMark = !messageIds || messageIds.includes(msg.id);
-            return shouldMark && msg.role === 'admin' ? 
+            return shouldMark && msg.role === 'admin' ?
               { ...msg, read: true, readAt: new Date() } : msg;
           })
         );
         setUnreadCount(0);
+        
+        // Also mark tooltip as read to clear the notification
+        try {
+          await networkManager.fetch('/api/bubble/tooltip', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId: session.id }),
+          }, 2);
+        } catch (tooltipError) {
+          logger.debug('[BubbleMessages] Tooltip mark read failed (non-critical):', tooltipError);
+        }
       }
     } catch (error) {
       logger.error('[BubbleMessages] ❌ Mark read failed:', error);

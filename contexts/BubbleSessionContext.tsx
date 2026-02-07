@@ -208,8 +208,22 @@ export function BubbleSessionProvider({ children }: { children: React.ReactNode 
    * Mark tooltip as read
    */
   const markTooltipRead = useCallback(async () => {
-    await updateSession({ hasUnreadTooltip: false, unreadAdminReplies: 0 });
-  }, [updateSession]);
+    if (!visitorId) return;
+    
+    try {
+      // Call the tooltip API to mark as read
+      await fetch('/api/bubble/tooltip', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: visitorId }),
+      });
+      
+      // Also update local session state
+      await updateSession({ hasUnreadTooltip: false, unreadAdminReplies: 0 });
+    } catch (error) {
+      logger.debug('[BubbleSession] Failed to mark tooltip as read:', error);
+    }
+  }, [visitorId, updateSession]);
 
   /**
    * Destroy session - soft delete
@@ -273,7 +287,7 @@ export function BubbleSessionProvider({ children }: { children: React.ReactNode 
     }
   }, [visitorId]);
 
-  // Setup smart polling for tooltip - COST-OPTIMIZED: Only poll when actually needed
+  // Setup smart polling for tooltip - OPTIMIZED: Balance between cost and UX
   useEffect(() => {
     if (!visitorId) return;
 
@@ -283,26 +297,26 @@ export function BubbleSessionProvider({ children }: { children: React.ReactNode 
       checkForTooltipUpdates,
       {
         intervals: {
-          realtime: 10000,   // 10s when page active (reduced from 2s to save costs)
-          active: 30000,     // 30s normal activity (reduced from 5s)
-          idle: 120000,      // 2min when idle (reduced from 30s) - MAJOR COST SAVING
+          realtime: 5000,    // 5s when page active - faster for better UX
+          active: 15000,     // 15s normal activity - reasonable balance
+          idle: 60000,       // 1min when idle - still responsive
           background: 0,     // STOP when tab hidden - NO POLLING = ZERO COST!
         },
-        priority: 'low',    // Low priority - not critical for user experience
+        priority: 'normal', // Normal priority - important for notifications
         maxIdleTime: 300000, // 5 minutes - stop completely after this
         stopOnHidden: true,  // ✅ STOP polling when tab hidden - SAVES MONEY!
-        stopOnIdle: true,    // ✅ STOP polling when user is idle - SAVES MONEY!
+        stopOnIdle: false,   // Keep polling when idle (user might be reading)
         tag: 'BubbleTooltip',
       }
     );
 
-    // Start in active mode (not realtime) to save costs
-    smartPolling.setMode('bubble-tooltip-check', 'active');
+    // Start in realtime mode for better notification delivery
+    smartPolling.setMode('bubble-tooltip-check', 'realtime');
     
-    // Initial check only once (removed aggressive 1s check)
+    // Initial check immediately for faster first notification
     const initialCheck = setTimeout(() => {
       checkForTooltipUpdates();
-    }, 5000); // Delayed to 5s to reduce initial load
+    }, 1000); // Quick initial check
 
     return () => {
       clearTimeout(initialCheck);
