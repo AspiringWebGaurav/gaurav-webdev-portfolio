@@ -47,7 +47,7 @@ export function formatDistanceToNow(dateString: string): string {
  * Get the base URL for the application
  * Automatically detects environment and returns appropriate URL
  * - Development: http://localhost:3000
- * - Production: https://portfoliio-www.gauravpatil.online or https://gaurav-webdev-portfolio.vercel.app
+ * - Production: https://www.gauravpatil.online or https://gaurav-webdev-portfolio.vercel.app
  */
 export function getBaseUrl(): string {
   // Check if we're in the browser

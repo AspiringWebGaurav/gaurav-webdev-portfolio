@@ -78,22 +78,22 @@ export default function PrivacyPage() {
               <li>
                 <strong>Firebase (Google):</strong> Firestore Database, Authentication, Storage, Cloud Functions
                 <br />
-                <span className="text-sm">Privacy Policy: <a href="https://firebase.google.com/support/privacy" className="text-purple underline">https://firebase.google.com/support/privacy</a></span>
+                <span className="text-sm">Privacy Policy: <a href="https://firebase.google.com/support/privacy" className="text-purple underline" target="_blank" rel="noopener noreferrer">https://firebase.google.com/support/privacy</a></span>
               </li>
               <li>
                 <strong>Vercel:</strong> Hosting and deployment services
                 <br />
-                <span className="text-sm">Privacy Policy: <a href="https://vercel.com/legal/privacy-policy" className="text-purple underline">https://vercel.com/legal/privacy-policy</a></span>
+                <span className="text-sm">Privacy Policy: <a href="https://vercel.com/legal/privacy-policy" className="text-purple underline" target="_blank" rel="noopener noreferrer">https://vercel.com/legal/privacy-policy</a></span>
               </li>
               <li>
                 <strong>EmailJS:</strong> Email delivery for contact forms
                 <br />
-                <span className="text-sm">Privacy Policy: <a href="https://www.emailjs.com/legal/privacy-policy/" className="text-purple underline">https://www.emailjs.com/legal/privacy-policy/</a></span>
+                <span className="text-sm">Privacy Policy: <a href="https://www.emailjs.com/legal/privacy-policy/" className="text-purple underline" target="_blank" rel="noopener noreferrer">https://www.emailjs.com/legal/privacy-policy/</a></span>
               </li>
               <li>
                 <strong>Cloudflare Turnstile:</strong> Bot detection and spam prevention
                 <br />
-                <span className="text-sm">Privacy Policy: <a href="https://www.cloudflare.com/privacypolicy/" className="text-purple underline">https://www.cloudflare.com/privacypolicy/</a></span>
+                <span className="text-sm">Privacy Policy: <a href="https://www.cloudflare.com/privacypolicy/" className="text-purple underline" target="_blank" rel="noopener noreferrer">https://www.cloudflare.com/privacypolicy/</a></span>
               </li>
             </ul>
           </section>

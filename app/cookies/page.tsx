@@ -124,21 +124,21 @@ export default function CookiesPage() {
             <ul className="list-disc list-inside text-white-200 mb-4 space-y-2">
               <li>Authentication cookies for login sessions</li>
               <li>Firestore connection tokens</li>
-              <li>Privacy Policy: <a href="https://firebase.google.com/support/privacy" className="text-purple underline">Firebase Privacy</a></li>
+              <li>Privacy Policy: <a href="https://firebase.google.com/support/privacy" className="text-purple underline" target="_blank" rel="noopener noreferrer">Firebase Privacy</a></li>
             </ul>
 
             <h3 className="text-xl font-semibold text-white mb-3">4.2 Vercel</h3>
             <ul className="list-disc list-inside text-white-200 mb-4 space-y-2">
               <li>Deployment and hosting cookies</li>
               <li>Analytics and performance monitoring</li>
-              <li>Privacy Policy: <a href="https://vercel.com/legal/privacy-policy" className="text-purple underline">Vercel Privacy</a></li>
+              <li>Privacy Policy: <a href="https://vercel.com/legal/privacy-policy" className="text-purple underline" target="_blank" rel="noopener noreferrer">Vercel Privacy</a></li>
             </ul>
 
             <h3 className="text-xl font-semibold text-white mb-3">4.3 Cloudflare Turnstile</h3>
             <ul className="list-disc list-inside text-white-200 mb-4 space-y-2">
               <li>Bot detection and verification</li>
               <li>Spam prevention cookies</li>
-              <li>Privacy Policy: <a href="https://www.cloudflare.com/privacypolicy/" className="text-purple underline">Cloudflare Privacy</a></li>
+              <li>Privacy Policy: <a href="https://www.cloudflare.com/privacypolicy/" className="text-purple underline" target="_blank" rel="noopener noreferrer">Cloudflare Privacy</a></li>
             </ul>
           </section>
 
