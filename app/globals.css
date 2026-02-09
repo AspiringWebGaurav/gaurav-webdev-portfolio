@@ -364,4 +364,21 @@
   [style*="position: fixed"] {
     will-change: transform;
     transform: translateZ(0);
-  }}
+  }
+
+  /* FLASH PREVENTION: Gate loading containers */
+  .gate-loading-container {
+    background-color: #04071d; /* Matches bg-black-100 */
+    min-height: 100vh;
+    will-change: opacity;
+  }
+
+  /* Smooth transitions between loading states */
+  .gate-transition-enter {
+    opacity: 0;
+  }
+  .gate-transition-enter-active {
+    opacity: 1;
+    transition: opacity 200ms ease-in;
+  }
+}

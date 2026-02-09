@@ -21,15 +21,16 @@ export default function MaintenanceGate({ children }: { children: React.ReactNod
   const router = useRouter();
   const [isChecking, setIsChecking] = useState(true);
   const hasChecked = useRef(false);
+  const isRedirecting = useRef(false); // FLASH FIX: Track redirect state to keep skeleton visible
 
   // Skip maintenance check for these paths
-  const shouldSkipGate = 
-    pathname?.startsWith("/admin") || 
+  const shouldSkipGate =
+    pathname?.startsWith("/admin") ||
     pathname?.startsWith("/banned") ||
     pathname?.startsWith("/maintenance") ||
     !pathname || // 404 - no pathname
     pathname === "/_not-found"; // Next.js internal 404 route
-  
+
   // Skip maintenance blocking on localhost (banner will show status instead)
   const isLocalhostEnv = !isProduction();
 
@@ -39,7 +40,7 @@ export default function MaintenanceGate({ children }: { children: React.ReactNod
       setIsChecking(false);
       return;
     }
-    
+
     // Skip blocking on localhost (banner will show status instead)
     if (isLocalhostEnv) {
       console.log('[Maintenance Gate] Localhost detected - skipping maintenance check');
@@ -69,8 +70,9 @@ export default function MaintenanceGate({ children }: { children: React.ReactNod
 
         if (data.enabled === true) {
           console.log('[Maintenance Gate] 🔧 MAINTENANCE MODE ON - Redirecting to /maintenance');
+          isRedirecting.current = true; // FLASH FIX: Set before redirect to keep skeleton visible
           router.replace('/maintenance');
-          // Keep showing loading state during redirect
+          // Keep isChecking=true during redirect - skeleton stays until browser navigates
           return;
         } else {
           console.log('[Maintenance Gate] ✅ MAINTENANCE OFF - Allowing access');
@@ -87,8 +89,9 @@ export default function MaintenanceGate({ children }: { children: React.ReactNod
     checkMaintenanceStatus();
   }, [pathname, router, shouldSkipGate, isLocalhostEnv]);
 
-  // While checking, show skeleton loader (prevents flash)
-  if (isChecking && !shouldSkipGate) {
+  // While checking OR redirecting, show skeleton loader (prevents flash)
+  // FLASH FIX: Added isRedirecting check to keep skeleton until browser navigates
+  if ((isChecking || isRedirecting.current) && !shouldSkipGate) {
     return <MaintenanceGateSkeleton />;
   }
 

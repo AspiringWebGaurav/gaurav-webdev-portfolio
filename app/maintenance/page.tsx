@@ -67,7 +67,7 @@ function MaintenanceContent() {
     if (transitionFlag === 'true') {
       console.log('[Maintenance Page] Detected curtain transition - coordinating handoff');
       setIsTransitioning(true);
-      
+
       // Clear flag after a moment to signal curtain can fade
       setTimeout(() => {
         sessionStorage.removeItem('maintenanceTransitionActive');
@@ -80,19 +80,19 @@ function MaintenanceContent() {
   // Handle countdown and redirect - defined early with useCallback for use in effects
   const startCountdownRedirect = useCallback(() => {
     if (isRedirecting) return;
-    
+
     console.log('[Maintenance Page] Starting countdown redirect - clearing cache');
     setIsRedirecting(true);
     setShowCountdown(true);
     setCountdownNumber(5); // Start from 5
-    
+
     // Clear browser cache immediately
     if ('caches' in window) {
       caches.keys().then(names => {
         names.forEach(name => caches.delete(name));
       });
     }
-    
+
     // Countdown: 5, 4, 3, 2, 1, then redirect (1 sec per number = 5 sec total)
     setTimeout(() => setCountdownNumber(4), 1000);
     setTimeout(() => setCountdownNumber(3), 2000);
@@ -128,15 +128,15 @@ function MaintenanceContent() {
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible' && !isRedirecting) {
         console.log('[Maintenance Page] Tab became visible - checking current status...');
-        
+
         try {
           // Add timestamp to prevent cache
-          const response = await fetch(`/api/maintenance/status?t=${Date.now()}`, { 
+          const response = await fetch(`/api/maintenance/status?t=${Date.now()}`, {
             cache: 'no-store',
             headers: { 'Cache-Control': 'no-cache' }
           });
           const data = await response.json();
-          
+
           if (data.enabled === false) {
             console.log('[Maintenance Page] Maintenance ended while tab was hidden - redirecting');
             // Clear any cached data
@@ -148,16 +148,16 @@ function MaintenanceContent() {
             window.location.replace('/');
             return;
           }
-          
+
           setLastVisibilityCheck(Date.now());
         } catch (error) {
           console.error('[Maintenance Page] Visibility check error:', error);
         }
       }
     };
-    
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    
+
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
@@ -168,12 +168,12 @@ function MaintenanceContent() {
     const checkStatus = async () => {
       try {
         // Add timestamp to bust cache + no-cache headers
-        const response = await fetch(`/api/maintenance/status?t=${Date.now()}`, { 
+        const response = await fetch(`/api/maintenance/status?t=${Date.now()}`, {
           cache: 'no-store',
           headers: { 'Cache-Control': 'no-cache' }
         });
         const data = await response.json();
-        
+
         if (data.enabled === false) {
           console.log('[Maintenance Page] Maintenance is OFF - redirecting to home');
           setIsRedirecting(true);
@@ -186,13 +186,13 @@ function MaintenanceContent() {
           window.location.replace('/');
           return;
         }
-        
+
         // Calculate estimated end time and check if overdue
         let estimatedEndTime: Date | null = null;
         let isOverdue = false;
         let enabledAt: Date | null = null;
         let overdueBy = 0;
-        
+
         if (data.estimatedDuration && data.enabledAt) {
           enabledAt = new Date(data.enabledAt);
           estimatedEndTime = new Date(enabledAt.getTime() + data.estimatedDuration * 60 * 1000);
@@ -202,7 +202,7 @@ function MaintenanceContent() {
             overdueBy = Math.floor((now.getTime() - estimatedEndTime.getTime()) / (60 * 1000));
           }
         }
-        
+
         setMaintenanceInfo({
           title: data.title || 'Under Maintenance',
           message: data.message || 'We\'ll be back soon!',
@@ -214,14 +214,14 @@ function MaintenanceContent() {
           overdueBy,
           autoEndEnabled: data.autoEndEnabled ?? false,
         });
-        
+
         setCheckingStatus(false);
       } catch (error) {
         console.error('[Maintenance Page] Error checking status:', error);
         setCheckingStatus(false);
       }
     };
-    
+
     checkStatus();
   }, []);
 
@@ -235,18 +235,18 @@ function MaintenanceContent() {
       if (maintenanceInfo.estimatedEndTime && now > maintenanceInfo.estimatedEndTime) {
         const overdueBy = Math.floor((now.getTime() - maintenanceInfo.estimatedEndTime.getTime()) / (60 * 1000));
         setMaintenanceInfo(prev => ({ ...prev, isOverdue: true, overdueBy }));
-        
+
         // ONLY poll API if auto-end is enabled
         // If auto-end is NOT enabled, admin will manually disable via Firestore (real-time listener handles that)
         if (maintenanceInfo.autoEndEnabled) {
           try {
             // Cache-bust with timestamp
-            const response = await fetch(`/api/maintenance/status?t=${Date.now()}`, { 
+            const response = await fetch(`/api/maintenance/status?t=${Date.now()}`, {
               cache: 'no-store',
               headers: { 'Cache-Control': 'no-cache' }
             });
             const data = await response.json();
-            
+
             // If maintenance is now disabled (auto-ended), start redirect
             if (data.enabled === false && !isRedirecting) {
               console.log('[Maintenance Page] Auto-end triggered via API - starting redirect');
@@ -264,7 +264,7 @@ function MaintenanceContent() {
 
     // Run immediately
     checkOverdueAndMaybePollAPI();
-    
+
     // Only set up interval polling if auto-end is enabled
     // Otherwise, we rely on Firestore real-time listener for manual disable
     if (maintenanceInfo.autoEndEnabled) {
@@ -285,7 +285,7 @@ function MaintenanceContent() {
 
     try {
       const docRef = doc(db, COLLECTION, DOC_ID);
-      
+
       unsubscribe = onSnapshot(
         docRef,
         (snapshot) => {
@@ -296,20 +296,20 @@ function MaintenanceContent() {
           }
 
           const data = snapshot.data();
-          
+
           if (data?.enabled === false && !isRedirecting) {
             console.log('[Maintenance Page] Maintenance disabled by admin - starting countdown redirect');
             startCountdownRedirect();
             return;
           }
-          
+
           // Update info if still in maintenance
           if (data?.enabled) {
             let estimatedEndTime: Date | null = null;
             let isOverdue = false;
             let enabledAt: Date | null = null;
             let overdueBy = 0;
-            
+
             if (data.estimatedDuration && data.enabledAt) {
               enabledAt = data.enabledAt.toDate ? data.enabledAt.toDate() : new Date(data.enabledAt);
               estimatedEndTime = new Date(enabledAt.getTime() + data.estimatedDuration * 60 * 1000);
@@ -319,7 +319,7 @@ function MaintenanceContent() {
                 overdueBy = Math.floor((now.getTime() - estimatedEndTime.getTime()) / (60 * 1000));
               }
             }
-            
+
             setMaintenanceInfo({
               title: data.title || 'Under Maintenance',
               message: data.message || 'We\'ll be back soon!',
@@ -401,7 +401,7 @@ function MaintenanceContent() {
 
         {/* Main content */}
         <div className="relative flex flex-col items-center gap-4 sm:gap-5 md:gap-6 px-4">
-          
+
           {/* Success Icon with enhanced animations */}
           <div className="relative">
             {/* Rotating ring */}
@@ -412,7 +412,7 @@ function MaintenanceContent() {
             >
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-green-500" />
             </motion.div>
-            
+
             {/* Outer pulse rings */}
             <motion.div
               className="absolute -inset-2 rounded-full border-2 border-green-500/40"
@@ -432,7 +432,7 @@ function MaintenanceContent() {
               animate={{ scale: 2.6, opacity: 0 }}
               transition={{ duration: 2, repeat: Infinity, ease: "easeOut", delay: 0.8 }}
             />
-            
+
             {/* Main icon container */}
             <motion.div
               initial={{ scale: 0, rotate: -180 }}
@@ -442,14 +442,14 @@ function MaintenanceContent() {
             >
               {/* Inner gradient glow */}
               <div className="absolute inset-3 rounded-full bg-gradient-to-br from-green-400/20 to-transparent blur-md" />
-              
+
               {/* Shine effect */}
               <motion.div
                 className="absolute inset-0 rounded-full bg-gradient-to-tr from-transparent via-white/10 to-transparent"
                 animate={{ rotate: 360 }}
                 transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
               />
-              
+
               {/* Checkmark */}
               <motion.svg
                 className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 text-green-400 relative z-10 drop-shadow-[0_0_10px_rgba(74,222,128,0.5)]"
@@ -529,12 +529,12 @@ function MaintenanceContent() {
                     <div className="relative">
                       {/* Background glow */}
                       <div className="absolute inset-0 bg-purple/20 blur-2xl rounded-full scale-150" />
-                      
+
                       {/* Number container */}
                       <div className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-xl sm:rounded-2xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-purple/30 flex items-center justify-center shadow-xl shadow-purple/20 backdrop-blur-sm">
                         <motion.span
                           className="text-4xl sm:text-5xl md:text-6xl font-bold text-purple drop-shadow-[0_0_30px_rgba(139,92,246,0.6)]"
-                          animate={{ 
+                          animate={{
                             scale: [1, 1.1, 1],
                             textShadow: [
                               "0 0 20px rgba(139,92,246,0.4)",
@@ -548,7 +548,7 @@ function MaintenanceContent() {
                         </motion.span>
                       </div>
                     </div>
-                    
+
                     {/* Loading text with dots animation */}
                     <motion.div
                       className="mt-3 sm:mt-4 flex items-center gap-1 text-white/40 text-xs sm:text-sm"
@@ -571,9 +571,9 @@ function MaintenanceContent() {
                     </motion.div>
                   </div>
                 ) : (
-                  <motion.div 
+                  <motion.div
                     className="flex items-center gap-2 sm:gap-3 px-4 sm:px-6 md:px-8 py-3 sm:py-4 bg-gradient-to-r from-purple/20 via-purple/30 to-purple/20 rounded-lg sm:rounded-xl border border-purple/40 shadow-lg shadow-purple/20"
-                    animate={{ 
+                    animate={{
                       boxShadow: [
                         "0 0 20px rgba(139,92,246,0.2)",
                         "0 0 40px rgba(139,92,246,0.3)",
@@ -668,10 +668,10 @@ function MaintenanceContent() {
       ) : (
         <motion.div
           key="maintenance"
-          initial={{ opacity: isTransitioning ? 1 : 0 }}
+          initial={{ opacity: 1 }} // FLASH FIX: Always start opaque to prevent flash
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: isTransitioning ? 0 : 0.3 }}
+          transition={{ duration: 0.3 }}
         >
           {renderScreen()}
         </motion.div>

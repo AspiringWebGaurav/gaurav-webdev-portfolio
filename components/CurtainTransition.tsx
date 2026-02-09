@@ -28,7 +28,7 @@ const CURTAIN_ICONS = [
 ];
 
 // Animation phases
-type AnimationPhase = 
+type AnimationPhase =
   | "idle"
   | "curtains-closing"
   | "curtains-closed"
@@ -43,10 +43,10 @@ interface CurtainTransitionProps {
   onError?: (error: Error) => void;
 }
 
-export default function CurtainTransition({ 
-  isActive, 
+export default function CurtainTransition({
+  isActive,
   onComplete,
-  onError 
+  onError
 }: CurtainTransitionProps) {
   const router = useRouter();
   const [phase, setPhase] = useState<AnimationPhase>("idle");
@@ -84,29 +84,29 @@ export default function CurtainTransition({
   const handleRedirect = useCallback(async () => {
     try {
       setPhase("redirecting");
-      
+
       // Small delay for visual feedback
       await new Promise(resolve => setTimeout(resolve, 300));
-      
+
       // Set flag to signal maintenance page we're transitioning
       // This prevents flash by keeping curtain visible during navigation
       sessionStorage.setItem('maintenanceTransitionActive', 'true');
       console.log('[CurtainTransition] Set transition flag, redirecting...');
-      
+
       // Attempt redirect
       router.replace("/maintenance");
-      
+
       // DON'T call onComplete immediately - keep curtain visible
       // Maintenance page will clear the flag when it's ready
-      // After 800ms safety timeout, fade out anyway
+      // FLASH FIX: Extended from 800ms to 1500ms for smoother handoff
       setTimeout(() => {
         onComplete?.();
-      }, 800);
+      }, 1500);
     } catch (error) {
       console.error("[CurtainTransition] Redirect error:", error);
       setHasError(true);
       onError?.(error instanceof Error ? error : new Error("Redirect failed"));
-      
+
       // Fallback: force navigation
       setTimeout(() => {
         window.location.href = "/maintenance";
@@ -147,7 +147,7 @@ export default function CurtainTransition({
         console.error("[CurtainTransition] Animation error:", error);
         setHasError(true);
         onError?.(error instanceof Error ? error : new Error("Animation failed"));
-        
+
         // Failsafe: redirect anyway after error
         setTimeout(() => {
           router.replace("/maintenance");
@@ -207,7 +207,7 @@ export default function CurtainTransition({
             <div className="absolute inset-0 bg-grid-white/[0.03]">
               <div className="absolute inset-0 [mask-image:linear-gradient(to_right,black_80%,transparent)]" />
             </div>
-            
+
             {/* Purple spotlight glow on right edge */}
             <motion.div
               className="absolute top-0 right-0 w-32 h-full"
@@ -219,7 +219,7 @@ export default function CurtainTransition({
               }}
               transition={{ duration: 0.3 }}
             />
-            
+
             {/* Particles on left panel */}
             <div className="absolute inset-0 pointer-events-none">
               {[...Array(10)].map((_, i) => (
@@ -262,7 +262,7 @@ export default function CurtainTransition({
             <div className="absolute inset-0 bg-grid-white/[0.03]">
               <div className="absolute inset-0 [mask-image:linear-gradient(to_left,black_80%,transparent)]" />
             </div>
-            
+
             {/* Purple spotlight glow on left edge */}
             <motion.div
               className="absolute top-0 left-0 w-32 h-full"
@@ -274,7 +274,7 @@ export default function CurtainTransition({
               }}
               transition={{ duration: 0.3 }}
             />
-            
+
             {/* Particles on right panel */}
             <div className="absolute inset-0 pointer-events-none">
               {[...Array(10)].map((_, i) => (
@@ -306,7 +306,7 @@ export default function CurtainTransition({
               <motion.div
                 className="absolute top-0 left-1/2 -translate-x-1/2 w-1 h-full"
                 initial={{ opacity: 0, scaleY: 0 }}
-                animate={{ 
+                animate={{
                   opacity: phase === "impact" ? 1 : 0.6,
                   scaleY: 1,
                 }}
@@ -408,7 +408,7 @@ export default function CurtainTransition({
                       animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.4, 0.2] }}
                       transition={{ duration: 2, repeat: Infinity, delay: 0.3 }}
                     />
-                    
+
                     {/* Icon container - Responsive */}
                     <motion.div
                       className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full bg-gradient-to-br from-purple/30 to-blue-600/20 flex items-center justify-center border-2 border-purple/50 shadow-2xl shadow-purple/40"
@@ -439,7 +439,7 @@ export default function CurtainTransition({
                     <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-white via-purple-200 to-white bg-clip-text text-transparent mb-2 sm:mb-3">
                       Entering Maintenance Mode
                     </h2>
-                    <motion.p 
+                    <motion.p
                       className="text-white/50 text-sm sm:text-base"
                       animate={{ opacity: [0.5, 0.8, 0.5] }}
                       transition={{ duration: 2, repeat: Infinity }}
@@ -462,7 +462,7 @@ export default function CurtainTransition({
                         backgroundSize: "200% 100%",
                       }}
                       initial={{ width: "0%" }}
-                      animate={{ 
+                      animate={{
                         width: `${loadingProgress}%`,
                         backgroundPosition: ["0% 0%", "100% 0%"],
                       }}
