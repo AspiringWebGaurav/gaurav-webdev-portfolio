@@ -12,6 +12,8 @@
 
 # testing
 /coverage
+coverage/
+test-results/
 
 # next.js
 /.next/
@@ -19,16 +21,20 @@
 
 # production
 /build
+dist/
 
 # misc
 .DS_Store
 *.pem
+Thumbs.db
 
-# debug
+# debug / logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.log
+logs/
 
 # Environment variables (NEVER commit these)
 .env
@@ -40,7 +46,7 @@ yarn-error.log*
 .env.vercel
 
 # vercel
-.vercel
+.vercel/
 
 # typescript
 *.tsbuildinfo
@@ -71,7 +77,20 @@ firebaseConfig.json
 *_OLD.*
 test-output.txt
 
-# Test results and coverage
-test-results/
-coverage/
-*.log
+# IDE junk
+.idea/
+.vscode/settings.json
+*.swp
+*.swo
+*~
+
+# Firebase emulator files
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+database-debug.log
+
+# Plans and misc (empty dirs)
+/plans
+/misc

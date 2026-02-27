@@ -1,12 +1,11 @@
 /**
- * Suspension Gate Component
+ * Suspension Gate Component - NON-BLOCKING
  * 
- * Blocks ALL routes when suspension is enabled and redirects to /suspended
- * Prevents URL manipulation and bypassing
+ * Checks suspension status in background while portfolio renders.
+ * If suspension enabled: atomic redirect to suspension page.
  * Only allows access to: /suspended, /admin, /banned, /maintenance
- * Acts as a hard lock during suspension mode
  * 
- * FLASH FIX: Uses plain black background instead of spinner to prevent visual flash
+ * Portfolio renders immediately — no blocking black screen.
  */
 
 "use client";
@@ -54,12 +53,8 @@ export default function SuspensionGate({ children }: SuspensionGateProps) {
     }
   }, [status.enabled, isLoading, isAllowedPath, pathname, router]);
 
-  // FLASH FIX: Use plain black background instead of spinner during loading
-  // This prevents the spinner-to-content flash sequence
-  if (isLoading && !isAllowedPath) {
-    return <div className="fixed inset-0 bg-black-100 z-50" />;
-  }
-
+  // NON-BLOCKING: Always render children immediately.
+  // Suspension check runs in background. If active, atomic redirect fires.
   return <>{children}</>;
 }
 

@@ -42,6 +42,7 @@ import ScrollRestoration from "@/hooks/useScrollRestoration";
 import ScrollToTop from "@/components/ScrollToTop";
 
 import BurnPreventionInitializer from "@/components/BurnPreventionInitializer";
+import MicroSpinner from "@/components/MicroSpinner";
 
 import StructuredData from "@/components/StructuredData";
 
@@ -204,6 +205,8 @@ export default function RootLayout({
                                         <LocalMaintenanceBanner />
                                         <AnalyticsHealthMonitor />
                                         <VisitorTracker />
+
+                                        <MicroSpinner />
 
                                         {children}
 

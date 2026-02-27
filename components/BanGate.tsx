@@ -1,18 +1,15 @@
 /**
- * Ban Gate Component - OPTIMIZED
+ * Ban Gate Component - NON-BLOCKING
  * Uses cached identity from BubbleSessionContext (0 duplicate API calls)
  * 
- * BEFORE: 3 Firebase reads (identify-enhanced + check-ban-enhanced)
- * AFTER: 0 Firebase reads (uses BubbleSessionContext cache)
- * 
- * Benefits:
- * - 50% faster load time
- * - 50% fewer Firebase reads
- * - No duplicate API calls
+ * Portfolio renders IMMEDIATELY while verification runs in background.
+ * If banned → atomic redirect to /banned page.
+ * Server-side middleware (proxy.ts) handles first-layer IP ban check.
  * 
  * Security maintained:
+ * - Server-side IP ban check in middleware (blocks before render)
  * - Real-time ban monitoring via BanMonitor
- * - Initial ban check via BubbleSessionContext
+ * - Background identity check via BubbleSessionContext
  * - Fail-safe redirect logic
  */
 
@@ -87,44 +84,21 @@ function BanGateInner({ children }: { children: React.ReactNode }) {
     }
 
     // Not banned - allow through
-    console.log('[Ban Gate] ✅ NOT BANNED - Allowing access (0 duplicate Firebase reads!)');
-  }, [pathname, router, shouldSkipGate, loading, identity]);
+    if (!loading) {
+      console.log('[Ban Gate] ✅ NOT BANNED - Allowing access (0 duplicate Firebase reads!)');
+    }
+  }, [pathname, router, shouldSkipGate, loading, identity, searchParams]);
 
-  // RENDER LOGIC:
-  // 1. Skip gate routes - render children immediately
-  if (shouldSkipGate) {
-    return <>{children}</>;
-  }
-  
-  // 2. While BubbleSessionContext is loading - show loading state
-  if (loading) {
-    return (
-      <div className="fixed inset-0 bg-black-100 flex items-center justify-center z-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-purple border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-white text-sm opacity-70">Verifying access...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // 3. Identity loaded and not banned - render portfolio
+  // NON-BLOCKING: Always render children immediately.
+  // Verification runs in background via useEffect above.
+  // If banned, useEffect triggers atomic redirect to /banned.
   return <>{children}</>;
 }
 
 // Wrapper component with Suspense boundary for useSearchParams()
 export default function BanGate({ children }: { children: React.ReactNode }) {
   return (
-    <Suspense
-      fallback={
-        <div className="fixed inset-0 bg-black-100 flex items-center justify-center z-50">
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-12 h-12 border-4 border-purple border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-white text-sm opacity-70">Verifying access...</p>
-          </div>
-        </div>
-      }
-    >
+    <Suspense fallback={<>{children}</>}>
       <BanGateInner>{children}</BanGateInner>
     </Suspense>
   );
