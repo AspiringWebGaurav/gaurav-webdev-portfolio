@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     const now = Timestamp.now();
     const fpHash = hashFingerprint(fingerprint);
     
-    logger.debug('[IdentifyEnhanced] Processing fingerprint:', fpHash);
+    // Process fingerprint silently
     
     // CRITICAL: Deduplicate by fingerprint to prevent multiple identities
     // from being created when client makes concurrent requests
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
         const preCheckDoc = await fpRef.get();
         
         if (preCheckDoc.exists) {
-          logger.debug('[IdentifyEnhanced] Pre-check: Fingerprint exists, skipping transaction');
+          // Fingerprint exists, skip transaction
           const fpData = preCheckDoc.data()!;
           const visitorRef = adminDb.collection(COLLECTIONS.VISITOR_PROFILES).doc(fpData.uuid);
           const visitorSnap = await visitorRef.get();
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
           };
         }
         
-        logger.debug('[IdentifyEnhanced] Pre-check: New fingerprint, starting transaction');
+        // New fingerprint, starting transaction
         
         // Use transaction to prevent race conditions for NEW visitors only
         return await adminDb.runTransaction(async (transaction) => {
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
           
           if (fpDoc.exists) {
             // Identity was created by another concurrent request - return it
-            logger.debug('[IdentifyEnhanced] Transaction: Fingerprint now exists (concurrent creation)');
+            // Fingerprint now exists (concurrent creation)
             const fpData = fpDoc.data()!;
             const visitorRef = adminDb.collection(COLLECTIONS.VISITOR_PROFILES).doc(fpData.uuid);
             const visitorDoc = await transaction.get(visitorRef);
@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
       const uuid = crypto.randomUUID();
       const mask = `device_${Math.random().toString(36).substring(2, 12)}`;
       
-      logger.debug('[IdentifyEnhanced] Creating new identity:', mask, 'for fingerprint:', fpHash);
+      // Creating new identity
       
       const visitorRef = adminDb.collection(COLLECTIONS.VISITOR_PROFILES).doc(uuid);
       const maskRef = adminDb.collection(COLLECTIONS.MASKS).doc(mask);
@@ -179,7 +179,7 @@ export async function POST(request: NextRequest) {
         createdAt: now,
       });
       
-      logger.debug('[IdentifyEnhanced] ✅ New identity created successfully:', mask);
+      // New identity created successfully
       
       return {
         uuid,
@@ -198,11 +198,7 @@ export async function POST(request: NextRequest) {
   2000 // 2s TTL - prevent concurrent identity creation
 );
 
-    logger.debug('[IdentifyEnhanced] Result:', { 
-      mask: result.mask, 
-      isNew: result.isNewIdentity, 
-      matchedSignal: result.matchedSignal 
-    });
+    // Identity resolved
     
     return NextResponse.json({
       success: true,

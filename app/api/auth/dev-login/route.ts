@@ -291,38 +291,6 @@ export async function POST(request: NextRequest) {
         // Continue in degraded mode
       }
     }
-    // Security Layer 6: Turnstile Captcha Verification (Production mode)
-    if (IS_PRODUCTION && captchaToken) {
-      try {
-        const captchaResponse = await fetch(
-          "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              secret: process.env.TURNSTILE_SECRET_KEY,
-              response: captchaToken
-            })
-          }
-        );
-        
-        const captchaResult = await captchaResponse.json();
-        if (!captchaResult.success) {
-          console.warn("⚠️ Captcha verification failed");
-          return NextResponse.json(
-            { 
-              error: "Captcha verification failed",
-              code: "CAPTCHA_FAILED"
-            },
-            { status: 400 }
-          );
-        }
-        console.log("✅ Captcha verified");
-      } catch (captchaError) {
-        console.error("❌ Captcha error:", captchaError);
-        // Continue without captcha in case of service issues
-      }
-    }
 
     // CREATE CUSTOM TOKEN with retry logic
     let customToken: string | null = null;

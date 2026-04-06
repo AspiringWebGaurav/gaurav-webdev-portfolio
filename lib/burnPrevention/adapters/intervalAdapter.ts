@@ -182,4 +182,4 @@ export function criticalInterval(
   });
 }
 
-console.log('[IntervalAdapter] ✅ Burn Prevention Interval Adapter loaded');
+// Interval Adapter loaded silently

@@ -1,6 +1,8 @@
 /**
  * API routes for project management
  * Supports CRUD operations with Firestore integration
+ * 
+ * 🔥 CACHE-ENABLED: Uses 3-layer cache (Memory → Redis → Firebase)
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -18,6 +20,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { deduplicate } from "@/lib/requestDeduplication";
+import { cacheGet, cacheInvalidate, CACHE_KEYS, CACHE_TTL } from "@/lib/cache";
 import {
   CreateProjectDTO,
   UpdateProjectDTO,
@@ -29,32 +32,53 @@ import {
 const COLLECTION_NAME = "portfolio_projects";
 
 /**
+ * Fetch projects from Firebase (source of truth)
+ */
+async function fetchProjectsFromFirebase() {
+  const projectsRef = collection(db, COLLECTION_NAME);
+  const q = query(projectsRef, orderBy("order", "asc"));
+  const snapshot = await deduplicate(
+    "projects-list",
+    () => getDocs(q),
+    2000
+  );
+
+  return snapshot.docs.map((doc) => {
+    const project = firestoreToProject(doc);
+    return {
+      ...project,
+      createdAt: project.createdAt.toISOString(),
+      updatedAt: project.updatedAt.toISOString(),
+    };
+  });
+}
+
+/**
  * GET - Fetch all projects
+ * 🔥 CACHED: Memory (60s) → Redis (10min) → Firebase
  */
 export async function GET(request: NextRequest) {
   try {
-    const projectsRef = collection(db, COLLECTION_NAME);
-    const q = query(projectsRef, orderBy("order", "asc"));
-    const snapshot = await deduplicate(
-      "projects-list",
-      () => getDocs(q),
-      2000
+    // Check for cache bypass
+    const bypass = request.nextUrl.searchParams.get('nocache') === 'true';
+    
+    // Use 3-layer cache
+    const projects = await cacheGet(
+      CACHE_KEYS.PROJECTS,
+      fetchProjectsFromFirebase,
+      {
+        memoryTTL: CACHE_TTL.MEMORY_LONG,
+        redisTTL: CACHE_TTL.STATIC_CONTENT,
+        bypass,
+      }
     );
-
-    const projects = snapshot.docs.map((doc) => {
-      const project = firestoreToProject(doc);
-      return {
-        ...project,
-        createdAt: project.createdAt.toISOString(),
-        updatedAt: project.updatedAt.toISOString(),
-      };
-    });
 
     return NextResponse.json(
       {
         success: true,
         projects,
         count: projects.length,
+        cached: !bypass,
       },
       { status: 200 }
     );
@@ -134,6 +158,9 @@ export async function POST(request: NextRequest) {
     }
 
     const project = firestoreToProject(docSnapshot);
+
+    // 🔥 Invalidate cache after create
+    await cacheInvalidate(CACHE_KEYS.PROJECTS, 'content');
 
     return NextResponse.json(
       {
@@ -230,6 +257,9 @@ export async function PUT(request: NextRequest) {
 
     const project = firestoreToProject(updatedSnapshot);
 
+    // 🔥 Invalidate cache after update
+    await cacheInvalidate(CACHE_KEYS.PROJECTS, 'content');
+
     return NextResponse.json(
       {
         success: true,
@@ -315,6 +345,9 @@ export async function DELETE(request: NextRequest) {
       // Delete from original collection
       await deleteDoc(projectRef);
 
+      // 🔥 Invalidate cache after soft delete
+      await cacheInvalidate(CACHE_KEYS.PROJECTS, 'content');
+
       return NextResponse.json(
         {
           success: true,
@@ -326,6 +359,9 @@ export async function DELETE(request: NextRequest) {
 
     // Hard delete
     await deleteDoc(projectRef);
+
+    // 🔥 Invalidate cache after hard delete
+    await cacheInvalidate(CACHE_KEYS.PROJECTS, 'content');
 
     return NextResponse.json(
       {

@@ -16,6 +16,7 @@ export interface Session {
   lastActivity: number;
   userAgent?: string;
   ipAddress?: string;
+  fingerprint?: string;
 }
 
 /**
@@ -24,7 +25,7 @@ export interface Session {
 export async function createSession(
   userId: string,
   email: string,
-  metadata?: { userAgent?: string; ipAddress?: string }
+  metadata?: { userAgent?: string; ipAddress?: string; fingerprint?: string }
 ): Promise<string> {
   const sessionId = generateSessionId();
   const now = Date.now();
@@ -38,6 +39,7 @@ export async function createSession(
     lastActivity: now,
     userAgent: metadata?.userAgent,
     ipAddress: metadata?.ipAddress,
+    fingerprint: metadata?.fingerprint,
   };
 
   // Store session in Firebase

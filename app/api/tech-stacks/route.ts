@@ -1,6 +1,8 @@
 /**
  * API routes for tech stack management
  * Supports CRUD operations with Firestore integration
+ * 
+ * 🔥 CACHE-ENABLED: Uses 3-layer cache (Memory → Redis → Firebase)
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -19,6 +21,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { deduplicate } from "@/lib/requestDeduplication";
+import { cacheGet, cacheInvalidate, CACHE_KEYS, CACHE_TTL } from "@/lib/cache";
 import {
   CreateTechStackDTO,
   UpdateTechStackDTO,
@@ -30,32 +33,46 @@ import {
 const COLLECTION_NAME = "portfolio_techStacks";
 
 /**
+ * Fetch tech stacks from Firebase (source of truth)
+ */
+async function fetchTechStacksFromFirebase() {
+  const techStacksRef = collection(db, COLLECTION_NAME);
+  const q = query(techStacksRef, orderBy("order", "asc"));
+  const snapshot = await deduplicate(
+    "tech-stacks-list",
+    () => getDocs(q),
+    2000
+  );
+
+  return snapshot.docs.map((doc) => {
+    const item = firestoreToTechStack(doc);
+    return {
+      ...item,
+      createdAt: item.createdAt.toISOString(),
+      updatedAt: item.updatedAt.toISOString(),
+    };
+  });
+}
+
+/**
  * GET - Fetch all tech stacks
+ * 🔥 CACHED: Memory (60s) → Redis (10min) → Firebase
  */
 export async function GET(request: NextRequest) {
   try {
-    const techStacksRef = collection(db, COLLECTION_NAME);
-    const q = query(techStacksRef, orderBy("order", "asc"));
-    const snapshot = await deduplicate(
-      "tech-stacks-list",
-      () => getDocs(q),
-      2000
-    );
-
-    const items = snapshot.docs.map((doc) => {
-      const item = firestoreToTechStack(doc);
-      return {
-        ...item,
-        createdAt: item.createdAt.toISOString(),
-        updatedAt: item.updatedAt.toISOString(),
-      };
-    });
-
-    // For admin, return all items; for frontend, return only active items
     const searchParams = request.nextUrl.searchParams;
     const adminView = searchParams.get("admin") === "true";
+    const bypass = searchParams.get('nocache') === 'true';
 
-    console.log(`[Tech Stacks API] GET request - adminView: ${adminView}, items count: ${items.length}`);
+    const items = await cacheGet(
+      CACHE_KEYS.TECH_STACKS,
+      fetchTechStacksFromFirebase,
+      {
+        memoryTTL: CACHE_TTL.MEMORY_LONG,
+        redisTTL: CACHE_TTL.STATIC_CONTENT,
+        bypass,
+      }
+    );
 
     if (adminView) {
       return NextResponse.json(
@@ -63,27 +80,24 @@ export async function GET(request: NextRequest) {
           success: true,
           items,
           count: items.length,
+          cached: !bypass,
         },
         { status: 200 }
       );
     } else {
-      const activeItems = items.filter((item) => item.isActive);
+      const activeItems = items.filter((item: any) => item.isActive);
       return NextResponse.json(
         {
           success: true,
           items: activeItems,
           count: activeItems.length,
+          cached: !bypass,
         },
         { status: 200 }
       );
     }
   } catch (error) {
     console.error("[Tech Stacks API] Error fetching tech stacks:", error);
-    console.error("[Tech Stacks API] Error details:", {
-      message: error instanceof Error ? error.message : "Unknown error",
-      stack: error instanceof Error ? error.stack : undefined,
-    });
-    
     return NextResponse.json(
       {
         success: false,

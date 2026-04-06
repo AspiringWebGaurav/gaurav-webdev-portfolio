@@ -1,6 +1,8 @@
 /**
  * API routes for currently working management
  * Supports CRUD operations with Firestore integration
+ * 
+ * 🔥 CACHE-ENABLED: Uses 3-layer cache (Memory → Redis → Firebase)
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -19,6 +21,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { deduplicate } from "@/lib/requestDeduplication";
+import { cacheGet, cacheInvalidate, CACHE_KEYS, CACHE_TTL } from "@/lib/cache";
 import {
   CreateCurrentlyWorkingDTO,
   UpdateCurrentlyWorkingDTO,
@@ -29,30 +32,45 @@ import {
 const COLLECTION_NAME = "portfolio_currentlyWorking";
 
 /**
+ * Fetch currently working from Firebase (source of truth)
+ */
+async function fetchCurrentlyWorkingFromFirebase() {
+  const currentlyWorkingRef = collection(db, COLLECTION_NAME);
+  const snapshot = await deduplicate(
+    "currently-working-list",
+    () => getDocs(currentlyWorkingRef),
+    2000
+  );
+
+  return snapshot.docs.map((doc) => {
+    const item = firestoreToCurrentlyWorking(doc);
+    return {
+      ...item,
+      createdAt: item.createdAt.toISOString(),
+      updatedAt: item.updatedAt.toISOString(),
+    };
+  });
+}
+
+/**
  * GET - Fetch currently working item
- * Only returns the active item for frontend display
+ * 🔥 CACHED: Memory (60s) → Redis (5min) → Firebase
  */
 export async function GET(request: NextRequest) {
   try {
-    const currentlyWorkingRef = collection(db, COLLECTION_NAME);
-    const snapshot = await deduplicate(
-      "currently-working-list",
-      () => getDocs(currentlyWorkingRef),
-      2000
-    );
-
-    const items = snapshot.docs.map((doc) => {
-      const item = firestoreToCurrentlyWorking(doc);
-      return {
-        ...item,
-        createdAt: item.createdAt.toISOString(),
-        updatedAt: item.updatedAt.toISOString(),
-      };
-    });
-
-    // For admin, return all items; for frontend, return only active item
     const searchParams = request.nextUrl.searchParams;
     const adminView = searchParams.get("admin") === "true";
+    const bypass = searchParams.get('nocache') === 'true';
+
+    const items = await cacheGet(
+      CACHE_KEYS.CURRENTLY_WORKING,
+      fetchCurrentlyWorkingFromFirebase,
+      {
+        memoryTTL: CACHE_TTL.MEMORY_LONG,
+        redisTTL: CACHE_TTL.STATIC_CONTENT / 2, // 5 min (changes more often)
+        bypass,
+      }
+    );
 
     if (adminView) {
       return NextResponse.json(
@@ -60,16 +78,17 @@ export async function GET(request: NextRequest) {
           success: true,
           items,
           count: items.length,
+          cached: !bypass,
         },
         { status: 200 }
       );
     } else {
-      // Return only the first active item for frontend
-      const activeItem = items.find((item) => item.isActive);
+      const activeItem = items.find((item: any) => item.isActive);
       return NextResponse.json(
         {
           success: true,
           item: activeItem || null,
+          cached: !bypass,
         },
         { status: 200 }
       );

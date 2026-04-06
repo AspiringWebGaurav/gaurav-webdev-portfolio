@@ -34,12 +34,10 @@ export async function deduplicate<T>(
 
   // If there's a pending request and it's still fresh, return it
   if (existing && (now - existing.timestamp) < ttl) {
-    logger.debug(`[Dedup] Using cached promise for: ${key} (age: ${now - existing.timestamp}ms)`);
     return existing.promise;
   }
 
   // Create new request
-  logger.debug(`[Dedup] Creating new request for: ${key}`);
   const promise = fetcher();
   
   pendingRequests.set(key, {
@@ -54,7 +52,6 @@ export async function deduplicate<T>(
         const current = pendingRequests.get(key);
         if (current && current.timestamp === now) {
           pendingRequests.delete(key);
-          logger.debug(`[Dedup] Cleaned up: ${key}`);
         }
       }, ttl);
     });
@@ -67,7 +64,6 @@ export async function deduplicate<T>(
  */
 export function clearDeduplicationCache(): void {
   pendingRequests.clear();
-  logger.debug('[Dedup] Cache cleared');
 }
 
 /**

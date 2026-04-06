@@ -1,7 +1,7 @@
 /**
- * Ban Appeals Review API Route - SIMPLIFIED
+ * Ban Appeals Review API Route with CACHE INVALIDATION
  * Handles accepting/rejecting ban appeals
- * No automatic recycle bin moves - appeals stay in collection after review
+ * Invalidates cache on review to ensure fresh data
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -9,6 +9,8 @@ import { adminDb, verifyAuth } from "@/lib/firebaseAdmin";
 import { ReviewBanAppealDTO, validateReviewNotes } from "@/types/banAppeal";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { translateMaskToUUID } from "@/lib/uuid-sync/server";
+import { cacheInvalidate, cacheInvalidatePattern } from "@/lib/cache";
+import { ADMIN_CACHE_KEYS } from "@/lib/cache/keys";
 
 const APPEALS_COLLECTION = "banAppeals";
 const VISITORS_COLLECTION = "og_uuid";
@@ -181,6 +183,15 @@ export async function POST(request: NextRequest) {
       createdAt: updatedData?.createdAt?.toDate ? updatedData.createdAt.toDate().toISOString() : updatedData?.createdAt,
       updatedAt: updatedData?.updatedAt?.toDate ? updatedData.updatedAt.toDate().toISOString() : updatedData?.updatedAt,
     };
+
+    // Invalidate ban appeals cache
+    await cacheInvalidate(ADMIN_CACHE_KEYS.BAN_APPEALS, '');
+    
+    // If accepted (visitor unbanned), also invalidate visitors cache
+    if (body.action === "accept") {
+      await cacheInvalidatePattern('admin:visitors');
+      await cacheInvalidatePattern('admin:aggregates');
+    }
 
     return NextResponse.json({
       success: true,

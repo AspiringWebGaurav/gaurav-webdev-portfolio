@@ -13,8 +13,9 @@ export default function PrivacyPage() {
         
         <div className="prose prose-invert max-w-none">
           <p className="text-white-200 mb-6">
-            <strong>Effective Date:</strong> January 9, 2026<br />
-            <strong>Last Updated:</strong> January 9, 2026
+            <strong>Originally Drafted:</strong> January 9, 2026<br />
+            <strong>Last Updated:</strong> April 6, 2026<br />
+            <strong>Version:</strong> 2.0
           </p>
 
           <section className="mb-8">
@@ -101,17 +102,21 @@ export default function PrivacyPage() {
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-white mb-4">5. Data Storage and Security</h2>
             <p className="text-white-200 mb-4">
-              We implement appropriate security measures to protect your information:
+              We implement enterprise-grade security measures to protect your information:
             </p>
             <ul className="list-disc list-inside text-white-200 mb-4 space-y-2">
-              <li>Data encrypted in transit (HTTPS/TLS)</li>
-              <li>Firestore Security Rules for database access control</li>
-              <li>Rate limiting and bot detection to prevent abuse</li>
-              <li>Regular security audits and monitoring</li>
-              <li>Automated backup systems for data preservation</li>
+              <li><strong>Encryption:</strong> All data encrypted in transit (HTTPS/TLS 1.3) and at rest</li>
+              <li><strong>Access Control:</strong> Firestore Security Rules with role-based permissions</li>
+              <li><strong>3-Layer Caching:</strong> Memory → Redis → Firebase architecture minimizes data exposure</li>
+              <li><strong>Rate Limiting:</strong> Multi-tier protection against abuse (20 msg/min chat, 3/hour forms)</li>
+              <li><strong>Bot Detection:</strong> Cloudflare Turnstile + behavioral analysis with 95% accuracy</li>
+              <li><strong>Request Deduplication:</strong> Prevents duplicate data transmissions</li>
+              <li><strong>Audit Logging:</strong> All admin actions logged with timestamps and IP addresses</li>
+              <li><strong>Automated Backups:</strong> Daily database backups with 30-day retention</li>
+              <li><strong>Security Monitoring:</strong> Real-time crash reporting and anomaly detection</li>
             </ul>
             <p className="text-white-200">
-              However, no method of transmission over the Internet is 100% secure. We cannot guarantee absolute security.
+              While we employ industry best practices, no method of transmission over the Internet is 100% secure. We continuously improve our security posture.
             </p>
           </section>
 
@@ -216,9 +221,38 @@ export default function PrivacyPage() {
             </p>
           </section>
 
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold text-white mb-4">14. Data Minimization</h2>
+            <p className="text-white-200 mb-4">
+              We follow the principle of data minimization:
+            </p>
+            <ul className="list-disc list-inside text-white-200 mb-4 space-y-2">
+              <li>We only collect data necessary for service provision</li>
+              <li>Anonymous visitor tracking does not require personal identification</li>
+              <li>Chat sessions auto-expire after 30 days of inactivity</li>
+              <li>Deleted content is permanently removed after 30 days in recycle bin</li>
+              <li>We do not sell, rent, or trade your personal information</li>
+            </ul>
+          </section>
+
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold text-white mb-4">15. Automated Decision Making</h2>
+            <p className="text-white-200 mb-4">
+              Our systems may use automated processing for:
+            </p>
+            <ul className="list-disc list-inside text-white-200 mb-4 space-y-2">
+              <li><strong>Spam Detection:</strong> Automatic filtering of malicious content</li>
+              <li><strong>Bot Prevention:</strong> Behavioral analysis to identify automated access</li>
+              <li><strong>Ban Enforcement:</strong> Automatic temporary bans for policy violations</li>
+            </ul>
+            <p className="text-white-200">
+              You have the right to request human review of any automated decision that affects you. Contact us to appeal any automated action.
+            </p>
+          </section>
+
           <div className="mt-12 pt-8 border-t border-white-200/20">
             <p className="text-white-200 text-sm">
-              This privacy policy was last updated on January 9, 2026. It is designed to comply with GDPR, CCPA, and other applicable data protection regulations.
+              This privacy policy was originally drafted on January 9, 2026 and last updated on April 6, 2026 (Version 2.0). It is designed to comply with GDPR, CCPA, LGPD, and other applicable data protection regulations worldwide.
             </p>
           </div>
         </div>

@@ -326,26 +326,6 @@ export default function SuspensionMonitor({ children }: { children: React.ReactN
         const data = snapshot.data();
         const enabled = data?.enabled === true;
         
-        console.log('[SuspensionMonitor] 📊 Firestore data:', {
-          enabled,
-          autoEndEnabled: data?.autoEndEnabled,
-          reason: data?.reason,
-          wasEnabledRef: wasEnabledRef.current,
-          pathname,
-          shouldSkipMonitor,
-          isRestorationInProgress: isRestorationInProgress.current
-        });
-        
-        console.log('[SuspensionMonitor] 📊 Firestore data:', {
-          enabled,
-          autoEndEnabled: data?.autoEndEnabled,
-          reason: data?.reason,
-          wasEnabledRef: wasEnabledRef.current,
-          pathname,
-          shouldSkipMonitor,
-          isRestorationInProgress: isRestorationInProgress.current
-        });
-
         // AUTO-END DETECTION: Check if auto-end time has passed
         if (enabled && data?.autoEndEnabled === true && data?.autoEndAt && !autoEndCheckTriggered.current) {
           const autoEndTime = data.autoEndAt.toDate();

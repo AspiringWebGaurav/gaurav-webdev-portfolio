@@ -1,6 +1,8 @@
 /**
  * API routes for work experience management
  * Supports CRUD operations with Firestore integration
+ * 
+ * 🔥 CACHE-ENABLED: Uses 3-layer cache (Memory → Redis → Firebase)
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -18,6 +20,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { deduplicate } from "@/lib/requestDeduplication";
+import { cacheGet, cacheInvalidate, CACHE_KEYS, CACHE_TTL } from "@/lib/cache";
 import {
   CreateWorkExperienceDTO,
   UpdateWorkExperienceDTO,
@@ -30,32 +33,51 @@ import {
 const COLLECTION_NAME = "portfolio_workExperience";
 
 /**
+ * Fetch work experiences from Firebase (source of truth)
+ */
+async function fetchWorkExperiencesFromFirebase() {
+  const workExperienceRef = collection(db, COLLECTION_NAME);
+  const q = query(workExperienceRef, orderBy("order", "asc"));
+  const snapshot = await deduplicate(
+    "work-experience-list",
+    () => getDocs(q),
+    2000
+  );
+
+  return snapshot.docs.map((doc) => {
+    const experience = firestoreToWorkExperience(doc);
+    return {
+      ...experience,
+      createdAt: experience.createdAt.toISOString(),
+      updatedAt: experience.updatedAt.toISOString(),
+    };
+  });
+}
+
+/**
  * GET - Fetch all work experiences
+ * 🔥 CACHED: Memory (60s) → Redis (10min) → Firebase
  */
 export async function GET(request: NextRequest) {
   try {
-    const workExperienceRef = collection(db, COLLECTION_NAME);
-    const q = query(workExperienceRef, orderBy("order", "asc"));
-    const snapshot = await deduplicate(
-      "work-experience-list",
-      () => getDocs(q),
-      2000
+    const bypass = request.nextUrl.searchParams.get('nocache') === 'true';
+    
+    const workExperiences = await cacheGet(
+      CACHE_KEYS.WORK_EXPERIENCE,
+      fetchWorkExperiencesFromFirebase,
+      {
+        memoryTTL: CACHE_TTL.MEMORY_LONG,
+        redisTTL: CACHE_TTL.STATIC_CONTENT,
+        bypass,
+      }
     );
-
-    const workExperiences = snapshot.docs.map((doc) => {
-      const experience = firestoreToWorkExperience(doc);
-      return {
-        ...experience,
-        createdAt: experience.createdAt.toISOString(),
-        updatedAt: experience.updatedAt.toISOString(),
-      };
-    });
 
     return NextResponse.json(
       {
         success: true,
         workExperiences,
         count: workExperiences.length,
+        cached: !bypass,
       },
       { status: 200 }
     );

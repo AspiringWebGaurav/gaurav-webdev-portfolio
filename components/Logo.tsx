@@ -41,6 +41,7 @@ export default function Logo({
         height={size}
         priority={variant === "default"}
         className="logo-image"
+        unoptimized
       />
     </div>
   );

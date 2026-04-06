@@ -79,6 +79,9 @@ const aggregatesCache = new Map<string, { data: AnalyticsAggregates; timestamp: 
 const CACHE_TTL = 60000; // 60 seconds
 const pendingRequests = new Map<string, Promise<any>>();
 
+// 🔒 REQUEST DEDUPLICATION - Prevents duplicate visitor fetches
+const pendingVisitorFetch = { promise: null as Promise<void> | null, key: '' };
+
 export function VisitorAnalyticsProvider({ children }: { children: React.ReactNode }) {
   const [visitors, setVisitors] = useState<VisitorProfile[]>([]);
   const [aggregates, setAggregates] = useState<AnalyticsAggregates | null>(null);
@@ -98,7 +101,7 @@ export function VisitorAnalyticsProvider({ children }: { children: React.ReactNo
     MAX_RETRIES: 3,
     BASE_DELAY: 1000, // 1 second
     MAX_DELAY: 10000, // 10 seconds
-    TIMEOUT: 15000, // 15 seconds
+    TIMEOUT: 30000, // 30 seconds (increased for dev mode compilation)
   };
 
   /**
@@ -182,6 +185,13 @@ export function VisitorAnalyticsProvider({ children }: { children: React.ReactNo
       const MAX_RETRIES = 3;
       const RETRY_DELAY = 1000; // 1 second base delay
       
+      // 🔒 REQUEST DEDUPLICATION - Prevent duplicate simultaneous calls
+      const requestKey = JSON.stringify({ ...filters, ...params });
+      if (pendingVisitorFetch.promise && pendingVisitorFetch.key === requestKey) {
+        console.log('🔒 Dedup: Reusing pending visitor fetch');
+        return pendingVisitorFetch.promise;
+      }
+      
       console.log('📊 fetchVisitors called with params:', params, 'retry:', retryCount);
       
       // Only in admin panel
@@ -219,6 +229,9 @@ export function VisitorAnalyticsProvider({ children }: { children: React.ReactNo
       
       console.log('✅ Auth token obtained, proceeding with fetch');
       
+      // Set deduplication lock
+      pendingVisitorFetch.key = requestKey;
+      
       if (!visitors || visitors.length === 0) {
         console.log('🔄 Setting loading state (no existing data)');
         setLoading(true);
@@ -245,7 +258,7 @@ export function VisitorAnalyticsProvider({ children }: { children: React.ReactNo
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`,
           },
-          signal: AbortSignal.timeout(15000), // 15s timeout
+          signal: AbortSignal.timeout(30000), // 30s timeout for dev mode
         });
 
         console.log('📡 Response status:', response.status, response.statusText);
@@ -367,6 +380,11 @@ export function VisitorAnalyticsProvider({ children }: { children: React.ReactNo
         }
       } finally {
         setLoading(false);
+        // Clear deduplication lock
+        if (pendingVisitorFetch.key === requestKey) {
+          pendingVisitorFetch.promise = null;
+          pendingVisitorFetch.key = '';
+        }
         console.log('✅ Fetch complete');
       }
     },
@@ -772,6 +790,8 @@ export function VisitorAnalyticsProvider({ children }: { children: React.ReactNo
         totalResumeViews: 0,
         totalResumeDownloads: 0,
         visitorsWhoDownloaded: 0,
+        totalFormSubmissions: 0,
+        visitorsWhoSubmitted: 0,
         topRegions: [],
         topDevices: [],
         topBrowsers: [],
@@ -843,7 +863,10 @@ export function VisitorAnalyticsProvider({ children }: { children: React.ReactNo
     const isAdminPanel = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
     if (!isAdminPanel) return;
 
-    const pollerId = smartPolling.start(
+    const pollerId = 'visitor-analytics';
+    
+    smartPolling.register(
+      pollerId,
       async () => {
         if (auth.currentUser) {
           await fetchVisitors();
@@ -852,17 +875,20 @@ export function VisitorAnalyticsProvider({ children }: { children: React.ReactNo
       },
       {
         intervals: {
-          realtime: 30000,  // 30s when admin actively viewing analytics
-          active: 120000,   // 2min when admin on page but idle
+          realtime: 60000,  // 60s when admin actively viewing (cache handles freshness)
+          active: 180000,   // 3min when admin on page but idle
           idle: 300000,     // 5min when admin away from analytics
-          background: 0,    // Stop when tab hidden (85% savings!)
+          background: 0,    // Stop when tab hidden
         },
         priority: 'high',
+        stopOnHidden: true,  // Stop polling when tab hidden (100% savings)
+        stopOnIdle: true,    // Stop polling after 3min idle (100% savings)
+        maxIdleTime: 180000, // 3 minutes before considered idle
         tag: 'visitor-analytics',
       }
     );
 
-    return () => smartPolling.stop(pollerId);
+    return () => smartPolling.unregister(pollerId);
   }, [fetchVisitors, fetchAggregatesWithTracking]);
 
   const value: VisitorAnalyticsContextType = {

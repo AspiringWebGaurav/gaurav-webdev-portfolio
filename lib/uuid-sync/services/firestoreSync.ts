@@ -185,25 +185,16 @@ export async function firestoreUpdateLastVisit(uuid: string): Promise<void> {
  */
 export async function firestoreCheckBanStatus(uuid: string): Promise<boolean> {
   try {
-    console.log('[FirestoreSync] Checking ban status for UUID:', uuid);
     
     const docRef = db.collection(COLLECTIONS.VISITOR_PROFILES).doc(uuid);
     const doc = await docRef.get();
 
     if (!doc.exists) {
-      console.log('[FirestoreSync] Document does not exist');
       return false;
     }
 
     const data = doc.data() as VisitorDocument;
     const banned = data.banned === true;
-    
-    console.log('[FirestoreSync] Ban status check result:', {
-      uuid,
-      banned,
-      banReason: data.banReason,
-      rawBanned: data.banned
-    });
     
     return banned;
   } catch (error) {

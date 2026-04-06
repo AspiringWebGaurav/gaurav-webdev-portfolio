@@ -81,12 +81,7 @@ export default function RecycleBinMobile() {
     try {
       const restoredData = await restoreItem(recycleBinId);
       if (!restoredData) {
-        showToast.info(
-          type: "error",
-          title: "Restore Failed",
-          message: "Failed to restore item",
-          duration: 3000,
-        });
+        showToast.error("Failed to restore item", "Restore Failed", { autoClose: 3000 });
         return;
       }
 
@@ -110,76 +105,36 @@ export default function RecycleBinMobile() {
             
             if (submissionResult.success) {
               await refreshSubmissions();
-              showToast.info(
-                type: "success",
-                title: "Restored Successfully",
-                message: "Contact submission restored with original status preserved",
-                duration: 2000,
-              });
+              showToast.success("Contact submission restored with original status preserved", "Restored Successfully", { autoClose: 2000 });
             } else {
-              showToast.info(
-                type: "error",
-                title: "Restore Failed",
-                message: submissionResult.error || "Failed to restore contact submission",
-                duration: 3000,
-              });
+              showToast.error(submissionResult.error || "Failed to restore contact submission", "Restore Failed", { autoClose: 3000 });
             }
             break;
 
           case "project":
             const projectResult = await createProject(restoredData);
             if (projectResult) {
-              showToast.info(
-                type: "success",
-                title: "Restored Successfully",
-                message: "Project restored successfully",
-                duration: 2000,
-              });
+              showToast.success("Project restored successfully", "Restored Successfully", { autoClose: 2000 });
             } else {
-              showToast.info(
-                type: "error",
-                title: "Restore Failed",
-                message: "Failed to restore project",
-                duration: 3000,
-              });
+              showToast.error("Failed to restore project", "Restore Failed", { autoClose: 3000 });
             }
             break;
 
           case "testimonial":
             const testimonialResult = await createTestimonial(restoredData);
             if (testimonialResult) {
-              showToast.info(
-                type: "success",
-                title: "Restored Successfully",
-                message: "Testimonial restored successfully",
-                duration: 2000,
-              });
+              showToast.success("Testimonial restored successfully", "Restored Successfully", { autoClose: 2000 });
             } else {
-              showToast.info(
-                type: "error",
-                title: "Restore Failed",
-                message: "Failed to restore testimonial",
-                duration: 3000,
-              });
+              showToast.error("Failed to restore testimonial", "Restore Failed", { autoClose: 3000 });
             }
             break;
 
           case "workExperience":
             const workExpResult = await createWorkExperience(restoredData);
             if (workExpResult) {
-              showToast.info(
-                type: "success",
-                title: "Restored Successfully",
-                message: "Work experience restored successfully",
-                duration: 2000,
-              });
+              showToast.success("Work experience restored successfully", "Restored Successfully", { autoClose: 2000 });
             } else {
-              showToast.info(
-                type: "error",
-                title: "Restore Failed",
-                message: "Failed to restore work experience",
-                duration: 3000,
-              });
+              showToast.error("Failed to restore work experience", "Restore Failed", { autoClose: 3000 });
             }
             break;
 
@@ -192,51 +147,26 @@ export default function RecycleBinMobile() {
               `todos_${restoredData.userId}`,
               JSON.stringify(todos)
             );
-            showToast.info(
-              type: "success",
-              title: "Restored Successfully",
-              message: "Todo restored successfully",
-              duration: 2000,
-            });
+            showToast.success("Todo restored successfully", "Restored Successfully", { autoClose: 2000 });
             break;
 
           case "timesheet":
           case "time-tracker":
           case "notification":
-            showToast.info(
-              type: "info",
-              title: "Not Implemented",
-              message: `${source} restoration not yet implemented`,
-              duration: 3000,
-            });
+            showToast.info(`${source} restoration not yet implemented`, "Not Implemented", { autoClose: 3000 });
             break;
 
           default:
             console.log("Unknown source type:", source);
-            showToast.info(
-              type: "warning",
-              title: "Unknown Type",
-              message: "Unknown item type",
-              duration: 3000,
-            });
+            showToast.warning("Unknown item type", "Unknown Type", { autoClose: 3000 });
         }
       } catch (error) {
         console.error("Error during item restoration:", error);
-        showToast.info(
-          type: "error",
-          title: "Restoration Warning",
-          message: "Item removed from recycle bin but restoration may have failed",
-          duration: 3000,
-        });
+        showToast.error("Item removed from recycle bin but restoration may have failed", "Restoration Warning", { autoClose: 3000 });
       }
     } catch (error) {
       console.error("Error restoring item:", error);
-      showToast.info(
-        type: "error",
-        title: "Restore Error",
-        message: "Failed to restore item",
-        duration: 3000,
-      });
+      showToast.error("Failed to restore item", "Restore Error", { autoClose: 3000 });
     }
   };
 

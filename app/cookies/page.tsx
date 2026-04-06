@@ -13,8 +13,9 @@ export default function CookiesPage() {
         
         <div className="prose prose-invert max-w-none">
           <p className="text-white-200 mb-6">
-            <strong>Effective Date:</strong> January 9, 2026<br />
-            <strong>Last Updated:</strong> January 9, 2026
+            <strong>Originally Drafted:</strong> January 9, 2026<br />
+            <strong>Last Updated:</strong> April 6, 2026<br />
+            <strong>Version:</strong> 2.0
           </p>
 
           <section className="mb-8">
@@ -71,10 +72,23 @@ export default function CookiesPage() {
               These protect against abuse and security threats:
             </p>
             <ul className="list-disc list-inside text-white-200 mb-4 space-y-2">
-              <li><strong>Ban Detection:</strong> Checking visitor ban status</li>
-              <li><strong>Spam Prevention:</strong> Rate limit counters, submission history</li>
-              <li><strong>Bot Detection:</strong> Cloudflare Turnstile verification</li>
+              <li><strong>Ban Detection:</strong> Real-time visitor ban status verification</li>
+              <li><strong>Spam Prevention:</strong> Multi-tier rate limit counters (20 msg/min, 3 forms/hour)</li>
+              <li><strong>Bot Detection:</strong> Cloudflare Turnstile + behavioral analysis</li>
+              <li><strong>Request Deduplication:</strong> Prevents duplicate submissions</li>
               <li><strong>Maintenance Mode:</strong> Bypass tokens for authorized users</li>
+              <li><strong>Cache Invalidation:</strong> Ensures data consistency across sessions</li>
+            </ul>
+
+            <h3 className="text-xl font-semibold text-white mb-3">2.5 Performance Cookies</h3>
+            <p className="text-white-200 mb-4">
+              These optimize website performance:
+            </p>
+            <ul className="list-disc list-inside text-white-200 mb-4 space-y-2">
+              <li><strong>3-Layer Cache:</strong> Memory → Redis → Firebase for fast responses</li>
+              <li><strong>Stale-While-Revalidate:</strong> Serves cached content while refreshing</li>
+              <li><strong>Smart Polling:</strong> Adaptive intervals based on user activity</li>
+              <li><strong>Event Batching:</strong> Groups analytics events for efficiency</li>
             </ul>
           </section>
 
@@ -219,9 +233,23 @@ export default function CookiesPage() {
             </ul>
           </section>
 
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold text-white mb-4">10. Data Protection</h2>
+            <p className="text-white-200 mb-4">
+              We protect cookie and storage data through:
+            </p>
+            <ul className="list-disc list-inside text-white-200 mb-4 space-y-2">
+              <li><strong>Encryption:</strong> Sensitive tokens encrypted before storage</li>
+              <li><strong>HttpOnly Flags:</strong> Critical cookies inaccessible to JavaScript</li>
+              <li><strong>Secure Flags:</strong> Cookies only transmitted over HTTPS</li>
+              <li><strong>SameSite Policy:</strong> Protection against CSRF attacks</li>
+              <li><strong>Auto-Expiration:</strong> Cookies automatically expire after set periods</li>
+            </ul>
+          </section>
+
           <div className="mt-12 pt-8 border-t border-white-200/20">
             <p className="text-white-200 text-sm">
-              This cookie policy is designed to provide transparency about our data practices and comply with GDPR, CCPA, and other applicable regulations.
+              This cookie policy was originally drafted on January 9, 2026 and last updated on April 6, 2026 (Version 2.0). It is designed to provide transparency about our data practices and comply with GDPR, CCPA, ePrivacy Directive, and other applicable regulations.
             </p>
           </div>
         </div>

@@ -48,6 +48,7 @@ import StructuredData from "@/components/StructuredData";
 
 // Vercel Analytics
 import { Analytics } from "@vercel/analytics/react";
+import Script from "next/script";
 
 import FingerprintInitializer from "@/components/FingerprintInitializer";
 
@@ -170,6 +171,13 @@ export default function RootLayout({
       style={{ colorScheme: "dark" }}
       suppressHydrationWarning
     >
+      <head>
+        {/* Switchyy - Real-time Mode Control */}
+        <Script
+          src="https://switchyy.vercel.app/switchy.js?key=pk_82d753f52d87afc2a1b68be4&project=UPTGQBddskwEThb3d3YN"
+          strategy="beforeInteractive"
+        />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <StructuredData />
 

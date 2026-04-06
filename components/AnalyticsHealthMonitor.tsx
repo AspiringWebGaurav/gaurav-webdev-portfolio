@@ -27,12 +27,11 @@ export default function AnalyticsHealthMonitor() {
   const [metrics, setMetrics] = useState<HealthMetrics | null>(null);
   const [isVisible, setIsVisible] = useState(false);
 
-  // Skip monitoring on 404 pages
-  if (!pathname || pathname === '/_not-found') {
-    return null;
-  }
+  // Check if should skip (404 pages)
+  const shouldSkip = !pathname || pathname === '/_not-found';
 
   useEffect(() => {
+    if (shouldSkip) return;
     // Update metrics every 5 seconds using burn-aware interval
     const updateMetrics = () => {
       const analytics = getAnalyticsReliability();
@@ -69,7 +68,10 @@ export default function AnalyticsHealthMonitor() {
       cleanup(); // Cleanup burn-aware interval
       window.removeEventListener('keydown', handleKeyPress);
     };
-  }, []);
+  }, [shouldSkip]);
+
+  // Skip rendering on 404 pages
+  if (shouldSkip) return null;
 
   if (!isVisible || !metrics) return null;
 

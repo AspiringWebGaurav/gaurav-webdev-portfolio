@@ -15,6 +15,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminDb, verifyAuth } from "@/lib/firebaseAdmin";
 import { Timestamp, FieldValue } from "firebase-admin/firestore";
 import { translateMaskToUUID } from "@/lib/uuid-sync/server";
+import { cacheInvalidatePattern } from "@/lib/cache";
 
 const VISITORS_COLLECTION = "og_uuid";
 const BAN_LOGS_COLLECTION = "banLogs";
@@ -338,6 +339,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<BanRespon
     }
 
     console.log(`[Ban API] ✅ Visitor ${resolvedMask || uuid.substring(0, 13)} banned successfully (${duration}ms)`);
+
+    // Invalidate visitors and aggregates cache
+    await cacheInvalidatePattern('admin:visitors');
+    await cacheInvalidatePattern('admin:aggregates');
 
     return NextResponse.json({
       success: true,

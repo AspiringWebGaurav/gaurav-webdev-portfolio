@@ -162,23 +162,29 @@ export const BanAppealsProvider: React.FC<BanAppealsProviderProps> = ({
     loadAppeals();
 
     // Smart polling - only poll when admin is viewing dashboard
-    const pollerId = smartPolling.start(
+    const pollerId = 'ban-appeals';
+    
+    smartPolling.register(
+      pollerId,
       async () => {
         await loadAppeals(false); // Silent background refresh
       },
       {
         intervals: {
-          realtime: 10000,  // 10s when admin actively managing appeals
-          active: 60000,    // 1min when admin on page but idle
+          realtime: 30000,  // 30s (cache handles freshness)
+          active: 90000,    // 90s when admin on page but idle
           idle: 180000,     // 3min when admin away from page
-          background: 0,    // Stop when tab hidden (80% cost savings!)
+          background: 0,    // Stop when tab hidden
         },
         priority: 'high',
+        stopOnHidden: true,  // Stop polling when tab hidden (100% savings)
+        stopOnIdle: true,    // Stop polling after 2min idle
+        maxIdleTime: 120000, // 2 minutes before considered idle
         tag: 'ban-appeals',
       }
     );
 
-    return () => smartPolling.stop(pollerId);
+    return () => smartPolling.unregister(pollerId);
   }, [loadAppeals]);
 
   /**

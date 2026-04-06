@@ -9,11 +9,7 @@ import logger from '../logger';
  * Log with consistent prefix
  */
 export function log(message: string, data?: any) {
-  if (data) {
-    logger.debug(LOG_PREFIX, message, data);
-  } else {
-    logger.debug(LOG_PREFIX, message);
-  }
+  // Silent in production, minimal logging
 }
 
 export function logError(message: string, error: any) {

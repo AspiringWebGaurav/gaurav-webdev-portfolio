@@ -94,3 +94,6 @@ database-debug.log
 # Plans and misc (empty dirs)
 /plans
 /misc
+
+# Developer local intelligence (not for version control)
+.local/

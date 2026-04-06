@@ -1,6 +1,10 @@
 /**
- * API routes for bug report management
- * Supports CRUD operations with Firestore integration and attachment handling
+ * API routes for bug report management with 3-LAYER CACHE + SWR
+ * 
+ * GET    - Fetch bug reports - CACHED (1min TTL)
+ * POST   - Create bug report
+ * PATCH  - Update bug report - INVALIDATES CACHE
+ * DELETE - Delete bug report - INVALIDATES CACHE
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -20,6 +24,8 @@ import {
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
 import { deduplicate } from "@/lib/requestDeduplication";
+import { cacheGetSWR, cacheInvalidate } from "@/lib/cache";
+import { ADMIN_CACHE_KEYS, ADMIN_CACHE_TTL } from "@/lib/cache/keys";
 import {
   CreateBugReportDTO,
   UpdateBugReportDTO,
@@ -174,14 +180,15 @@ async function uploadAttachment(
 
 /**
  * GET /api/bug-reports
- * Fetch all bug reports (admin only) or single report by ID
+ * Fetch all bug reports with 3-LAYER CACHE + SWR
  */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const reportId = searchParams.get("id");
+    const bypassCache = searchParams.get("nocache") === "true";
 
-    // Fetch single report
+    // Fetch single report (no cache for individual reports)
     if (reportId) {
       const docRef = doc(db, COLLECTION_NAME, reportId);
       const docSnap = await getDoc(docRef);
@@ -197,24 +204,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: true, bugReport });
     }
 
-    // Fetch all reports (admin only - add auth check here if needed)
-    const reportsRef = collection(db, COLLECTION_NAME);
-    const q = query(reportsRef, orderBy("createdAt", "desc"));
-    
-    // Use deduplication to prevent rapid-fire duplicate calls
-    const snapshot = await deduplicate(
-      "bug-reports-list",
-      () => getDocs(q),
-      2000 // 2s TTL window
+    // Fetch all reports with 3-layer cache + SWR
+    const responseData = await cacheGetSWR(
+      ADMIN_CACHE_KEYS.BUG_REPORTS,
+      fetchBugReportsFromFirebase,
+      {
+        prefix: '',
+        memoryTTL: ADMIN_CACHE_TTL.BUG_REPORTS_MEMORY,
+        redisTTL: ADMIN_CACHE_TTL.BUG_REPORTS,
+        bypass: bypassCache,
+      }
     );
 
-    const bugReports = snapshot.docs.map((doc) => firestoreToBugReport(doc));
-
-    return NextResponse.json({
-      success: true,
-      bugReports,
-      count: bugReports.length,
-    });
+    return NextResponse.json(responseData);
   } catch (error: any) {
     console.error("Error fetching bug reports:", error);
     return NextResponse.json(
@@ -222,6 +224,28 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+/**
+ * Fetch bug reports from Firebase (called on cache miss)
+ */
+async function fetchBugReportsFromFirebase() {
+  const reportsRef = collection(db, COLLECTION_NAME);
+  const q = query(reportsRef, orderBy("createdAt", "desc"));
+  
+  const snapshot = await deduplicate(
+    "bug-reports-list",
+    () => getDocs(q),
+    2000
+  );
+
+  const bugReports = snapshot.docs.map((doc) => firestoreToBugReport(doc));
+
+  return {
+    success: true,
+    bugReports,
+    count: bugReports.length,
+  };
 }
 
 /**
@@ -426,6 +450,9 @@ export async function PATCH(request: NextRequest) {
 
     await updateDoc(docRef, updateData);
 
+    // Invalidate cache BEFORE returning response
+    await cacheInvalidate(ADMIN_CACHE_KEYS.BUG_REPORTS, '');
+
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error("Error updating bug report:", error);
@@ -510,6 +537,9 @@ export async function DELETE(request: NextRequest) {
 
     // Delete document
     await deleteDoc(docRef);
+
+    // Invalidate cache BEFORE returning response
+    await cacheInvalidate(ADMIN_CACHE_KEYS.BUG_REPORTS, '');
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

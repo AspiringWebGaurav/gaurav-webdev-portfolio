@@ -163,23 +163,29 @@ export function BugReportProvider({ children }: { children: React.ReactNode }) {
     // Only poll on admin pages
     if (!isAdminPage) return;
 
-    const pollerId = smartPolling.start(
+    const pollerId = 'bug-reports';
+    
+    smartPolling.register(
+      pollerId,
       async () => {
         await fetchBugReports(false); // Silent refresh
       },
       {
         intervals: {
-          realtime: 15000,  // 15s when admin actively managing bugs
-          active: 60000,    // 1min when admin on page but idle
-          idle: 180000,     // 3min when admin away
-          background: 0,    // Stop when tab hidden (80% savings!)
+          realtime: 45000,  // 45s (cache handles freshness)
+          active: 180000,   // 3min when admin on page but idle
+          idle: 300000,     // 5min when admin away
+          background: 0,    // Stop when tab hidden
         },
         priority: 'high',
+        stopOnHidden: true,  // Stop polling when tab hidden (100% savings)
+        stopOnIdle: true,    // Stop polling after 3min idle
+        maxIdleTime: 180000, // 3 minutes before considered idle
         tag: 'bug-reports',
       }
     );
 
-    return () => smartPolling.stop(pollerId);
+    return () => smartPolling.unregister(pollerId);
   }, [fetchBugReports, isAdminPage]);
 
   /**

@@ -32,17 +32,13 @@ export default function ImageSlideshow({
   const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
   const [imageLoading, setImageLoading] = useState<Set<number>>(new Set());
 
-  // Debug logging
-  console.log('ImageSlideshow received:', { images, alt, imagesType: typeof images, isArray: Array.isArray(images) });
-
-  // Handle single or no images
-  if (!images || images.length === 0) {
-    console.warn('ImageSlideshow: No images provided');
-    return null;
-  }
+  // Determine render mode
+  const hasNoImages = !images || images.length === 0;
+  const isSingleImage = images && images.length === 1;
 
   // Handle image load error
   const handleImageError = useCallback((index: number) => {
+    if (hasNoImages) return;
     console.warn(`Failed to load image at index ${index}: ${images[index]}`);
     setImageErrors(prev => new Set(prev).add(index));
     setImageLoading(prev => {
@@ -50,7 +46,7 @@ export default function ImageSlideshow({
       next.delete(index);
       return next;
     });
-  }, [images]);
+  }, [images, hasNoImages]);
 
   // Handle image load success
   const handleImageLoad = useCallback((index: number) => {
@@ -61,8 +57,34 @@ export default function ImageSlideshow({
     });
   }, []);
 
+  // Manual navigation
+  const goToSlide = useCallback((index: number) => {
+    setCurrentIndex(index);
+  }, []);
+
+  // Auto-advance slideshow with smooth transitions
+  useEffect(() => {
+    // Skip if no images or single image
+    if (hasNoImages || isSingleImage) return;
+
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % images.length);
+    }, interval);
+
+    return () => clearInterval(timer);
+  }, [images?.length, interval, hasNoImages, isSingleImage]);
+
+  // Debug logging
+  console.log('ImageSlideshow received:', { images, alt, imagesType: typeof images, isArray: Array.isArray(images) });
+
+  // Handle no images
+  if (hasNoImages) {
+    console.warn('ImageSlideshow: No images provided');
+    return null;
+  }
+
   // If only one image, show it without slideshow
-  if (images.length === 1) {
+  if (isSingleImage) {
     return (
       <div className="relative w-full h-full">
         <Image
@@ -84,20 +106,6 @@ export default function ImageSlideshow({
       </div>
     );
   }
-
-  // Auto-advance slideshow with smooth transitions
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % images.length);
-    }, interval);
-
-    return () => clearInterval(timer);
-  }, [images.length, interval]);
-
-  // Manual navigation
-  const goToSlide = useCallback((index: number) => {
-    setCurrentIndex(index);
-  }, []);
 
   return (
     <div className="relative w-full h-full overflow-hidden">

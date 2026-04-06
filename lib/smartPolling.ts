@@ -73,8 +73,19 @@ class SmartPollingManager {
       logger.debug('[SmartPolling] 👁️ Visibility:', this.documentVisible ? 'VISIBLE' : 'HIDDEN');
       
       if (wasHidden && this.documentVisible) {
-        // Tab became visible - instant poll all critical pollers
-        logger.debug('[SmartPolling] ⚡ Tab focused - instant poll');
+        // Tab became visible - resume paused pollers and instant poll
+        logger.debug('[SmartPolling] ⚡ Tab focused - resuming and instant poll');
+        
+        // Resume any pollers that were paused due to hidden tab
+        this.timers.forEach((timer, id) => {
+          if (timer.mode === 'paused' && timer.options.stopOnHidden) {
+            timer.mode = 'active';
+            timer.isRunning = true;
+            this.updatePoller(id);
+          }
+        });
+        
+        // Instant poll critical and high priority pollers
         this.timers.forEach((timer, id) => {
           if (timer.priority === 'critical' || timer.priority === 'high') {
             this.trigger(id);
@@ -307,6 +318,31 @@ class SmartPollingManager {
       this.updatePoller(id);
       console.log(`[SmartPolling] 🔄 ${timer.options.tag}: ${oldMode} → ${mode}`);
     }
+  }
+
+  /**
+   * Trigger ALL pollers immediately (for tab focus refetch)
+   * Useful when tab becomes visible after being hidden
+   */
+  triggerAll(): void {
+    this.timers.forEach((timer, id) => {
+      if (timer.isRunning && timer.mode !== 'paused') {
+        this.trigger(id);
+      }
+    });
+  }
+
+  /**
+   * Resume all paused pollers (for tab focus)
+   */
+  resumeAll(): void {
+    this.timers.forEach((timer, id) => {
+      if (timer.mode === 'paused' && timer.options.stopOnHidden) {
+        timer.mode = 'active';
+        timer.isRunning = true;
+        this.updatePoller(id);
+      }
+    });
   }
 
   /**

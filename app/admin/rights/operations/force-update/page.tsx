@@ -28,7 +28,7 @@ interface ErrorDetails {
   suggestedAction?: string;
 }
 
-interface BroadcastResult extends BatchUpdateResult {}
+type BroadcastResult = BatchUpdateResult;
 
 interface AuditLog {
   timestamp: number;

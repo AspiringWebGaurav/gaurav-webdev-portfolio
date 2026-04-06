@@ -1,6 +1,9 @@
 /**
- * Ban Appeals API Routes - SIMPLIFIED
- * No complex history tracking, rate limiting, or automatic recycle bin moves
+ * Ban Appeals API Routes with 3-LAYER CACHE + SWR
+ * 
+ * GET    - Fetch all appeals - CACHED (30s TTL)
+ * POST   - Create new appeal
+ * DELETE - Delete appeal - INVALIDATES CACHE
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -13,38 +16,31 @@ import {
   MAX_BAN_APPEALS
 } from "@/types/banAppeal";
 import { identifyVisitor, getIdentityResult, translateMaskToUUID } from "@/lib/uuid-sync/server";
+import { cacheGetSWR, cacheInvalidate } from "@/lib/cache";
+import { ADMIN_CACHE_KEYS, ADMIN_CACHE_TTL } from "@/lib/cache/keys";
 
 const COLLECTION_NAME = "banAppeals";
 
 /**
- * GET - Fetch all ban appeals
+ * GET - Fetch all ban appeals with 3-LAYER CACHE + SWR
  */
 export async function GET(request: NextRequest) {
   try {
-    const appealsRef = adminDb.collection(COLLECTION_NAME);
-    const snapshot = await appealsRef.orderBy("createdAt", "desc").get();
+    const { searchParams } = new URL(request.url);
+    const bypassCache = searchParams.get("nocache") === "true";
 
-    const appeals: BanAppeal[] = snapshot.docs.map((doc) => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        mask: data.mask,
-        appealReason: data.appealReason,
-        banReason: data.banReason,
-        banCategory: data.banCategory,
-        status: data.status || "pending",
-        reviewedBy: data.reviewedBy,
-        reviewedAt: data.reviewedAt?.toDate ? data.reviewedAt.toDate().toISOString() : data.reviewedAt,
-        reviewNotes: data.reviewNotes,
-        createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : data.createdAt,
-        updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : data.updatedAt,
-      };
-    });
+    const responseData = await cacheGetSWR(
+      ADMIN_CACHE_KEYS.BAN_APPEALS,
+      fetchBanAppealsFromFirebase,
+      {
+        prefix: '',
+        memoryTTL: ADMIN_CACHE_TTL.BAN_APPEALS_MEMORY,
+        redisTTL: ADMIN_CACHE_TTL.BAN_APPEALS,
+        bypass: bypassCache,
+      }
+    );
 
-    return NextResponse.json({
-      success: true,
-      data: appeals,
-    });
+    return NextResponse.json(responseData);
   } catch (error: any) {
     console.error("[Ban Appeals API] Error fetching appeals:", error);
     return NextResponse.json(
@@ -55,6 +51,36 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+/**
+ * Fetch ban appeals from Firebase (called on cache miss)
+ */
+async function fetchBanAppealsFromFirebase() {
+  const appealsRef = adminDb.collection(COLLECTION_NAME);
+  const snapshot = await appealsRef.orderBy("createdAt", "desc").get();
+
+  const appeals: BanAppeal[] = snapshot.docs.map((doc) => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      mask: data.mask,
+      appealReason: data.appealReason,
+      banReason: data.banReason,
+      banCategory: data.banCategory,
+      status: data.status || "pending",
+      reviewedBy: data.reviewedBy,
+      reviewedAt: data.reviewedAt?.toDate ? data.reviewedAt.toDate().toISOString() : data.reviewedAt,
+      reviewNotes: data.reviewNotes,
+      createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : data.createdAt,
+      updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : data.updatedAt,
+    };
+  });
+
+  return {
+    success: true,
+    data: appeals,
+  };
 }
 
 /**
@@ -240,6 +266,9 @@ export async function DELETE(request: NextRequest) {
     }
 
     await docRef.delete();
+
+    // Invalidate cache BEFORE returning response
+    await cacheInvalidate(ADMIN_CACHE_KEYS.BAN_APPEALS, '');
 
     return NextResponse.json({
       success: true,

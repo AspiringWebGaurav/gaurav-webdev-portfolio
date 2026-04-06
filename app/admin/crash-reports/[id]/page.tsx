@@ -186,7 +186,7 @@ export default function CrashReportDetailPage() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Screenshot at Crash Time</h3>
                 {report.screenshot?.url ? (
                   <div className="relative bg-gray-100 rounded-lg overflow-hidden">
-                    <Image
+                    <NextImage
                       src={report.screenshot.url}
                       alt="Crash Screenshot"
                       width={1200}

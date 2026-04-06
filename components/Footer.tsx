@@ -204,6 +204,7 @@ const Footer = () => {
                 width={20}
                 height={20}
                 loading="lazy"
+                unoptimized
               />
             </div>
           ))}

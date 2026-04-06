@@ -1,17 +1,23 @@
 /**
- * Crash Reports API Route
- * Handles CRUD operations for crash reports
+ * Crash Reports API Route with 3-LAYER CACHE + SWR
  * 
- * GET    - Fetch all crash reports (admin only)
+ * GET    - Fetch all crash reports (admin only) - CACHED
  * POST   - Create new crash report (public, rate-limited)
- * PATCH  - Update crash report (admin only)
- * DELETE - Delete crash report (admin only)
+ * PATCH  - Update crash report (admin only) - INVALIDATES CACHE
+ * DELETE - Delete crash report (admin only) - INVALIDATES CACHE
+ * 
+ * Cache Strategy:
+ * - Memory (15s) → Redis (30s) → Firebase
+ * - SWR for instant response
+ * - Auto-invalidation on mutations
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import admin from "firebase-admin";
 import { adminDb, verifyAuth } from "@/lib/firebaseAdmin";
 import { CreateCrashReportDTO, CrashReport } from "@/crash-report-mechanism/types/crashReport";
+import { cacheGetSWR, cacheInvalidate } from "@/lib/cache";
+import { ADMIN_CACHE_KEYS, ADMIN_CACHE_TTL } from "@/lib/cache/keys";
 
 const COLLECTION = "crashReports";
 const Timestamp = admin.firestore.Timestamp; // Use admin Timestamp, not client
@@ -30,19 +36,15 @@ function generateHash(input: string): string {
 }
 
 /**
- * GET - Fetch all crash reports
+ * GET - Fetch all crash reports with 3-LAYER CACHE + SWR
  * Admin authentication required
  */
 export async function GET(request: NextRequest) {
-  console.log('[API] 🔍 GET /api/crash-reports - Request received');
-  
   try {
     // Verify admin authentication
     const authHeader = request.headers.get("authorization");
-    console.log('[API] 🔐 Auth header present:', !!authHeader);
     
     if (!authHeader) {
-      console.log('[API] ❌ No authorization header');
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
@@ -50,58 +52,32 @@ export async function GET(request: NextRequest) {
     }
 
     const token = authHeader.replace("Bearer ", "");
-    console.log('[API] 🎫 Token extracted, verifying...');
-    
     const decodedToken = await verifyAuth(token);
 
     if (!decodedToken) {
-      console.log('[API] ❌ Token verification failed');
       return NextResponse.json(
         { success: false, error: "Invalid token" },
         { status: 401 }
       );
     }
 
-    console.log(`[API] ✅ Admin authenticated: ${decodedToken.email}`);
-    console.log('[API] 📊 Fetching crash reports from Firestore...');
+    // Check for cache bypass
+    const { searchParams } = new URL(request.url);
+    const bypassCache = searchParams.get("nocache") === "true";
 
-    // Fetch crash reports from Firestore
-    const reportsRef = adminDb.collection(COLLECTION);
-    const snapshot = await reportsRef
-      .orderBy("createdAt", "desc")
-      .limit(100) // Pagination limit
-      .get();
+    // Use 3-layer cache with SWR
+    const responseData = await cacheGetSWR(
+      ADMIN_CACHE_KEYS.CRASH_REPORTS,
+      fetchCrashReportsFromFirebase,
+      {
+        prefix: '',
+        memoryTTL: ADMIN_CACHE_TTL.CRASH_REPORTS_MEMORY,
+        redisTTL: ADMIN_CACHE_TTL.CRASH_REPORTS,
+        bypass: bypassCache,
+      }
+    );
 
-    const reports = snapshot.docs.map((doc) => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        ...data,
-        // Convert Firestore Timestamps to ISO strings
-        createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-        updatedAt: data.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-        firstSeen: data.firstSeen?.toDate?.()?.toISOString() || new Date().toISOString(),
-        lastSeen: data.lastSeen?.toDate?.()?.toISOString() || new Date().toISOString(),
-        resolvedAt: data.resolvedAt?.toDate?.()?.toISOString(),
-        timestamp: data.timestamp?.toDate?.()?.toISOString() || new Date().toISOString(),
-        screenshot: data.screenshot ? {
-          ...data.screenshot,
-          capturedAt: data.screenshot.capturedAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-        } : null,
-        adminNotes: (data.adminNotes || []).map((note: any) => ({
-          ...note,
-          createdAt: note.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-        })),
-      };
-    });
-
-    console.log(`[API] ✅ Returned ${reports.length} crash reports`);
-
-    return NextResponse.json({
-      success: true,
-      reports,
-      count: reports.length,
-    });
+    return NextResponse.json(responseData);
 
   } catch (error: any) {
     console.error("[API] Error fetching crash reports:", error);
@@ -110,6 +86,45 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+/**
+ * Fetch crash reports from Firebase (called on cache miss)
+ */
+async function fetchCrashReportsFromFirebase() {
+  const reportsRef = adminDb.collection(COLLECTION);
+  const snapshot = await reportsRef
+    .orderBy("createdAt", "desc")
+    .limit(100)
+    .get();
+
+  const reports = snapshot.docs.map((doc) => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      ...data,
+      createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+      updatedAt: data.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+      firstSeen: data.firstSeen?.toDate?.()?.toISOString() || new Date().toISOString(),
+      lastSeen: data.lastSeen?.toDate?.()?.toISOString() || new Date().toISOString(),
+      resolvedAt: data.resolvedAt?.toDate?.()?.toISOString(),
+      timestamp: data.timestamp?.toDate?.()?.toISOString() || new Date().toISOString(),
+      screenshot: data.screenshot ? {
+        ...data.screenshot,
+        capturedAt: data.screenshot.capturedAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+      } : null,
+      adminNotes: (data.adminNotes || []).map((note: any) => ({
+        ...note,
+        createdAt: note.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+      })),
+    };
+  });
+
+  return {
+    success: true,
+    reports,
+    count: reports.length,
+  };
 }
 
 /**
@@ -290,8 +305,6 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    console.log(`[API] Updating crash report ${id} by ${decodedToken.email}`);
-
     // Add resolved metadata if status is being set to resolved
     if (updates.status === "resolved" && !updates.resolvedAt) {
       updates.resolvedAt = Timestamp.now();
@@ -304,7 +317,8 @@ export async function PATCH(request: NextRequest) {
       updatedAt: Timestamp.now(),
     });
 
-    console.log(`[API] ✅ Updated crash report: ${id}`);
+    // Invalidate cache BEFORE returning response
+    await cacheInvalidate(ADMIN_CACHE_KEYS.CRASH_REPORTS, '');
 
     return NextResponse.json({
       success: true,
@@ -370,11 +384,10 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Delete the crash report document from Firestore
-    console.log(`[API] 🗑️  Deleting Firestore document...`);
     await adminDb.collection(COLLECTION).doc(id).delete();
-    console.log(`[API] ✅ Firestore document deleted: ${id}`);
 
-    console.log(`[API] ========== DELETION COMPLETE ==========`);
+    // Invalidate cache BEFORE returning response
+    await cacheInvalidate(ADMIN_CACHE_KEYS.CRASH_REPORTS, '');
 
     return NextResponse.json({
       success: true,

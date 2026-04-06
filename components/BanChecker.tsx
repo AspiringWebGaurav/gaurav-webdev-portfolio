@@ -21,45 +21,36 @@ const REDIRECT_DELAY = 1000; // 1 second delay before redirect
 
 export default function BanChecker() {
   const pathname = usePathname();
-  
-  // Don't render BanChecker on admin or banned pages at all
-  if (pathname?.startsWith("/admin") || pathname?.startsWith("/banned")) {
-    return null;
-  }
-  
-  const { visitorId: mask } = useBubbleSession(); // Get mask from context
+  const { visitorId: mask } = useBubbleSession();
   const checkInProgress = useRef<boolean>(false);
   const lastBanStatus = useRef<boolean>(false);
   const redirectTimer = useRef<NodeJS.Timeout | null>(null);
+  
+  // Check if we should skip monitoring (admin or banned pages)
+  const shouldSkip = pathname?.startsWith("/admin") || pathname?.startsWith("/banned");
 
   /**
    * Handle ban status change from real-time listener
    * Shows toast only for MID-SESSION bans (user was browsing, then got banned)
    */
-  const handleBanStatusChange = useCallback((status: { banned: boolean; banReason?: string; banCategory?: string }) => {
-    // Don't check on admin or banned pages
-    if (pathname?.startsWith("/admin") || pathname?.startsWith("/banned")) {
-      return;
-    }
+  const handleBanStatusChange = useCallback((status: { banned: boolean; banReason?: string; banCategory?: string; banType?: string }) => {
+    if (shouldSkip) return;
 
     const wasBanned = lastBanStatus.current;
     const isBanned = status.banned === true;
 
-    // Only act if status changed from not-banned to banned (MID-SESSION ban)
     if (!wasBanned && isBanned) {
       console.log("[Ban Checker] ⛔ REAL-TIME BAN DETECTED - User banned during active session", {
         reason: status.banReason,
         category: status.banCategory,
       });
 
-      // Show toast for mid-session bans (user was actively browsing)
       showToast.error(
         status.banReason || "Security Violation",
         "Access Restricted - You have been banned",
         { autoClose: 3000 }
       );
 
-      // Delayed redirect to show toast
       redirectTimer.current = setTimeout(() => {
         const params = new URLSearchParams({
           reason: status.banReason || "Security Violation",
@@ -72,14 +63,13 @@ export default function BanChecker() {
     }
 
     lastBanStatus.current = isBanned;
-  }, [pathname]);
+  }, [shouldSkip]);
 
   /**
    * Handle real-time listener errors
    */
   const handleListenerError = useCallback((error: Error) => {
     console.error("[Ban Checker] Real-time listener error:", error);
-    // Fall back to polling if real-time fails
   }, []);
 
   /**
@@ -87,24 +77,14 @@ export default function BanChecker() {
    * CRITICAL: For returning banned visitors, redirect IMMEDIATELY without toast
    */
   const initialBanCheck = useCallback(async () => {
-    // Don't check on admin or banned pages
-    if (pathname?.startsWith("/admin") || pathname?.startsWith("/banned")) {
-      return;
-    }
-
-    if (!mask) {
-      console.log('[Ban Checker] Waiting for mask from context...');
-      return;
-    }
+    if (shouldSkip || !mask) return;
 
     try {
       console.log('[Ban Checker] 🔍 Initial ban check for mask:', mask);
       
       const response = await fetch("/api/visitor-analytics/check-ban-realtime", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mask }),
         cache: "no-store",
       });
@@ -122,9 +102,8 @@ export default function BanChecker() {
             timestamp: new Date().toISOString(),
           });
           
-          // Immediate redirect - no delay, no toast
           window.location.replace(`/banned?${params.toString()}`);
-          return; // Stop execution
+          return;
         } else {
           console.log('[Ban Checker] ✅ Initial check passed - visitor allowed');
         }
@@ -134,39 +113,27 @@ export default function BanChecker() {
     } catch (error) {
       console.error('[Ban Checker] Initial check failed:', error);
     }
-  }, [mask, pathname]);
+  }, [mask, shouldSkip]);
 
   /**
    * Fallback polling check (in case real-time fails)
    */
   const fallbackBanCheck = useCallback(async () => {
-    // Don't check on admin or banned pages
-    if (pathname?.startsWith("/admin") || pathname?.startsWith("/banned")) {
-      return;
-    }
-
-    // Prevent duplicate simultaneous checks
-    if (checkInProgress.current) {
-      return;
-    }
+    if (shouldSkip || checkInProgress.current) return;
 
     checkInProgress.current = true;
     
     try {
-      // Get visitor mask from ban status manager
-      const mask = banStatusManager.getMask();
-      
-      if (!mask) {
+      const currentMask = banStatusManager.getMask();
+      if (!currentMask) {
         console.warn('[Ban Checker] No mask available for fallback check');
         return;
       }
       
       const response = await fetch("/api/visitor-analytics/check-ban", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ mask }), // Send mask to avoid dual identity
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mask: currentMask }),
         cache: "no-store",
       });
 
@@ -179,11 +146,7 @@ export default function BanChecker() {
           const reason = data.banInfo?.reason || "Security Violation";
           const category = data.banInfo?.category || "normal";
           
-          showToast.error(
-            reason,
-            "Access Restricted",
-            { autoClose: 3000 }
-          );
+          showToast.error(reason, "Access Restricted", { autoClose: 3000 });
 
           setTimeout(() => {
             const params = new URLSearchParams({
@@ -203,82 +166,61 @@ export default function BanChecker() {
     } finally {
       checkInProgress.current = false;
     }
-  }, [pathname]);
+  }, [shouldSkip]);
 
   /**
    * Setup real-time listener and fallback polling
    */
   useEffect(() => {
-    // Don't monitor on admin or banned pages
-    if (pathname?.startsWith("/admin") || pathname?.startsWith("/banned")) {
-      return;
-    }
-
-    // Wait for mask from BubbleSessionContext before initializing
-    if (!mask) {
-      console.log("[Ban Checker] Waiting for mask from BubbleSessionContext...");
+    if (shouldSkip || !mask) {
+      if (!mask && !shouldSkip) {
+        console.log("[Ban Checker] Waiting for mask from BubbleSessionContext...");
+      }
       return;
     }
 
     console.log("[Ban Checker] Setting up real-time ban monitoring with mask:", mask);
-
-    // Perform initial ban check immediately
     initialBanCheck();
 
     let unsubscribe: (() => void) | null = null;
     let fallbackInterval: NodeJS.Timeout | null = null;
     let mounted = true;
 
-    // Async setup function
     const setupMonitoring = async () => {
       try {
-        // Initialize with mask from BubbleSessionContext (prevents duplicate identity creation)
         if (!banStatusManager.isReady()) {
           await banStatusManager.initialize(mask);
         }
 
-        if (!mounted) return; // Component unmounted during init
+        if (!mounted) return;
 
-        // Subscribe to real-time updates
         unsubscribe = await banStatusManager.subscribe(
           "ban-checker",
           handleBanStatusChange,
           handleListenerError
         );
 
-        // Setup fallback polling as backup
         fallbackInterval = setInterval(fallbackBanCheck, FALLBACK_CHECK_INTERVAL);
       } catch (error) {
         console.error("[Ban Checker] Setup error:", error);
-        
         if (!mounted) return;
-
-        // Fall back to polling only if real-time setup fails
         fallbackInterval = setInterval(fallbackBanCheck, FALLBACK_CHECK_INTERVAL);
       }
     };
 
-    // Start setup
     setupMonitoring();
 
-    // Cleanup function
     return () => {
       mounted = false;
       console.log("[Ban Checker] Cleaning up ban monitoring");
-      
-      if (unsubscribe) {
-        unsubscribe();
-      }
-      
-      if (fallbackInterval) {
-        clearInterval(fallbackInterval);
-      }
-      
-      if (redirectTimer.current) {
-        clearTimeout(redirectTimer.current);
-      }
+      if (unsubscribe) unsubscribe();
+      if (fallbackInterval) clearInterval(fallbackInterval);
+      if (redirectTimer.current) clearTimeout(redirectTimer.current);
     };
-  }, [pathname, mask, handleBanStatusChange, handleListenerError, fallbackBanCheck, initialBanCheck]);
+  }, [shouldSkip, mask, handleBanStatusChange, handleListenerError, fallbackBanCheck, initialBanCheck]);
+
+  // Don't render anything on admin or banned pages
+  if (shouldSkip) return null;
 
   return null;
 }

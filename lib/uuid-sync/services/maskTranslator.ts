@@ -16,15 +16,12 @@ import { MaskNotFoundError, UUIDNotFoundError } from '../errors';
 export async function translateMaskToUUIDNoCache(mask: string): Promise<string> {
   validateMask(mask);
   
-  log('Translating mask to UUID (NO CACHE)', { mask });
   
   // Query Firestore directly - skip cache
   try {
     const uuid = await firestoreGetUUIDByMask(mask);
-    log('UUID translated from Firestore (fresh read)', { mask, uuid: uuid.substring(0, 13) });
     return uuid;
   } catch (error) {
-    log('UUID not found for mask', { mask });
     throw new MaskNotFoundError(mask);
   }
 }
@@ -35,12 +32,10 @@ export async function translateMaskToUUIDNoCache(mask: string): Promise<string> 
 export async function translateMaskToUUID(mask: string): Promise<string> {
   validateMask(mask);
   
-  log('Translating mask to UUID', { mask });
   
   // Check cache
   const cached = cacheGet<string>(`mask:${mask}`);
   if (cached) {
-    log('UUID found in cache', { mask });
     return cached;
   }
   
@@ -52,7 +47,6 @@ export async function translateMaskToUUID(mask: string): Promise<string> {
     cacheSet(`mask:${mask}`, uuid, CACHE_TTL.MASK_TO_UUID);
     cacheSet(`uuid:${uuid}`, mask, CACHE_TTL.UUID_TO_MASK);
     
-    log('UUID translated from Firestore', { mask, uuid: uuid.substring(0, 13) });
     return uuid;
   } catch (error) {
     if (error instanceof UUIDNotFoundError) {

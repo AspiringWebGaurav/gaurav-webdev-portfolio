@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebaseAdmin';
 import { getCacheStats } from '@/lib/cacheInvalidation';
+import { cacheStats, memoryCache } from '@/lib/cache';
+import { isRedisEnabled } from '@/lib/redis';
 
 /**
  * GET /api/admin/cache-stats
  * Get current cache statistics and database counts
+ * 
+ * 🔥 Enhanced with 3-layer cache monitoring
  */
 export async function GET(request: NextRequest) {
   try {
@@ -17,8 +21,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get cache stats
-    const cacheStats = await getCacheStats();
+    // Get legacy cache stats
+    const legacyCacheStats = await getCacheStats();
+
+    // Get 3-layer cache stats (new system)
+    const layeredCacheReport = cacheStats.getReport();
+    const memoryCacheStats = memoryCache.getStats();
 
     // Get database counts
     const [uuidSnapshot, fingerprintSnapshot, maskSnapshot] = await Promise.all([
@@ -35,20 +43,28 @@ export async function GET(request: NextRequest) {
 
     // Simplify cache stats for easy consumption
     const simplifiedCache = {
-      identity: cacheStats.identity?.entries || 0,
-      uuid: cacheStats.uuid?.entries || 0,
-      browser: cacheStats.browser?.routes || 0,
+      identity: legacyCacheStats.identity?.entries || 0,
+      uuid: legacyCacheStats.uuid?.entries || 0,
+      browser: legacyCacheStats.browser?.routes || 0,
     };
-
-    // Estimate connected clients (simplified - would need WebSocket in production)
-    const connectedClients = 1; // Placeholder
 
     return NextResponse.json({
       success: true,
+      // 3-Layer Cache System (NEW)
+      layeredCache: {
+        enabled: true,
+        redisEnabled: isRedisEnabled(),
+        hitRatio: layeredCacheReport.hitRatio,
+        firebaseRatio: layeredCacheReport.firebaseRatio,
+        status: layeredCacheReport.status,
+        uptime: layeredCacheReport.uptime,
+        metrics: layeredCacheReport.metrics,
+        memoryCache: memoryCacheStats,
+      },
+      // Legacy cache stats
       cache: simplifiedCache,
-      cacheDetailed: cacheStats,
+      cacheDetailed: legacyCacheStats,
       database: databaseStatus,
-      connectedClients,
       timestamp: Date.now(),
     });
   } catch (error: any) {

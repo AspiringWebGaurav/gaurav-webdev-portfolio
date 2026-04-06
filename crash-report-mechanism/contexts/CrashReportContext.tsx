@@ -80,14 +80,6 @@ export function CrashReportProvider({ children }: { children: React.ReactNode })
 
   // Only fetch on admin pages
   const isAdminPage = pathname?.startsWith("/admin");
-  
-  console.log('[CrashReports] 🔧 Context initialized', {
-    pathname,
-    isAdminPage,
-    loading,
-    crashReportsCount: crashReports.length,
-    hasInitialized: hasInitializedRef.current
-  });
 
   /**
    * Fetch all crash reports from server
@@ -96,7 +88,6 @@ export function CrashReportProvider({ children }: { children: React.ReactNode })
     async (showLoading = true, force = false, retryCount = 0) => {
       // Skip if not on admin page
       if (!isAdminPage) {
-        console.log("[CrashReports] ⏭️ Skipping fetch - not on admin page");
         setLoading(false);
         return;
       }
@@ -104,13 +95,8 @@ export function CrashReportProvider({ children }: { children: React.ReactNode })
       // Cache check (30 seconds) - SKIP cache check on force or initial load
       const cacheAge = Date.now() - lastFetchRef.current;
       if (!force && cacheAge < 30000 && crashReports.length > 0 && hasInitializedRef.current) {
-        console.log(
-          `[CrashReports] ⚡ Using cached data (age: ${Math.floor(cacheAge / 1000)}s)`
-        );
         return;
       }
-
-      console.log(`[CrashReports] 🔄 Starting fetch (force=${force}, showLoading=${showLoading}, cacheAge=${Math.floor(cacheAge / 1000)}s), retry=${retryCount}`);
 
       try {
         if (showLoading) {
@@ -121,7 +107,6 @@ export function CrashReportProvider({ children }: { children: React.ReactNode })
         // Wait for auth to be ready
         let user = auth.currentUser;
         if (!user) {
-          console.log("[CrashReports] ⏳ Waiting for auth...");
           
           // Wait up to 5 seconds for auth
           const authReady = await new Promise<boolean>((resolve) => {
@@ -141,7 +126,6 @@ export function CrashReportProvider({ children }: { children: React.ReactNode })
           });
 
           if (!authReady) {
-            console.log("[CrashReports] ❌ Auth timeout - cannot fetch");
             setLoading(false);
             return;
           }
@@ -149,11 +133,7 @@ export function CrashReportProvider({ children }: { children: React.ReactNode })
           user = auth.currentUser;
         }
         
-        console.log("[CrashReports] 🔐 Current user:", user ? user.email : "NO USER");
-
-        console.log("[CrashReports] 🔑 Getting ID token...");
         const token = await user!.getIdToken();
-        console.log("[CrashReports] ✅ Token obtained, fetching from API...");
 
         // Fetch from API
         const response = await fetch("/api/crash-reports", {
@@ -162,11 +142,8 @@ export function CrashReportProvider({ children }: { children: React.ReactNode })
           },
         });
 
-        console.log("[CrashReports] 📡 API Response:", response.status, response.statusText);
-
         if (!response.ok) {
           if (response.status === 401 || response.status === 403) {
-            console.log("[CrashReports] Permission denied");
             setLoading(false);
             return;
           }
@@ -202,8 +179,6 @@ export function CrashReportProvider({ children }: { children: React.ReactNode })
         lastFetchRef.current = Date.now();
         setLastUpdated(new Date());
 
-        console.log(`[CrashReports] ✅ Fetched ${reports.length} crash reports`);
-
         // Show notification for new critical crashes (first load only)
         if (!hasInitializedRef.current) {
           const criticalCount = reports.filter(
@@ -218,13 +193,6 @@ export function CrashReportProvider({ children }: { children: React.ReactNode })
           hasInitializedRef.current = true;
         }
       } catch (err: any) {
-        console.error("[CrashReports] ❌ Fetch error:", err);
-        console.error("[CrashReports] Error details:", {
-          message: err.message,
-          name: err.name,
-          stack: err.stack
-        });
-        
         // Check if it's a network error and retry
         const isNetworkError =
           err.message?.includes('network') ||
@@ -232,7 +200,6 @@ export function CrashReportProvider({ children }: { children: React.ReactNode })
           err.code === 'auth/network-request-failed';
         
         if (isNetworkError && retryCount < 3) {
-          console.log(`[CrashReports] 🔄 Network error, retrying (${retryCount + 1}/3)...`);
           
           // Exponential backoff: 1s, 2s, 4s
           const delay = Math.pow(2, retryCount) * 1000;
@@ -247,7 +214,6 @@ export function CrashReportProvider({ children }: { children: React.ReactNode })
         }
       } finally {
         setLoading(false);
-        console.log("[CrashReports] 🏁 Fetch complete, loading=false");
       }
     },
     [isAdminPage, crashReports.length]
@@ -263,12 +229,15 @@ export function CrashReportProvider({ children }: { children: React.ReactNode })
       "crash-reports",
       () => fetchCrashReports(false),
       {
-        priority: 'high', // Higher priority than visitor analytics
+        priority: 'high',
         intervals: {
-          active: 15000, // 15 seconds - More aggressive for urgent crash data
-          idle: 45000, // 45 seconds
-          background: 90000, // 90 seconds
+          active: 30000,  // 30s (cache handles freshness)
+          idle: 90000,    // 90s when idle
+          background: 0,  // Stop when hidden
         },
+        stopOnHidden: true,  // Stop polling when tab hidden (100% savings)
+        stopOnIdle: true,    // Stop polling after 2min idle
+        maxIdleTime: 120000, // 2 minutes before considered idle
       }
     );
 
@@ -280,7 +249,6 @@ export function CrashReportProvider({ children }: { children: React.ReactNode })
    */
   useEffect(() => {
     if (isAdminPage && !hasInitializedRef.current) {
-      console.log("[CrashReports] 🚀 Initial mount - starting aggressive fetch");
       
       // Immediate attempt
       fetchCrashReports(true, true);
@@ -294,12 +262,10 @@ export function CrashReportProvider({ children }: { children: React.ReactNode })
         }
         
         retryCount++;
-        console.log(`[CrashReports] 🔄 Retry attempt ${retryCount}`);
         fetchCrashReports(true, true);
         
         if (retryCount >= 5) {
           clearInterval(retryInterval);
-          console.log("[CrashReports] ⏹️ Max retries reached");
         }
       }, 1000);
       
@@ -316,7 +282,6 @@ export function CrashReportProvider({ children }: { children: React.ReactNode })
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible" && hasInitializedRef.current) {
-        console.log("[CrashReports] 👀 Page visible - triggering refresh");
         fetchCrashReports(false, true); // Force refresh when page becomes visible
       }
     };
@@ -334,22 +299,18 @@ export function CrashReportProvider({ children }: { children: React.ReactNode })
    */
   useEffect(() => {
     if (!isAdminPage || typeof BroadcastChannel === 'undefined') {
-      console.log("[CrashReports] 📡 BroadcastChannel skipped:", !isAdminPage ? "not admin page" : "not supported");
       return;
     }
 
-    console.log("[CrashReports] 📡 Setting up BroadcastChannel listener");
     const channel = new BroadcastChannel('crash-reports');
 
     channel.onmessage = (event) => {
       if (event.data.type === 'NEW_CRASH') {
-        console.log("[CrashReports] 🚨 NEW CRASH BROADCAST RECEIVED - fetching immediately!");
         fetchCrashReports(false, true); // Immediate fetch, bypass cache, no loading spinner
       }
     };
 
     return () => {
-      console.log("[CrashReports] 📡 Closing BroadcastChannel listener");
       channel.close();
     };
   }, [isAdminPage, fetchCrashReports]);
@@ -524,10 +485,6 @@ export function CrashReportProvider({ children }: { children: React.ReactNode })
       const report = crashReports.find(r => r.id === id);
       const screenshotUrl = report?.screenshot?.url;
 
-      console.log("[CrashReports] Initiating deletion with 3-layer fallback...");
-      console.log("[CrashReports] Report ID:", id);
-      console.log("[CrashReports] Has screenshot:", !!screenshotUrl);
-
       const token = await user.getIdToken();
 
       // Layer 1: Immediate deletion
@@ -545,10 +502,6 @@ export function CrashReportProvider({ children }: { children: React.ReactNode })
         throw new Error(data.error || "Failed to delete");
       }
 
-      console.log("[CrashReports] ✅ Deletion successful:");
-      console.log("[CrashReports] - Firestore:", data.deletedFromFirestore ? "✅" : "❌");
-      console.log("[CrashReports] - Storage:", data.deletedFromStorage ? "✅" : (data.hadScreenshot ? "⚠️" : "N/A"));
-
       // Remove from local state immediately
       setCrashReports((prev) => prev.filter((r) => r.id !== id));
 
@@ -562,7 +515,6 @@ export function CrashReportProvider({ children }: { children: React.ReactNode })
       }
 
     } catch (err: any) {
-      console.error("[CrashReports] ❌ Delete error:", err.message);
       
       // Check if it's a timeout or network error
       if (err.name === 'AbortError' || err.message.includes('timeout')) {
