@@ -26,12 +26,14 @@ export default function AbusePolicyGate({ children }: AbusePolicyGateProps) {
   // Paths that bypass the gate (fast routing - no verification)
   const isBypassPath = 
     pathname?.startsWith('/abuse-policy-active') ||
+    pathname?.startsWith('/abuse-policy') ||
     pathname?.startsWith('/admin/abuse-policy') ||
     pathname?.startsWith('/banned') ||
     pathname?.startsWith('/maintenance') ||
     pathname?.startsWith('/suspnd_srv_temp_') ||
     pathname?.startsWith('/privacy') ||
     pathname?.startsWith('/terms') ||
+    pathname?.startsWith('/cookies') ||
     pathname?.startsWith('/contact') ||
     pathname === '/_error' ||
     pathname === '/_not-found';

@@ -218,7 +218,7 @@ export default function AbusePolicyPage() {
             </div>
             <div className="flex gap-3">
               <a
-                href="/admin/abuse-policy"
+                href="/abuse-policy"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-5 py-2.5 bg-slate-800/60 hover:bg-slate-700/60 border border-slate-600/50 text-slate-300 hover:text-white rounded-lg font-medium transition-all backdrop-blur-sm text-sm"

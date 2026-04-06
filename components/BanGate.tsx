@@ -30,10 +30,14 @@ function BanGateInner({ children }: { children: React.ReactNode }) {
   
   // CRITICAL: Compute shouldSkipGate FIRST, before any checks
   const shouldSkipGate = useMemo(() => {
-    // Skip for admin, banned, maintenance, and 404 pages
+    // Skip for admin, banned, maintenance, policy pages, and 404 pages
     return pathname?.startsWith("/admin") || 
            pathname?.startsWith("/banned") || 
            pathname?.startsWith("/maintenance") ||
+           pathname?.startsWith("/abuse-policy") ||
+           pathname?.startsWith("/privacy") ||
+           pathname?.startsWith("/terms") ||
+           pathname?.startsWith("/cookies") ||
            !pathname || // 404 - no pathname
            pathname === "/_not-found"; // Next.js internal 404 route
   }, [pathname]);

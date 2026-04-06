@@ -24,6 +24,10 @@ export default function MaintenanceGate({ children }: { children: React.ReactNod
     pathname?.startsWith("/admin") ||
     pathname?.startsWith("/banned") ||
     pathname?.startsWith("/maintenance") ||
+    pathname?.startsWith("/abuse-policy") ||
+    pathname?.startsWith("/privacy") ||
+    pathname?.startsWith("/terms") ||
+    pathname?.startsWith("/cookies") ||
     !pathname || // 404 - no pathname
     pathname === "/_not-found"; // Next.js internal 404 route
 

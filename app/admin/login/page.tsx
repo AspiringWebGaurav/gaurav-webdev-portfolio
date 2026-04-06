@@ -129,7 +129,6 @@ export default function LoginPage() {
 
     setDevLoading(true);
     setPasswordError(false);
-    setShowTransition(true);
     
     try {
       console.log("🔒 Starting enterprise-grade secure login...");
@@ -147,12 +146,9 @@ export default function LoginPage() {
         
         setPasswordError(true);
         setDevLoading(false);
-        setShowTransition(false);
-        setShowSuccessLoader(false);
         
         if (abusePolicyTriggered) {
           console.log('[Login] Abuse Policy activated after password failure');
-          setDevLoading(true);
           setShowTransition(true);
           showToast.error("Too many failed attempts. Temporary ban activated. Redirecting...", "Access Restricted", { autoClose: 5000 });
           setTimeout(() => {
@@ -177,6 +173,7 @@ export default function LoginPage() {
       abusePolicyManager.recordSuccessfulLogin();
       
       console.log("✅ Admin login successful");
+      setShowTransition(true);
       setShowSuccessLoader(true);
       sessionStorage.setItem('justLoggedIn', 'true');
       router.prefetch("/admin/dashboard");
@@ -192,12 +189,9 @@ export default function LoginPage() {
       
       setPasswordError(true);
       setDevLoading(false);
-      setShowTransition(false);
-      setShowSuccessLoader(false);
       
       if (abusePolicyTriggered) {
         console.log('[Login] Abuse Policy activated after login exception');
-        setDevLoading(true);
         setShowTransition(true);
         showToast.error("Too many failed attempts. Temporary ban activated. Redirecting...", "Access Restricted", { autoClose: 5000 });
         setTimeout(() => {

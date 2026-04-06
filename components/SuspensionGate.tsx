@@ -30,6 +30,10 @@ export default function SuspensionGate({ children }: SuspensionGateProps) {
     pathname?.toLowerCase().startsWith('/admin') ||
     pathname?.toLowerCase().startsWith('/banned') ||
     pathname?.toLowerCase().startsWith('/maintenance') ||
+    pathname?.toLowerCase().startsWith('/abuse-policy') ||
+    pathname?.toLowerCase().startsWith('/privacy') ||
+    pathname?.toLowerCase().startsWith('/terms') ||
+    pathname?.toLowerCase().startsWith('/cookies') ||
     pathname === '/_error' ||
     pathname === '/_not-found';
 
