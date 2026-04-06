@@ -209,30 +209,41 @@ export async function POST(request: NextRequest) {
     // Security Layer 6: Turnstile Captcha Verification (Production mode)
     if (IS_PRODUCTION && captchaToken) {
       try {
-        const captchaResponse = await fetch(
-          "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              secret: process.env.TURNSTILE_SECRET_KEY,
-              response: captchaToken
-            })
-          }
-        );
-        
-        const captchaResult = await captchaResponse.json();
-        if (!captchaResult.success) {
-          console.warn("⚠️ Captcha verification failed");
-          return NextResponse.json(
-            { 
-              error: "Captcha verification failed",
-              code: "CAPTCHA_FAILED"
-            },
-            { status: 400 }
+        const secretKey = process.env.TURNSTILE_SECRET_KEY;
+        if (!secretKey) {
+          console.error("❌ TURNSTILE_SECRET_KEY not configured!");
+          // Skip captcha if not configured rather than fail
+        } else {
+          // Cloudflare expects form-urlencoded, NOT JSON
+          const formData = new URLSearchParams();
+          formData.append("secret", secretKey);
+          formData.append("response", captchaToken);
+          
+          const captchaResponse = await fetch(
+            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/x-www-form-urlencoded" },
+              body: formData.toString()
+            }
           );
+          
+          const captchaResult = await captchaResponse.json();
+          console.log("🔍 Captcha result:", JSON.stringify(captchaResult));
+          
+          if (!captchaResult.success) {
+            console.warn("⚠️ Captcha verification failed:", captchaResult["error-codes"]);
+            return NextResponse.json(
+              { 
+                error: "Captcha verification failed",
+                code: "CAPTCHA_FAILED",
+                details: captchaResult["error-codes"]
+              },
+              { status: 400 }
+            );
+          }
+          console.log("✅ Captcha verified");
         }
-        console.log("✅ Captcha verified");
       } catch (captchaError) {
         console.error("❌ Captcha error:", captchaError);
         // Continue without captcha in case of service issues
