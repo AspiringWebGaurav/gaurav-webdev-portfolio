@@ -17,7 +17,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-import { challengeStore, rateLimitStore, getClientIP, checkRateLimit } from "@/lib/challengeVerification";
+import { storeChallenge, rateLimitStore, getClientIP, checkRateLimit } from "@/lib/challengeVerification";
 import { trackSecurityEvent, isBlocked, isSuspicious } from "@/lib/securityMonitor";
 
 export async function GET(request: NextRequest) {
@@ -86,13 +86,21 @@ export async function GET(request: NextRequest) {
     const timestamp = Date.now();
     const challengeId = crypto.randomBytes(16).toString("hex");
 
-    // Store challenge with metadata
-    challengeStore.set(challengeId, {
+    // Store challenge in Redis (serverless-safe)
+    const stored = await storeChallenge(challengeId, {
       nonce,
       timestamp,
       ip,
       used: false
     });
+
+    if (!stored) {
+      console.error("❌ Failed to store challenge in Redis");
+      return NextResponse.json(
+        { error: "Service temporarily unavailable", code: "STORAGE_ERROR" },
+        { status: 503 }
+      );
+    }
 
     console.log(`✅ Challenge generated for IP: ${ip}`);
 

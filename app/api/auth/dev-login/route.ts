@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSession } from "@/lib/sessionManager";
 import { adminAuth } from "@/lib/firebaseAdmin";
-import { verifyChallenge } from "@/lib/challengeVerification";
+import { verifyChallengeAsync } from "@/lib/challengeVerification";
 import { 
   trackSecurityEvent, 
   isBlocked, 
@@ -166,18 +166,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Security Layer 5: Challenge-Response Verification
+    // Security Layer 5: Challenge-Response Verification (Redis-based, serverless-safe)
     // Try all 3 password layers for maximum compatibility
-    let verificationResult = verifyChallenge(challengeId, signature, ADMIN_PASSWORD!);
+    let verificationResult = await verifyChallengeAsync(challengeId, signature, ADMIN_PASSWORD!);
     
     // Try Layer 2 password if Layer 1 fails
     if (!verificationResult.valid && process.env.DEV_LOGIN_PASSWORD) {
-      verificationResult = verifyChallenge(challengeId, signature, process.env.DEV_LOGIN_PASSWORD);
+      verificationResult = await verifyChallengeAsync(challengeId, signature, process.env.DEV_LOGIN_PASSWORD);
     }
     
     // Try Layer 3 password if Layer 2 fails
     if (!verificationResult.valid && process.env.ADMIN_PASS) {
-      verificationResult = verifyChallenge(challengeId, signature, process.env.ADMIN_PASS);
+      verificationResult = await verifyChallengeAsync(challengeId, signature, process.env.ADMIN_PASS);
     }
     
     if (!verificationResult.valid) {

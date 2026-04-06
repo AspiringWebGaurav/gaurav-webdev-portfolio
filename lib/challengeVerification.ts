@@ -1,45 +1,67 @@
 /**
  * Challenge Verification Utility
  * Shared between challenge generation and verification routes
+ * 
+ * SERVERLESS-SAFE: Uses Redis for challenge storage (works across instances)
  */
 
 import crypto from "crypto";
+import { safeGet, safeSet, safeDel } from "./redis";
 
-// In-memory challenge store (use Redis in production for multi-instance)
-export const challengeStore = new Map<string, {
+// Challenge data structure
+interface ChallengeData {
   nonce: string;
   timestamp: number;
   ip: string;
   used: boolean;
-}>();
+}
 
-// Rate limiting store (IP → attempts)
+// Rate limiting store (IP → attempts) - in-memory is OK for rate limiting
 export const rateLimitStore = new Map<string, {
   attempts: number;
   resetTime: number;
 }>();
 
-// Cleanup old challenges every 5 minutes
-if (typeof setInterval !== 'undefined') {
-  setInterval(() => {
-    const now = Date.now();
-    for (const [key, value] of challengeStore.entries()) {
-      if (now - value.timestamp > 60000 || value.used) {
-        challengeStore.delete(key);
-      }
-    }
-  }, 300000);
+// Redis key prefix for challenges
+const CHALLENGE_PREFIX = "auth:challenge:";
+const CHALLENGE_TTL = 120; // 2 minutes TTL
+
+/**
+ * Store a challenge in Redis
+ */
+export async function storeChallenge(
+  challengeId: string,
+  data: ChallengeData
+): Promise<boolean> {
+  const key = `${CHALLENGE_PREFIX}${challengeId}`;
+  return await safeSet(key, data, CHALLENGE_TTL);
 }
 
 /**
- * Verify challenge signature
+ * Get a challenge from Redis
  */
-export function verifyChallenge(
+export async function getChallenge(challengeId: string): Promise<ChallengeData | null> {
+  const key = `${CHALLENGE_PREFIX}${challengeId}`;
+  return await safeGet<ChallengeData>(key);
+}
+
+/**
+ * Delete a challenge from Redis
+ */
+export async function deleteChallenge(challengeId: string): Promise<boolean> {
+  const key = `${CHALLENGE_PREFIX}${challengeId}`;
+  return await safeDel(key);
+}
+
+/**
+ * Verify challenge signature (async for Redis)
+ */
+export async function verifyChallengeAsync(
   challengeId: string,
   providedSignature: string,
   password: string
-): { valid: boolean; error?: string } {
-  const challenge = challengeStore.get(challengeId);
+): Promise<{ valid: boolean; error?: string }> {
+  const challenge = await getChallenge(challengeId);
 
   if (!challenge) {
     return { valid: false, error: "Invalid or expired challenge" };
@@ -51,7 +73,7 @@ export function verifyChallenge(
 
   const now = Date.now();
   if (now - challenge.timestamp > 60000) {
-    challengeStore.delete(challengeId);
+    await deleteChallenge(challengeId);
     return { valid: false, error: "Challenge expired" };
   }
 
@@ -67,8 +89,24 @@ export function verifyChallenge(
 
   // Mark challenge as used (prevent replay attacks)
   challenge.used = true;
+  await safeSet(`${CHALLENGE_PREFIX}${challengeId}`, challenge, 60); // Keep for 1 min after use
 
   return { valid: true };
+}
+
+/**
+ * Sync version for backward compatibility (uses in-memory fallback)
+ * @deprecated Use verifyChallengeAsync instead
+ */
+export function verifyChallenge(
+  challengeId: string,
+  providedSignature: string,
+  password: string
+): { valid: boolean; error?: string } {
+  // This is kept for backward compatibility but won't work in serverless
+  // The async version should be used instead
+  console.warn("⚠️ Using sync verifyChallenge - may not work in serverless");
+  return { valid: false, error: "Use async verification" };
 }
 
 /**
