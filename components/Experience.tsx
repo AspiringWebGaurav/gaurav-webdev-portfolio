@@ -13,7 +13,7 @@ const Experience = () => {
     const fetchWorkExperiences = async () => {
       try {
         setLoading(true);
-        const response = await fetch("/api/work-experience");
+        const response = await fetch("/api/work-experience", { cache: "no-store" });
 
         if (!response.ok) {
           throw new Error("Failed to fetch work experiences");

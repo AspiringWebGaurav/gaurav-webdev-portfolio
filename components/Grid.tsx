@@ -12,12 +12,12 @@ interface TechStack {
   isActive: boolean;
 }
 
-// Default tech stacks to prevent hydration mismatch
-const DEFAULT_TECH_STACKS = ["ReactJS", "Express", "Typescript", "VueJS", "NuxtJS", "GraphQL"];
+// No default tech stacks - fetch from API only
 
 const Grid = () => {
-  const [dynamicTitle, setDynamicTitle] = useState("Currently building a JS Animation library");
-  const [techStacks, setTechStacks] = useState<string[]>(DEFAULT_TECH_STACKS);
+  const [dynamicTitle, setDynamicTitle] = useState<string | null>(null);
+  const [techStacks, setTechStacks] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
 
@@ -30,7 +30,7 @@ const Grid = () => {
     
     const fetchCurrentlyWorking = async () => {
       try {
-        const response = await fetch("/api/currently-working");
+        const response = await fetch("/api/currently-working", { cache: "no-store" });
         if (response.ok) {
           const data = await response.json();
           if (data.item && data.item.headingTitle) {
@@ -45,7 +45,7 @@ const Grid = () => {
 
     const fetchTechStacks = async () => {
       try {
-        const response = await fetch("/api/tech-stacks");
+        const response = await fetch("/api/tech-stacks", { cache: "no-store" });
         if (response.ok) {
           const data = await response.json();
           if (data.items && Array.isArray(data.items) && data.items.length > 0) {
@@ -66,8 +66,12 @@ const Grid = () => {
       }
     };
 
-    fetchCurrentlyWorking();
-    fetchTechStacks();
+    const loadData = async () => {
+      setLoading(true);
+      await Promise.all([fetchCurrentlyWorking(), fetchTechStacks()]);
+      setLoading(false);
+    };
+    loadData();
   }, []);
 
   return (
@@ -87,14 +91,14 @@ const Grid = () => {
             <BentoGridItem
               id={id}
               key={id}
-              title={id === 5 ? dynamicTitle : title}
+              title={id === 5 ? (dynamicTitle || "Working on something exciting...") : title}
               description={description}
               className={className}
               img={img}
               imgClassName={imgClassName}
               titleClassName={titleClassName}
               spareImg={spareImg}
-              techStacks={id === 3 ? techStacks : undefined}
+              techStacks={id === 3 ? (techStacks.length > 0 ? techStacks : undefined) : undefined}
               onContactClick={id === 6 ? handleContactClick : undefined}
             />
           )

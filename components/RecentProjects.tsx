@@ -18,7 +18,7 @@ const RecentProjects = () => {
         setLoading(true);
         setError(null);
 
-        const response = await fetch("/api/projects");
+        const response = await fetch("/api/projects", { cache: "no-store" });
         if (!response.ok) {
           throw new Error("Failed to fetch projects");
         }
@@ -131,10 +131,10 @@ const RecentProjects = () => {
             return img ? [img] : [];
           })();
           
-          // Ensure iconLists is always an array
-          const icons = Array.isArray(iconLists) 
+          // Ensure iconLists is always an array of strings
+          const icons: string[] = Array.isArray(iconLists) 
             ? iconLists 
-            : (typeof iconLists === 'object' ? Object.values(iconLists) : []);
+            : (typeof iconLists === 'object' && iconLists ? Object.values(iconLists) as string[] : []);
 
           return (
             <div

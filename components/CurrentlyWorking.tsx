@@ -21,7 +21,7 @@ const CurrentlyWorking = () => {
         setLoading(true);
         setError(null);
 
-        const response = await fetch("/api/currently-working");
+        const response = await fetch("/api/currently-working", { cache: "no-store" });
         if (!response.ok) {
           throw new Error("Failed to fetch currently working");
         }

@@ -5,7 +5,12 @@ import { FaLocationArrow } from "react-icons/fa6";
 import { Bug, AlertTriangle, Shield } from "lucide-react";
 import Image from "next/image";
 
-import { socialMedia } from "@/data";
+// Social media links - these are site configuration, not dynamic content
+const socialLinks = [
+  { id: 1, img: "/git.svg", href: "https://github.com/gauravpatil", label: "GitHub" },
+  { id: 2, img: "/twit.svg", href: "https://twitter.com/gauravpatil", label: "Twitter" },
+  { id: 3, img: "/link.svg", href: "https://linkedin.com/in/gauravpatil", label: "LinkedIn" },
+];
 import MagicButton from "./ui/MagicButton";
 import ContactFormModal from "./ContactFormModal";
 import BugReportIntro from "./BugReportIntro";
@@ -193,20 +198,24 @@ const Footer = () => {
           className="flex items-center md:gap-3 gap-2"
           style={{ marginRight: `${socialIconsMargin}px` }}
         >
-          {socialMedia.map((info) => (
-            <div
+          {socialLinks.map((info) => (
+            <a
               key={info.id}
+              href={info.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={info.label}
               className="w-10 h-10 cursor-pointer flex justify-center items-center backdrop-filter backdrop-blur-lg saturate-180 bg-opacity-75 bg-black-200 rounded-lg border border-black-300 hover:bg-opacity-100 hover:border-purple/50 transition-all"
             >
               <Image
                 src={info.img}
-                alt="social media icon"
+                alt={info.label}
                 width={20}
                 height={20}
                 loading="lazy"
                 unoptimized
               />
-            </div>
+            </a>
           ))}
         </div>
       </div>

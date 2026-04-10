@@ -246,6 +246,9 @@ export async function PUT(request: NextRequest) {
     // Update document
     await updateDoc(testimonialRef, updateData);
 
+    // Invalidate cache after update
+    await cacheInvalidate(CACHE_KEYS.TESTIMONIALS, 'content');
+
     // Fetch updated document
     const updatedSnapshot = await getDoc(testimonialRef);
     if (!updatedSnapshot.exists()) {
@@ -333,6 +336,9 @@ export async function DELETE(request: NextRequest) {
       // Delete from original collection
       await deleteDoc(testimonialRef);
 
+      // Invalidate cache after soft delete
+      await cacheInvalidate(CACHE_KEYS.TESTIMONIALS, 'content');
+
       return NextResponse.json(
         {
           success: true,
@@ -344,6 +350,9 @@ export async function DELETE(request: NextRequest) {
 
     // Hard delete
     await deleteDoc(testimonialRef);
+
+    // Invalidate cache after hard delete
+    await cacheInvalidate(CACHE_KEYS.TESTIMONIALS, 'content');
 
     return NextResponse.json(
       {

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 import { ThemeProvider } from "./provider";
@@ -48,7 +49,6 @@ import StructuredData from "@/components/StructuredData";
 
 // Vercel Analytics
 import { Analytics } from "@vercel/analytics/react";
-import Script from "next/script";
 
 import FingerprintInitializer from "@/components/FingerprintInitializer";
 
@@ -172,10 +172,9 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        {/* Switchyy - Real-time Mode Control */}
-        <Script
-          src="https://switchyy.vercel.app/switchy.js?key=pk_82d753f52d87afc2a1b68be4&project=UPTGQBddskwEThb3d3YN"
-          strategy="beforeInteractive"
+        <Script 
+          src="https://switchyy.vercel.app/switchy.js?key=pk_2438a858cc6d02f81e0a5603&project=lnwJOuOdZZlEoWETT1rv" 
+          strategy="beforeInteractive" 
         />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>

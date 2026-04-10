@@ -10,6 +10,11 @@ import Experience from "@/components/Experience";
 import Approach from "@/components/Approach";
 import Footer from "@/components/Footer";
 import BugHunt from "@/components/BugHunt";
+import ErrorBoundary from "@/components/ErrorBoundary";
+
+// Force dynamic rendering - never cache this page
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 // Skeleton wrapper and components
 import { WithSkeleton } from "@/components/skeletons";
