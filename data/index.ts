@@ -69,6 +69,12 @@ export const gridItems = [
   },
 ];
 
-// REMOVED: Static projects, testimonials, workExperience, socialMedia
+// REMOVED: Static projects, testimonials, workExperience
 // All content is now fetched from Firebase via API routes
 // See: /api/projects, /api/testimonials, /api/work-experience
+
+export const socialMedia = [
+  { id: 1, img: "/git.svg", href: "https://github.com/AspiringWebGaurav", label: "GitHub" },
+  { id: 2, img: "/x.svg", href: "https://x.com/PREDATORkopmh09", label: "X" },
+  { id: 3, img: "/link.svg", href: "https://www.linkedin.com/in/gaurav-patil-335402234/", label: "LinkedIn" },
+];

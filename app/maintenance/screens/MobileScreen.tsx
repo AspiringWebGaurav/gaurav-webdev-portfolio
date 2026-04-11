@@ -251,12 +251,16 @@ export default function MobileScreen({ maintenanceInfo }: MobileScreenProps) {
           <div className="flex flex-col items-center gap-2 mt-3">
             <div className="flex items-center gap-3">
               {socialMedia.map((info) => (
-                <div
+                <a
                   key={info.id}
-                  className="w-9 h-9 flex items-center justify-center bg-black-200 rounded-lg border border-white/10 cursor-pointer"
+                  href={info.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  <NextImage src={info.img} alt="social" width={18} height={18} />
-                </div>
+                  <div className="w-9 h-9 flex items-center justify-center bg-black-200 rounded-lg border border-white/10 cursor-pointer">
+                    <NextImage src={info.img} alt="social" width={18} height={18} />
+                  </div>
+                </a>
               ))}
             </div>
           </div>

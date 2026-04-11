@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og'
  
-export const runtime = 'edge'
+// export const runtime = 'edge' // disabled to allow static generation and fix font manifest
 export const size = { width: 180, height: 180 }
 export const contentType = 'image/png'
  

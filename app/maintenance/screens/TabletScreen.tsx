@@ -258,12 +258,16 @@ export default function TabletScreen({ maintenanceInfo }: TabletScreenProps) {
           <div className="flex flex-col items-center gap-2 mt-4">
             <div className="flex items-center gap-3">
               {socialMedia.map((info) => (
-                <div
+                <a
                   key={info.id}
-                  className="w-10 h-10 flex items-center justify-center bg-black-200 rounded-lg border border-white/10 hover:border-purple/50 transition-all cursor-pointer"
+                  href={info.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  <NextImage src={info.img} alt="social" width={20} height={20} />
-                </div>
+                  <div className="w-10 h-10 flex items-center justify-center bg-black-200 rounded-lg border border-white/10 hover:border-purple/50 transition-all cursor-pointer">
+                    <NextImage src={info.img} alt="social" width={20} height={20} />
+                  </div>
+                </a>
               ))}
             </div>
           </div>

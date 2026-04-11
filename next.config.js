@@ -48,15 +48,6 @@ const nextConfig = {
     proxyTimeout: 30000,
   },
   
-  // Custom proxy for server-side ban detection
-  async rewrites() {
-    return {
-      beforeFiles: [],
-      afterFiles: [],
-      fallback: [],
-    };
-  },
-
   // Production optimizations
   ...(process.env.NODE_ENV === "production" && {
     compress: true,

@@ -172,10 +172,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        <Script 
-          src="https://switchyy.vercel.app/switchy.js?key=pk_2438a858cc6d02f81e0a5603&project=lnwJOuOdZZlEoWETT1rv" 
-          strategy="beforeInteractive" 
-        />
+<script src="https://switchyy.eu.cc/switchy.js?key=pk_2438a858cc6d02f81e0a5603&project=lnwJOuOdZZlEoWETT1rv"></script>
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <StructuredData />

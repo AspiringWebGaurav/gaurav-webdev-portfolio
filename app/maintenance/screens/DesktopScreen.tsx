@@ -502,13 +502,19 @@ export default function DesktopScreen({ maintenanceInfo }: DesktopScreenProps) {
             {/* Left: Social Links - Fixed width */}
             <div className="flex items-center gap-2.5 w-[120px] justify-center">
               {socialMedia.map((info) => (
-                <motion.div
+                <a
                   key={info.id}
-                  whileHover={{ scale: 1.1, borderColor: 'rgba(139,92,246,0.5)' }}
-                  className="w-9 h-9 flex items-center justify-center bg-black-200 rounded-lg border border-white/10 cursor-pointer transition-all"
+                  href={info.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  <NextImage src={info.img} alt="social" width={18} height={18} />
-                </motion.div>
+                  <motion.div
+                    whileHover={{ scale: 1.1, borderColor: 'rgba(139,92,246,0.5)' }}
+                    className="w-9 h-9 flex items-center justify-center bg-black-200 rounded-lg border border-white/10 cursor-pointer transition-all"
+                  >
+                    <NextImage src={info.img} alt="social" width={18} height={18} />
+                  </motion.div>
+                </a>
               ))}
             </div>
 

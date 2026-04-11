@@ -5,12 +5,7 @@ import { FaLocationArrow } from "react-icons/fa6";
 import { Bug, AlertTriangle, Shield } from "lucide-react";
 import Image from "next/image";
 
-// Social media links - these are site configuration, not dynamic content
-const socialLinks = [
-  { id: 1, img: "/git.svg", href: "https://github.com/gauravpatil", label: "GitHub" },
-  { id: 2, img: "/twit.svg", href: "https://twitter.com/gauravpatil", label: "Twitter" },
-  { id: 3, img: "/link.svg", href: "https://linkedin.com/in/gauravpatil", label: "LinkedIn" },
-];
+import { socialMedia } from "@/data";
 import MagicButton from "./ui/MagicButton";
 import ContactFormModal from "./ContactFormModal";
 import BugReportIntro from "./BugReportIntro";
@@ -122,23 +117,32 @@ const Footer = () => {
             <span className="text-white-100 text-xs opacity-70">
               Copyright © {new Date().getFullYear()} Gaurav Patil
             </span>
-            <div className="flex gap-2 mt-1 text-xs">
+            <div className="flex items-center gap-2 mt-1 text-xs">
               <a 
-                href="https://www.gauravpatil.online" 
+                href="https://gauravs-work-space.vercel.app" 
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-purple hover:underline"
+                className="text-purple hover:underline transition-colors"
               >
-                🔗 Portfolio
+                💼 Workspace
               </a>
               <span className="text-white-100 opacity-50">|</span>
               <a 
-                href="https://www.gauravworkspace.store" 
+                href="/terms" 
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white-100 opacity-70 hover:text-purple hover:opacity-100 transition-colors"
               >
-                💼 Workspace
+                Terms
+              </a>
+              <span className="text-white-100 opacity-50">&amp;</span>
+              <a 
+                href="/privacy" 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white-100 opacity-70 hover:text-purple hover:opacity-100 transition-colors"
+              >
+                Privacy
               </a>
             </div>
           </div>
@@ -198,7 +202,7 @@ const Footer = () => {
           className="flex items-center md:gap-3 gap-2"
           style={{ marginRight: `${socialIconsMargin}px` }}
         >
-          {socialLinks.map((info) => (
+          {socialMedia.map((info) => (
             <a
               key={info.id}
               href={info.href}

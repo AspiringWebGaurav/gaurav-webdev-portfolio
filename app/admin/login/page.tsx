@@ -227,7 +227,7 @@ export default function LoginPage() {
         showFooterLinks={true}
         privacyPolicyLink="/privacy"
         termsOfServiceLink="/terms"
-        contactLink="/contact"
+        contactLink="/#contact"
       >
         <div className="text-center mb-10">
           <h1 className="text-3xl font-bold tracking-tight mb-2 text-gray-900 dark:text-white">Sign in to Admin</h1>
