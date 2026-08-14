@@ -1,26 +1,13 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { IoCopyOutline } from "react-icons/io5";
-import { FaLocationArrow } from "react-icons/fa6";
-import { MessageCircle } from "lucide-react";
-import dynamic from "next/dynamic";
 
-// Using lottie-react instead of deprecated react-lottie
 import Lottie from "lottie-react";
 
 import { cn } from "@/lib/utils";
-import { useChatBubbleControl } from "@/contexts/ChatBubbleControlContext";
 
 import { BackgroundGradientAnimation } from "./GradientBg";
-// Dynamic import for 3D globe to prevent HMR issues
-const GridGlobe = dynamic(() => import("./GridGlobe"), {
-  ssr: false,
-  loading: () => (
-    <div className="flex items-center justify-center h-full w-full">
-      <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-    </div>
-  ),
-});
+import GridGlobe from "./GridGlobe";
 import animationData from "@/data/confetti.json";
 import MagicButton from "./MagicButton";
 
@@ -54,8 +41,6 @@ export const BentoGridItem = ({
   imgClassName,
   titleClassName,
   spareImg,
-  techStacks,
-  onContactClick,
 }: {
   className?: string;
   id: number;
@@ -65,23 +50,32 @@ export const BentoGridItem = ({
   imgClassName?: string;
   titleClassName?: string;
   spareImg?: string;
-  techStacks?: string[];
-  onContactClick?: () => void;
 }) => {
-  // Use the chat bubble control context
-  const { openBubble } = useChatBubbleControl();
-  
-  // Default tech stacks to prevent hydration issues
-  const defaultTechStacks = ["ReactJS", "Express", "Typescript", "VueJS", "NuxtJS", "GraphQL"];
-  
-  const allTechStacks = techStacks && techStacks.length > 0 ? techStacks : defaultTechStacks;
-  
-  // Split into 4 columns
-  const itemsPerColumn = Math.ceil(allTechStacks.length / 4);
-  const column1 = allTechStacks.slice(0, itemsPerColumn);
-  const column2 = allTechStacks.slice(itemsPerColumn, itemsPerColumn * 2);
-  const column3 = allTechStacks.slice(itemsPerColumn * 2, itemsPerColumn * 3);
-  const column4 = allTechStacks.slice(itemsPerColumn * 3);
+  const leftLists = ["ReactJS", "Express", "Typescript"];
+  const rightLists = ["VueJS", "NuxtJS", "GraphQL"];
+
+  const [copied, setCopied] = useState(false);
+  const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleCopy = () => {
+    const text = "gauravpatil5737@gmail.com";
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    if (copyTimeoutRef.current) {
+      clearTimeout(copyTimeoutRef.current);
+    }
+    copyTimeoutRef.current = setTimeout(() => {
+      setCopied(false);
+    }, 3000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div
@@ -151,12 +145,12 @@ export const BentoGridItem = ({
           {/* for the github 3d globe */}
           {id === 2 && <GridGlobe />}
 
-          {/* Tech stack list div - Updated positioning for mobile */}
+          {/* Tech stack list div */}
           {id === 3 && (
-            <div className="flex gap-1 lg:gap-2 w-fit absolute -right-20 lg:-right-16">
-              {/* Column 1 */}
+            <div className="flex gap-1 lg:gap-5 w-fit absolute -right-3 lg:-right-2">
+              {/* tech stack lists */}
               <div className="flex flex-col gap-3 md:gap-3 lg:gap-8">
-                {column1.map((item, i) => (
+                {leftLists.map((item, i) => (
                   <span
                     key={i}
                     className="lg:py-4 lg:px-3 py-2 px-3 text-xs lg:text-base opacity-50 
@@ -165,44 +159,14 @@ export const BentoGridItem = ({
                     {item}
                   </span>
                 ))}
-                <span className="lg:py-4 lg:px-3 py-4 px-3 rounded-lg text-center bg-[#10132E]"></span>
+                <span className="lg:py-4 lg:px-3 py-4 px-3  rounded-lg text-center bg-[#10132E]"></span>
               </div>
-              
-              {/* Column 2 */}
               <div className="flex flex-col gap-3 md:gap-3 lg:gap-8">
-                <span className="lg:py-4 lg:px-3 py-4 px-3 rounded-lg text-center bg-[#10132E]"></span>
-                {column2.map((item, i) => (
+                <span className="lg:py-4 lg:px-3 py-4 px-3  rounded-lg text-center bg-[#10132E]"></span>
+                {rightLists.map((item, i) => (
                   <span
                     key={i}
-                    className="lg:py-4 lg:px-3 py-2 px-3 text-xs lg:text-base opacity-50 
-                    lg:opacity-100 rounded-lg text-center bg-[#10132E]"
-                  >
-                    {item}
-                  </span>
-                ))}
-              </div>
-              
-              {/* Column 3 */}
-              <div className="flex flex-col gap-3 md:gap-3 lg:gap-8">
-                {column3.map((item, i) => (
-                  <span
-                    key={i}
-                    className="lg:py-4 lg:px-3 py-2 px-3 text-xs lg:text-base opacity-50 
-                    lg:opacity-100 rounded-lg text-center bg-[#10132E]"
-                  >
-                    {item}
-                  </span>
-                ))}
-                <span className="lg:py-4 lg:px-3 py-4 px-3 rounded-lg text-center bg-[#10132E]"></span>
-              </div>
-              
-              {/* Column 4 */}
-              <div className="flex flex-col gap-3 md:gap-3 lg:gap-8">
-                <span className="lg:py-4 lg:px-3 py-4 px-3 rounded-lg text-center bg-[#10132E]"></span>
-                {column4.map((item, i) => (
-                  <span
-                    key={i}
-                    className="lg:py-4 lg:px-3 py-2 px-3 text-xs lg:text-base opacity-50 
+                    className="lg:py-4 lg:px-2 py-2 px-3 text-xs lg:text-base opacity-50 
                     lg:opacity-100 rounded-lg text-center bg-[#10132E]"
                   >
                     {item}
@@ -212,31 +176,31 @@ export const BentoGridItem = ({
             </div>
           )}
           {id === 6 && (
-            <div className="mt-3 sm:mt-5 relative z-10">
-              {/* Two buttons side by side */}
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 md:gap-4">
-                {/* Button 1: Let's get in touch - Opens contact form */}
-                <div className="flex-1 w-full">
-                  <MagicButton
-                    title="Let's get in touch"
-                    icon={<FaLocationArrow />}
-                    position="left"
-                    handleClick={onContactClick}
-                    otherClasses="!bg-[#161A31] !mt-0"
-                  />
-                </div>
-
-                {/* Button 2: Chat with me - Opens chat bubble in chat mode */}
-                <div className="flex-1 w-full">
-                  <MagicButton
-                    title="Chat with me"
-                    icon={<MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
-                    position="left"
-                    handleClick={() => openBubble('chat')}
-                    otherClasses="!bg-[#161A31] !mt-0"
-                  />
-                </div>
+            <div className="mt-5 relative">
+              {/* button border magic from tailwind css buttons  */}
+              {/* add rounded-md h-8 md:h-8, remove rounded-full */}
+              {/* remove focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50 */}
+              {/* add handleCopy() for the copy the text */}
+              <div
+                className={`absolute -bottom-5 right-0 ${
+                  copied ? "block" : "block"
+                }`}
+              >
+                <Lottie
+                  animationData={animationData}
+                  loop={copied}
+                  autoplay={copied}
+                  style={{ height: 200, width: 400 }}
+                />
               </div>
+
+              <MagicButton
+                title={copied ? "Email is Copied!" : "Copy my email address"}
+                icon={<IoCopyOutline />}
+                position="left"
+                handleClick={handleCopy}
+                otherClasses="!bg-[#161A31]"
+              />
             </div>
           )}
         </div>

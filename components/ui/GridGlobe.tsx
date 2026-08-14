@@ -1,12 +1,12 @@
 "use client";
 import React from "react";
-import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
-// Restore: dynamically import named World export from Globe.tsx
-const World = dynamic(() => import("./Globe").then((m) => m.World), { ssr: false });
 
-const GridGlobe = () => {
-  const globeConfig = {
+const World = dynamic(() => import("./Globe").then((m) => m.World), {
+  ssr: false,
+});
+
+const globeConfig = {
     pointSize: 4,
     globeColor: "#062056",
     showAtmosphere: true,
@@ -392,6 +392,7 @@ const GridGlobe = () => {
     },
   ];
 
+const GridGlobe = () => {
   return (
     // remove dark:bg-black bg-white h-screen md:h-auto  w-full flex-row py-20
     // change absolute -left-5 top-36, add w-full h-full md:top-40
