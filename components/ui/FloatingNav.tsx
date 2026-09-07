@@ -63,8 +63,23 @@ export const FloatingNav = ({
       window.history.scrollRestoration = "manual";
     }
 
-    const currentSection = window.location.pathname.replace(/^\//, "").replace(/^#/, "");
-    if (!currentSection || !SECTIONS.includes(currentSection as typeof SECTIONS[number])) {
+    const hashSection = window.location.hash.replace(/^#/, "").toLowerCase();
+    const pathSection = window.location.pathname.replace(/^\//, "").toLowerCase();
+    const currentSection =
+      SECTIONS.includes(hashSection as (typeof SECTIONS)[number])
+        ? hashSection
+        : SECTIONS.includes(pathSection as (typeof SECTIONS)[number])
+        ? pathSection
+        : "";
+
+    // Check saved scroll position from sessionStorage if no explicit section
+    let savedScrollY = 0;
+    try {
+      const saved = sessionStorage.getItem("portfolio_scroll_y");
+      if (saved) savedScrollY = parseInt(saved, 10) || 0;
+    } catch {}
+
+    if (!currentSection && savedScrollY <= 120) {
       return;
     }
 
@@ -72,9 +87,11 @@ export const FloatingNav = ({
     isNavigatingRef.current = true;
 
     // Pre-hydrate target section and preceding sections
-    window.dispatchEvent(
-      new CustomEvent("nav-scroll-start", { detail: { link: `/${currentSection}` } })
-    );
+    if (currentSection) {
+      window.dispatchEvent(
+        new CustomEvent("nav-scroll-start", { detail: { link: `/#${currentSection}` } })
+      );
+    }
 
     const scrollToTarget = () => {
       if (currentSection === "contact") {
@@ -82,7 +99,7 @@ export const FloatingNav = ({
           top: document.documentElement.scrollHeight,
           behavior: "smooth",
         });
-      } else {
+      } else if (currentSection) {
         const el = document.getElementById(currentSection);
         if (el) {
           const navOffset = window.innerWidth < 768 ? 60 : 75;
@@ -92,6 +109,12 @@ export const FloatingNav = ({
             behavior: "smooth",
           });
         }
+      } else if (savedScrollY > 120) {
+        const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+        window.scrollTo({
+          top: Math.min(savedScrollY, maxScroll),
+          behavior: "smooth",
+        });
       }
     };
 
@@ -151,18 +174,29 @@ export const FloatingNav = ({
         const viewportHeight = window.innerHeight;
         const docHeight = document.documentElement.scrollHeight;
 
+        // Persist scroll position to sessionStorage for refresh restoration
+        try {
+          sessionStorage.setItem("portfolio_scroll_y", String(scrollY));
+        } catch {}
+
         // 1. Hero fold detection
         if (scrollY < 120) {
-          if (window.location.pathname !== "/" && !window.location.pathname.startsWith("/blog")) {
+          if (window.location.hash !== "" || (window.location.pathname !== "/" && !window.location.pathname.startsWith("/blog"))) {
             window.history.replaceState(null, "", "/");
+            try {
+              sessionStorage.removeItem("portfolio_active_section");
+            } catch {}
           }
           return;
         }
 
         // 2. Absolute bottom detection (Footer / Contact section view)
         if (viewportHeight + scrollY >= docHeight - 120) {
-          if (window.location.hash !== "#contact" && window.location.pathname !== "/contact") {
+          if (window.location.hash !== "#contact") {
             window.history.replaceState(null, "", "/#contact");
+            try {
+              sessionStorage.setItem("portfolio_active_section", "contact");
+            } catch {}
           }
           return;
         }
@@ -187,21 +221,21 @@ export const FloatingNav = ({
         }
 
         if (dominantSection) {
-          if (dominantSection === "contact" || dominantSection === "approach") {
-            if (window.location.hash !== "#contact" && window.location.pathname !== "/contact") {
-              window.history.replaceState(null, "", "/#contact");
-            }
-          } else {
-            // Map intermediate sections to primary navbar routes
-            let targetPath = `/${dominantSection}`;
-            if (dominantSection === "experience") targetPath = "/testimonials";
-
-            if (window.location.pathname !== targetPath) {
-              window.history.replaceState(null, "", targetPath);
-            }
+          const targetHash = `#${dominantSection}`;
+          if (window.location.hash !== targetHash) {
+            window.history.replaceState(null, "", `/${targetHash}`);
+            try {
+              sessionStorage.setItem("portfolio_active_section", dominantSection);
+            } catch {}
           }
         }
       });
+    };
+
+    const handleSaveScroll = () => {
+      try {
+        sessionStorage.setItem("portfolio_scroll_y", String(window.scrollY));
+      } catch {}
     };
 
     const onNavStartCustom = () => {
@@ -213,10 +247,14 @@ export const FloatingNav = ({
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("beforeunload", handleSaveScroll, { passive: true });
+    window.addEventListener("pagehide", handleSaveScroll, { passive: true });
     window.addEventListener("nav-scroll-start", onNavStartCustom);
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("beforeunload", handleSaveScroll);
+      window.removeEventListener("pagehide", handleSaveScroll);
       window.removeEventListener("nav-scroll-start", onNavStartCustom);
       if (navigationTimerRef.current) clearTimeout(navigationTimerRef.current);
     };
@@ -252,9 +290,7 @@ export const FloatingNav = ({
       }
 
       const sectionId = link.replace(/^\//, "").replace(/^#/, "");
-      const isHomePage =
-        pathname === "/" ||
-        ["/about", "/projects", "/testimonials", "/experience", "/approach", "/contact"].includes(pathname);
+      const isHomePage = pathname === "/";
 
       if (isHomePage) {
         e.preventDefault();
@@ -287,7 +323,13 @@ export const FloatingNav = ({
           }
         }
 
-        window.history.replaceState(null, "", link);
+        const targetUrl = sectionId ? `/#${sectionId}` : "/";
+        window.history.replaceState(null, "", targetUrl);
+        try {
+          if (sectionId) {
+            sessionStorage.setItem("portfolio_active_section", sectionId);
+          }
+        } catch {}
       } else {
         e.preventDefault();
         router.push(`/#${sectionId}`);

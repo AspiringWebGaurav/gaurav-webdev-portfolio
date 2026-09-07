@@ -65,30 +65,30 @@ export default async function Home() {
         <HeroSection data={data.hero} />
 
         {/* Below-the-fold modules */}
-        <div id="about" className="w-full">
+        <div id="about" className="w-full scroll-mt-24 sm:scroll-mt-28">
           <GridSection cards={data.cards} />
         </div>
 
-        <div id="projects" className="w-full">
+        <div id="projects" className="w-full scroll-mt-24 sm:scroll-mt-28">
           <ProjectsSection projects={data.projects} />
         </div>
 
-        <div id="testimonials" className="w-full">
+        <div id="testimonials" className="w-full scroll-mt-24 sm:scroll-mt-28">
           <TestimonialsSection
             testimonials={data.testimonials}
             clients={data.clients}
           />
         </div>
 
-        <div id="experience" className="w-full">
+        <div id="experience" className="w-full scroll-mt-24 sm:scroll-mt-28">
           <ExperienceSection experience={data.experience} />
         </div>
 
-        <div id="approach" className="w-full">
+        <div id="approach" className="w-full scroll-mt-24 sm:scroll-mt-28">
           <ApproachSection phases={data.phases} />
         </div>
 
-        <div id="contact" className="w-full">
+        <div id="contact" className="w-full scroll-mt-24 sm:scroll-mt-28">
           <FooterSection
             cta={data.cta}
             footer={data.footer}

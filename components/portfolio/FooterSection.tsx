@@ -162,6 +162,8 @@ export const FooterSection = ({
           <span className="text-neutral-600">·</span>
           <Link
             href={footer.termsUrl || "/terms"}
+            target="_blank"
+            rel="noopener noreferrer"
             className="hover:text-purple transition-colors duration-200"
           >
             Terms
@@ -169,6 +171,8 @@ export const FooterSection = ({
           <span className="text-neutral-600">·</span>
           <Link
             href={footer.privacyUrl || "/privacy"}
+            target="_blank"
+            rel="noopener noreferrer"
             className="hover:text-purple transition-colors duration-200"
           >
             Privacy
@@ -176,6 +180,8 @@ export const FooterSection = ({
           <span className="text-neutral-600">·</span>
           <Link
             href="/chat"
+            target="_blank"
+            rel="noopener noreferrer"
             className="hover:text-purple transition-colors duration-200"
           >
             Chat Guide
@@ -183,6 +189,8 @@ export const FooterSection = ({
           <span className="text-neutral-600">·</span>
           <Link
             href="/security"
+            target="_blank"
+            rel="noopener noreferrer"
             className="hover:text-purple transition-colors duration-200"
           >
             Security
@@ -190,6 +198,8 @@ export const FooterSection = ({
           <span className="text-neutral-600">·</span>
           <Link
             href="/accessibility"
+            target="_blank"
+            rel="noopener noreferrer"
             className="hover:text-purple transition-colors duration-200"
           >
             Accessibility
