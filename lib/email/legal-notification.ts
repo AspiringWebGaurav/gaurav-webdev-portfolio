@@ -14,12 +14,13 @@
 
 import { EMAIL_IDENTITIES } from "./identities";
 import { sendTransactionalEmail, SendEmailResult, escapeHtml, resolveAppUrl } from "./brevo";
-import { formatLegalSummaryProse } from "@/lib/legal/prose";
+import { formatLegalSummaryProse } from "../legal/prose";
 
 export interface BuildLegalNotificationParams {
   docType: "TERMS" | "PRIVACY";
   version: string;
   effectiveDate: string;
+  lastUpdatedDate?: string;
   changeSummary: string;
   recipientName?: string;
   recipientType?: "VISITOR" | "ADMIN_AUDIT";
@@ -33,22 +34,26 @@ export function buildLegalNotificationEmail(params: BuildLegalNotificationParams
   textContent: string;
 } {
   const docTitle = params.docType === "TERMS" ? "Terms of Service" : "Privacy Policy";
-  const appBaseUrl = resolveAppUrl();
+  const rawBaseUrl = resolveAppUrl();
+  const appBaseUrl = rawBaseUrl.includes("localhost") ? "https://gauravpatil.site" : rawBaseUrl;
   const termsUrl = `${appBaseUrl}/terms`;
   const privacyUrl = `${appBaseUrl}/privacy`;
-  const contactUrl = `${appBaseUrl}/contact`;
+  const securityUrl = `${appBaseUrl}/security`;
+  const accessibilityUrl = `${appBaseUrl}/accessibility`;
+  const contactUrl = `${appBaseUrl}/#contact`;
   const policyUrl = params.docType === "TERMS" ? termsUrl : privacyUrl;
 
-  // Google Payments style subject line & headline
+  // Single-entity subject line & headline (Rule 2.12 compliant: zero corporate plurals)
+  // Calm, simple enterprise format (like Google, Stripe, Apple) to prevent spam flagging
   const subject =
     params.docType === "TERMS"
-      ? "Updating our terms of service"
-      : "Updating our privacy policy";
+      ? "Terms of Service Update"
+      : "Privacy Policy Update";
 
   const headlineTitle =
     params.docType === "TERMS"
-      ? "We're updating our terms of service"
-      : "We're updating our privacy policy";
+      ? "Terms of Service Update"
+      : "Privacy Policy Update";
 
   const recipientName = params.recipientName?.trim();
   const greeting =
@@ -57,7 +62,8 @@ export function buildLegalNotificationEmail(params: BuildLegalNotificationParams
       : "Dear Customer,";
 
   const safeEffectiveDate = escapeHtml(params.effectiveDate);
-  const prose = formatLegalSummaryProse(docTitle, safeEffectiveDate);
+  const safeLastUpdatedDate = params.lastUpdatedDate ? escapeHtml(params.lastUpdatedDate) : undefined;
+  const prose = formatLegalSummaryProse(docTitle, safeEffectiveDate, safeLastUpdatedDate);
 
   const textContent = `
 ${headlineTitle}
@@ -68,9 +74,12 @@ You're receiving this email as per policy and acceptance of use, because you may
 
 ${prose.text}
 
-Your current legal agreements:
-• Terms of Service: ${termsUrl}
-• Privacy Policy: ${privacyUrl}
+Current platform agreements & resources:
+• Terms of Service: ${termsUrl} (Standard terms, engineering deliverables, and acceptable use)
+• Privacy Policy: ${privacyUrl} (Data minimization, zero tracking cookies, and encryption safeguards)
+• Security Architecture: ${securityUrl} (Technical safeguards and responsible disclosure)
+• Accessibility Statement: ${accessibilityUrl} (WCAG 2.1 AA compliance and inclusive design commitment)
+• Contact & Inquiries: ${contactUrl} (Direct developer outreach and confidential inquiries)
 
 Review updated ${docTitle.toLowerCase()}:
 ${policyUrl}
@@ -80,9 +89,13 @@ Gaurav Patil
 Gaurav Portfolio
 
 -------------------------------------------------------------------------------
-Help center: ${termsUrl}#legal-contact
-Contact us: ${contactUrl}
+Terms: ${termsUrl}
+Privacy: ${privacyUrl}
+Security: ${securityUrl}
+Accessibility: ${accessibilityUrl}
+Contact: ${contactUrl}
 
+Gaurav Portfolio • Full-Stack Engineer • ${appBaseUrl.replace(/^https?:\/\//, "")}
 You have received this mandatory service announcement to update you about important changes to Gaurav Portfolio.
 Please do not reply to this email, as replies to this automated address are not monitored.
 `.trim();
@@ -123,21 +136,37 @@ Please do not reply to this email, as replies to this automated address are not 
           You're receiving this email as per policy and acceptance of use, because you may have used my services, accessed authenticated services, or interacted with Gaurav Portfolio.
         </p>
 
-        <!-- Core Update Prose + Reassurance -->
+        <!-- Core Update Prose (Clean Developer Policy Notice & Reassurance) -->
         ${prose.html}
 
-        <!-- Current Agreements List -->
-        <p style="margin:20px 0 8px 0;font-size:14px;font-weight:700;color:#202124;">
-          Your current legal agreements:
-        </p>
-        <ul style="margin:0 0 22px 0;padding-left:20px;font-size:14px;line-height:1.8;color:#1a73e8;">
-          <li style="margin-bottom:4px;">
-            <a href="${termsUrl}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;text-decoration:underline;">Terms of Service</a>
-          </li>
-          <li style="margin-bottom:4px;">
-            <a href="${privacyUrl}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;text-decoration:underline;">Privacy Policy</a>
-          </li>
-        </ul>
+        <!-- Current Agreements & Platform Resources List -->
+        <div style="margin:20px 0 22px 0;">
+          <p style="margin:0 0 8px 0;font-size:14px;font-weight:700;color:#202124;">
+            Current platform agreements &amp; resources:
+          </p>
+          <ul style="margin:0;padding-left:20px;font-size:13px;line-height:1.9;color:#1a73e8;">
+            <li style="margin-bottom:4px;">
+              <a href="${termsUrl}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;text-decoration:underline;font-weight:500;">Terms of Service</a>
+              <span style="color:#5f6368;"> &mdash; Standard terms, engineering deliverables, and acceptable use</span>
+            </li>
+            <li style="margin-bottom:4px;">
+              <a href="${privacyUrl}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;text-decoration:underline;font-weight:500;">Privacy Policy</a>
+              <span style="color:#5f6368;"> &mdash; Data minimization, zero tracking cookies, and encryption safeguards</span>
+            </li>
+            <li style="margin-bottom:4px;">
+              <a href="${securityUrl}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;text-decoration:underline;font-weight:500;">Security Architecture &amp; Disclosures</a>
+              <span style="color:#5f6368;"> &mdash; Technical safeguards and responsible disclosure reporting</span>
+            </li>
+            <li style="margin-bottom:4px;">
+              <a href="${accessibilityUrl}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;text-decoration:underline;font-weight:500;">Accessibility Statement</a>
+              <span style="color:#5f6368;"> &mdash; WCAG 2.1 AA compliance and inclusive design commitment</span>
+            </li>
+            <li style="margin-bottom:4px;">
+              <a href="${contactUrl}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;text-decoration:underline;font-weight:500;">Contact &amp; Confidential Inquiries</a>
+              <span style="color:#5f6368;"> &mdash; Direct developer outreach and private communication</span>
+            </li>
+          </ul>
+        </div>
 
         <!-- Google-Style Action CTA Button -->
         <div style="margin:22px 0 28px 0;">
@@ -156,22 +185,18 @@ Please do not reply to this email, as replies to this automated address are not 
         <!-- Google-Style Bottom Divider -->
         <hr style="border:none;border-top:1px solid #dadce0;margin:32px 0 20px 0;" />
 
-        <!-- Google-Style Help Center & Contact Us -->
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 18px auto;">
-          <tr>
-            <td style="padding:0 12px;font-size:13px;font-family:'Google Sans',Roboto,Arial,sans-serif;">
-              <a href="${termsUrl}#legal-contact" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;text-decoration:none;font-weight:500;">
-                <span style="font-weight:bold;font-size:15px;">?</span>&nbsp;&nbsp;Help center
-              </a>
-            </td>
-            <td style="color:#dadce0;font-size:14px;">|</td>
-            <td style="padding:0 12px;font-size:13px;font-family:'Google Sans',Roboto,Arial,sans-serif;">
-              <a href="${contactUrl}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;text-decoration:none;font-weight:500;">
-                <span style="font-size:14px;">&#9993;</span>&nbsp;&nbsp;Contact us
-              </a>
-            </td>
-          </tr>
-        </table>
+        <!-- Clean Enterprise Footer Navigation (Zero Broken Symbols) -->
+        <div style="text-align:center;margin:0 0 16px 0;font-size:12px;color:#5f6368;line-height:1.8;">
+          <a href="${termsUrl}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;text-decoration:none;font-weight:500;">Terms of Service</a>
+          &nbsp;&nbsp;&bull;&nbsp;&nbsp;
+          <a href="${privacyUrl}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;text-decoration:none;font-weight:500;">Privacy Policy</a>
+          &nbsp;&nbsp;&bull;&nbsp;&nbsp;
+          <a href="${securityUrl}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;text-decoration:none;font-weight:500;">Security</a>
+          &nbsp;&nbsp;&bull;&nbsp;&nbsp;
+          <a href="${accessibilityUrl}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;text-decoration:none;font-weight:500;">Accessibility</a>
+          &nbsp;&nbsp;&bull;&nbsp;&nbsp;
+          <a href="${contactUrl}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;text-decoration:none;font-weight:500;">Contact</a>
+        </div>
 
         <!-- Google-Style Legal Entity & Mandatory Notice -->
         <div style="text-align:center;font-size:12px;color:#70757a;line-height:1.5;margin-bottom:8px;">
@@ -208,6 +233,7 @@ export async function sendLegalNotificationEmail(params: {
   docType: "TERMS" | "PRIVACY";
   version: string;
   effectiveDate: string;
+  lastUpdatedDate?: string;
   changeSummary: string;
   recipientType?: "VISITOR" | "ADMIN_AUDIT";
   idempotencyKey?: string;
@@ -216,6 +242,7 @@ export async function sendLegalNotificationEmail(params: {
     docType: params.docType,
     version: params.version,
     effectiveDate: params.effectiveDate,
+    lastUpdatedDate: params.lastUpdatedDate,
     changeSummary: params.changeSummary,
     recipientName: params.toName,
     recipientType: params.recipientType,

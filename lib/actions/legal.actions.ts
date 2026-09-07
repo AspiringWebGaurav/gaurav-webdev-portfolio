@@ -47,7 +47,7 @@ export async function saveDraftAction(
       effectiveDate: parsed.data.effectiveDate,
       lastUpdatedDate: parsed.data.lastUpdatedDate,
       changeSummary: parsed.data.changeSummary,
-      isMaterialChange: parsed.data.isMaterialChange,
+      isMaterialChange: true,
       sections: parsed.data.sections,
       savedAt: now,
       savedByAdmin: session.email,
@@ -134,7 +134,7 @@ export async function publishDocumentAction(
       effectiveDate: parsed.data.effectiveDate,
       lastUpdatedDate: parsed.data.lastUpdatedDate,
       changeSummary: parsed.data.changeSummary,
-      isMaterialChange: parsed.data.isMaterialChange,
+      isMaterialChange: true,
       sections: parsed.data.sections,
       adminEmail: session.email,
     });

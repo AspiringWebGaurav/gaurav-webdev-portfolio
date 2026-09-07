@@ -17,7 +17,7 @@ export const SaveDraftSchema = z.object({
   effectiveDate: z.string().min(1, "Effective date is required"),
   lastUpdatedDate: z.string().min(1, "Last updated date is required"),
   changeSummary: z.string().default(""),
-  isMaterialChange: z.boolean().default(false),
+  isMaterialChange: z.boolean().default(true),
   sections: z.array(LegalSectionSchema).min(1, "At least one section is required"),
 });
 
@@ -35,7 +35,7 @@ export const PublishDocumentSchema = z.object({
   effectiveDate: z.string().min(1, "Effective date is required"),
   lastUpdatedDate: z.string().min(1, "Last updated date is required"),
   changeSummary: z.string().optional().default(""),
-  isMaterialChange: z.boolean().default(false),
+  isMaterialChange: z.boolean().default(true),
   sections: z.array(LegalSectionSchema).min(1, "At least one section is required"),
 });
 

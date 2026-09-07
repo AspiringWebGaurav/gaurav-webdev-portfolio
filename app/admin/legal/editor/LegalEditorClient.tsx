@@ -17,7 +17,6 @@ import {
   FaPen,
   FaCheck,
   FaTriangleExclamation,
-  FaCircleInfo,
 } from "react-icons/fa6";
 import { useAdminConfirm } from "@/components/admin/context";
 import { ButtonHelpBadge } from "@/components/admin/ui/ButtonHelpTooltip";
@@ -26,20 +25,40 @@ import {
   saveDraftAction,
   discardDraftAction,
   publishDocumentAction,
-  getEligibleRecipientsPreviewAction,
 } from "@/lib/actions/legal.actions";
-import {
-  FaCircleCheck,
-  FaUsers,
-  FaRotate,
-  FaEnvelope,
-} from "react-icons/fa6";
+import { FaRotate, FaCircleCheck } from "react-icons/fa6";
 import { MarkdownLegalRenderer } from "@/components/legal/MarkdownLegalRenderer";
 import type { LegalDocument, LegalSection } from "@/types/legal";
 
 interface LegalEditorClientProps {
   termsDoc: LegalDocument | null;
   privacyDoc: LegalDocument | null;
+}
+
+function getFormattedToday(): string {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date());
+}
+
+function getNextPatchVersion(curr: string): string {
+  if (!curr) return "0.0.2";
+  const parts = curr.trim().split(".").map((p) => parseInt(p, 10));
+  if (parts.length >= 3 && !isNaN(parts[2])) {
+    return `${parts[0]}.${parts[1]}.${parts[2] + 1}`;
+  }
+  return "0.0.2";
+}
+
+function getNextMinorVersion(curr: string): string {
+  if (!curr) return "0.1.0";
+  const parts = curr.trim().split(".").map((p) => parseInt(p, 10));
+  if (parts.length >= 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+    return `${parts[0]}.${parts[1] + 1}.0`;
+  }
+  return "0.1.0";
 }
 
 export const LegalEditorClient: React.FC<LegalEditorClientProps> = ({
@@ -62,7 +81,6 @@ export const LegalEditorClient: React.FC<LegalEditorClientProps> = ({
   const [effectiveDate, setEffectiveDate] = useState("");
   const [lastUpdatedDate, setLastUpdatedDate] = useState("");
   const [changeSummary, setChangeSummary] = useState("");
-  const [isMaterialChange, setIsMaterialChange] = useState(false);
   const [sections, setSections] = useState<LegalSection[]>([]);
   const [isLivePreview, setIsLivePreview] = useState(false);
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
@@ -80,44 +98,30 @@ export const LegalEditorClient: React.FC<LegalEditorClientProps> = ({
   const [publishProgress, setPublishProgress] = useState(0);
   const [publishCurrentStep, setPublishCurrentStep] = useState("");
   const [publishCompleted, setPublishCompleted] = useState(false);
-  const [publishedJobId, setPublishedJobId] = useState<string | null>(null);
-
-  // Audience Preview State in Editor
-  const [editorAudience, setEditorAudience] = useState<{ email: string; name?: string; type: string }[] | null>(null);
-  const [isLoadingEditorAudience, setIsLoadingEditorAudience] = useState(false);
-  const [showAudienceList, setShowAudienceList] = useState(false);
-  const [showEmailPreview, setShowEmailPreview] = useState(false);
-
-  // Fetch audience preview when material change is toggled
-  useEffect(() => {
-    if (isMaterialChange && !editorAudience && !isLoadingEditorAudience) {
-      setIsLoadingEditorAudience(true);
-      getEligibleRecipientsPreviewAction().then((res) => {
-        setIsLoadingEditorAudience(false);
-        if (res.success && res.data) {
-          setEditorAudience(res.data);
-        }
-      });
-    }
-  }, [isMaterialChange, editorAudience, isLoadingEditorAudience]);
 
   // Sync state when active document changes or mounts
   useEffect(() => {
     if (!currentActiveDoc) return;
 
+    const todayStr = getFormattedToday();
+
     if (currentActiveDoc.draft) {
       setVersion(currentActiveDoc.draft.version);
-      setEffectiveDate(currentActiveDoc.draft.effectiveDate);
-      setLastUpdatedDate(currentActiveDoc.draft.lastUpdatedDate);
+      // Fixed day date crafted as before, preserved from draft or document
+      setEffectiveDate(currentActiveDoc.draft.effectiveDate?.trim() || currentActiveDoc.effectiveDate?.trim() || "January 1, 2026");
+      // Dynamic live date: defaults to today's date
+      setLastUpdatedDate(todayStr);
       setChangeSummary(currentActiveDoc.draft.changeSummary || "");
-      setIsMaterialChange(currentActiveDoc.draft.isMaterialChange || false);
       setSections([...currentActiveDoc.draft.sections]);
     } else {
-      setVersion(currentActiveDoc.publishedVersion);
-      setEffectiveDate(currentActiveDoc.effectiveDate);
-      setLastUpdatedDate(currentActiveDoc.lastUpdatedDate);
+      // Auto-suggest next patch version so admin doesn't have to calculate it manually
+      const nextVer = getNextPatchVersion(currentActiveDoc.publishedVersion || "0.0.1");
+      setVersion(nextVer);
+      // Fixed day date crafted as before
+      setEffectiveDate(currentActiveDoc.effectiveDate?.trim() || "January 1, 2026");
+      // Dynamic live date: defaults to today's live date
+      setLastUpdatedDate(todayStr);
       setChangeSummary("");
-      setIsMaterialChange(false);
       setSections([...currentActiveDoc.sections]);
     }
 
@@ -184,15 +188,19 @@ export const LegalEditorClient: React.FC<LegalEditorClientProps> = ({
     setSavingDraft(true);
     setFeedback(null);
 
+    const todayStr = getFormattedToday();
+    const finalEffective = effectiveDate.trim() || "January 1, 2026";
+    const finalUpdated = lastUpdatedDate.trim() || todayStr;
+
     const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
     const [res] = await Promise.all([
       saveDraftAction({
         docType: activeDocType,
         version: version.trim(),
-        effectiveDate: effectiveDate.trim(),
-        lastUpdatedDate: lastUpdatedDate.trim(),
+        effectiveDate: finalEffective,
+        lastUpdatedDate: finalUpdated,
         changeSummary: changeSummary.trim(),
-        isMaterialChange,
+        isMaterialChange: true,
         sections,
       }),
       sleep(750), // Smooth deliberate cadence
@@ -238,11 +246,11 @@ export const LegalEditorClient: React.FC<LegalEditorClientProps> = ({
         message: "Draft discarded. Restored published version.",
       });
       if (currentActiveDoc) {
-        setVersion(currentActiveDoc.publishedVersion);
-        setEffectiveDate(currentActiveDoc.effectiveDate);
-        setLastUpdatedDate(currentActiveDoc.lastUpdatedDate);
+        const todayStr = getFormattedToday();
+        setVersion(getNextPatchVersion(currentActiveDoc.publishedVersion || "0.0.1"));
+        setEffectiveDate(currentActiveDoc.effectiveDate?.trim() || "January 1, 2026");
+        setLastUpdatedDate(todayStr);
         setChangeSummary("");
-        setIsMaterialChange(false);
         setSections([...currentActiveDoc.sections]);
       }
       router.refresh();
@@ -268,17 +276,12 @@ export const LegalEditorClient: React.FC<LegalEditorClientProps> = ({
     }
 
     const docName = activeDocType === "TERMS" ? "Terms of Service" : "Privacy Policy";
-    const recipientCountText = editorAudience?.length ? ` (${editorAudience.length} recipients)` : "";
-
-    const description = isMaterialChange
-      ? `You are publishing an important update (v${version.trim()}) to the ${docName}. This will update your live website, archive the old version, and email all active visitors and your admin Gmail${recipientCountText}.`
-      : `You are publishing a routine update (v${version.trim()}) to the ${docName}. This will update your live website immediately without sending emails.`;
 
     const ok = await confirm({
       title: `Publish ${docName} v${version.trim()}`,
-      description,
-      variant: isMaterialChange ? "warning" : "purple",
-      confirmLabel: isMaterialChange ? "Confirm & Publish" : "Publish Now",
+      description: `You are publishing version ${version.trim()} of the ${docName} to the live website. This will update the public policy and archive the previous version.`,
+      variant: "purple",
+      confirmLabel: "Publish Changes",
     });
 
     if (!ok) return;
@@ -288,26 +291,29 @@ export const LegalEditorClient: React.FC<LegalEditorClientProps> = ({
     // Launch deliberate step-by-step publishing flow ("slow UI/UX")
     setIsPublishingFlow(true);
     setPublishCompleted(false);
-    setPublishedJobId(null);
-    setPublishProgress(20);
+    setPublishProgress(25);
     setPublishCurrentStep(`Checking ${docName} v${version.trim()}...`);
 
     await sleep(650);
-    setPublishProgress(45);
+    setPublishProgress(50);
     setPublishCurrentStep("Saving previous version to archive ledger...");
 
     await sleep(700);
-    setPublishProgress(70);
+    setPublishProgress(75);
     setPublishCurrentStep(`Publishing live ${docName} to website...`);
+
+    const todayStr = getFormattedToday();
+    const finalEffective = effectiveDate.trim() || "January 1, 2026";
+    const finalUpdated = lastUpdatedDate.trim() || todayStr;
 
     const res = await publishDocumentAction({
       docType: activeDocType,
       expectedVersion: currentActiveDoc.version,
       version: version.trim(),
-      effectiveDate: effectiveDate.trim(),
-      lastUpdatedDate: lastUpdatedDate.trim(),
+      effectiveDate: finalEffective,
+      lastUpdatedDate: finalUpdated,
       changeSummary: changeSummary.trim(),
-      isMaterialChange,
+      isMaterialChange: true,
       sections,
     });
 
@@ -320,12 +326,9 @@ export const LegalEditorClient: React.FC<LegalEditorClientProps> = ({
       return;
     }
 
-    if (isMaterialChange && res.data?.jobId) {
-      setPublishProgress(90);
-      setPublishCurrentStep("Queuing email broadcast for recipients...");
-      setPublishedJobId(res.data.jobId);
-      await sleep(750);
-    }
+    setPublishProgress(90);
+    setPublishCurrentStep("Finalizing publication & synchronizing updates...");
+    await sleep(650);
 
     setPublishProgress(100);
     setPublishCurrentStep("All done! Your new revision is live.");
@@ -414,22 +417,50 @@ export const LegalEditorClient: React.FC<LegalEditorClientProps> = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <label className="block text-xs font-admin-mono font-semibold text-[#475569] mb-1">
-              Revision Version (SemVer)
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-admin-mono font-semibold text-[#475569]">
+                Revision Version (SemVer)
+              </label>
+              <span className="text-[10px] font-admin-mono text-[#64748B]">
+                v{currentActiveDoc?.publishedVersion || "0.0.1"} (Live)
+              </span>
+            </div>
             <input
               type="text"
               value={version}
               onChange={(e) => setVersion(e.target.value)}
-              placeholder="e.g. 1.0.0"
+              placeholder="e.g. 0.0.2"
               className="w-full px-3 py-2 text-xs font-admin-mono border border-[#CBD5E1] rounded-sm bg-[#FFFFFF] text-[#0F172A] focus:outline-none focus:border-[#7C3AED]"
             />
+            <div className="flex items-center gap-1.5 mt-1.5">
+              <button
+                type="button"
+                onClick={() => setVersion(getNextPatchVersion(currentActiveDoc?.publishedVersion || "0.0.1"))}
+                className="text-[10px] font-admin-mono px-2 py-0.5 rounded border border-[#E2E8F0] bg-[#FAFAFA] hover:bg-[#F1F5F9] text-[#475569] transition-colors cursor-pointer"
+                title="Increment patch version"
+              >
+                + Patch ({getNextPatchVersion(currentActiveDoc?.publishedVersion || "0.0.1")})
+              </button>
+              <button
+                type="button"
+                onClick={() => setVersion(getNextMinorVersion(currentActiveDoc?.publishedVersion || "0.0.1"))}
+                className="text-[10px] font-admin-mono px-2 py-0.5 rounded border border-[#E2E8F0] bg-[#FAFAFA] hover:bg-[#F1F5F9] text-[#475569] transition-colors cursor-pointer"
+                title="Increment minor version"
+              >
+                + Minor ({getNextMinorVersion(currentActiveDoc?.publishedVersion || "0.0.1")})
+              </button>
+            </div>
           </div>
 
           <div>
-            <label className="block text-xs font-admin-mono font-semibold text-[#475569] mb-1">
-              Effective Date
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-admin-mono font-semibold text-[#475569]">
+                Effective Date
+              </label>
+              <span className="text-[10px] font-admin-mono px-1.5 py-0.5 rounded bg-[#F1F5F9] text-[#64748B] font-medium">
+                Day Date (Fixed)
+              </span>
+            </div>
             <input
               type="text"
               value={effectiveDate}
@@ -437,199 +468,75 @@ export const LegalEditorClient: React.FC<LegalEditorClientProps> = ({
               placeholder="e.g. January 1, 2026"
               className="w-full px-3 py-2 text-xs font-admin-mono border border-[#CBD5E1] rounded-sm bg-[#FFFFFF] text-[#0F172A] focus:outline-none focus:border-[#7C3AED]"
             />
+            <div className="flex items-center gap-1.5 mt-1.5">
+              <button
+                type="button"
+                onClick={() => setEffectiveDate("January 1, 2026")}
+                className="text-[10px] font-admin-mono px-2 py-0.5 rounded border border-[#E2E8F0] bg-[#FAFAFA] hover:bg-[#F1F5F9] text-[#475569] transition-colors cursor-pointer"
+                title="Reset to original crafted date"
+              >
+                Jan 1, 2026 (Crafted)
+              </button>
+              <button
+                type="button"
+                onClick={() => setEffectiveDate(getFormattedToday())}
+                className="text-[10px] font-admin-mono px-2 py-0.5 rounded border border-[#E2E8F0] bg-[#FAFAFA] hover:bg-[#F1F5F9] text-[#475569] transition-colors cursor-pointer"
+                title="Set to today's date"
+              >
+                Use Today
+              </button>
+            </div>
           </div>
 
           <div>
-            <label className="block text-xs font-admin-mono font-semibold text-[#475569] mb-1">
-              Last Updated Date
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-admin-mono font-semibold text-[#475569]">
+                Last Updated Date
+              </label>
+              <span className="text-[10px] font-admin-mono px-1.5 py-0.5 rounded bg-[#EDE9FE] text-[#7C3AED] font-semibold">
+                Dynamic Live Date
+              </span>
+            </div>
             <input
               type="text"
               value={lastUpdatedDate}
               onChange={(e) => setLastUpdatedDate(e.target.value)}
-              placeholder="e.g. August 29, 2026"
+              placeholder="e.g. September 7, 2026"
               className="w-full px-3 py-2 text-xs font-admin-mono border border-[#CBD5E1] rounded-sm bg-[#FFFFFF] text-[#0F172A] focus:outline-none focus:border-[#7C3AED]"
             />
+            <div className="flex items-center gap-1.5 mt-1.5">
+              <button
+                type="button"
+                onClick={() => setLastUpdatedDate(getFormattedToday())}
+                className="text-[10px] font-admin-mono px-2 py-0.5 rounded border border-[#DDD6FE] bg-[#F5F3FF] hover:bg-[#EDE9FE] text-[#7C3AED] font-semibold transition-colors cursor-pointer"
+                title="Sync with today's live date"
+              >
+                Sync Today (Live)
+              </button>
+              <button
+                type="button"
+                onClick={() => setLastUpdatedDate(effectiveDate)}
+                className="text-[10px] font-admin-mono px-2 py-0.5 rounded border border-[#E2E8F0] bg-[#FAFAFA] hover:bg-[#F1F5F9] text-[#475569] transition-colors cursor-pointer"
+                title="Match effective date"
+              >
+                Match Effective Date
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Material Change Toggle & Summary */}
-        <div className="pt-3 border-t border-[#F8FAFC] space-y-3">
-          <div className="flex items-center gap-3">
-            <input
-              type="checkbox"
-              id="materialToggle"
-              checked={isMaterialChange}
-              onChange={(e) => setIsMaterialChange(e.target.checked)}
-              className="w-4 h-4 text-[#7C3AED] rounded border-[#CBD5E1] focus:ring-[#7C3AED] cursor-pointer"
-            />
-            <label
-              htmlFor="materialToggle"
-              className="text-xs font-admin-mono font-bold text-[#0F172A] cursor-pointer"
-            >
-              Important Update (Send notification email to active visitors &amp; admin)
-            </label>
-          </div>
-
-          {isMaterialChange && (
-            <div className="p-3.5 bg-[#F5F3FF] border border-[#DDD6FE] rounded-sm space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-2 text-xs font-admin-mono font-semibold text-[#7C3AED]">
-                  <FaCircleInfo className="w-3.5 h-3.5" />
-                  <span>Internal Change Note (Optional &mdash; saved in Admin History only, never sent in emails)</span>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowEmailPreview(!showEmailPreview)}
-                    className="text-[11px] font-admin-mono text-[#7C3AED] hover:text-[#6D28D9] flex items-center gap-1 font-semibold cursor-pointer underline"
-                  >
-                    <FaEnvelope className="w-3 h-3" />
-                    <span>{showEmailPreview ? "Hide Email Preview" : "Preview Announcement Letter"}</span>
-                  </button>
-
-                  {isLoadingEditorAudience ? (
-                    <span className="text-[11px] font-admin-mono text-[#7C3AED] flex items-center gap-1">
-                      <FaRotate className="w-3 h-3 animate-spin" /> Checking recipient list...
-                    </span>
-                  ) : editorAudience ? (
-                    <button
-                      type="button"
-                      onClick={() => setShowAudienceList(!showAudienceList)}
-                      className="text-[11px] font-admin-mono text-[#7C3AED] hover:text-[#6D28D9] flex items-center gap-1 font-semibold cursor-pointer underline"
-                    >
-                      <FaUsers className="w-3 h-3" />
-                      <span>
-                        {editorAudience.length} emails will receive this ({showAudienceList ? "Hide List" : "Show List"})
-                      </span>
-                    </button>
-                  ) : null}
-                </div>
-              </div>
-
-              <textarea
-                value={changeSummary}
-                onChange={(e) => setChangeSummary(e.target.value)}
-                rows={2}
-                placeholder="Optional internal note for your records... Leave blank if not needed (never published in emails)."
-                className="w-full px-3 py-2 text-xs font-admin-mono border border-[#CBD5E1] rounded-sm bg-[#FFFFFF] text-[#0F172A] focus:outline-none focus:border-[#7C3AED]"
-              />
-
-              <div className="text-[11px] font-admin-mono text-[#64748B]">
-                This note is saved strictly in your internal database history. Visitor announcement emails contain <strong className="text-[#0F172A]">zero internal logs and zero version numbers</strong> &mdash; simply notifying visitors that terms have updated and inviting them to check anytime.
-              </div>
-
-              {/* Live Google/Asana-Style Email Preview */}
-              {showEmailPreview && (
-                <div className="pt-2 border-t border-[#DDD6FE]">
-                  <div className="text-[10px] uppercase font-bold text-[#6D28D9] font-admin-mono mb-2 flex items-center justify-between">
-                    <span>Live Email Preview (Clean Notice &mdash; Zero Logs / No Version Numbers)</span>
-                    <span className="text-[#64748B] lowercase font-normal">from: Gaurav Portfolio No-Reply &lt;no-reply@gauravpatil.site&gt;</span>
-                  </div>
-
-                  <div className="bg-[#FFFFFF] border border-[#CBD5E1] rounded-sm p-5 text-left shadow-xs space-y-3 font-sans max-w-xl mx-auto">
-                    {/* Google-Style Top Brand & Divider */}
-                    <div className="pt-1">
-                      <span className="text-xl font-semibold text-[#1A73E8]">Gaurav</span>
-                      <span className="text-xl font-normal text-[#5F6368]"> Portfolio</span>
-                    </div>
-                    <hr className="border-none border-t border-[#DADCE0] my-2" />
-
-                    <div className="text-2xl font-normal text-[#1A73E8] pt-1">
-                      {activeDocType === "TERMS" ? "We're updating our terms of service" : "We're updating our privacy policy"}
-                    </div>
-
-                    <div className="text-xs text-[#202124] pt-1">
-                      Dear Customer,
-                    </div>
-
-                    <div className="text-xs text-[#3C4043] leading-relaxed">
-                      You&apos;re receiving this email because you have visited or interacted with Gaurav Portfolio.
-                    </div>
-
-                    {/* Bold Core Announcement */}
-                    <div className="text-xs text-[#3C4043] leading-relaxed font-bold">
-                      I am updating the public {activeDocType === "TERMS" ? "Terms of Service" : "Privacy Policy"} governing Gaurav Portfolio. Your {activeDocType === "TERMS" ? "terms of service" : "privacy policy"} will automatically update to reflect this change shortly (on or around {effectiveDate || "January 1, 2026"}).
-                    </div>
-
-                    {/* Google-Style Reassurance Paragraph */}
-                    <div className="text-xs text-[#3C4043] leading-relaxed">
-                      This update won&apos;t affect how you explore the portfolio or interact with services, and you don&apos;t need to take any action. Your data sovereignty, rights, and privacy protections remain fully preserved.
-                    </div>
-
-                    {/* Google-Style Agreements List */}
-                    <div className="pt-1">
-                      <div className="text-xs font-bold text-[#202124] mb-1">Your current legal agreements:</div>
-                      <ul className="text-xs text-[#1A73E8] list-disc list-inside space-y-1">
-                        <li><span className="underline cursor-default">Terms of Service</span></li>
-                        <li><span className="underline cursor-default">Privacy Policy</span></li>
-                      </ul>
-                    </div>
-
-                    <div className="pt-2">
-                      <span className="inline-block px-4 py-2 bg-[#1A73E8] text-white text-xs font-medium rounded-xs cursor-default">
-                        Review updated {activeDocType === "TERMS" ? "terms of service" : "privacy policy"}
-                      </span>
-                    </div>
-
-                    <div className="text-xs text-[#3C4043] pt-2">
-                      Sincerely,<br />
-                      <strong className="text-[#202124]">Gaurav Patil</strong><br />
-                      <span className="text-[#5F6368]">Gaurav Portfolio</span>
-                    </div>
-
-                    {/* Google-Style Bottom Divider & Help Center */}
-                    <hr className="border-none border-t border-[#DADCE0] my-3" />
-
-                    <div className="text-center text-xs text-[#1A73E8] space-x-3">
-                      <span className="font-medium cursor-default">? Help center</span>
-                      <span className="text-[#DADCE0]">|</span>
-                      <span className="font-medium cursor-default">&#9993; Contact us</span>
-                    </div>
-
-                    <div className="text-center text-[11px] text-[#70757A]">
-                      Gaurav Portfolio &bull; Full-Stack Engineer &bull; gauravpatil.site
-                    </div>
-
-                    <div className="text-center text-[10px] text-[#70757A] space-y-1">
-                      <div>
-                        You have received this mandatory service announcement to update you about important changes to Gaurav Portfolio.
-                      </div>
-                      <div>
-                        Please do not reply to this email, as replies to this automated address are not monitored.
-                      </div>
-                    </div>
-
-                    <div className="text-center pt-2">
-                      <span className="text-sm font-semibold text-[#1A73E8]">Gaurav</span>
-                      <span className="text-sm font-normal text-[#70757A]"> Portfolio</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {showAudienceList && editorAudience && (
-                <div className="pt-2 border-t border-[#DDD6FE]">
-                  <div className="text-[10px] uppercase font-bold text-[#6D28D9] font-admin-mono mb-1.5">
-                    Email Recipients Preview ({editorAudience.length})
-                  </div>
-                  <div className="max-h-36 overflow-y-auto space-y-1 bg-[#FFFFFF] border border-[#DDD6FE] rounded-sm p-2 text-xs font-admin-mono">
-                    {editorAudience.map((aud, i) => (
-                      <div key={i} className="flex items-center justify-between text-[11px] py-0.5">
-                        <span className="text-[#0F172A]">
-                          {aud.email} {aud.name ? `(${aud.name})` : ""}
-                        </span>
-                        <span className="text-[9px] px-1.5 py-0.2 bg-purple-50 text-purple-700 rounded font-semibold border border-purple-200">
-                          {aud.type}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+        {/* Revision Note (Internal Only) */}
+        <div className="pt-3 border-t border-[#F8FAFC] space-y-2">
+          <label className="block text-xs font-admin-mono font-semibold text-[#475569]">
+            Revision Note (Optional &mdash; saved in Admin History only)
+          </label>
+          <textarea
+            value={changeSummary}
+            onChange={(e) => setChangeSummary(e.target.value)}
+            rows={2}
+            placeholder="Optional internal note for your records... Leave blank if not needed."
+            className="w-full px-3 py-2 text-xs font-admin-mono border border-[#CBD5E1] rounded-sm bg-[#FFFFFF] text-[#0F172A] focus:outline-none focus:border-[#7C3AED]"
+          />
         </div>
 
         {/* Editor Action Buttons */}
@@ -688,7 +595,7 @@ export const LegalEditorClient: React.FC<LegalEditorClientProps> = ({
               className="inline-flex items-center gap-2 px-4 py-2 text-xs font-admin-mono font-semibold bg-[#7C3AED] hover:bg-[#6D28D9] text-[#FFFFFF] rounded-sm transition-all cursor-pointer shadow-2xs disabled:opacity-50"
             >
               <FaUpload className="w-3.5 h-3.5" />
-              <span>{isMaterialChange ? "Publish & Broadcast" : "Publish Revision"}</span>
+              <span>Publish Revision</span>
               <ButtonHelpBadge text={BUTTON_HELP.LEGAL_PUBLISH} />
             </button>
           </div>
@@ -937,44 +844,23 @@ export const LegalEditorClient: React.FC<LegalEditorClientProps> = ({
                 <span>3. Live website updated</span>
               </div>
 
-              {isMaterialChange && (
-                <div
-                  className={`flex items-center gap-2 ${
-                    publishProgress >= 100 ? "text-emerald-700 font-semibold" : "text-[#94A3B8]"
-                  }`}
-                >
-                  {publishProgress >= 100 ? (
-                    <FaCheck className="w-3 h-3 text-emerald-600" />
-                  ) : (
-                    <span className="w-3 h-3 rounded-full border border-[#CBD5E1]" />
-                  )}
-                  <span>
-                    4. Email notifications queued for {editorAudience?.length || "all"} recipients
-                  </span>
-                </div>
-              )}
+              <div
+                className={`flex items-center gap-2 ${
+                  publishProgress >= 100 ? "text-emerald-700 font-semibold" : "text-[#94A3B8]"
+                }`}
+              >
+                {publishProgress >= 100 ? (
+                  <FaCheck className="w-3 h-3 text-emerald-600" />
+                ) : (
+                  <span className="w-3 h-3 rounded-full border border-[#CBD5E1]" />
+                )}
+                <span>4. Publication finalized &amp; changes synchronized</span>
+              </div>
             </div>
 
-            {/* If Completed, show recipient summary and action buttons */}
+            {/* If Completed, show action buttons */}
             {publishCompleted && (
               <div className="space-y-3 pt-2">
-                {isMaterialChange && editorAudience && (
-                  <div className="p-3 bg-[#F0FDF4] border border-emerald-200 rounded-sm text-xs font-admin-mono text-emerald-900">
-                    <div className="font-bold mb-1 flex items-center justify-between">
-                      <span>✉️ Broadcast Dispatched to {editorAudience.length} Recipients:</span>
-                      {publishedJobId && (
-                        <span className="font-normal text-[10px] text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded">
-                          Job #{publishedJobId}
-                        </span>
-                      )}
-                    </div>
-                    <div className="max-h-24 overflow-y-auto space-y-0.5 text-[11px] text-emerald-800">
-                      {editorAudience.map((a, i) => (
-                        <div key={i}>&bull; {a.email}</div>
-                      ))}
-                    </div>
-                  </div>
-                )}
 
                 <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
                   <button
