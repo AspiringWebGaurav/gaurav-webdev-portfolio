@@ -1,0 +1,339 @@
+import React from "react";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { FaLocationArrow, FaGithub, FaCheck, FaLightbulb, FaLayerGroup } from "react-icons/fa6";
+import { PROJECT_CASE_STUDIES } from "@/lib/data/case-studies";
+
+interface PageProps {
+  params: Promise<{ slug: string }>;
+}
+
+export const revalidate = 60;
+
+export async function generateStaticParams() {
+  return Object.keys(PROJECT_CASE_STUDIES).map((slug) => ({
+    slug,
+  }));
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const study = PROJECT_CASE_STUDIES[slug];
+
+  if (!study) {
+    return {
+      title: "Case Study Not Found",
+      robots: { index: false, follow: false },
+    };
+  }
+
+  const canonicalUrl = `https://gauravpatil.site/projects/${slug}`;
+
+  return {
+    title: `${study.title} — Case Study`,
+    description: study.subtitle,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title: `${study.title} — Technical Case Study | Gaurav Patil`,
+      description: study.subtitle,
+      url: canonicalUrl,
+      siteName: "Gaurav Patil Portfolio",
+      type: "article",
+      images: study.coverImage ? [{ url: study.coverImage, width: 1200, height: 630 }] : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${study.title} — Case Study | Gaurav Patil`,
+      description: study.subtitle,
+    },
+  };
+}
+
+export default async function ProjectCaseStudyPage({ params }: PageProps) {
+  const { slug } = await params;
+  const study = PROJECT_CASE_STUDIES[slug];
+
+  if (!study) {
+    notFound();
+  }
+
+  const canonicalUrl = `https://gauravpatil.site/projects/${slug}`;
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://gauravpatil.site",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Projects",
+        item: "https://gauravpatil.site/projects",
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: study.title,
+        item: canonicalUrl,
+      },
+    ],
+  };
+
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "@id": `${canonicalUrl}#article`,
+    headline: `${study.title} — Technical Case Study`,
+    description: study.subtitle,
+    url: canonicalUrl,
+    image: `https://gauravpatil.site${study.coverImage}`,
+    author: {
+      "@type": "Person",
+      name: "Gaurav Patil",
+      url: "https://gauravpatil.site",
+      sameAs: ["https://github.com/AspiringWebGaurav"],
+    },
+    publisher: {
+      "@type": "Person",
+      name: "Gaurav Patil",
+      url: "https://gauravpatil.site",
+    },
+    inLanguage: "en-US",
+    about: study.technologies.map((t) => ({
+      "@type": "Thing",
+      name: t,
+    })),
+  };
+
+  return (
+    <main className="relative bg-black-100 min-h-screen text-white flex justify-center items-center flex-col mx-auto px-5 sm:px-10 overflow-clip">
+      {/* Schema.org Injection */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
+      />
+
+      {/* Ambient Grid Pattern */}
+      <div
+        className="h-screen w-full dark:bg-black-100 bg-white dark:bg-grid-white/[0.03] bg-grid-black-100/[0.2]
+       absolute top-0 left-0 flex items-center justify-center pointer-events-none"
+      >
+        <div
+          className="absolute pointer-events-none inset-0 flex items-center justify-center dark:bg-black-100
+         bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]"
+        />
+      </div>
+
+      <div className="max-w-4xl w-full pt-16 sm:pt-24 pb-20 relative z-10">
+        {/* Breadcrumb Navigation */}
+        <nav aria-label="Breadcrumb" className="mb-8 flex items-center gap-2 text-sm text-[#C1C2D3] flex-wrap">
+          <Link href="/" className="hover:text-purple transition-colors duration-200">
+            Home
+          </Link>
+          <span className="text-white/40">/</span>
+          <Link href="/projects" className="hover:text-purple transition-colors duration-200">
+            Projects
+          </Link>
+          <span className="text-white/40">/</span>
+          <span className="text-purple font-medium truncate max-w-xs sm:max-w-md" aria-current="page">
+            {study.title}
+          </span>
+        </nav>
+
+        {/* Case Study Header */}
+        <header className="mb-12">
+          <div className="flex items-center gap-3 mb-4 flex-wrap">
+            <span className="px-3 py-1 rounded-full text-xs font-mono font-medium bg-purple/10 text-purple border border-purple/30">
+              {study.category}
+            </span>
+            <span className="px-3 py-1 rounded-full text-xs font-mono text-neutral-400 bg-white/[0.05] border border-white/[0.1]">
+              {study.role}
+            </span>
+            <span className="px-3 py-1 rounded-full text-xs font-mono text-neutral-400 bg-white/[0.05] border border-white/[0.1]">
+              {study.timeline}
+            </span>
+          </div>
+
+          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-white mb-4 leading-tight">
+            {study.title}
+          </h1>
+
+          <p className="text-base sm:text-xl text-white-200 leading-relaxed">
+            {study.subtitle}
+          </p>
+        </header>
+
+        {/* Cover Image Showcase */}
+        <div className="relative w-full h-64 sm:h-96 rounded-3xl overflow-hidden bg-[#13162D] border border-white/[0.1] mb-12 flex items-center justify-center">
+          <img
+            src="/bg.png"
+            alt=""
+            role="presentation"
+            className="absolute inset-0 w-full h-full object-cover opacity-50"
+            loading="lazy"
+            decoding="async"
+          />
+          <img
+            src={study.coverImage}
+            alt={`${study.title} architecture showcase`}
+            className="z-10 object-contain max-h-full p-4"
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
+
+        {/* Action Links Bar */}
+        <div className="flex items-center gap-4 mb-14 p-4 rounded-2xl bg-[#04071D] border border-white/[0.1] flex-wrap justify-between">
+          <div className="flex items-center gap-2 flex-wrap">
+            {study.technologies.map((tech) => (
+              <span
+                key={tech}
+                className="px-2.5 py-1 text-xs font-mono rounded-lg bg-white/[0.06] text-white/90 border border-white/[0.08]"
+              >
+                {tech}
+              </span>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-4 ml-auto">
+            {study.githubUrl && (
+              <a
+                href={study.githubUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-neutral-300 hover:text-white px-3 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] transition-colors"
+              >
+                <FaGithub className="w-4 h-4" />
+                Source Code
+              </a>
+            )}
+            {study.liveUrl && (
+              <a
+                href={study.liveUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-black bg-purple hover:bg-purple/90 px-4 py-2 rounded-xl transition-colors"
+              >
+                Live Demo
+                <FaLocationArrow className="w-3 h-3" />
+              </a>
+            )}
+          </div>
+        </div>
+
+        {/* Section 1: Overview */}
+        <section aria-labelledby="overview-heading" className="mb-14">
+          <h2 id="overview-heading" className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+            <FaLayerGroup className="w-5 h-5 text-purple" />
+            Project Overview
+          </h2>
+          <p className="text-base sm:text-lg text-white-200 leading-relaxed">
+            {study.overview}
+          </p>
+        </section>
+
+        {/* Section 2: Architecture */}
+        <section aria-labelledby="architecture-heading" className="mb-14 p-6 sm:p-8 rounded-3xl bg-[#04071D] border border-white/[0.1]">
+          <h2 id="architecture-heading" className="text-2xl font-bold text-white mb-3">
+            {study.architecture.title}
+          </h2>
+          <p className="text-white-200 text-sm sm:text-base leading-relaxed mb-6">
+            {study.architecture.description}
+          </p>
+          <ul className="space-y-3">
+            {study.architecture.points.map((point, idx) => (
+              <li key={idx} className="flex items-start gap-3 text-sm sm:text-base text-neutral-300">
+                <FaCheck className="w-4 h-4 text-purple mt-1 flex-shrink-0" />
+                <span>{point}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {/* Section 3: Key Challenges & Solutions */}
+        <section aria-labelledby="challenges-heading" className="mb-14">
+          <h2 id="challenges-heading" className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+            <FaLightbulb className="w-5 h-5 text-purple" />
+            Engineering Challenges & Solutions
+          </h2>
+          <div className="space-y-6">
+            {study.challenges.map((c, idx) => (
+              <div
+                key={idx}
+                className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.08]"
+              >
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  {c.title}
+                </h3>
+                <p className="text-sm sm:text-base text-neutral-300 leading-relaxed">
+                  {c.solution}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Section 4: Key Features & Results */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+          {/* Features */}
+          <section aria-labelledby="features-heading" className="p-6 rounded-3xl bg-[#04071D] border border-white/[0.1]">
+            <h2 id="features-heading" className="text-xl font-bold text-white mb-4">
+              Core Capabilities
+            </h2>
+            <ul className="space-y-3">
+              {study.features.map((feature, idx) => (
+                <li key={idx} className="flex items-start gap-2.5 text-sm text-neutral-300">
+                  <span className="w-1.5 h-1.5 rounded-full bg-purple mt-2 flex-shrink-0" />
+                  <span>{feature}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          {/* Results */}
+          <section aria-labelledby="results-heading" className="p-6 rounded-3xl bg-[#04071D] border border-white/[0.1]">
+            <h2 id="results-heading" className="text-xl font-bold text-white mb-4">
+              Validated Outcomes
+            </h2>
+            <ul className="space-y-3">
+              {study.results.map((result, idx) => (
+                <li key={idx} className="flex items-start gap-2.5 text-sm text-neutral-300">
+                  <FaCheck className="w-3.5 h-3.5 text-purple mt-1 flex-shrink-0" />
+                  <span>{result}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
+
+        {/* Navigation Footer */}
+        <div className="flex items-center justify-between pt-8 border-t border-white/[0.08] flex-wrap gap-4">
+          <Link
+            href="/projects"
+            className="inline-flex items-center gap-2 text-sm text-neutral-400 hover:text-white transition-colors"
+          >
+            ← Back to All Projects
+          </Link>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-sm text-purple hover:text-white transition-colors"
+          >
+            Go to Homepage →
+          </Link>
+        </div>
+      </div>
+    </main>
+  );
+}

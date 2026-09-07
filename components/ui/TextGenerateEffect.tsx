@@ -3,18 +3,20 @@ import { cn } from "@/lib/utils";
 export const TextGenerateEffect = ({
   words,
   className,
+  as: Component = "h1",
 }: {
   words: string;
   className?: string;
   filter?: boolean;
   duration?: number;
+  as?: "h1" | "h2" | "h3" | "div";
 }) => {
   const wordsArray = words.split(" ");
 
   return (
-    <div className={cn("font-bold", className)}>
-      <div className="my-4">
-        <div className="dark:text-white text-black leading-snug tracking-wide">
+    <Component className={cn("font-bold", className)}>
+      <span className="my-4 block">
+        <span className="dark:text-white text-black leading-snug tracking-wide">
           {wordsArray.map((word, idx) => (
             <span
               key={`${word}-${idx}`}
@@ -31,9 +33,9 @@ export const TextGenerateEffect = ({
               {word}
             </span>
           ))}
-        </div>
-      </div>
-    </div>
+        </span>
+      </span>
+    </Component>
   );
 };
 

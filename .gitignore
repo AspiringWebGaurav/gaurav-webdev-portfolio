@@ -1,7 +1,7 @@
 # ==========================================
 # Dependencies
 # ==========================================
-/node_modules
+node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -11,17 +11,18 @@
 !.yarn/versions
 
 # ==========================================
-# Next.js Build & Output
+# Next.js Build, Compilers & Output
 # ==========================================
-/.next/
-/out/
-/build
-/dist
-/.turbo
-/.turbo/
-/.swc
-/.cache/
+.next/
+out/
+build/
+dist/
+.turbo/
+.swc/
 .cache/
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+next-env.d.ts
 
 # ==========================================
 # Environment Variables & Secrets (CRITICAL)
@@ -30,47 +31,60 @@
 .env.*
 .env*.local
 !.env.example
+*.pem
+*.key
+*.cert
+*.crt
+*.pfx
+*.p12
+*.keystore
+*.jks
+serviceAccountKey*.json
+firebase-admin*.json
+credentials*.json
+google-services*.json
+*secret*.json
+*.secret
+id_rsa*
+id_ed25519*
+*.kdbx
 
 # ==========================================
 # AI Agent Workspaces, Artifacts, Metadata & Rules (Local Only)
 # ==========================================
-/.agents
-/.agents/
-/.gemini
-/.gemini/
-/.claude
-/.claude/
-/.antigravity
-/.antigravity/
-/.cursor
-/.cursor/
-/.windsurf
-/.windsurf/
-/brain
-/brain/
-/.system_generated
-/.system_generated/
-/scratch
-/scratch/
+.agents/
+.gemini/
+.claude/
+.antigravity/
+.cursor/
+.windsurf/
+.cline/
+.roo/
+.codeium/
+.aide/
+.devin/
+brain/
+.system_generated/
+.user_uploaded/
+scratch/
+**/scratch/**
 *.local.md
+*.local.*
+*.scratch.*
+*.prompt.md
+agent*.log
 
 # ==========================================
-# Vercel & Deployment
+# Vercel & Deployment Platforms
 # ==========================================
-.vercel
-.netlify
+.vercel/
+.netlify/
+.serverless/
 
 # ==========================================
-# TypeScript
+# Logs & Diagnostic Dumps
 # ==========================================
-*.tsbuildinfo
-tsconfig.tsbuildinfo
-next-env.d.ts
-
-# ==========================================
-# Logs & Debugging
-# ==========================================
-logs
+logs/
 *.log
 *.log*
 npm-debug.log*
@@ -80,24 +94,23 @@ pnpm-debug.log*
 lerna-debug.log*
 
 # ==========================================
-# Testing & Coverage
+# Testing, Coverage & Playwright Local Suites
 # ==========================================
-/coverage
-/.nyc_output
-/playwright-report
-/playwright-report/
-/test-results
-/test-results/
-/.playwright
-/.playwright/
-/playwright/.cache
-/playwright.config.ts
-/playwright.config.js
-/tests
-/tests/
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+.playwright/
+playwright/.cache/
+playwright.config.ts
+playwright.config.js
+tests/
+videos/
+screenshots/
+test-artifacts/
 
 # ==========================================
-# IDE & Editor Files
+# IDE, Editor & Tooling Workspaces
 # ==========================================
 .vscode/*
 !.vscode/settings.json
@@ -105,19 +118,34 @@ lerna-debug.log*
 !.vscode/launch.json
 !.vscode/extensions.json
 .idea/
+.zed/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 *.swp
-*.bak
-*.backup
-*.tmp
-*.temp
+*.swo
+*.sublime-workspace
+*.sublime-project
 
 # ==========================================
-# Operating System Files
+# Temporary Files, Dumps & Backups
+# ==========================================
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+*.orig
+*.rej
+*.patch
+*~
+
+# ==========================================
+# Operating System & Filesystem Garbage
 # ==========================================
 .DS_Store
 .DS_Store?
@@ -127,13 +155,12 @@ lerna-debug.log*
 ehthumbs.db
 Thumbs.db
 desktop.ini
-*.pem
-*.key
-*.cert
+$RECYCLE.BIN/
 
 # ==========================================
-# Linter & Cache Artifacts
+# Linter & Formatting Caches
 # ==========================================
 .eslintcache
 .stylelintcache
+.prettiercache
 .hintrc

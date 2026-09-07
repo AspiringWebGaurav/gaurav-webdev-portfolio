@@ -4,6 +4,7 @@ import { FloatingNav } from "@/components/ui/FloatingNav";
 import ScrollToTop from "@/components/ui/ScrollToTop";
 import { LivePortfolioSync } from "@/components/portfolio/LivePortfolioSync";
 import { getPortfolioData } from "@/lib/public-data/getPortfolioData";
+import { PortfolioJsonLd } from "@/components/seo/JsonLd";
 
 import {
   GridSectionSkeleton,
@@ -55,6 +56,7 @@ export default async function Home() {
 
   return (
     <main className="relative bg-black-100 flex justify-center items-center flex-col mx-auto sm:px-10 px-5 overflow-clip">
+      <PortfolioJsonLd />
       <LivePortfolioSync />
       <div className="max-w-7xl w-full">
         <FloatingNav navItems={formattedNav} />

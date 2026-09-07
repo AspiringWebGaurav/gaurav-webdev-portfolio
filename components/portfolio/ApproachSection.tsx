@@ -49,9 +49,9 @@ export const ApproachSection = ({ phases = SEED_PHASES }: ApproachSectionProps) 
 
   return (
     <section className="w-full py-20">
-      <h1 className="heading">
+      <h2 className="heading">
         My <span className="text-purple">approach</span>
-      </h1>
+      </h2>
       <div className="my-20 flex flex-col lg:flex-row items-center justify-center w-full gap-4">
         {sortedPhases.map((phase) => {
           const theme = THEME_CONFIGS[phase.themeColor] || THEME_CONFIGS.emerald;

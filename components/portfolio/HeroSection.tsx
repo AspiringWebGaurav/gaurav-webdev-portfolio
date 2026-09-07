@@ -64,6 +64,7 @@ export const HeroSection = ({ data = SEED_HERO }: HeroSectionProps) => {
           </p>
 
           <TextGenerateEffect
+            as="h1"
             words={data.headingWords || SEED_HERO.headingWords}
             className="text-center text-[40px] md:text-5xl lg:text-6xl"
           />

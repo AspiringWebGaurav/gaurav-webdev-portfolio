@@ -86,14 +86,13 @@ const nextConfig: NextConfig = {
     "192.168.0.154",
   ],
 
-  async rewrites() {
+  async redirects() {
     return [
-      { source: "/about", destination: "/" },
-      { source: "/projects", destination: "/" },
-      { source: "/testimonials", destination: "/" },
-      { source: "/experience", destination: "/" },
-      { source: "/approach", destination: "/" },
-      { source: "/contact", destination: "/" },
+      { source: "/about", destination: "/#about", permanent: true },
+      { source: "/testimonials", destination: "/#testimonials", permanent: true },
+      { source: "/experience", destination: "/#experience", permanent: true },
+      { source: "/approach", destination: "/#approach", permanent: true },
+      { source: "/contact", destination: "/#contact", permanent: true },
     ];
   },
 

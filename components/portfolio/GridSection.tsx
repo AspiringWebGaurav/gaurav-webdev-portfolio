@@ -47,6 +47,7 @@ export const GridSection = ({ cards = SEED_CARDS }: GridSectionProps) => {
 
   return (
     <section>
+      <h2 className="sr-only">About Gaurav Patil — Technical Skills & Work Philosophy</h2>
       <BentoGrid className="w-full py-20">
         {sortedCards.map((card) => {
           const slot = card.slotIndex || 1;

@@ -134,11 +134,11 @@ export const FooterSection = ({
       {/* Dynamic CTA Banner */}
       {cta.isEnabled !== false && (
         <div className="flex flex-col items-center">
-          <h1 className="heading lg:max-w-[45vw]">
+          <h2 className="heading lg:max-w-[45vw]">
             {cta.headingPrefix || "Ready to take "}
             <span className="text-purple">{cta.headingHighlight || "your"}</span>
             {cta.headingSuffix || " digital presence to the next level?"}
-          </h1>
+          </h2>
           <p className="text-white-200 md:mt-10 my-5 text-center">
             {cta.description ||
               "Reach out to me today and let's discuss how I can help you achieve your goals."}
@@ -162,8 +162,6 @@ export const FooterSection = ({
           <span className="text-neutral-600">·</span>
           <Link
             href={footer.termsUrl || "/terms"}
-            target="_blank"
-            rel="noopener noreferrer"
             className="hover:text-purple transition-colors duration-200"
           >
             Terms
@@ -171,8 +169,6 @@ export const FooterSection = ({
           <span className="text-neutral-600">·</span>
           <Link
             href={footer.privacyUrl || "/privacy"}
-            target="_blank"
-            rel="noopener noreferrer"
             className="hover:text-purple transition-colors duration-200"
           >
             Privacy
@@ -180,8 +176,6 @@ export const FooterSection = ({
           <span className="text-neutral-600">·</span>
           <Link
             href="/chat"
-            target="_blank"
-            rel="noopener noreferrer"
             className="hover:text-purple transition-colors duration-200"
           >
             Chat Guide
@@ -189,8 +183,6 @@ export const FooterSection = ({
           <span className="text-neutral-600">·</span>
           <Link
             href="/security"
-            target="_blank"
-            rel="noopener noreferrer"
             className="hover:text-purple transition-colors duration-200"
           >
             Security
@@ -198,8 +190,6 @@ export const FooterSection = ({
           <span className="text-neutral-600">·</span>
           <Link
             href="/accessibility"
-            target="_blank"
-            rel="noopener noreferrer"
             className="hover:text-purple transition-colors duration-200"
           >
             Accessibility

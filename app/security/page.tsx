@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { SecurityPolicyContent } from "@/components/legal/SecurityPolicyContent";
 
 export const metadata: Metadata = {
-  title: "Security Architecture & Trust | Gaurav Portfolio",
+  title: "Security Architecture & Trust",
   description:
     "Overview of security architecture, authentication standards, spam protection, and responsible disclosure.",
   alternates: {

@@ -34,10 +34,10 @@ export const TestimonialsSection = ({
 
   return (
     <section className="py-20">
-      <h1 className="heading">
+      <h2 className="heading">
         Kind words from
-        <span className="text-purple"> satisfied clients</span>
-      </h1>
+        <span className="text-purple"> collaborators & peers</span>
+      </h2>
 
       <div className="flex flex-col items-center max-lg:mt-10">
         <div className="h-[50vh] md:h-[30rem] w-full rounded-md flex flex-col antialiased items-center justify-center relative overflow-hidden">

@@ -36,20 +36,54 @@ export async function generateMetadata(): Promise<Metadata> {
     const seo = seoResult.data || SEED_SEO;
 
     const canonicalUrl = seo.canonicalUrl || "https://gauravpatil.site";
-    const title = seo.title || "Gaurav's Portfolio";
-    const description = seo.description || "Modern, Slick and Minimalist Developer Portfolio";
+    const title = seo.title || "Gaurav Patil — Full Stack Developer & Software Engineer";
+    const description =
+      seo.description ||
+      "Official portfolio of Gaurav Patil, a Full Stack Developer & Software Engineer based in India specializing in Next.js, React, TypeScript, and modern scalable web architecture.";
 
     return {
       metadataBase: new URL(canonicalUrl),
-      title,
+      title: {
+        default: title,
+        template: "%s | Gaurav Patil",
+      },
       description,
-      keywords: seo.keywords && seo.keywords.length > 0 ? seo.keywords : ["Developer", "Portfolio", "Frontend", "Next.js"],
-      authors: [{ name: seo.author || "Gaurav Patil" }],
+      alternates: {
+        canonical: canonicalUrl,
+      },
+      keywords:
+        seo.keywords && seo.keywords.length > 0
+          ? seo.keywords
+          : [
+              "Gaurav Patil",
+              "Gaurav Patil developer",
+              "Gaurav Patil full stack developer",
+              "Gaurav Patil software developer",
+              "Gaurav Patil portfolio",
+              "Gaurav Patil India",
+              "Next.js",
+              "React",
+              "TypeScript",
+            ],
+      authors: [{ name: seo.author || "Gaurav Patil", url: canonicalUrl }],
+      creator: "Gaurav Patil",
+      icons: {
+        icon: [
+          { url: "/favicon.ico", sizes: "any" },
+          { url: "/icon.svg", type: "image/svg+xml" },
+          { url: "/icon.png", sizes: "32x32", type: "image/png" },
+        ],
+        shortcut: "/favicon.ico",
+        apple: [
+          { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+        ],
+      },
+      manifest: "/manifest.webmanifest",
       openGraph: {
         title,
         description,
         url: canonicalUrl,
-        siteName: "Gaurav Portfolio",
+        siteName: "Gaurav Patil Portfolio",
         images: seo.ogImageUrl ? [{ url: seo.ogImageUrl, width: 1200, height: 630 }] : [],
         type: "website",
       },
@@ -64,8 +98,35 @@ export async function generateMetadata(): Promise<Metadata> {
   } catch {
     return {
       metadataBase: new URL("https://gauravpatil.site"),
-      title: "Gaurav's Portfolio",
-      description: "Modern, Slick and Minimalist Developer Portfolio",
+      title: {
+        default: "Gaurav Patil — Full Stack Developer & Software Engineer",
+        template: "%s | Gaurav Patil",
+      },
+      description:
+        "Official portfolio of Gaurav Patil, a Full Stack Developer & Software Engineer based in India specializing in Next.js, React, TypeScript, and modern scalable web architecture.",
+      alternates: {
+        canonical: "https://gauravpatil.site",
+      },
+      icons: {
+        icon: [
+          { url: "/favicon.ico", sizes: "any" },
+          { url: "/icon.svg", type: "image/svg+xml" },
+          { url: "/icon.png", sizes: "32x32", type: "image/png" },
+        ],
+        shortcut: "/favicon.ico",
+        apple: [
+          { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+        ],
+      },
+      manifest: "/manifest.webmanifest",
+      openGraph: {
+        title: "Gaurav Patil — Full Stack Developer & Software Engineer",
+        description:
+          "Official portfolio of Gaurav Patil, a Full Stack Developer & Software Engineer based in India.",
+        url: "https://gauravpatil.site",
+        siteName: "Gaurav Patil Portfolio",
+        type: "website",
+      },
     };
   }
 }

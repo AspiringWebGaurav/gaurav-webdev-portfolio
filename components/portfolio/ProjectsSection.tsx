@@ -1,6 +1,7 @@
 "use client";
 
-import { FaLocationArrow } from "react-icons/fa6";
+import Link from "next/link";
+import { FaLocationArrow, FaArrowRight } from "react-icons/fa6";
 import { PinContainer } from "@/components/ui/3d-pin";
 import type { ProjectDocument } from "@/types/portfolio";
 import { SEED_PROJECTS } from "@/lib/dal/repositories/seed-data";
@@ -9,15 +10,31 @@ interface ProjectsSectionProps {
   projects?: ProjectDocument[];
 }
 
+const getTechName = (iconUrl: string) => {
+  const file = iconUrl.split("/").pop()?.replace(/\.(svg|png|webp)$/, "") || "";
+  const map: Record<string, string> = {
+    re: "React",
+    tail: "Tailwind CSS",
+    ts: "TypeScript",
+    three: "Three.js",
+    fm: "Framer Motion",
+    next: "Next.js",
+    stream: "Stream API",
+    c: "Cloudinary",
+    gsap: "GSAP",
+  };
+  return map[file] || `${file || "Technology"} Icon`;
+};
+
 export const ProjectsSection = ({ projects = SEED_PROJECTS }: ProjectsSectionProps) => {
   const sortedProjects = [...projects].sort((a, b) => (a.order || 0) - (b.order || 0));
 
   return (
-    <div className="py-20">
-      <h1 className="heading">
+    <section className="py-20">
+      <h2 className="heading">
         A small selection of{" "}
         <span className="text-purple">recent projects</span>
-      </h1>
+      </h2>
       <div className="flex flex-wrap items-center justify-center p-2 sm:p-4 gap-x-24 gap-y-8 mt-6 sm:mt-10">
         {sortedProjects.map(({ id, title, description, coverImage, iconLists, liveUrl }) => (
           <div
@@ -30,20 +47,20 @@ export const ProjectsSection = ({ projects = SEED_PROJECTS }: ProjectsSectionPro
                   className="relative w-full h-full overflow-hidden lg:rounded-3xl"
                   style={{ backgroundColor: "#13162D" }}
                 >
-                  <img src="/bg.png" alt="bgimg" loading="lazy" decoding="async" />
+                  <img src="/bg.png" alt="" role="presentation" loading="lazy" decoding="async" />
                 </div>
                 <img
                   src={coverImage}
-                  alt="cover"
+                  alt={`${title} project preview`}
                   loading="lazy"
                   decoding="async"
                   className="z-10 absolute bottom-0 object-contain max-h-full"
                 />
               </div>
 
-              <h1 className="font-bold lg:text-2xl md:text-xl text-base line-clamp-1">
+              <h3 className="font-bold lg:text-2xl md:text-xl text-base line-clamp-1">
                 {title}
-              </h1>
+              </h3>
 
               <p className="text-white-200 text-sm md:text-base font-normal line-clamp-2 my-2 leading-relaxed">
                 {description}
@@ -59,7 +76,13 @@ export const ProjectsSection = ({ projects = SEED_PROJECTS }: ProjectsSectionPro
                         transform: `translateX(-${5 * index + 2}px)`,
                       }}
                     >
-                      <img src={icon} alt="icon5" loading="lazy" decoding="async" className="p-2" />
+                      <img
+                        src={icon}
+                        alt={getTechName(icon)}
+                        loading="lazy"
+                        decoding="async"
+                        className="p-2"
+                      />
                     </div>
                   ))}
                 </div>
@@ -80,6 +103,16 @@ export const ProjectsSection = ({ projects = SEED_PROJECTS }: ProjectsSectionPro
           </div>
         ))}
       </div>
-    </div>
+
+      <div className="mt-12 sm:mt-16 flex justify-center">
+        <Link
+          href="/projects"
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white/[0.05] hover:bg-purple/20 border border-white/[0.1] hover:border-purple/40 text-sm font-medium text-white transition-all duration-300 group"
+        >
+          <span>Explore All Projects & Architecture Case Studies</span>
+          <FaArrowRight className="w-3.5 h-3.5 text-purple group-hover:translate-x-1 transition-transform" />
+        </Link>
+      </div>
+    </section>
   );
 };

@@ -123,6 +123,7 @@ export interface ProjectDocument {
   iconLists: string[];
   liveUrl: string;               // Strictly HTTPS URL
   githubUrl?: string;            // Strictly https://github.com/...
+  slug?: string;                 // URL-safe route slug for technical case studies
   isFeatured: boolean;
   isPublished: boolean;
   createdAt: string;

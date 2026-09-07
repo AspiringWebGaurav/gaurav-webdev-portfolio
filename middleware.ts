@@ -81,19 +81,11 @@ export async function middleware(request: NextRequest) {
   }
 
 
-  // 2. Clean Runtime Section Rewriting (/about, /projects, /testimonials, /contact -> /)
-  const isSectionRoute = ["/about", "/projects", "/testimonials", "/contact"].includes(pathname);
-  return isSectionRoute
-    ? NextResponse.rewrite(new URL("/", request.url), {
-        request: {
-          headers: requestHeaders,
-        },
-      })
-    : NextResponse.next({
-        request: {
-          headers: requestHeaders,
-        },
-      });
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
 }
 
 export const config = {

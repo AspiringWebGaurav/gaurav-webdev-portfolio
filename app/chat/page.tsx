@@ -2,9 +2,13 @@ import type { Metadata } from "next";
 import { ChatLearnMoreContent } from "@/components/legal/ChatLearnMoreContent";
 
 export const metadata: Metadata = {
-  title: "Personal Assistant & Chat Guide | Gaurav Portfolio",
+  title: "Personal Assistant & Chat Guide",
   description:
     "Explore the architectural purpose, preview mechanics, and privacy standards for the Gaurav Portfolio Personal Assistant.",
+  robots: {
+    index: false,
+    follow: true,
+  },
   alternates: {
     canonical: "https://gauravpatil.site/chat",
   },

@@ -11,10 +11,10 @@ export const ExperienceSection = ({ experience = SEED_EXPERIENCE }: ExperienceSe
   const sortedExperience = [...experience].sort((a, b) => (a.order || 0) - (b.order || 0));
 
   return (
-    <div className="py-20 w-full">
-      <h1 className="heading">
+    <section className="py-20 w-full">
+      <h2 className="heading">
         My <span className="text-purple">work experience</span>
-      </h1>
+      </h2>
 
       <div className="w-full mt-8 sm:mt-12 grid lg:grid-cols-4 sm:grid-cols-2 grid-cols-1 gap-6 sm:gap-10">
         {sortedExperience.map((card, idx) => (
@@ -39,9 +39,9 @@ export const ExperienceSection = ({ experience = SEED_EXPERIENCE }: ExperienceSe
                 className="lg:w-32 md:w-20 w-16 object-contain"
               />
               <div className="lg:ms-5">
-                <h1 className="text-start text-xl md:text-2xl font-bold">
+                <h3 className="text-start text-xl md:text-2xl font-bold">
                   {card.title}
-                </h1>
+                </h3>
                 {card.company && (
                   <p className="text-start text-purple text-xs font-mono mt-1">
                     {card.company} {card.period ? `• ${card.period}` : ""}
@@ -55,6 +55,6 @@ export const ExperienceSection = ({ experience = SEED_EXPERIENCE }: ExperienceSe
           </Button>
         ))}
       </div>
-    </div>
+    </section>
   );
 };

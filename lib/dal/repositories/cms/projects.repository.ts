@@ -37,6 +37,14 @@ export class ProjectsRepository extends BaseRepository {
     });
   }
 
+  public async getProjectBySlug(slug: string): Promise<RepositoryResult<ProjectDocument | null>> {
+    return this.executeQuery("getProjectBySlug", async () => {
+      const all = (await this.getProjects()).data || [];
+      const found = all.find((p) => p.slug === slug || p.id === slug);
+      return found || null;
+    });
+  }
+
   public async createProject(
     data: Omit<ProjectDocument, "id" | "createdAt" | "updatedAt" | "version" | "order"> & { order?: number }
   ): Promise<RepositoryResult<ProjectDocument>> {
