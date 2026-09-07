@@ -18,7 +18,10 @@
 /build
 /dist
 /.turbo
+/.turbo/
 /.swc
+/.cache/
+.cache/
 
 # ==========================================
 # Environment Variables & Secrets (CRITICAL)
@@ -27,6 +30,29 @@
 .env.*
 .env*.local
 !.env.example
+
+# ==========================================
+# AI Agent Workspaces, Artifacts, Metadata & Rules (Local Only)
+# ==========================================
+/.agents
+/.agents/
+/.gemini
+/.gemini/
+/.claude
+/.claude/
+/.antigravity
+/.antigravity/
+/.cursor
+/.cursor/
+/.windsurf
+/.windsurf/
+/brain
+/brain/
+/.system_generated
+/.system_generated/
+/scratch
+/scratch/
+*.local.md
 
 # ==========================================
 # Vercel & Deployment
@@ -38,6 +64,7 @@
 # TypeScript
 # ==========================================
 *.tsbuildinfo
+tsconfig.tsbuildinfo
 next-env.d.ts
 
 # ==========================================
@@ -45,6 +72,7 @@ next-env.d.ts
 # ==========================================
 logs
 *.log
+*.log*
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -56,6 +84,17 @@ lerna-debug.log*
 # ==========================================
 /coverage
 /.nyc_output
+/playwright-report
+/playwright-report/
+/test-results
+/test-results/
+/.playwright
+/.playwright/
+/playwright/.cache
+/playwright.config.ts
+/playwright.config.js
+/tests
+/tests/
 
 # ==========================================
 # IDE & Editor Files
@@ -71,6 +110,11 @@ lerna-debug.log*
 *.njsproj
 *.sln
 *.sw?
+*.swp
+*.bak
+*.backup
+*.tmp
+*.temp
 
 # ==========================================
 # Operating System Files

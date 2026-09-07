@@ -36,8 +36,8 @@ export const BackgroundGradientAnimation = ({
   const interactiveRef = useRef<HTMLDivElement>(null);
   const curXRef = useRef(0);
   const curYRef = useRef(0);
-  const [tgX, setTgX] = useState(0);
-  const [tgY, setTgY] = useState(0);
+  const tgXRef = useRef(0);
+  const tgYRef = useRef(0);
 
   useEffect(() => {
     document.body.style.setProperty(
@@ -81,28 +81,55 @@ export const BackgroundGradientAnimation = ({
     thirdColor,
   ]);
 
-  useEffect(() => {
+  const isMovingRef = useRef(false);
+  const animationFrameIdRef = useRef<number | null>(null);
+
+  // High-performance RAF animation loop that sleeps when idle
+  const startAnimationLoop = () => {
+    if (isMovingRef.current) return;
+    isMovingRef.current = true;
+
     function move() {
-      if (!interactiveRef.current) {
-        return;
+      if (interactiveRef.current) {
+        const dx = tgXRef.current - curXRef.current;
+        const dy = tgYRef.current - curYRef.current;
+
+        curXRef.current += dx / 20;
+        curYRef.current += dy / 20;
+
+        interactiveRef.current.style.transform = `translate(${Math.round(
+          curXRef.current
+        )}px, ${Math.round(curYRef.current)}px)`;
+
+        // If delta is negligible, stop the loop to conserve CPU/GPU
+        if (Math.abs(dx) < 0.1 && Math.abs(dy) < 0.1) {
+          curXRef.current = tgXRef.current;
+          curYRef.current = tgYRef.current;
+          isMovingRef.current = false;
+          animationFrameIdRef.current = null;
+          return;
+        }
       }
-      curXRef.current += (tgX - curXRef.current) / 20;
-      curYRef.current += (tgY - curYRef.current) / 20;
-      interactiveRef.current.style.transform = `translate(${Math.round(
-        curXRef.current
-      )}px, ${Math.round(curYRef.current)}px)`;
+      animationFrameIdRef.current = requestAnimationFrame(move);
     }
 
-    move();
-  }, [tgX, tgY]);
+    animationFrameIdRef.current = requestAnimationFrame(move);
+  };
 
-
+  useEffect(() => {
+    return () => {
+      if (animationFrameIdRef.current) {
+        cancelAnimationFrame(animationFrameIdRef.current);
+      }
+    };
+  }, []);
 
   const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
     if (interactiveRef.current) {
       const rect = interactiveRef.current.getBoundingClientRect();
-      setTgX(event.clientX - rect.left);
-      setTgY(event.clientY - rect.top);
+      tgXRef.current = event.clientX - rect.left;
+      tgYRef.current = event.clientY - rect.top;
+      startAnimationLoop();
     }
   };
 

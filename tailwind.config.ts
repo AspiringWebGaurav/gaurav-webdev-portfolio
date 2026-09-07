@@ -1,7 +1,8 @@
 import type { Config } from "tailwindcss";
+import { createRequire } from "module";
 
+const require = createRequire(import.meta.url);
 const svgToDataUri = require("mini-svg-data-uri");
-
 const colors = require("tailwindcss/colors");
 const {
   default: flattenColorPalette,
@@ -26,6 +27,10 @@ const config = {
       },
     },
     extend: {
+      fontFamily: {
+        "admin-sans": ["var(--font-admin-sans)", "Plus Jakarta Sans", "Inter", "-apple-system", "sans-serif"],
+        "admin-mono": ["var(--font-admin-mono)", "Geist Mono", "JetBrains Mono", "Menlo", "monospace"],
+      },
       colors: {
         black: {
           DEFAULT: "#000",
@@ -141,6 +146,11 @@ const config = {
             transform: "translateY(-50%)",
           },
         },
+        shake: {
+          "0%, 100%": { transform: "translateX(0)" },
+          "15%, 45%, 75%": { transform: "translateX(-8px)" },
+          "30%, 60%, 90%": { transform: "translateX(8px)" },
+        },
         scroll: {
           to: {
             transform: "translate(calc(-50% - 0.5rem))",
@@ -148,6 +158,7 @@ const config = {
         },
       },
       animation: {
+        shake: "shake 0.35s cubic-bezier(0.36, 0.07, 0.19, 0.97) both",
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         spotlight: "spotlight 2s ease .75s 1 forwards",
