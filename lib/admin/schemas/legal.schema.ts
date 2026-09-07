@@ -27,11 +27,8 @@ export const DiscardDraftSchema = z.object({
 
 export const PublishDocumentSchema = z.object({
   docType: z.enum(["TERMS", "PRIVACY"]),
-  expectedVersion: z.number().int().nonnegative(),
-  version: z
-    .string()
-    .min(1, "Version is required")
-    .regex(/^\d+\.\d+\.\d+$/, "Version must follow semantic format (e.g. 1.0.0, 1.1.0)"),
+  expectedVersion: z.number().int().nonnegative().optional(),
+  version: z.string().min(1, "Version is required").trim(),
   effectiveDate: z.string().min(1, "Effective date is required"),
   lastUpdatedDate: z.string().min(1, "Last updated date is required"),
   changeSummary: z.string().optional().default(""),

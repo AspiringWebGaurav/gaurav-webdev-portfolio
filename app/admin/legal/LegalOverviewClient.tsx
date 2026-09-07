@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   FaScaleBalanced,
   FaShieldHalved,
@@ -51,6 +52,7 @@ export const LegalOverviewClient: React.FC<LegalOverviewClientProps> = ({
   termsHistoryCount,
   privacyHistoryCount,
 }) => {
+  const router = useRouter();
   const confirm = useAdminConfirm();
   const [jobs, setJobs] = useState<LegalNotificationJobDocument[]>(initialJobs);
   const [retryingJobId, setRetryingJobId] = useState<string | null>(null);
@@ -96,13 +98,15 @@ export const LegalOverviewClient: React.FC<LegalOverviewClientProps> = ({
     }
   };
 
-  const handleRetryJob = async (jobId: string) => {
+  const handleRetryJob = async (jobId: string, currentStatus?: string) => {
+    const isDispatch = currentStatus === "QUEUED";
     const ok = await confirm({
-      title: "Retry Failed Notifications",
-      description:
-        "This will reset all failed recipient attempts for this job and immediately re-trigger the background dispatch engine.",
+      title: isDispatch ? "Dispatch Legal Broadcast" : "Retry Failed Notifications",
+      description: isDispatch
+        ? "This will immediately dispatch the legal notification emails to all queued recipients."
+        : "This will reset all failed recipient attempts for this job and immediately re-trigger the background dispatch engine.",
       variant: "purple",
-      confirmLabel: "Retry Now",
+      confirmLabel: isDispatch ? "Dispatch Now" : "Retry Now",
     });
 
     if (!ok) return;
@@ -114,14 +118,21 @@ export const LegalOverviewClient: React.FC<LegalOverviewClientProps> = ({
     setRetryingJobId(null);
 
     if (res.success) {
-      setActionMessage(`Job ${jobId} re-queued successfully.`);
+      setActionMessage(
+        isDispatch
+          ? `Job ${jobId} dispatched successfully.`
+          : `Job ${jobId} re-queued successfully.`
+      );
       setJobs((prev) =>
         prev.map((j) =>
-          j.id === jobId ? { ...j, status: "RETRYING", failedCount: 0 } : j
+          j.id === jobId
+            ? { ...j, status: isDispatch ? "PROCESSING" : "RETRYING", failedCount: 0 }
+            : j
         )
       );
+      router.refresh();
     } else {
-      setActionMessage(`Error: ${res.error || "Failed to retry job"}`);
+      setActionMessage(`Error: ${res.error || "Failed to process job"}`);
     }
   };
 
@@ -421,7 +432,9 @@ export const LegalOverviewClient: React.FC<LegalOverviewClientProps> = ({
               <tbody className="divide-y divide-[#F1F5F9]">
                 {jobs.map((job) => {
                   const isRetrying = retryingJobId === job.id;
+                  const isQueued = job.status === "QUEUED";
                   const canRetry =
+                    isQueued ||
                     job.status === "FAILED" ||
                     job.status === "PARTIAL_FAILURE" ||
                     (job.status === "PROCESSING" && (job.leaseExpiresAt ?? 0) < Date.now());
@@ -469,13 +482,13 @@ export const LegalOverviewClient: React.FC<LegalOverviewClientProps> = ({
                           {canRetry && (
                             <button
                               type="button"
-                              onClick={() => handleRetryJob(job.id)}
+                              onClick={() => handleRetryJob(job.id, job.status)}
                               disabled={isRetrying}
                               className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-admin-mono font-semibold bg-[#F5F3FF] hover:bg-[#7C3AED] text-[#7C3AED] hover:text-[#FFFFFF] border border-[#DDD6FE] rounded-sm transition-all cursor-pointer disabled:opacity-50"
                             >
                               <FaRotate className={`w-2.5 h-2.5 ${isRetrying ? "animate-spin" : ""}`} />
-                              <span>Retry</span>
-                              <ButtonHelpBadge text={BUTTON_HELP.LEGAL_RETRY_JOB} />
+                              <span>{isQueued ? "Dispatch" : "Retry"}</span>
+                              <ButtonHelpBadge text={isQueued ? "Trigger immediate broadcast dispatch for this queued job" : BUTTON_HELP.LEGAL_RETRY_JOB} />
                             </button>
                           )}
                         </div>

@@ -266,11 +266,10 @@ export const LegalEditorClient: React.FC<LegalEditorClientProps> = ({
   const handlePublish = async () => {
     if (!currentActiveDoc) return;
 
-    const isSemver = /^\d+\.\d+\.\d+$/.test(version.trim());
-    if (!isSemver) {
+    if (!version.trim()) {
       setFeedback({
         type: "error",
-        message: "Please enter a valid version number like 1.0.0 or 1.1.0.",
+        message: "Please enter a version identifier (e.g. 0.0.1, 0.0.2).",
       });
       return;
     }

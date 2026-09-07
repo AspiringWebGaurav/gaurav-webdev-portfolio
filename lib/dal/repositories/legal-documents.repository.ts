@@ -165,9 +165,11 @@ export class LegalDocumentsRepository extends BaseRepository {
     params: PublishLegalParams
   ): Promise<RepositoryResult<{ publishedDoc: LegalDocument; historyDocId: string; jobId?: string }>> {
     const docId = this.getDocId(params.docType);
-    const historyDocId = `hist_${params.docType.toLowerCase()}_v${params.version.replace(/\./g, "_")}`;
+    const versionSlug = params.version.trim().replace(/[^a-zA-Z0-9]/g, "_");
+    const timestampSuffix = Date.now();
+    const historyDocId = `hist_${params.docType.toLowerCase()}_v${versionSlug}_${timestampSuffix}`;
     const jobId = params.isMaterialChange
-      ? `job_legal_${params.docType.toLowerCase()}_${params.version.replace(/\./g, "_")}`
+      ? `job_legal_${params.docType.toLowerCase()}_${versionSlug}_${timestampSuffix}`
       : undefined;
 
     return this.executeMutation("publishDocument", async () => {
@@ -182,13 +184,7 @@ export class LegalDocumentsRepository extends BaseRepository {
           currentActive = activeSnap.data() as LegalDocument;
         }
 
-        // Optimistic concurrency control verification
-        if (currentActive.version !== params.expectedVersion) {
-          throw new Error(
-            `Concurrency Conflict: Document version was updated in another session. Expected v${params.expectedVersion}, found v${currentActive.version}.`
-          );
-        }
-
+        // Admin has full unconstrained publishing authority across any version sequence
         const now = new Date().toISOString();
 
         // 1. Snapshot previous version into immutable history

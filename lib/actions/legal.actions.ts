@@ -15,7 +15,7 @@ import {
   RestoreVersionInput,
   RetryJobInput,
 } from "@/lib/admin/schemas/legal.schema";
-import { resolveAppUrl } from "@/lib/email/brevo";
+import { executeLegalJobWorker } from "@/lib/legal/legal-job-runner";
 import type { LegalDocument } from "@/types/legal";
 
 export interface ActionResult<T = unknown> {
@@ -148,29 +148,13 @@ export async function publishDocumentAction(
 
     const { publishedDoc, historyDocId, jobId } = publishRes.data;
 
-    // If material change created a job, snapshot recipients and trigger worker
+    // If material change created a job, snapshot recipients and execute dispatch directly in-process
     if (jobId) {
       try {
         await legalDocumentsRepository.resolveRecipientSnapshot(jobId);
-
-        // Async kickoff without blocking publish response
-        const appBaseUrl = resolveAppUrl();
-        const workerSecret =
-          process.env.CRON_SECRET ||
-          process.env.JWT_SECRET ||
-          "internal_legal_worker_secret";
-
-        fetch(`${appBaseUrl}/api/admin/legal/jobs/${jobId}/process`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${workerSecret}`,
-            "Content-Type": "application/json",
-          },
-        }).catch((err) => {
-          console.error("[PublishAction:KickoffError]", err);
-        });
-      } catch (snapshotErr) {
-        console.error("[PublishAction:RecipientSnapshotError]", snapshotErr);
+        await executeLegalJobWorker(jobId);
+      } catch (workerErr) {
+        console.error("[PublishAction:WorkerError]", workerErr);
       }
     }
 
@@ -257,22 +241,8 @@ export async function retryJobAction(
       return { success: false, error: res.error };
     }
 
-    // Trigger processor immediately
-    const appBaseUrl = resolveAppUrl();
-    const workerSecret =
-      process.env.CRON_SECRET ||
-      process.env.JWT_SECRET ||
-      "internal_legal_worker_secret";
-
-    fetch(`${appBaseUrl}/api/admin/legal/jobs/${parsed.data.jobId}/process`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${workerSecret}`,
-        "Content-Type": "application/json",
-      },
-    }).catch((err) => {
-      console.error("[RetryJobAction:KickoffError]", err);
-    });
+    // Execute runner directly in-process
+    await executeLegalJobWorker(parsed.data.jobId);
 
     revalidatePath("/admin/legal");
 

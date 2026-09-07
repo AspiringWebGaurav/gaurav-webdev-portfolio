@@ -108,7 +108,7 @@ export interface LegalNotificationRecipientRecord {
 
 export interface PublishLegalParams {
   docType: "TERMS" | "PRIVACY";
-  expectedVersion: number;
+  expectedVersion?: number;
   version: string;
   effectiveDate: string;
   lastUpdatedDate: string;
