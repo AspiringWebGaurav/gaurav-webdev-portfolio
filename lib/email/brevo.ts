@@ -532,6 +532,9 @@ export async function dispatchOtpEmail(
       <span style="font-family:${EMAIL_TYPOGRAPHY.fontMono};font-size:${EMAIL_TYPOGRAPHY.sizeOtp};font-weight:700;letter-spacing:5px;color:${EMAIL_TYPOGRAPHY.colorHeading};line-height:${EMAIL_TYPOGRAPHY.lineHeightCode};display:inline-block;">${safeOtp}</span>
     </div>
     <p style="${EMAIL_SPACING.helperTextMargin}font-size:${EMAIL_TYPOGRAPHY.sizeSmall};color:${EMAIL_TYPOGRAPHY.colorMuted};">This code is valid for ${expiresMin} minutes. If you did not request this code, you can safely ignore this email.</p>
+    <div style="margin:12px 0 8px 0;padding:8px 12px;background:#F8FAFC;border:1px solid #E2E8F0;border-left:3px solid #7C3AED;border-radius:4px;font-size:11px;color:#475569;line-height:1.4;">
+      <strong>⚠️ Unmonitored Mailbox:</strong> This is an automated message sent from an unmonitored address (<code>no-reply@gauravpatil.site</code>). Please do not reply directly to this email.
+    </div>
     <p style="${EMAIL_SPACING.signoffMargin}font-size:${EMAIL_TYPOGRAPHY.sizeSmall};color:${EMAIL_TYPOGRAPHY.colorBody};">Gaurav Services</p>
   `;
 
@@ -542,7 +545,7 @@ export async function dispatchOtpEmail(
     footerContext: { termsUrl: rawTermsUrl, privacyUrl: rawPrivacyUrl, brandName: "Gaurav Services" },
   });
 
-  const textContent = `Hi Gaurav,\n\nHere is your verification code to complete sign-in to the Admin Panel:\n\n${params.otp}\n\nThis code is valid for ${expiresMin} minutes. If you did not request this code, you can safely ignore this email.\n\nGaurav Services\n\nTerms: ${rawTermsUrl} | Privacy: ${rawPrivacyUrl}`;
+  const textContent = `Hi Gaurav,\n\nHere is your verification code to complete sign-in to the Admin Panel:\n\n${params.otp}\n\nThis code is valid for ${expiresMin} minutes. If you did not request this code, you can safely ignore this email.\n\n(Note: This email was sent from an unmonitored address. Please do not reply directly to this email.)\n\nGaurav Services\n\nTerms: ${rawTermsUrl} | Privacy: ${rawPrivacyUrl}`;
 
   return sendTransactionalEmail({
     purpose: "SECURITY_OTP",
@@ -765,6 +768,9 @@ export async function dispatchLiveChatOtpEmail(
       </table>
     </div>
     <p style="margin:0 0 2px 0;color:#6b7280;font-size:11px;">Expires in ${expiresMin} minutes &bull; ${formattedTime}</p>
+    <div style="margin:8px 0 6px 0;padding:6px 10px;background:#F8FAFC;border:1px solid #E2E8F0;border-left:3px solid #7C3AED;border-radius:4px;font-size:10px;color:#64748B;line-height:1.4;">
+      <strong>⚠️ Unmonitored Mailbox:</strong> This automated code was sent from an unmonitored address. Replies cannot be received.
+    </div>
     <p style="margin:0;color:#9ca3af;font-size:10px;line-height:1.3;">If you did not request Live Chat access, you can safely ignore this email.</p>
   `;
 
@@ -832,6 +838,9 @@ export async function dispatchTurnstileFallbackOtpEmail(
       </table>
     </div>
     <p style="margin:0 0 2px 0;color:#6b7280;font-size:11px;">Expires in ${expiresMin} minutes &bull; ${formattedTime}</p>
+    <div style="margin:8px 0 6px 0;padding:6px 10px;background:#F8FAFC;border:1px solid #E2E8F0;border-left:3px solid #7C3AED;border-radius:4px;font-size:10px;color:#64748B;line-height:1.4;">
+      <strong>⚠️ Unmonitored Mailbox:</strong> This automated code was sent from an unmonitored address. Replies cannot be received.
+    </div>
     <p style="margin:0;color:#9ca3af;font-size:10px;line-height:1.3;">If you did not initiate this request, you can safely ignore this email.</p>
   `;
 

@@ -18,6 +18,7 @@ import {
   FaLock,
   FaPaperclip,
   FaXmark,
+  FaImage,
 } from "react-icons/fa6";
 import {
   ADMIN_MAIL_SENDERS,
@@ -120,6 +121,7 @@ export const ComposeMailForm: React.FC<ComposeMailFormProps> = ({
 
   // Form Field Inputs
   const [senderKey, setSenderKey] = useState<MailSenderKey>(initialDraft?.senderKey || "HELLO");
+  const [senderName, setSenderName] = useState("Gaurav Patil");
   const [toInput, setToInput] = useState(formatRecipientString(initialDraft?.to || []));
   const [ccInput, setCcInput] = useState(formatRecipientString(initialDraft?.cc || []));
   const [bccInput, setBccInput] = useState(formatRecipientString(initialDraft?.bcc || []));
@@ -390,10 +392,15 @@ export const ComposeMailForm: React.FC<ComposeMailFormProps> = ({
       );
     }
     if (isPending) {
+      const recipientCount = parseEmailList(toInput).length;
       return (
         <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-xs bg-[#F5F3FF] border border-[#DDD6FE] text-[10px] font-admin-mono text-[#7C3AED] font-bold">
           <FaSpinner className="w-2.5 h-2.5 animate-spin text-[#7C3AED]" />
-          <span>Sending via Brevo...</span>
+          <span>
+            {recipientCount > 1
+              ? `Sending Paced (1-by-1, ${recipientCount} recipients)...`
+              : "Sending via Brevo..."}
+          </span>
         </div>
       );
     }
@@ -651,6 +658,7 @@ export const ComposeMailForm: React.FC<ComposeMailFormProps> = ({
           draftId,
           expectedRevision: draftRevision,
           senderKey: inFlightSendSnapshot.senderKey,
+          senderName: senderName.trim() || undefined,
           to: toRecipients,
           cc: ccRecipients,
           bcc: bccRecipients,
@@ -661,10 +669,13 @@ export const ComposeMailForm: React.FC<ComposeMailFormProps> = ({
 
         if (res.status === "SENT" && res.messageId) {
           activeSendOpIdRef.current = null;
+          const recCount = toRecipients.length;
           showNotification(
             "success",
-            "Email successfully dispatched via Brevo REST API v3.",
-            `Message ID: ${res.messageId}`
+            recCount > 1
+              ? `All ${recCount} recipients received individualized emails (sent 1-by-1 with async pacing).`
+              : "Email successfully dispatched via Brevo REST API v3.",
+            `Delivery Status: SENT (${res.messageId})`
           );
 
           // Send while typing protection: check if live editor was modified in-flight
@@ -891,42 +902,52 @@ export const ComposeMailForm: React.FC<ComposeMailFormProps> = ({
       {/* Main Form */}
       <form onSubmit={handleSubmit} className="p-4 sm:p-5 space-y-3">
         {/* From Identity Selector */}
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <label className="font-admin-mono text-[11px] uppercase tracking-wider text-[#64748B] font-bold">
-              From Identity (Verified Brevo Senders)
-            </label>
-            <div className="font-admin-mono text-[11px] text-[#10B981] flex items-center gap-1.5 font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" />
-              <span>Reply-To: {selectedIdentity.defaultReplyTo}</span>
+        {/* From Identity Selector & Dynamic Display Name */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="font-admin-mono text-[11px] uppercase tracking-wider text-[#64748B] font-bold">
+                From Identity (Verified Senders)
+              </label>
+              <div className="font-admin-mono text-[11px] text-[#10B981] flex items-center gap-1.5 font-semibold">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" />
+                <span>Reply-To: {selectedIdentity.defaultReplyTo}</span>
+              </div>
             </div>
+            <select
+              value={senderKey}
+              onChange={(e) => setSenderKey(e.target.value as MailSenderKey)}
+              disabled={isPending || isSavingDraft || isDiscarding}
+              className="w-full px-3 py-1.5 text-xs font-admin-sans font-semibold bg-[#FAFAFA] border border-[#E2E8F0] rounded-sm focus:outline-hidden focus:border-[#7C3AED] focus:bg-[#FFFFFF] transition-colors cursor-pointer disabled:opacity-60"
+            >
+              <optgroup label="OFFICIAL SENDER IDENTITIES — gauravpatil.site">
+                {Object.values(ADMIN_MAIL_SENDERS)
+                  .filter((s) => !s.isLegacy && !s.isNoReply)
+                  .map((identity) => (
+                    <option key={identity.key} value={identity.key}>
+                      {identity.displayName} &lt;{identity.email}&gt;
+                    </option>
+                  ))}
+              </optgroup>
+            </select>
           </div>
-          <select
-            value={senderKey}
-            onChange={(e) => setSenderKey(e.target.value as MailSenderKey)}
-            disabled={isPending || isSavingDraft || isDiscarding}
-            className="w-full px-3 py-1.5 text-xs font-admin-sans font-semibold bg-[#FAFAFA] border border-[#E2E8F0] rounded-sm focus:outline-hidden focus:border-[#7C3AED] focus:bg-[#FFFFFF] transition-colors cursor-pointer disabled:opacity-60"
-          >
-            <optgroup label="OFFICIAL SENDERS — gauravpatil.site">
-              {Object.values(ADMIN_MAIL_SENDERS)
-                .filter((s) => !s.isLegacy)
-                .map((identity) => (
-                  <option key={identity.key} value={identity.key}>
-                    {identity.displayName} &lt;{identity.email}&gt;
-                  </option>
-                ))}
-            </optgroup>
-          </select>
 
-          {/* No-Reply Advisory Notice */}
-          {selectedIdentity.isNoReply && (
-            <div className="mt-1.5 p-2 bg-[#FFFBEB] border border-[#FDE68A] rounded-sm text-xs text-[#92400E] flex items-center gap-2">
-              <FaTriangleExclamation className="w-3.5 h-3.5 text-[#F59E0B] shrink-0" />
-              <span>
-                <strong>Unmonitored Mailbox:</strong> Recipients replying to this address will not receive a response.
-              </span>
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="font-admin-mono text-[11px] uppercase tracking-wider text-[#64748B] font-bold">
+                Sender Display Name (Dynamic)
+              </label>
+              <span className="font-admin-mono text-[11px] text-[#64748B]">Inbox appearance</span>
             </div>
-          )}
+            <input
+              type="text"
+              value={senderName}
+              onChange={(e) => setSenderName(e.target.value)}
+              placeholder="Gaurav Patil"
+              disabled={isPending || isSavingDraft || isDiscarding}
+              className="w-full px-3 py-1.5 text-xs font-admin-sans bg-[#FAFAFA] border border-[#E2E8F0] rounded-sm focus:outline-hidden focus:border-[#7C3AED] focus:bg-[#FFFFFF] transition-colors disabled:opacity-60"
+            />
+          </div>
         </div>
 
         {/* To Recipient Field */}
@@ -1102,6 +1123,16 @@ export const ComposeMailForm: React.FC<ComposeMailFormProps> = ({
                   >
                     <FaCode className="w-2.5 h-2.5" />
                     <span>Code</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleInsertFormatting("![Image Description](https://", ")")}
+                    disabled={isPending || isSavingDraft || isDiscarding}
+                    title="Insert Image (![alt](url))"
+                    className="p-1 px-1.5 text-[11px] font-admin-mono text-[#475569] hover:text-black bg-[#F1F5F9] hover:bg-[#E2E8F0] rounded-xs transition-colors flex items-center gap-1 disabled:opacity-50"
+                  >
+                    <FaImage className="w-2.5 h-2.5" />
+                    <span>Image</span>
                   </button>
                 </div>
 

@@ -23,7 +23,10 @@ export type EmailIdentityType =
   | "HELP"
   | "NO_REPLY"
   | "ME"
-  | "WORK";
+  | "WORK"
+  | "NEWSLETTER"
+  | "BLOG"
+  | "SUPPORT";
 
 export interface EmailSenderVariant {
   email: string;
@@ -136,22 +139,22 @@ export const EMAIL_IDENTITIES: Record<EmailIdentityType, EmailIdentity> = {
     email: "security@gauravpatil.site",
     primaryEmail: "security@gauravpatil.site",
     legacyEmail: "security@gauravpatil.site",
-    name: "Gaurav Security Services",
-    displayName: "Gaurav Security Services",
+    name: "Gaurav Patil",
+    displayName: "Gaurav Patil",
     defaultReplyTo: "security@gauravpatil.site",
     purpose:
       "OTP emails, email verification, 2FA, login/security verification, password reset, security recovery & alerts.",
     isNoReply: false,
     primary: {
       email: "security@gauravpatil.site",
-      name: "Gaurav Security Services",
+      name: "Gaurav Patil",
       defaultReplyTo: "security@gauravpatil.site",
       purpose: "Security alerts and inquiry replies.",
       isNoReply: false,
     },
     legacy: {
       email: "security@gauravpatil.site",
-      name: "Gaurav Security Services",
+      name: "Gaurav Patil",
       defaultReplyTo: "security@gauravpatil.site",
       purpose: "Security alerts and inquiry replies.",
       isNoReply: false,
@@ -163,22 +166,22 @@ export const EMAIL_IDENTITIES: Record<EmailIdentityType, EmailIdentity> = {
     email: "help@gauravpatil.site",
     primaryEmail: "help@gauravpatil.site",
     legacyEmail: "help@gauravpatil.site",
-    name: "Gaurav Support",
-    displayName: "Gaurav Support",
+    name: "Gaurav Patil",
+    displayName: "Gaurav Patil",
     defaultReplyTo: "help@gauravpatil.site",
     purpose:
       "Support requests, assistance, ticket notifications, and user help workflows.",
     isNoReply: false,
     primary: {
       email: "help@gauravpatil.site",
-      name: "Gaurav Support",
+      name: "Gaurav Patil",
       defaultReplyTo: "help@gauravpatil.site",
       purpose: "Support and assistance.",
       isNoReply: false,
     },
     legacy: {
       email: "help@gauravpatil.site",
-      name: "Gaurav Support",
+      name: "Gaurav Patil",
       defaultReplyTo: "help@gauravpatil.site",
       purpose: "Support and assistance.",
       isNoReply: false,
@@ -190,25 +193,103 @@ export const EMAIL_IDENTITIES: Record<EmailIdentityType, EmailIdentity> = {
     email: "no-reply@gauravpatil.site",
     primaryEmail: "no-reply@gauravpatil.site",
     legacyEmail: "no-reply@gauravpatil.site",
-    name: "Gaurav Portfolio No-Reply",
-    displayName: "Gaurav Portfolio No-Reply",
+    name: "No-Reply | Gaurav Patil",
+    displayName: "No-Reply | Gaurav Patil",
     defaultReplyTo: "no-reply@gauravpatil.site",
     purpose:
       "Strictly non-reply automated system notifications and ephemeral passcodes where replying is not applicable.",
     isNoReply: true,
     primary: {
       email: "no-reply@gauravpatil.site",
-      name: "Gaurav Portfolio No-Reply",
+      name: "No-Reply | Gaurav Patil",
       defaultReplyTo: "no-reply@gauravpatil.site",
       purpose: "OTP and system notifications.",
       isNoReply: true,
     },
     legacy: {
       email: "no-reply@gauravpatil.site",
-      name: "Gaurav Portfolio No-Reply",
+      name: "No-Reply | Gaurav Patil",
       defaultReplyTo: "no-reply@gauravpatil.site",
       purpose: "OTP and system notifications.",
       isNoReply: true,
+    },
+  },
+  NEWSLETTER: {
+    type: "NEWSLETTER",
+    key: "NEWSLETTER",
+    email: "newsletter@gauravpatil.site",
+    primaryEmail: "newsletter@gauravpatil.site",
+    legacyEmail: "newsletter@gauravpatil.site",
+    name: "Gaurav Patil",
+    displayName: "Gaurav Patil",
+    defaultReplyTo: "newsletter@gauravpatil.site",
+    purpose: "Newsletter subscriber broadcasts, monthly digests, and portfolio project highlights.",
+    isNoReply: false,
+    primary: {
+      email: "newsletter@gauravpatil.site",
+      name: "Gaurav Patil",
+      defaultReplyTo: "newsletter@gauravpatil.site",
+      purpose: "Newsletter campaigns and subscriber communications.",
+      isNoReply: false,
+    },
+    legacy: {
+      email: "newsletter@gauravpatil.site",
+      name: "Gaurav Patil",
+      defaultReplyTo: "newsletter@gauravpatil.site",
+      purpose: "Newsletter campaigns and subscriber communications.",
+      isNoReply: false,
+    },
+  },
+  BLOG: {
+    type: "BLOG",
+    key: "BLOG",
+    email: "blog@gauravpatil.site",
+    primaryEmail: "blog@gauravpatil.site",
+    legacyEmail: "blog@gauravpatil.site",
+    name: "Gaurav Patil",
+    displayName: "Gaurav Patil",
+    defaultReplyTo: "blog@gauravpatil.site",
+    purpose: "Engineering article notifications, technical deep dives, and blogging updates.",
+    isNoReply: false,
+    primary: {
+      email: "blog@gauravpatil.site",
+      name: "Gaurav Patil",
+      defaultReplyTo: "blog@gauravpatil.site",
+      purpose: "Blog and technical writing notifications.",
+      isNoReply: false,
+    },
+    legacy: {
+      email: "blog@gauravpatil.site",
+      name: "Gaurav Patil",
+      defaultReplyTo: "blog@gauravpatil.site",
+      purpose: "Blog and technical writing notifications.",
+      isNoReply: false,
+    },
+  },
+  SUPPORT: {
+    type: "SUPPORT",
+    key: "SUPPORT",
+    email: "support@gauravpatil.site",
+    primaryEmail: "support@gauravpatil.site",
+    legacyEmail: "support@gauravpatil.site",
+    name: "Gaurav Patil",
+    displayName: "Gaurav Patil",
+    defaultReplyTo: "support@gauravpatil.site",
+    purpose: "Support ticket notifications, help desk inquiries, and technical assistance.",
+    isNoReply: false,
+    primary: {
+      email: "support@gauravpatil.site",
+      name: "Gaurav Patil",
+      defaultReplyTo: "support@gauravpatil.site",
+      purpose: "Technical assistance and user support.",
+      isNoReply: false,
+    },
+    legacy: {
+      email: "support@gauravpatil.site",
+      name: "Gaurav Patil",
+      defaultReplyTo: "support@gauravpatil.site",
+      purpose: "Technical assistance and user support.",
+      isNoReply: false,
     },
   },
 } as const;
@@ -222,7 +303,10 @@ export type EmailPurpose =
   | "SECURITY_ALERT"
   | "SUPPORT_REQUEST"
   | "SUPPORT_NOTIFICATION"
-  | "SYSTEM_NOTIFICATION";
+  | "SYSTEM_NOTIFICATION"
+  | "NEWSLETTER_BROADCAST"
+  | "BLOG_NOTIFICATION"
+  | "IMAGE_CAMPAIGN";
 
 /**
  * Resolves the appropriate EmailIdentity based on the specific transactional purpose.
@@ -240,10 +324,30 @@ export function getEmailIdentityForPurpose(purpose: EmailPurpose): EmailIdentity
       return EMAIL_IDENTITIES.SECURITY;
     case "SUPPORT_REQUEST":
     case "SUPPORT_NOTIFICATION":
-      return EMAIL_IDENTITIES.HELP;
+      return EMAIL_IDENTITIES.SUPPORT;
     case "SYSTEM_NOTIFICATION":
       return EMAIL_IDENTITIES.NO_REPLY;
+    case "NEWSLETTER_BROADCAST":
+      return EMAIL_IDENTITIES.NEWSLETTER;
+    case "BLOG_NOTIFICATION":
+      return EMAIL_IDENTITIES.BLOG;
+    case "IMAGE_CAMPAIGN":
+      return EMAIL_IDENTITIES.NEWSLETTER;
     default:
       return EMAIL_IDENTITIES.HELLO;
+  }
+}
+
+/**
+ * Resolves the preferred provider ("BREVO" or "MAILERCLOUD") for an email purpose.
+ */
+export function getEmailProviderForPurpose(purpose: EmailPurpose): "BREVO" | "MAILERCLOUD" {
+  switch (purpose) {
+    case "NEWSLETTER_BROADCAST":
+    case "IMAGE_CAMPAIGN":
+      return "MAILERCLOUD";
+    case "BLOG_NOTIFICATION":
+    default:
+      return "BREVO";
   }
 }

@@ -93,6 +93,9 @@ export function renderEmailFooter(
         <span>${escapeAttributeOrText(context?.brandName || "Gaurav Services")}</span>
         ${links ? ` &nbsp;&bull;&nbsp; ${links}` : ""}
       </p>
+      <p style="margin:4px 0 0 0;font-size:10px;color:#94a3b8;line-height:1.3;">
+        Automated security notice &bull; This mailbox is unmonitored and cannot receive incoming replies.
+      </p>
     `;
   }
 

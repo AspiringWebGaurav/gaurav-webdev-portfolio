@@ -50,7 +50,7 @@ export async function sendAdminMailAction(
     };
   }
 
-  const { idempotencyKey, draftId, expectedRevision, senderKey, to, cc, bcc, subject, body, attachments } = parsed.data;
+  const { idempotencyKey, draftId, expectedRevision, senderKey, senderName, to, cc, bcc, subject, body, attachments } = parsed.data;
 
   // 2. Resolve Verified Sender Identity from Authoritative Server Registry
   const identity = ADMIN_MAIL_SENDERS[senderKey];
@@ -89,6 +89,9 @@ export async function sendAdminMailAction(
   const cleanSubject = subject.replace(/[\r\n]/g, " ").trim();
   const htmlBody = compileSafeHtml(body, cleanSubject);
 
+  // Dynamic sender display name
+  const effectiveSenderName = senderName?.trim() || identity.displayName || "Gaurav Patil";
+
   // Extract lightweight metadata for Firestore document audit ledger (Base64 is strictly omitted)
   const attachmentMeta = attachments?.map((att) => ({
     name: sanitizeAttachmentFilename(att.name),
@@ -102,7 +105,7 @@ export async function sendAdminMailAction(
     brevoIdempotencyKey: brevoUuid,
     senderKey: identity.key,
     senderEmail: identity.email,
-    senderName: identity.displayName,
+    senderName: effectiveSenderName,
     replyTo: identity.defaultReplyTo,
     to,
     cc: sanitizedCc,
@@ -133,6 +136,7 @@ export async function sendAdminMailAction(
   // 6. Execute Brevo REST API v3 Outbound Dispatch
   const dispatchResult = await dispatchAdminMail({
     senderKey: identity.key,
+    senderName: effectiveSenderName,
     to,
     cc: sanitizedCc,
     bcc: sanitizedBcc,
@@ -149,7 +153,9 @@ export async function sendAdminMailAction(
   // 7. Finalize State in Firestore (Atomic Transaction with Revision-Safe Draft Cleanup)
   await mailRepository.finalizeSendStatus(idempotencyKey, {
     status: dispatchResult.status,
-    brevoMessageId: dispatchResult.messageId,
+    provider: dispatchResult.provider,
+    brevoMessageId: dispatchResult.provider === "BREVO" ? dispatchResult.messageId : undefined,
+    mailercloudMessageId: dispatchResult.provider === "MAILERCLOUD" ? dispatchResult.messageId : undefined,
     errorMessage: dispatchResult.error,
     draftIdToDelete: draftId,
     expectedRevision,

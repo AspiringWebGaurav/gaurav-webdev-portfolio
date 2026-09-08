@@ -69,8 +69,8 @@ async function runTests() {
     "NO_REPLY primary email is strictly no-reply@gauravpatil.site"
   );
   assert(
-    EMAIL_IDENTITIES.NO_REPLY.primary.name === "Gaurav Portfolio No-Reply",
-    "NO_REPLY sender display name is strictly Gaurav Portfolio No-Reply"
+    EMAIL_IDENTITIES.NO_REPLY.primary.name === "No-Reply | Gaurav Patil",
+    "NO_REPLY sender display name is strictly No-Reply | Gaurav Patil"
   );
   assert(EMAIL_IDENTITIES.NO_REPLY.isNoReply === true, "NO_REPLY identity is flagged as isNoReply: true");
 

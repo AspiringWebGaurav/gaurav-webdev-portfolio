@@ -97,7 +97,7 @@ async function runSuite() {
 
     const payload = capturedDispatches[0].body;
     assert.equal(payload.sender.email, "no-reply@gauravpatil.site", "From address must be no-reply");
-    assert.equal(payload.sender.name, "Gaurav Portfolio No-Reply", "Sender display name must be Gaurav Portfolio No-Reply");
+    assert.equal(payload.sender.name, "No-Reply | Gaurav Patil", "Sender display name must be No-Reply | Gaurav Patil");
     assert.equal(payload.replyTo.email, "no-reply@gauravpatil.site", "Reply-To must be no-reply");
     assert.equal(payload.subject, `Your verification code is ${otp}`, "Subject line matches");
 
@@ -140,7 +140,7 @@ async function runSuite() {
 
     const payload = capturedDispatches[0].body;
     assert.equal(payload.sender.email, "security@gauravpatil.site", "From address must be security");
-    assert.ok(payload.sender.name === "Gaurav Security Services" || payload.sender.name === "Device Auth", "Display name matches");
+    assert.equal(payload.sender.name, "Gaurav Patil", "Display name matches Gaurav Patil");
     assert.equal(payload.subject, "Authorize sign-in from a new IP address", "Subject line matches");
 
     const html = payload.htmlContent;

@@ -125,15 +125,21 @@ export const SendMailSchema = z
     draftId: z.string().max(64).optional(),
     expectedRevision: z.number().int().min(1).optional(),
     senderKey: z.enum([
+      "HELLO",
+      "ME",
+      "WORK",
       "SECURITY",
       "HELP",
-      "HELLO",
       "NO_REPLY",
+      "NEWSLETTER",
+      "BLOG",
+      "SUPPORT",
       "LEGACY_SECURITY",
       "LEGACY_HELP",
       "LEGACY_HELLO",
       "LEGACY_NO_REPLY",
     ]),
+    senderName: z.string().trim().max(60, "Sender name must be under 60 characters.").optional(),
     to: z
       .array(MailRecipientSchema)
       .min(1, "At least one 'To' recipient is required.")
@@ -196,16 +202,22 @@ export const SaveDraftSchema = z
     expectedRevision: z.number().int().min(1).optional(),
     senderKey: z
       .enum([
+        "HELLO",
+        "ME",
+        "WORK",
         "SECURITY",
         "HELP",
-        "HELLO",
         "NO_REPLY",
+        "NEWSLETTER",
+        "BLOG",
+        "SUPPORT",
         "LEGACY_SECURITY",
         "LEGACY_HELP",
         "LEGACY_HELLO",
         "LEGACY_NO_REPLY",
       ])
       .default("HELLO"),
+    senderName: z.string().trim().max(60).optional(),
     to: z.array(MailRecipientSchema).default([]),
     cc: z.array(MailRecipientSchema).default([]),
     bcc: z.array(MailRecipientSchema).default([]),

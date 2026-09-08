@@ -80,6 +80,9 @@ export type MailSenderKey =
   | "NO_REPLY"
   | "ME"
   | "WORK"
+  | "NEWSLETTER"
+  | "BLOG"
+  | "SUPPORT"
   | "LEGACY_SECURITY"
   | "LEGACY_HELP"
   | "LEGACY_HELLO"
@@ -94,6 +97,7 @@ export interface MailRecipient {
 
 export interface MailDocument {
   id: string; // idempotencyKey
+  provider?: "BREVO" | "MAILERCLOUD";
   senderKey: MailSenderKey;
   senderEmail: string;
   senderName: string;
@@ -106,6 +110,7 @@ export interface MailDocument {
   htmlBody?: string;
   status: MailSendStatus;
   brevoMessageId?: string;
+  mailercloudMessageId?: string;
   errorMessage?: string;
   sentByAdminEmail: string;
   createdAt: string; // ISO 8601
