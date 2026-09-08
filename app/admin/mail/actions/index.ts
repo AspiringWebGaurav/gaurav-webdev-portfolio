@@ -154,8 +154,7 @@ export async function sendAdminMailAction(
   await mailRepository.finalizeSendStatus(idempotencyKey, {
     status: dispatchResult.status,
     provider: dispatchResult.provider,
-    brevoMessageId: dispatchResult.provider === "BREVO" ? dispatchResult.messageId : undefined,
-    mailercloudMessageId: dispatchResult.provider === "MAILERCLOUD" ? dispatchResult.messageId : undefined,
+    brevoMessageId: dispatchResult.messageId,
     errorMessage: dispatchResult.error,
     draftIdToDelete: draftId,
     expectedRevision,

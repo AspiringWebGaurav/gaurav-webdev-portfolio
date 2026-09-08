@@ -97,7 +97,7 @@ export interface MailRecipient {
 
 export interface MailDocument {
   id: string; // idempotencyKey
-  provider?: "BREVO" | "MAILERCLOUD";
+  provider?: "BREVO";
   senderKey: MailSenderKey;
   senderEmail: string;
   senderName: string;
@@ -110,7 +110,6 @@ export interface MailDocument {
   htmlBody?: string;
   status: MailSendStatus;
   brevoMessageId?: string;
-  mailercloudMessageId?: string;
   errorMessage?: string;
   sentByAdminEmail: string;
   createdAt: string; // ISO 8601

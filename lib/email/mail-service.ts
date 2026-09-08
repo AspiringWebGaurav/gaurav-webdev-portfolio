@@ -8,7 +8,6 @@
 
 import { adminLogger } from "@/lib/admin/logger";
 import { escapeHtml, formatBrevoIdempotencyKey } from "./brevo";
-import { sendMailercloudEmail } from "./mailercloud";
 import {
   EMAIL_IDENTITIES,
   EmailIdentityType,
@@ -35,7 +34,7 @@ export interface MailSenderIdentity {
   domain: string;
   legacyEmail?: string;
   brevoSenderId?: number;
-  provider?: "BREVO" | "MAILERCLOUD";
+  provider?: "BREVO";
 }
 
 export const ADMIN_MAIL_SENDERS: Record<MailSenderKey, MailSenderIdentity> = {
@@ -392,7 +391,7 @@ export interface DispatchAdminMailParams {
   attachments?: { name: string; content: string }[];
   idempotencyKey: string;
   adminEmail: string;
-  provider?: "BREVO" | "MAILERCLOUD" | "AUTO";
+  provider?: "BREVO";
   pacingDelayMs?: number;
   onRecipientProgress?: (current: number, total: number, result: DispatchAdminMailResult) => void;
 }
@@ -402,7 +401,7 @@ export interface DispatchAdminMailResult {
   status: "SENT" | "FAILED" | "DELIVERY_UNCERTAIN";
   messageId?: string;
   error?: string;
-  provider?: "BREVO" | "MAILERCLOUD";
+  provider?: "BREVO";
 }
 
 interface DispatchSingleAttemptParams {
@@ -416,11 +415,10 @@ interface DispatchSingleAttemptParams {
   textContent: string;
   attachments?: { name: string; content: string }[];
   idempotencyKey: string;
-  preferMailercloud: boolean;
 }
 
 /**
- * Executes a single atomic 1-to-1 dispatch attempt with automatic bidirectional failover.
+ * Executes a single atomic 1-to-1 dispatch attempt via Brevo REST API v3.
  */
 async function dispatchSingleAttempt(
   params: DispatchSingleAttemptParams
@@ -436,194 +434,127 @@ async function dispatchSingleAttempt(
     textContent,
     attachments,
     idempotencyKey,
-    preferMailercloud,
   } = params;
 
-  // Helper: Send via Mailercloud
-  const tryMailercloud = async (): Promise<DispatchAdminMailResult> => {
-    const mcResult = await sendMailercloudEmail({
-      from: identity.email,
-      fromName: senderDisplayName,
-      to,
-      replyTo: identity.defaultReplyTo,
-      subject: cleanSubject,
-      html: htmlContent,
-      text: textContent,
-      idempotencyKey,
-    });
-
+  const apiKey = process.env.BREVO_API_KEY;
+  if (!apiKey) {
     return {
-      success: mcResult.success,
-      status: mcResult.status,
-      messageId: mcResult.messageId,
-      error: mcResult.error,
-      provider: "MAILERCLOUD",
+      success: false,
+      status: "FAILED",
+      error: "BREVO_API_KEY is not configured in server environment.",
     };
+  }
+
+  const payload: Record<string, unknown> = {
+    sender: {
+      name: senderDisplayName,
+      email: identity.email,
+    },
+    to: to.map((rec) => ({
+      email: rec.email.trim().toLowerCase(),
+      name: rec.name?.trim() || undefined,
+    })),
+    replyTo: {
+      email: identity.defaultReplyTo,
+      name: senderDisplayName,
+    },
+    subject: cleanSubject,
+    htmlContent,
+    textContent,
+    tags: ["admin_mail", `sender_${identity.key.toLowerCase()}`],
   };
 
-  // Helper: Send via Brevo
-  const tryBrevo = async (): Promise<DispatchAdminMailResult> => {
-    const apiKey = process.env.BREVO_API_KEY;
-    if (!apiKey) {
-      return {
-        success: false,
-        status: "FAILED",
-        error: "BREVO_API_KEY is not configured in server environment.",
-      };
-    }
+  if (cc && cc.length > 0) {
+    payload.cc = cc.map((rec) => ({
+      email: rec.email.trim().toLowerCase(),
+      name: rec.name?.trim() || undefined,
+    }));
+  }
 
-    const payload: Record<string, unknown> = {
-      sender: {
-        name: senderDisplayName,
-        email: identity.email,
+  if (bcc && bcc.length > 0) {
+    payload.bcc = bcc.map((rec) => ({
+      email: rec.email.trim().toLowerCase(),
+      name: rec.name?.trim() || undefined,
+    }));
+  }
+
+  if (attachments && attachments.length > 0) {
+    payload.attachment = attachments.map((att) => ({
+      name: att.name,
+      content: att.content.replace(/^data:[^;]+;base64,/, ""),
+    }));
+  }
+
+  const brevoIdempotencyKey = formatBrevoIdempotencyKey(idempotencyKey);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+  const startTime = Date.now();
+
+  try {
+    const res = await fetch(BREVO_API_ENDPOINT, {
+      method: "POST",
+      headers: {
+        accept: "application/json",
+        "api-key": apiKey,
+        "content-type": "application/json",
+        "Idempotency-Key": brevoIdempotencyKey,
       },
-      to: to.map((rec) => ({
-        email: rec.email.trim().toLowerCase(),
-        name: rec.name?.trim() || undefined,
-      })),
-      replyTo: {
-        email: identity.defaultReplyTo,
-        name: senderDisplayName,
-      },
-      subject: cleanSubject,
-      htmlContent,
-      textContent,
-      tags: ["admin_mail", `sender_${identity.key.toLowerCase()}`],
-    };
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
 
-    if (cc && cc.length > 0) {
-      payload.cc = cc.map((rec) => ({
-        email: rec.email.trim().toLowerCase(),
-        name: rec.name?.trim() || undefined,
-      }));
-    }
+    clearTimeout(timeoutId);
+    const durationMs = Date.now() - startTime;
+    const data = await res.json().catch(() => ({}));
 
-    if (bcc && bcc.length > 0) {
-      payload.bcc = bcc.map((rec) => ({
-        email: rec.email.trim().toLowerCase(),
-        name: rec.name?.trim() || undefined,
-      }));
-    }
-
-    if (attachments && attachments.length > 0) {
-      payload.attachment = attachments.map((att) => ({
-        name: att.name,
-        content: att.content.replace(/^data:[^;]+;base64,/, ""),
-      }));
-    }
-
-    const brevoIdempotencyKey = formatBrevoIdempotencyKey(idempotencyKey);
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
-    const startTime = Date.now();
-
-    try {
-      const res = await fetch(BREVO_API_ENDPOINT, {
-        method: "POST",
-        headers: {
-          accept: "application/json",
-          "api-key": apiKey,
-          "content-type": "application/json",
-          "Idempotency-Key": brevoIdempotencyKey,
-        },
-        body: JSON.stringify(payload),
-        signal: controller.signal,
+    if (res.ok && (res.status === 200 || res.status === 201)) {
+      const messageId = (data.messageId as string) || "msg_accepted";
+      adminLogger.info("dispatchAdminMail:Success", "Brevo accepted outbound mail", {
+        idempotencyKey,
+        senderKey: identity.key,
+        recipientCount: to.length,
+        durationMs,
+        brevoMessageId: messageId,
       });
 
-      clearTimeout(timeoutId);
-      const durationMs = Date.now() - startTime;
-      const data = await res.json().catch(() => ({}));
-
-      if (res.ok && (res.status === 200 || res.status === 201)) {
-        const messageId = (data.messageId as string) || "msg_accepted";
-        adminLogger.info("dispatchAdminMail:Success", "Brevo accepted outbound mail", {
-          idempotencyKey,
-          senderKey: identity.key,
-          recipientCount: to.length,
-          durationMs,
-          brevoMessageId: messageId,
-        });
-
-        return {
-          success: true,
-          status: "SENT",
-          messageId,
-          provider: "BREVO",
-        };
-      }
-
-      const errorMessage =
-        (data.message as string) ||
-        (data.error as string) ||
-        `Brevo API returned HTTP ${res.status}`;
-
-      if (res.status >= 500) {
-        return {
-          success: false,
-          status: "DELIVERY_UNCERTAIN",
-          error: `Provider returned HTTP ${res.status}. Delivery unconfirmed.`,
-        };
-      }
-
       return {
-        success: false,
-        status: "FAILED",
-        error: errorMessage,
+        success: true,
+        status: "SENT",
+        messageId,
+        provider: "BREVO",
       };
-    } catch (err: unknown) {
-      clearTimeout(timeoutId);
-      const error = err as Error;
-      const isTimeout = error.name === "AbortError";
+    }
 
+    const errorMessage =
+      (data.message as string) ||
+      (data.error as string) ||
+      `Brevo API returned HTTP ${res.status}`;
+
+    if (res.status >= 500) {
       return {
         success: false,
         status: "DELIVERY_UNCERTAIN",
-        error: isTimeout
-          ? "Brevo email gateway timed out (10s). Delivery status unconfirmed."
-          : "Network error connecting to Brevo API. Delivery status unconfirmed.",
+        error: `Provider returned HTTP ${res.status}. Delivery unconfirmed.`,
       };
     }
-  };
 
-  // Primary Provider Determination & Automatic Failover Engine
-  if (preferMailercloud) {
-    const primaryResult = await tryMailercloud();
-    if (primaryResult.success) {
-      return primaryResult;
-    }
+    return {
+      success: false,
+      status: "FAILED",
+      error: errorMessage,
+    };
+  } catch (err: unknown) {
+    clearTimeout(timeoutId);
+    const error = err as Error;
+    const isTimeout = error.name === "AbortError";
 
-    if (primaryResult.status !== "DELIVERY_UNCERTAIN" && process.env.BREVO_API_KEY) {
-      adminLogger.warn(
-        "dispatchAdminMail:FailoverToBrevo",
-        `Mailercloud failed (${primaryResult.error}), executing automatic failover to Brevo`,
-        { senderKey: identity.key, recipientCount: to.length }
-      );
-      const failoverResult = await tryBrevo();
-      if (failoverResult.success) {
-        return failoverResult;
-      }
-    }
-
-    return primaryResult;
-  } else {
-    const primaryResult = await tryBrevo();
-    if (primaryResult.success) {
-      return primaryResult;
-    }
-
-    if (primaryResult.status !== "DELIVERY_UNCERTAIN" && process.env.MAILERCLOUD_API_KEY) {
-      adminLogger.warn(
-        "dispatchAdminMail:FailoverToMailercloud",
-        `Brevo failed (${primaryResult.error}), executing automatic failover to Mailercloud`,
-        { senderKey: identity.key, recipientCount: to.length }
-      );
-      const failoverResult = await tryMailercloud();
-      if (failoverResult.success) {
-        return failoverResult;
-      }
-    }
-
-    return primaryResult;
+    return {
+      success: false,
+      status: "DELIVERY_UNCERTAIN",
+      error: isTimeout
+        ? "Brevo email gateway timed out (10s). Delivery status unconfirmed."
+        : "Network error connecting to Brevo API. Delivery status unconfirmed.",
+    };
   }
 }
 
@@ -651,10 +582,6 @@ export async function dispatchAdminMail(
   const htmlContent = compileSafeHtml(params.body, cleanSubject);
   const textContent = params.body.trim();
   const senderDisplayName = params.senderName?.trim() || identity.displayName || "Gaurav Patil";
-
-  const preferMailercloud =
-    params.provider === "MAILERCLOUD" ||
-    (!params.provider && identity.provider === "MAILERCLOUD");
 
   // 2. Sequential 1-by-1 Paced Delivery Engine (When multiple recipients in "to")
   if (params.to.length > 1) {
@@ -686,7 +613,6 @@ export async function dispatchAdminMail(
         textContent,
         attachments: params.attachments,
         idempotencyKey: singleIdempotencyKey,
-        preferMailercloud,
       });
 
       if (res.success) {
@@ -713,7 +639,7 @@ export async function dispatchAdminMail(
       success: anySucceeded,
       status: allSucceeded ? "SENT" : anySucceeded ? "SENT" : "FAILED",
       messageId: primaryMessageId || `batch_seq_${Date.now()}`,
-      provider: preferMailercloud ? "MAILERCLOUD" : "BREVO",
+      provider: "BREVO",
       error: allSucceeded
         ? undefined
         : `Sequential delivery completed: ${successCount}/${params.to.length} delivered. Last error: ${lastError}`,
@@ -732,7 +658,6 @@ export async function dispatchAdminMail(
     textContent,
     attachments: params.attachments,
     idempotencyKey: params.idempotencyKey,
-    preferMailercloud,
   });
 }
 
@@ -743,7 +668,7 @@ export interface SequentialBatchParams {
   subject: string;
   body: string;
   adminEmail: string;
-  provider?: "BREVO" | "MAILERCLOUD" | "AUTO";
+  provider?: "BREVO";
   attachments?: { name: string; content: string }[];
   delayBetweenMs?: number;
   onProgress?: (index: number, total: number, result: DispatchAdminMailResult) => void;
@@ -759,7 +684,7 @@ export interface SequentialBatchResult {
     status: "SENT" | "FAILED" | "DELIVERY_UNCERTAIN";
     messageId?: string;
     error?: string;
-    provider?: "BREVO" | "MAILERCLOUD";
+    provider?: "BREVO";
   }>;
 }
 

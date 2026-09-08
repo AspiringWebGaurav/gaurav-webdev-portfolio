@@ -176,9 +176,8 @@ export class MailRepository extends BaseRepository {
     idempotencyKey: string,
     params: {
       status: "SENT" | "FAILED" | "DELIVERY_UNCERTAIN";
-      provider?: "BREVO" | "MAILERCLOUD";
+      provider?: "BREVO";
       brevoMessageId?: string;
-      mailercloudMessageId?: string;
       errorMessage?: string;
       draftIdToDelete?: string;
       expectedRevision?: number;
@@ -191,7 +190,6 @@ export class MailRepository extends BaseRepository {
         updatedAt: now,
         ...(params.provider && { provider: params.provider }),
         ...(params.brevoMessageId && { brevoMessageId: params.brevoMessageId }),
-        ...(params.mailercloudMessageId && { mailercloudMessageId: params.mailercloudMessageId }),
         ...(params.errorMessage && { errorMessage: params.errorMessage }),
         ...(params.status === "SENT" && { sentAt: new Date(now).toISOString() }),
       };

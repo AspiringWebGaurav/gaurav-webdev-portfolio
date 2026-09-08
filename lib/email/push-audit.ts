@@ -5,8 +5,7 @@
  * whenever changes are pushed to GitHub.
  *
  * Relay Invariant:
- * - Primary Relay: Mailercloud (Relieves Brevo's 300/day transactional quota)
- * - Fallback Relay: Brevo API v3 (Automatic failover if Mailercloud is unreachable)
+ * - Relay: Brevo API v3 (Direct transactional pipeline)
  * - Sender: Gaurav Patil <security@gauravpatil.site>
  * - To: Admin Gmail (gauravpatil5737@gmail.com)
  *
@@ -17,8 +16,7 @@
  */
 
 import { EMAIL_IDENTITIES } from "./identities";
-import { sendMailercloudEmail } from "./mailercloud";
-import type { SendEmailResult } from "./brevo";
+import { sendTransactionalEmail, type SendEmailResult } from "./brevo";
 
 export interface GitPushAuditFile {
   status: "MOD" | "ADD" | "DEL" | "REN" | string;
@@ -122,35 +120,27 @@ export function renderPushAuditHtml(params: GitPushAuditParams): string {
   const remainingFilesCount = totalFilesCount - displayedFiles.length;
 
   const fileRowsHtml = displayedFiles.map((file) => {
-    let badgeBg = "#eff6ff";
-    let badgeColor = "#2563eb";
-    let badgeBorder = "#bfdbfe";
+    let labelColor = "#2563eb";
     let label = "MOD";
 
     if (file.status === "ADD") {
-      badgeBg = "#ecfdf5";
-      badgeColor = "#059669";
-      badgeBorder = "#a7f3d0";
+      labelColor = "#059669";
       label = "ADD";
     } else if (file.status === "DEL") {
-      badgeBg = "#fef2f2";
-      badgeColor = "#dc2626";
-      badgeBorder = "#fecaca";
+      labelColor = "#dc2626";
       label = "DEL";
     } else if (file.status === "REN") {
-      badgeBg = "#fdf4ff";
-      badgeColor = "#9333ea";
-      badgeBorder = "#f0abfc";
+      labelColor = "#9333ea";
       label = "REN";
     }
 
     const compactPath = formatCompactPath(file.path);
 
     return `<tr>
-      <td style="padding:1px 0; width:36px; vertical-align:middle;">
-        <span style="display:inline-block; font-family:monospace; font-size:8px; font-weight:700; color:${badgeColor}; background:${badgeBg}; border:1px solid ${badgeBorder}; padding:1px 3px; border-radius:2px; letter-spacing:0.3px;">${label}</span>
+      <td style="padding:2px 0; width:34px; font-family:monospace; font-size:10px; font-weight:700; color:${labelColor}; vertical-align:middle;">
+        ${label}
       </td>
-      <td style="padding:1px 0; font-family:monospace; font-size:10px; color:#334155; vertical-align:middle; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+      <td style="padding:2px 0; font-family:monospace; font-size:11px; color:#334155; vertical-align:middle; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
         ${escapeHtml(compactPath)}
       </td>
     </tr>`;
@@ -163,73 +153,59 @@ export function renderPushAuditHtml(params: GitPushAuditParams): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Push Audit #${shortHash}</title>
 </head>
-<body style="margin:0; padding:10px; background-color:#ffffff; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; -webkit-font-smoothing:antialiased; color:#0f172a;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" align="left" style="max-width:500px; margin:0; border-collapse:collapse;">
+<body style="margin:0; padding:12px; background-color:#ffffff; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; -webkit-font-smoothing:antialiased; color:#0f172a;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" align="left" style="max-width:520px; margin:0; border-collapse:collapse;">
     <tr>
       <td style="padding:0;">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff; border:1px solid #e2e8f0; border-left:3px solid #7c3aed; border-radius:6px; border-collapse:collapse;">
-          <tr>
-            <td style="padding:10px 12px;">
-              
-              <!-- 1. Header Line: Status + Hash + Branch + Verified Badge -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
-                <tr>
-                  <td align="left" style="font-size:11px; font-weight:700; color:#0f172a;">
-                    <span style="color:#7c3aed;">⚡ PUSH AUDIT</span>
-                    <span style="color:#cbd5e1; margin:0 4px;">•</span>
-                    <a href="${commitUrl}" style="color:#7c3aed; font-family:monospace; font-weight:700; text-decoration:none;">#${shortHash}</a>
-                    <span style="color:#64748b; font-family:monospace; font-weight:500; font-size:10px; margin-left:2px;">(${branch})</span>
-                  </td>
-                  <td align="right">
-                    <span style="font-family:monospace; font-size:9px; font-weight:700; color:#059669; background:#ecfdf5; border:1px solid #a7f3d0; padding:1px 6px; border-radius:3px; letter-spacing:0.3px;">
-                      VERIFIED ✓
-                    </span>
-                  </td>
-                </tr>
-              </table>
+        <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:6px; padding:16px 18px; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+          
+          <!-- Header Badge: Clean, No Emojis, No Tickmarks -->
+          <div style="margin-bottom:10px;">
+            <span style="display:inline-block; padding:2px 8px; background-color:#f5f3ff; border:1px solid #ddd6fe; color:#7c3aed; font-size:10px; font-family:monospace; font-weight:700; border-radius:3px; letter-spacing:0.5px; text-transform:uppercase;">
+              PUSH AUDIT &bull; #${shortHash} (${branch})
+            </span>
+          </div>
 
-              <!-- 2. Commit Message: Clean, Direct, Single Block -->
-              <div style="margin:6px 0 6px 0; font-size:12px; font-weight:600; color:#0f172a; line-height:1.4; word-break:break-word;">
-                ${safeMessage}
-              </div>
+          <!-- Commit Message -->
+          <div style="margin:0 0 8px 0; font-size:13px; font-weight:600; color:#0f172a; line-height:1.45; word-break:break-word;">
+            ${safeMessage}
+          </div>
 
-              <!-- 3. Meta Strip: Actor, Timestamp & Diff Stats in 1 Compact Row -->
-              <div style="font-size:10px; color:#64748b; border-top:1px solid #f1f5f9; padding-top:5px; margin-bottom:6px;">
-                <span style="font-weight:600; color:#334155;">${authorName}</span>
-                <span style="color:#cbd5e1; margin:0 4px;">•</span>
-                <span>${formattedTime}</span>
-                ${params.insertions || params.deletions ? `
-                <span style="color:#cbd5e1; margin:0 4px;">•</span>
-                <span style="color:#059669; font-weight:700; font-family:monospace;">${escapeHtml(params.insertions || "+0")}</span>
-                <span style="color:#cbd5e1; margin:0 2px;">/</span>
-                <span style="color:#dc2626; font-weight:700; font-family:monospace;">${escapeHtml(params.deletions || "-0")}</span>
-                ` : ""}
-              </div>
+          <!-- Meta Strip: Author, Timestamp, Diff Stats -->
+          <div style="font-size:11px; color:#64748b; margin-bottom:10px;">
+            <span style="font-weight:600; color:#334155;">${authorName}</span>
+            <span style="color:#cbd5e1; margin:0 4px;">&bull;</span>
+            <span>${formattedTime}</span>
+            ${params.insertions || params.deletions ? `
+            <span style="color:#cbd5e1; margin:0 4px;">&bull;</span>
+            <span style="color:#059669; font-weight:600; font-family:monospace;">${escapeHtml(params.insertions || "+0")}</span>
+            <span style="color:#cbd5e1; margin:0 2px;">/</span>
+            <span style="color:#dc2626; font-weight:600; font-family:monospace;">${escapeHtml(params.deletions || "-0")}</span>
+            ` : ""}
+          </div>
 
-              <!-- 4. Ultra-Compact Monospace Files Box (Height ~45px) -->
-              ${totalFilesCount > 0 ? `
-              <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; padding:4px 8px; font-family:monospace;">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
-                  ${fileRowsHtml}
-                </table>
-              </div>
-              ` : ""}
+          <!-- Monospace Files Box -->
+          ${totalFilesCount > 0 ? `
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; padding:6px 10px; font-family:monospace;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+              ${fileRowsHtml}
+            </table>
+          </div>
+          ` : ""}
 
-              <!-- 5. Micro Action Line: Quick Summary & GitHub Link -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:6px; font-size:10px; border-collapse:collapse;">
-                <tr>
-                  <td align="left" style="color:#94a3b8;">
-                    ${totalFilesCount} files changed ${remainingFilesCount > 0 ? `&bull; +${remainingFilesCount} more` : ""}
-                  </td>
-                  <td align="right">
-                    <a href="${commitUrl}" style="color:#7c3aed; text-decoration:none; font-weight:600;">View on GitHub &rarr;</a>
-                  </td>
-                </tr>
-              </table>
+          <!-- Micro Action Line -->
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:10px; font-size:11px; border-collapse:collapse;">
+            <tr>
+              <td align="left" style="color:#94a3b8;">
+                ${totalFilesCount} files changed ${remainingFilesCount > 0 ? `&bull; +${remainingFilesCount} more` : ""}
+              </td>
+              <td align="right">
+                <a href="${commitUrl}" style="color:#7c3aed; text-decoration:none; font-weight:600;">View diff on GitHub &rarr;</a>
+              </td>
+            </tr>
+          </table>
 
-            </td>
-          </tr>
-        </table>
+        </div>
       </td>
     </tr>
   </table>
@@ -258,7 +234,7 @@ Diff: https://github.com/${repoName}/commit/${params.commitHash}`;
 }
 
 /**
- * Dispatches the push audit email via Mailercloud (primary) with Brevo fallback.
+ * Dispatches the push audit email via Brevo REST API v3.
  */
 export async function sendGitPushAuditEmail(params: GitPushAuditParams): Promise<SendEmailResult> {
   const adminEmail =
@@ -271,20 +247,14 @@ export async function sendGitPushAuditEmail(params: GitPushAuditParams): Promise
   const html = renderPushAuditHtml(params);
   const text = renderPushAuditText(params);
 
-  // Exclusive Relay: Mailercloud (100% dedicated, zero Brevo quota load)
-  const mcRes = await sendMailercloudEmail({
-    from: EMAIL_IDENTITIES.SECURITY.email,
-    fromName: EMAIL_IDENTITIES.SECURITY.name,
-    replyTo: EMAIL_IDENTITIES.SECURITY.defaultReplyTo,
+  return sendTransactionalEmail({
+    purpose: "SECURITY_ALERT",
+    identity: EMAIL_IDENTITIES.SECURITY,
     to: [{ email: adminEmail, name: "Gaurav Patil" }],
+    replyTo: { email: EMAIL_IDENTITIES.SECURITY.email, name: "Gaurav Patil" },
     subject,
-    html,
-    text,
+    htmlContent: html,
+    textContent: text,
+    tags: ["git_push_audit", "security_log"],
   });
-
-  return {
-    success: mcRes.success,
-    messageId: mcRes.messageId,
-    error: mcRes.error,
-  };
 }

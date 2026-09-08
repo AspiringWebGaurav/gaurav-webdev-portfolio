@@ -339,15 +339,9 @@ export function getEmailIdentityForPurpose(purpose: EmailPurpose): EmailIdentity
 }
 
 /**
- * Resolves the preferred provider ("BREVO" or "MAILERCLOUD") for an email purpose.
+ * Resolves the preferred provider ("BREVO") for an email purpose.
  */
-export function getEmailProviderForPurpose(purpose: EmailPurpose): "BREVO" | "MAILERCLOUD" {
-  switch (purpose) {
-    case "NEWSLETTER_BROADCAST":
-    case "IMAGE_CAMPAIGN":
-      return "MAILERCLOUD";
-    case "BLOG_NOTIFICATION":
-    default:
-      return "BREVO";
-  }
+export function getEmailProviderForPurpose(purpose?: EmailPurpose): "BREVO" {
+  void purpose;
+  return "BREVO";
 }
