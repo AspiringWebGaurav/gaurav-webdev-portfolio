@@ -14,7 +14,9 @@
 
 import { EMAIL_IDENTITIES } from "./identities";
 import { sendTransactionalEmail, SendEmailResult, escapeHtml, resolveAppUrl } from "./brevo";
+import { sendResendEmail } from "./resend";
 import { formatLegalSummaryProse } from "../legal/prose";
+
 
 export interface BuildLegalNotificationParams {
   docType: "TERMS" | "PRIVACY";
@@ -75,11 +77,11 @@ You're receiving this email as per policy and acceptance of use, because you may
 ${prose.text}
 
 Current platform agreements & resources:
-• Terms of Service: ${termsUrl} (Standard terms, engineering deliverables, and acceptable use)
-• Privacy Policy: ${privacyUrl} (Data minimization, zero tracking cookies, and encryption safeguards)
+• Terms of Service: ${termsUrl} (Standard terms, deliverables, and acceptable use)
+• Privacy Policy: ${privacyUrl} (Data minimization, zero cookies, and encryption safeguards)
 • Security Architecture: ${securityUrl} (Technical safeguards and responsible disclosure)
 • Accessibility Statement: ${accessibilityUrl} (WCAG 2.1 AA compliance and inclusive design commitment)
-• Contact & Inquiries: ${contactUrl} (Direct developer outreach and confidential inquiries)
+• Contact & Inquiries: ${contactUrl} (Direct developer outreach and private communication)
 
 Review updated ${docTitle.toLowerCase()}:
 ${policyUrl}
@@ -89,15 +91,11 @@ Gaurav Patil
 Gaurav Portfolio
 
 -------------------------------------------------------------------------------
-Terms: ${termsUrl}
-Privacy: ${privacyUrl}
-Security: ${securityUrl}
-Accessibility: ${accessibilityUrl}
-Contact: ${contactUrl}
+Terms: ${termsUrl} • Privacy: ${privacyUrl} • Security: ${securityUrl}
+Accessibility: ${accessibilityUrl} • Contact: ${contactUrl}
 
-Gaurav Portfolio • Full-Stack Engineer • ${appBaseUrl.replace(/^https?:\/\//, "")}
-You have received this mandatory service announcement to update you about important changes to Gaurav Portfolio.
-Please do not reply to this email, as replies to this automated address are not monitored.
+Gaurav Portfolio • Full-Stack Engineer • India • ${appBaseUrl.replace(/^https?:\/\//, "")}
+Mandatory service announcement • Replies to this automated address are not monitored.
 `.trim();
 
   const htmlContent = `<!DOCTYPE html>
@@ -105,6 +103,8 @@ Please do not reply to this email, as replies to this automated address are not 
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
   <title>${escapeHtml(subject)}</title>
 </head>
 <body style="margin:0;padding:24px 16px;background-color:#ffffff;font-family:'Google Sans',Roboto,-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;-webkit-font-smoothing:antialiased;color:#202124;">
@@ -112,84 +112,107 @@ Please do not reply to this email, as replies to this automated address are not 
     <tr>
       <td style="padding:0;font-family:'Google Sans',Roboto,-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
         
-        <!-- Google-Style Header Logo -->
-        <div style="margin-bottom:16px;">
-          <span style="font-size:24px;font-weight:600;color:#1a73e8;letter-spacing:-0.5px;">Gaurav</span>
-          <span style="font-size:24px;font-weight:400;color:#5f6368;letter-spacing:-0.5px;"> Portfolio</span>
-        </div>
+        <!-- Header: Logo & Symmetric Revision Badge -->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;">
+          <tr>
+            <td align="left" style="vertical-align:middle;">
+              <span style="font-size:22px;font-weight:600;color:#1a73e8;letter-spacing:-0.5px;">Gaurav</span>
+              <span style="font-size:22px;font-weight:400;color:#5f6368;letter-spacing:-0.5px;"> Portfolio</span>
+            </td>
+            <td align="right" style="vertical-align:middle;">
+              <span style="display:inline-block;padding:3px 9px;border-radius:12px;background-color:#e8f0fe;color:#1967d2;font-size:11px;font-weight:600;letter-spacing:0.02em;text-transform:uppercase;">
+                Legal Revision
+              </span>
+            </td>
+          </tr>
+        </table>
 
-        <!-- Google-Style Top Divider -->
-        <hr style="border:none;border-top:1px solid #dadce0;margin:0 0 24px 0;" />
+        <!-- Top Divider -->
+        <hr style="border:none;border-top:1px solid #e5e7eb;margin:0 0 20px 0;" />
 
-        <!-- Google-Style Primary Headline -->
-        <h1 style="margin:0 0 20px 0;font-size:26px;font-weight:400;color:#1a73e8;line-height:1.25;letter-spacing:-0.2px;">
+        <!-- Primary Headline -->
+        <h1 style="margin:0 0 16px 0;font-size:23px;font-weight:500;color:#1a73e8;line-height:1.3;letter-spacing:-0.2px;">
           ${escapeHtml(headlineTitle)}
         </h1>
 
         <!-- Greeting -->
-        <p style="margin:0 0 16px 0;font-size:14px;line-height:1.6;color:#202124;">
+        <p style="margin:0 0 14px 0;font-size:14px;line-height:1.6;color:#202124;">
           ${escapeHtml(greeting)}
         </p>
 
         <!-- Context Sentence -->
-        <p style="margin:0 0 16px 0;font-size:14px;line-height:1.6;color:#3c4043;">
+        <p style="margin:0 0 14px 0;font-size:14px;line-height:1.6;color:#3c4043;">
           You're receiving this email as per policy and acceptance of use, because you may have used my services, accessed authenticated services, or interacted with Gaurav Portfolio.
         </p>
 
         <!-- Core Update Prose (Clean Developer Policy Notice & Reassurance) -->
         ${prose.html}
 
-        <!-- Current Agreements & Platform Resources List -->
-        <div style="margin:20px 0 22px 0;">
-          <p style="margin:0 0 8px 0;font-size:14px;font-weight:700;color:#202124;">
+        <!-- Symmetric Agreement Resources Container Box -->
+        <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;margin:18px 0 22px 0;">
+          <div style="font-size:13px;font-weight:600;color:#1e293b;margin-bottom:8px;">
             Current platform agreements &amp; resources:
-          </p>
-          <ul style="margin:0;padding-left:20px;font-size:13px;line-height:1.9;color:#1a73e8;">
-            <li style="margin-bottom:4px;">
-              <a href="${termsUrl}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;text-decoration:underline;font-weight:500;">Terms of Service</a>
-              <span style="color:#5f6368;"> &mdash; Standard terms, engineering deliverables, and acceptable use</span>
-            </li>
-            <li style="margin-bottom:4px;">
-              <a href="${privacyUrl}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;text-decoration:underline;font-weight:500;">Privacy Policy</a>
-              <span style="color:#5f6368;"> &mdash; Data minimization, zero tracking cookies, and encryption safeguards</span>
-            </li>
-            <li style="margin-bottom:4px;">
-              <a href="${securityUrl}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;text-decoration:underline;font-weight:500;">Security Architecture &amp; Disclosures</a>
-              <span style="color:#5f6368;"> &mdash; Technical safeguards and responsible disclosure reporting</span>
-            </li>
-            <li style="margin-bottom:4px;">
-              <a href="${accessibilityUrl}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;text-decoration:underline;font-weight:500;">Accessibility Statement</a>
-              <span style="color:#5f6368;"> &mdash; WCAG 2.1 AA compliance and inclusive design commitment</span>
-            </li>
-            <li style="margin-bottom:4px;">
-              <a href="${contactUrl}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;text-decoration:underline;font-weight:500;">Contact &amp; Confidential Inquiries</a>
-              <span style="color:#5f6368;"> &mdash; Direct developer outreach and private communication</span>
-            </li>
-          </ul>
+          </div>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:12px;line-height:1.8;">
+            <tr>
+              <td style="padding:2px 0;">
+                <a href="${termsUrl}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;text-decoration:none;font-weight:500;">Terms of Service</a>
+                <span style="color:#5f6368;"> &mdash; Standard terms, deliverables, and acceptable use</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:2px 0;">
+                <a href="${privacyUrl}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;text-decoration:none;font-weight:500;">Privacy Policy</a>
+                <span style="color:#5f6368;"> &mdash; Data minimization, zero cookies, and encryption safeguards</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:2px 0;">
+                <a href="${securityUrl}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;text-decoration:none;font-weight:500;">Security Architecture</a>
+                <span style="color:#5f6368;"> &mdash; Technical safeguards and responsible disclosure</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:2px 0;">
+                <a href="${accessibilityUrl}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;text-decoration:none;font-weight:500;">Accessibility Statement</a>
+                <span style="color:#5f6368;"> &mdash; WCAG 2.1 AA compliance and inclusive design commitment</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:2px 0;">
+                <a href="${contactUrl}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;text-decoration:none;font-weight:500;">Contact &amp; Inquiries</a>
+                <span style="color:#5f6368;"> &mdash; Direct developer outreach and private communication</span>
+              </td>
+            </tr>
+          </table>
         </div>
 
-        <!-- Google-Style Action CTA Button -->
-        <div style="margin:22px 0 28px 0;">
-          <a href="${policyUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block;background-color:#1a73e8;color:#ffffff;font-size:14px;font-weight:500;padding:10px 24px;border-radius:4px;text-decoration:none;letter-spacing:0.01em;">
-            Review updated ${escapeHtml(docTitle.toLowerCase())}
-          </a>
-        </div>
+        <!-- Bulletproof Action CTA Button -->
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin:20px 0 24px 0;">
+          <tr>
+            <td align="left" style="border-radius:6px;background-color:#1a73e8;">
+              <a href="${policyUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:10px 22px;font-size:14px;font-weight:500;color:#ffffff;text-decoration:none;border-radius:6px;letter-spacing:0.01em;">
+                Review updated ${escapeHtml(docTitle.toLowerCase())} &rarr;
+              </a>
+            </td>
+          </tr>
+        </table>
 
-        <!-- Google-Style Sign-Off -->
-        <div style="margin:24px 0 0 0;font-size:14px;line-height:1.6;color:#3c4043;">
+        <!-- Sign-Off -->
+        <div style="margin:20px 0 0 0;font-size:14px;line-height:1.6;color:#3c4043;">
           Sincerely,<br />
           <strong style="color:#202124;">Gaurav Patil</strong><br />
-          <span style="color:#5f6368;">Gaurav Portfolio</span>
+          <span style="color:#5f6368;font-size:13px;">Gaurav Portfolio</span>
         </div>
 
-        <!-- Google-Style Bottom Divider -->
-        <hr style="border:none;border-top:1px solid #dadce0;margin:32px 0 20px 0;" />
+        <!-- Symmetric Bottom Divider -->
+        <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0 16px 0;" />
 
-        <!-- Clean Enterprise Footer Navigation (Zero Broken Symbols) -->
-        <div style="text-align:center;margin:0 0 16px 0;font-size:12px;color:#5f6368;line-height:1.8;">
-          <a href="${termsUrl}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;text-decoration:none;font-weight:500;">Terms of Service</a>
+        <!-- Clean Symmetric 3-Tier Footer -->
+        <div style="text-align:center;margin:0 0 10px 0;font-size:12px;color:#5f6368;line-height:1.6;">
+          <a href="${termsUrl}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;text-decoration:none;font-weight:500;">Terms</a>
           &nbsp;&nbsp;&bull;&nbsp;&nbsp;
-          <a href="${privacyUrl}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;text-decoration:none;font-weight:500;">Privacy Policy</a>
+          <a href="${privacyUrl}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;text-decoration:none;font-weight:500;">Privacy</a>
           &nbsp;&nbsp;&bull;&nbsp;&nbsp;
           <a href="${securityUrl}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;text-decoration:none;font-weight:500;">Security</a>
           &nbsp;&nbsp;&bull;&nbsp;&nbsp;
@@ -198,20 +221,12 @@ Please do not reply to this email, as replies to this automated address are not 
           <a href="${contactUrl}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;text-decoration:none;font-weight:500;">Contact</a>
         </div>
 
-        <!-- Google-Style Legal Entity & Mandatory Notice -->
-        <div style="text-align:center;font-size:12px;color:#70757a;line-height:1.5;margin-bottom:8px;">
-          Gaurav Portfolio &bull; Full-Stack Engineer &bull; <a href="${appBaseUrl}" style="color:#70757a;text-decoration:none;">${appBaseUrl.replace(/^https?:\/\//, "")}</a>
+        <div style="text-align:center;font-size:11px;color:#70757a;line-height:1.6;margin-bottom:6px;">
+          Gaurav Portfolio &bull; Full-Stack Engineer &bull; India &bull; <a href="${appBaseUrl}" style="color:#70757a;text-decoration:none;">${appBaseUrl.replace(/^https?:\/\//, "")}</a>
         </div>
 
-        <p style="margin:0 0 16px 0;font-size:11px;line-height:1.5;color:#70757a;text-align:center;">
-          You have received this mandatory service announcement to update you about important changes to Gaurav Portfolio.<br />
-          Please do not reply to this email, as replies to this automated address are not monitored.
-        </p>
-
-        <!-- Google-Style Bottom Watermark -->
-        <div style="text-align:center;margin-top:16px;">
-          <span style="font-size:16px;font-weight:600;color:#1a73e8;letter-spacing:-0.4px;">Gaurav</span>
-          <span style="font-size:16px;font-weight:400;color:#70757a;letter-spacing:-0.4px;"> Portfolio</span>
+        <div style="text-align:center;font-size:11px;color:#9aa0a6;line-height:1.5;">
+          Mandatory service announcement &bull; Replies to this automated address are not monitored
         </div>
 
       </td>
@@ -227,6 +242,10 @@ Please do not reply to this email, as replies to this automated address are not 
   };
 }
 
+export interface LegalNotificationResult extends SendEmailResult {
+  provider?: "RESEND" | "BREVO";
+}
+
 export async function sendLegalNotificationEmail(params: {
   toEmail: string;
   toName?: string;
@@ -237,7 +256,8 @@ export async function sendLegalNotificationEmail(params: {
   changeSummary: string;
   recipientType?: "VISITOR" | "ADMIN_AUDIT";
   idempotencyKey?: string;
-}): Promise<SendEmailResult> {
+  provider?: "RESEND" | "BREVO" | "AUTO";
+}): Promise<LegalNotificationResult> {
   const { subject, htmlContent, textContent } = buildLegalNotificationEmail({
     docType: params.docType,
     version: params.version,
@@ -248,7 +268,42 @@ export async function sendLegalNotificationEmail(params: {
     recipientType: params.recipientType,
   });
 
-  return await sendTransactionalEmail({
+  const providerPreference = params.provider || "AUTO";
+
+  // 1. Attempt Primary Dispatch via Resend (when AUTO or RESEND)
+  if (providerPreference !== "BREVO" && process.env.RESEND_API_KEY?.trim()) {
+    try {
+      const resendResult = await sendResendEmail({
+        from: `Gaurav Portfolio <${EMAIL_IDENTITIES.NO_REPLY.email}>`,
+        to: [{ email: params.toEmail, name: params.toName }],
+        replyTo: { email: EMAIL_IDENTITIES.NO_REPLY.email, name: "Gaurav Portfolio" },
+        subject,
+        html: htmlContent,
+        text: textContent,
+        tags: [
+          { name: "category", value: "legal_update" },
+          { name: "document_type", value: params.docType.toLowerCase() },
+          { name: "version", value: params.version },
+        ],
+      });
+
+      if (resendResult.success) {
+        return {
+          success: true,
+          messageId: resendResult.messageId,
+          statusCode: resendResult.statusCode || 200,
+          provider: "RESEND",
+        };
+      }
+
+      console.warn("⚠️ Warning: Resend legal notification failed, falling back to Brevo:", resendResult.error);
+    } catch (resendErr) {
+      console.warn("⚠️ Warning: Resend exception during legal notification, falling back to Brevo:", (resendErr as Error).message);
+    }
+  }
+
+  // 2. Automatic Failover to Brevo REST API v3
+  const brevoResult = await sendTransactionalEmail({
     identity: EMAIL_IDENTITIES.NO_REPLY,
     senderName: "Gaurav Portfolio",
     to: [{ email: params.toEmail, name: params.toName }],
@@ -258,4 +313,10 @@ export async function sendLegalNotificationEmail(params: {
     textContent,
     idempotencyKey: params.idempotencyKey,
   });
+
+  return {
+    ...brevoResult,
+    provider: "BREVO",
+  };
 }
+

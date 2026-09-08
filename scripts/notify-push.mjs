@@ -198,19 +198,19 @@ const fileRowsHtml = displayedFiles.map((file) => {
     label = "REN";
   }
 
-  const compactPath = formatCompactPath(file.path);
+  const compactPath = formatCompactPath(file.path, 46);
 
   return `<tr>
-    <td style="padding:2px 0; width:34px; font-family:monospace; font-size:10px; font-weight:700; color:${labelColor}; vertical-align:middle;">
+    <td style="padding:1px 0; width:30px; font-family:ui-monospace,Menlo,Monaco,'Cascadia Mono',monospace; font-size:9.5px; font-weight:700; color:${labelColor}; vertical-align:middle;">
       ${label}
     </td>
-    <td style="padding:2px 0; font-family:monospace; font-size:11px; color:#334155; vertical-align:middle; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+    <td style="padding:1px 0; font-family:ui-monospace,Menlo,Monaco,'Cascadia Mono',monospace; font-size:10px; color:#334155; vertical-align:middle; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
       ${escapeHtml(compactPath)}
     </td>
   </tr>`;
 }).join("");
 
-// 3. Clean, anti-spam, single-view zero-scroll React Email layout
+// 3. Clean, anti-spam, ultra-compact single-view zero-scroll React Email layout
 const htmlContent = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
@@ -221,31 +221,31 @@ const htmlContent = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//
   <meta name="color-scheme" content="light" />
   <title>Push Audit #${shortHash}</title>
 </head>
-<body style="margin:0; padding:12px; background-color:#ffffff; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; -webkit-font-smoothing:antialiased; color:#0f172a;">
+<body style="margin:0; padding:4px 6px; background-color:#ffffff; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; -webkit-font-smoothing:antialiased; color:#0f172a;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" align="left" style="max-width:520px; margin:0; border-collapse:collapse;">
     <tr>
       <td style="padding:0;">
-        <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:6px; padding:16px 18px; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+        <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:6px; padding:10px 12px; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
           
           <!-- Header Badge: Minimalist Swiss typography (Zero Emojis, Zero Tickmarks) -->
-          <div style="margin-bottom:10px;">
-            <span style="display:inline-block; padding:2px 8px; background-color:#f5f3ff; border:1px solid #ddd6fe; color:#7c3aed; font-size:10px; font-family:ui-monospace,Menlo,Monaco,monospace; font-weight:700; border-radius:3px; letter-spacing:0.5px; text-transform:uppercase;">
+          <div style="margin-bottom:5px;">
+            <span style="display:inline-block; padding:1px 6px; background-color:#f5f3ff; border:1px solid #ddd6fe; color:#7c3aed; font-size:9.5px; font-family:ui-monospace,Menlo,Monaco,monospace; font-weight:700; border-radius:3px; letter-spacing:0.5px; text-transform:uppercase;">
               PUSH AUDIT &bull; #${shortHash} (${escapeHtml(gitData.branch)})
             </span>
           </div>
 
           <!-- Commit Message -->
-          <div style="margin:0 0 8px 0; font-size:13px; font-weight:600; color:#0f172a; line-height:1.45; word-break:break-word;">
+          <div style="margin:0 0 5px 0; font-size:12px; font-weight:600; color:#0f172a; line-height:1.35; word-break:break-word;">
             ${escapeHtml(gitData.commitMessage)}
           </div>
 
           <!-- Meta Strip: Author, Timestamp, Diff Stats -->
-          <div style="font-size:11px; color:#64748b; margin-bottom:10px;">
+          <div style="font-size:10px; color:#64748b; margin-bottom:6px;">
             <span style="font-weight:600; color:#334155;">${escapeHtml(gitData.authorName)}</span>
-            <span style="color:#cbd5e1; margin:0 4px;">&bull;</span>
+            <span style="color:#cbd5e1; margin:0 3px;">&bull;</span>
             <span>${escapeHtml(formattedTime)}</span>
             ${gitData.insertions || gitData.deletions ? `
-            <span style="color:#cbd5e1; margin:0 4px;">&bull;</span>
+            <span style="color:#cbd5e1; margin:0 3px;">&bull;</span>
             <span style="color:#059669; font-weight:600; font-family:ui-monospace,Menlo,Monaco,monospace;">${escapeHtml(gitData.insertions || "+0")}</span>
             <span style="color:#cbd5e1; margin:0 2px;">/</span>
             <span style="color:#dc2626; font-weight:600; font-family:ui-monospace,Menlo,Monaco,monospace;">${escapeHtml(gitData.deletions || "-0")}</span>
@@ -254,32 +254,21 @@ const htmlContent = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//
 
           <!-- Monospace Files Box -->
           ${totalFilesCount > 0 ? `
-          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; padding:6px 10px; font-family:ui-monospace,Menlo,Monaco,monospace;">
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; padding:3px 8px; font-family:ui-monospace,Menlo,Monaco,monospace;">
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
               ${fileRowsHtml}
             </table>
           </div>
           ` : ""}
 
-          <!-- Micro Action & Origin Strip: Inside Card for Pure Single-View Zero-Scroll -->
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:10px; font-size:11px; border-collapse:collapse;">
+          <!-- Unified Single-Row Action & Origin Strip (Zero Scroll Standard) -->
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:6px; padding-top:5px; border-top:1px solid #f1f5f9; font-size:10px; border-collapse:collapse;">
             <tr>
-              <td align="left" style="color:#64748b; font-size:11px; vertical-align:middle;">
-                ${totalFilesCount} files changed ${remainingFilesCount > 0 ? `&bull; +${remainingFilesCount} more` : ""}
+              <td align="left" style="color:#64748b; font-size:10px; vertical-align:middle;">
+                ${totalFilesCount} files changed${remainingFilesCount > 0 ? ` (+${remainingFilesCount})` : ""} &bull; India
               </td>
               <td align="right" style="vertical-align:middle;">
-                <a href="${commitUrl}" style="color:#7c3aed; text-decoration:none; font-weight:600; font-size:11px;">View diff on GitHub &rarr;</a>
-              </td>
-            </tr>
-          </table>
-
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:8px; padding-top:6px; border-top:1px solid #f1f5f9; font-size:10px; border-collapse:collapse;">
-            <tr>
-              <td align="left" style="color:#94a3b8; font-size:10px;">
-                Gaurav Portfolio Infrastructure &bull; India
-              </td>
-              <td align="right" style="color:#94a3b8; font-size:10px;">
-                Pre-Push Gate Passed
+                <a href="${commitUrl}" style="color:#7c3aed; text-decoration:none; font-weight:600; font-size:10px;">View on GitHub &rarr;</a>
               </td>
             </tr>
           </table>
@@ -290,6 +279,7 @@ const htmlContent = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//
   </table>
 </body>
 </html>`;
+
 
 const textContent = `[GIT PUSH AUDIT]
 Status: VERIFIED (Pre-Push Gate Passed)

@@ -138,7 +138,12 @@ export async function sendResendEmail(
     if (cc.length > 0) restPayload.cc = cc;
     if (bcc.length > 0) restPayload.bcc = bcc;
     if (replyTo) restPayload.reply_to = replyTo;
-    if (options.tags) restPayload.tags = options.tags;
+    if (options.tags) {
+      restPayload.tags = options.tags.map((tag) => ({
+        name: tag.name.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 256),
+        value: tag.value.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 256),
+      }));
+    }
     if (options.headers) restPayload.headers = options.headers;
     if (options.attachments) {
       restPayload.attachments = options.attachments.map((att) => ({
