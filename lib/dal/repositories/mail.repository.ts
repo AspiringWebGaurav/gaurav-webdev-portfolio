@@ -176,8 +176,9 @@ export class MailRepository extends BaseRepository {
     idempotencyKey: string,
     params: {
       status: "SENT" | "FAILED" | "DELIVERY_UNCERTAIN";
-      provider?: "BREVO";
+      provider?: "BREVO" | "RESEND" | "AUTO";
       brevoMessageId?: string;
+      resendMessageId?: string;
       errorMessage?: string;
       draftIdToDelete?: string;
       expectedRevision?: number;
@@ -190,9 +191,11 @@ export class MailRepository extends BaseRepository {
         updatedAt: now,
         ...(params.provider && { provider: params.provider }),
         ...(params.brevoMessageId && { brevoMessageId: params.brevoMessageId }),
+        ...(params.resendMessageId && { resendMessageId: params.resendMessageId }),
         ...(params.errorMessage && { errorMessage: params.errorMessage }),
         ...(params.status === "SENT" && { sentAt: new Date(now).toISOString() }),
       };
+
 
       await firestoreDataSource.runTransaction(async (transaction, db) => {
         const mailDocRef = db.collection("admin_mails").doc(idempotencyKey);

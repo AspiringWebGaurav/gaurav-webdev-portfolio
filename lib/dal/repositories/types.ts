@@ -109,7 +109,7 @@ export interface MailAttachmentPayload extends MailAttachmentMeta {
 export interface MailDocument {
   id: string; // idempotencyKey (application operation ID)
   brevoIdempotencyKey?: string; // Provider-level UUID
-  provider?: "BREVO";
+  provider?: "BREVO" | "RESEND" | "AUTO";
   senderKey: MailSenderKey;
   senderEmail: string;
   senderName: string;
@@ -123,12 +123,14 @@ export interface MailDocument {
   attachments?: MailAttachmentMeta[];
   status: MailSendStatus;
   brevoMessageId?: string;
+  resendMessageId?: string;
   errorMessage?: string;
   sentByAdminEmail: string;
   createdAt: string; // ISO 8601
   sentAt?: string; // ISO 8601
   updatedAt: number; // Epoch ms for lock staleness detection
 }
+
 
 export interface MailDraftDocument {
   id: string;

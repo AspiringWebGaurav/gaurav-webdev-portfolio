@@ -19,8 +19,10 @@ import {
   EMAIL_TYPOGRAPHY,
 } from "./layout";
 import type { MailRecipient, MailSenderKey } from "@/lib/dal/repositories/types";
+import { sendResendEmail } from "./resend";
 
 const BREVO_API_ENDPOINT = "https://api.brevo.com/v3/smtp/email";
+
 
 export interface MailSenderIdentity {
   key: MailSenderKey;
@@ -391,7 +393,7 @@ export interface DispatchAdminMailParams {
   attachments?: { name: string; content: string }[];
   idempotencyKey: string;
   adminEmail: string;
-  provider?: "BREVO";
+  provider?: "BREVO" | "RESEND" | "AUTO";
   pacingDelayMs?: number;
   onRecipientProgress?: (current: number, total: number, result: DispatchAdminMailResult) => void;
 }
@@ -401,7 +403,7 @@ export interface DispatchAdminMailResult {
   status: "SENT" | "FAILED" | "DELIVERY_UNCERTAIN";
   messageId?: string;
   error?: string;
-  provider?: "BREVO";
+  provider?: "BREVO" | "RESEND";
 }
 
 interface DispatchSingleAttemptParams {
@@ -415,10 +417,82 @@ interface DispatchSingleAttemptParams {
   textContent: string;
   attachments?: { name: string; content: string }[];
   idempotencyKey: string;
+  provider?: "BREVO" | "RESEND" | "AUTO";
 }
 
 /**
- * Executes a single atomic 1-to-1 dispatch attempt via Brevo REST API v3.
+ * Dispatches outbound admin mail via Resend API.
+ */
+async function dispatchViaResend(
+  params: DispatchSingleAttemptParams
+): Promise<DispatchAdminMailResult> {
+  const {
+    identity,
+    senderDisplayName,
+    to,
+    cc,
+    bcc,
+    cleanSubject,
+    htmlContent,
+    textContent,
+    attachments,
+  } = params;
+
+  try {
+    const resendResult = await sendResendEmail({
+      from: `${senderDisplayName} <${identity.email}>`,
+      to: to.map((r) => ({ email: r.email, name: r.name })),
+      cc: cc?.map((r) => ({ email: r.email, name: r.name })),
+      bcc: bcc?.map((r) => ({ email: r.email, name: r.name })),
+      replyTo: { email: identity.defaultReplyTo, name: senderDisplayName },
+      subject: cleanSubject,
+      html: htmlContent,
+      text: textContent,
+      attachments: attachments?.map((att) => ({
+        filename: att.name,
+        content: att.content,
+      })),
+      tags: [
+        { name: "category", value: "admin_mail" },
+        { name: "sender", value: identity.key.toLowerCase() },
+      ],
+    });
+
+    if (resendResult.success) {
+      adminLogger.info("dispatchAdminMail:ResendSuccess", "Resend accepted outbound mail", {
+        idempotencyKey: params.idempotencyKey,
+        senderKey: identity.key,
+        recipientCount: to.length,
+        resendMessageId: resendResult.messageId,
+      });
+
+      return {
+        success: true,
+        status: "SENT",
+        messageId: resendResult.messageId,
+        provider: "RESEND",
+      };
+    }
+
+    return {
+      success: false,
+      status: "FAILED",
+      error: resendResult.error || "Resend dispatch failed.",
+      provider: "RESEND",
+    };
+  } catch (err: unknown) {
+    const error = err as Error;
+    return {
+      success: false,
+      status: "FAILED",
+      error: error.message || "Exception during Resend dispatch.",
+      provider: "RESEND",
+    };
+  }
+}
+
+/**
+ * Executes a single atomic 1-to-1 dispatch attempt with dual-engine failover.
  */
 async function dispatchSingleAttempt(
   params: DispatchSingleAttemptParams
@@ -434,10 +508,23 @@ async function dispatchSingleAttempt(
     textContent,
     attachments,
     idempotencyKey,
+    provider = "AUTO",
   } = params;
 
+  // 1. Direct Resend Dispatch requested
+  if (provider === "RESEND") {
+    return dispatchViaResend(params);
+  }
+
+  // 2. Primary Brevo Dispatch (with Resend failover when provider is AUTO)
   const apiKey = process.env.BREVO_API_KEY;
   if (!apiKey) {
+    if (provider === "AUTO" && process.env.RESEND_API_KEY) {
+      adminLogger.info("dispatchAdminMail:FallbackToResend", "BREVO_API_KEY absent; routing via Resend", {
+        idempotencyKey,
+      });
+      return dispatchViaResend(params);
+    }
     return {
       success: false,
       status: "FAILED",
@@ -530,6 +617,16 @@ async function dispatchSingleAttempt(
       (data.error as string) ||
       `Brevo API returned HTTP ${res.status}`;
 
+    // If Brevo has 5xx server error or 429 rate limit, attempt Resend failover in AUTO mode
+    if ((res.status >= 500 || res.status === 429) && provider === "AUTO" && process.env.RESEND_API_KEY) {
+      adminLogger.warn("dispatchAdminMail:FailoverToResend", "Brevo error; executing seamless failover to Resend", {
+        status: res.status,
+        error: errorMessage,
+        idempotencyKey,
+      });
+      return dispatchViaResend(params);
+    }
+
     if (res.status >= 500) {
       return {
         success: false,
@@ -547,6 +644,16 @@ async function dispatchSingleAttempt(
     clearTimeout(timeoutId);
     const error = err as Error;
     const isTimeout = error.name === "AbortError";
+
+    // If timeout or network error, attempt Resend failover in AUTO mode
+    if (provider === "AUTO" && process.env.RESEND_API_KEY) {
+      adminLogger.warn("dispatchAdminMail:FailoverToResend", "Brevo network timeout; executing seamless failover to Resend", {
+        isTimeout,
+        error: error.message,
+        idempotencyKey,
+      });
+      return dispatchViaResend(params);
+    }
 
     return {
       success: false,
@@ -595,6 +702,7 @@ export async function dispatchAdminMail(
     let successCount = 0;
     let primaryMessageId = "";
     let lastError = "";
+    let providerUsed: "BREVO" | "RESEND" = "BREVO";
 
     for (let i = 0; i < params.to.length; i++) {
       const recipient = params.to[i];
@@ -613,11 +721,13 @@ export async function dispatchAdminMail(
         textContent,
         attachments: params.attachments,
         idempotencyKey: singleIdempotencyKey,
+        provider: params.provider,
       });
 
       if (res.success) {
         successCount++;
         if (!primaryMessageId) primaryMessageId = res.messageId || "";
+        if (res.provider) providerUsed = res.provider;
       } else {
         lastError = res.error || "Unknown dispatch error";
       }
@@ -639,7 +749,7 @@ export async function dispatchAdminMail(
       success: anySucceeded,
       status: allSucceeded ? "SENT" : anySucceeded ? "SENT" : "FAILED",
       messageId: primaryMessageId || `batch_seq_${Date.now()}`,
-      provider: "BREVO",
+      provider: providerUsed,
       error: allSucceeded
         ? undefined
         : `Sequential delivery completed: ${successCount}/${params.to.length} delivered. Last error: ${lastError}`,
@@ -658,8 +768,10 @@ export async function dispatchAdminMail(
     textContent,
     attachments: params.attachments,
     idempotencyKey: params.idempotencyKey,
+    provider: params.provider,
   });
 }
+
 
 export interface SequentialBatchParams {
   senderKey: MailSenderKey;
@@ -668,7 +780,7 @@ export interface SequentialBatchParams {
   subject: string;
   body: string;
   adminEmail: string;
-  provider?: "BREVO";
+  provider?: "BREVO" | "RESEND" | "AUTO";
   attachments?: { name: string; content: string }[];
   delayBetweenMs?: number;
   onProgress?: (index: number, total: number, result: DispatchAdminMailResult) => void;
@@ -684,9 +796,10 @@ export interface SequentialBatchResult {
     status: "SENT" | "FAILED" | "DELIVERY_UNCERTAIN";
     messageId?: string;
     error?: string;
-    provider?: "BREVO";
+    provider?: "BREVO" | "RESEND";
   }>;
 }
+
 
 /**
  * Sequential Asynchronous Batch Dispatch Engine

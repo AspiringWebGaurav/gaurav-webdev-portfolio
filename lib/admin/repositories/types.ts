@@ -97,7 +97,7 @@ export interface MailRecipient {
 
 export interface MailDocument {
   id: string; // idempotencyKey
-  provider?: "BREVO";
+  provider?: "BREVO" | "RESEND" | "AUTO";
   senderKey: MailSenderKey;
   senderEmail: string;
   senderName: string;
@@ -110,12 +110,14 @@ export interface MailDocument {
   htmlBody?: string;
   status: MailSendStatus;
   brevoMessageId?: string;
+  resendMessageId?: string;
   errorMessage?: string;
   sentByAdminEmail: string;
   createdAt: string; // ISO 8601
   sentAt?: string; // ISO 8601
   updatedAt: number; // Epoch ms for lock staleness detection
 }
+
 
 export interface MailDraftDocument {
   id: string;

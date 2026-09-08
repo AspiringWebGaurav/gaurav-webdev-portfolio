@@ -48,15 +48,17 @@ function loadEnv() {
 
 loadEnv();
 
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || process.env.BREVO_NOTIFICATION_RECIPIENT || "gauravpatil5737@gmail.com";
 const SENDER_EMAIL = "security@gauravpatil.site";
 const SENDER_NAME = "Gaurav Patil";
 
-if (!BREVO_API_KEY) {
-  console.error("❌ Error: BREVO_API_KEY is not configured in environment or .env.local.");
+if (!RESEND_API_KEY && !BREVO_API_KEY) {
+  console.error("❌ Error: Neither RESEND_API_KEY nor BREVO_API_KEY is configured in environment or .env.local.");
   process.exit(1);
 }
+
 
 // 2. Extract git commit metadata with file statuses & diff stats
 function getGitMetadata() {
@@ -208,12 +210,15 @@ const fileRowsHtml = displayedFiles.map((file) => {
   </tr>`;
 }).join("");
 
-// 3. Clean, attractive, single-view zero-scroll HTML template
-const htmlContent = `<!DOCTYPE html>
-<html lang="en">
+// 3. Clean, anti-spam, single-view zero-scroll React Email layout
+const htmlContent = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="x-apple-disable-message-reformatting" />
+  <meta name="format-detection" content="telephone=no, date=no, address=no, email=no" />
+  <meta name="color-scheme" content="light" />
   <title>Push Audit #${shortHash}</title>
 </head>
 <body style="margin:0; padding:12px; background-color:#ffffff; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; -webkit-font-smoothing:antialiased; color:#0f172a;">
@@ -222,9 +227,9 @@ const htmlContent = `<!DOCTYPE html>
       <td style="padding:0;">
         <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:6px; padding:16px 18px; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
           
-          <!-- Header Badge: Clean, No Emojis, No Tickmarks -->
+          <!-- Header Badge: Minimalist Swiss typography (Zero Emojis, Zero Tickmarks) -->
           <div style="margin-bottom:10px;">
-            <span style="display:inline-block; padding:2px 8px; background-color:#f5f3ff; border:1px solid #ddd6fe; color:#7c3aed; font-size:10px; font-family:monospace; font-weight:700; border-radius:3px; letter-spacing:0.5px; text-transform:uppercase;">
+            <span style="display:inline-block; padding:2px 8px; background-color:#f5f3ff; border:1px solid #ddd6fe; color:#7c3aed; font-size:10px; font-family:ui-monospace,Menlo,Monaco,monospace; font-weight:700; border-radius:3px; letter-spacing:0.5px; text-transform:uppercase;">
               PUSH AUDIT &bull; #${shortHash} (${escapeHtml(gitData.branch)})
             </span>
           </div>
@@ -241,29 +246,40 @@ const htmlContent = `<!DOCTYPE html>
             <span>${escapeHtml(formattedTime)}</span>
             ${gitData.insertions || gitData.deletions ? `
             <span style="color:#cbd5e1; margin:0 4px;">&bull;</span>
-            <span style="color:#059669; font-weight:600; font-family:monospace;">${escapeHtml(gitData.insertions || "+0")}</span>
+            <span style="color:#059669; font-weight:600; font-family:ui-monospace,Menlo,Monaco,monospace;">${escapeHtml(gitData.insertions || "+0")}</span>
             <span style="color:#cbd5e1; margin:0 2px;">/</span>
-            <span style="color:#dc2626; font-weight:600; font-family:monospace;">${escapeHtml(gitData.deletions || "-0")}</span>
+            <span style="color:#dc2626; font-weight:600; font-family:ui-monospace,Menlo,Monaco,monospace;">${escapeHtml(gitData.deletions || "-0")}</span>
             ` : ""}
           </div>
 
           <!-- Monospace Files Box -->
           ${totalFilesCount > 0 ? `
-          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; padding:6px 10px; font-family:monospace;">
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; padding:6px 10px; font-family:ui-monospace,Menlo,Monaco,monospace;">
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
               ${fileRowsHtml}
             </table>
           </div>
           ` : ""}
 
-          <!-- Micro Action Line -->
+          <!-- Micro Action & Origin Strip: Inside Card for Pure Single-View Zero-Scroll -->
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:10px; font-size:11px; border-collapse:collapse;">
             <tr>
-              <td align="left" style="color:#94a3b8;">
+              <td align="left" style="color:#64748b; font-size:11px; vertical-align:middle;">
                 ${totalFilesCount} files changed ${remainingFilesCount > 0 ? `&bull; +${remainingFilesCount} more` : ""}
               </td>
-              <td align="right">
-                <a href="${commitUrl}" style="color:#7c3aed; text-decoration:none; font-weight:600;">View diff on GitHub &rarr;</a>
+              <td align="right" style="vertical-align:middle;">
+                <a href="${commitUrl}" style="color:#7c3aed; text-decoration:none; font-weight:600; font-size:11px;">View diff on GitHub &rarr;</a>
+              </td>
+            </tr>
+          </table>
+
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:8px; padding-top:6px; border-top:1px solid #f1f5f9; font-size:10px; border-collapse:collapse;">
+            <tr>
+              <td align="left" style="color:#94a3b8; font-size:10px;">
+                Gaurav Portfolio Infrastructure &bull; India
+              </td>
+              <td align="right" style="color:#94a3b8; font-size:10px;">
+                Pre-Push Gate Passed
               </td>
             </tr>
           </table>
@@ -284,20 +300,72 @@ Time: ${formattedTime}
 Changes: ${totalFilesCount} files (${gitData.insertions || "+0"} / ${gitData.deletions || "-0"})
 ${gitData.filesChanged.slice(0, 5).map((f) => `- [${f.status}] ${f.path}`).join("\n")}
 ${remainingFilesCount > 0 ? `+ ${remainingFilesCount} more files\n` : ""}
-Diff: ${commitUrl}`;
+Diff: ${commitUrl}
 
-// 4. Reliable Relay: Brevo REST API v3 (300 Free/Day)
+Sent by Gaurav Portfolio Infrastructure • India`;
+
+
+// 4. Dual-Engine Dispatch: Resend (Primary) with Brevo (Fallback)
 async function dispatch() {
   console.log("==================================================================");
-  console.log("       DISPATCHING GIT PUSH AUDIT NOTIFICATION (BREVO RELAY)      ");
+  console.log("              DISPATCHING GIT PUSH AUDIT NOTIFICATION             ");
   console.log("==================================================================");
   console.log(`  Commit:    #${shortHash} (${gitData.branch})`);
   console.log(`  To:        ${ADMIN_EMAIL}`);
   console.log(`  Sender:    ${SENDER_NAME} <${SENDER_EMAIL}>`);
-  console.log(`  Relay:     Brevo REST API v3 (300 Free/Day)`);
+  console.log(`  Primary:   Resend REST API (Tokyo ap-northeast-1)`);
+  console.log(`  Fallback:  Brevo REST API v3`);
   console.log(`  Timestamp: ${formattedTime}`);
   console.log("------------------------------------------------------------------");
 
+  // 1. Attempt Primary Dispatch via Resend
+  if (RESEND_API_KEY) {
+    try {
+      console.log("  [Relay] Attempting primary dispatch via Resend REST API...");
+      const resendRes = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${RESEND_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: `${SENDER_NAME} <${SENDER_EMAIL}>`,
+          to: [ADMIN_EMAIL],
+          reply_to: `${SENDER_NAME} <${SENDER_EMAIL}>`,
+          subject: `Push Audit #${shortHash}`,
+          html: htmlContent,
+          text: textContent,
+          tags: [
+            { name: "category", value: "git_push_audit" },
+            { name: "environment", value: "production" },
+          ],
+        }),
+      });
+
+      const resendData = await resendRes.json().catch(() => ({}));
+      if (resendRes.ok) {
+        console.log(`✔ SUCCESS: Audit email dispatched via Resend!`);
+        console.log(`  Message ID: ${resendData.id || "SUCCESS"}`);
+        console.log(`  Relay Used: Resend (Preserved Brevo Quota)`);
+        console.log("==================================================================");
+        process.exit(0);
+      } else {
+        console.warn(`⚠️ Warning: Resend returned HTTP ${resendRes.status}, falling back to Brevo...`);
+        console.warn("  Error Details:", resendData);
+      }
+    } catch (resendErr) {
+      console.warn("⚠️ Warning: Network error contacting Resend, falling back to Brevo:", resendErr.message);
+    }
+  }
+
+  // 2. Fallback to Brevo REST API v3
+  if (!BREVO_API_KEY) {
+    console.error("✖ FAILED: Resend failed and BREVO_API_KEY is not configured.");
+    console.log("==================================================================");
+    process.exit(1);
+  }
+
+  console.log("  [Relay] Executing failover dispatch via Brevo REST API v3...");
   const payload = {
     sender: { name: SENDER_NAME, email: SENDER_EMAIL },
     to: [{ email: ADMIN_EMAIL, name: "Gaurav Patil" }],
@@ -321,20 +389,22 @@ async function dispatch() {
 
     const data = await res.json().catch(() => ({}));
     if (res.status === 200 || res.status === 201) {
-      console.log(`✔ SUCCESS: Audit email dispatched via Brevo!`);
+      console.log(`✔ SUCCESS: Audit email dispatched via Brevo fallback!`);
       console.log(`  Message ID: ${data.messageId || "SUCCESS"}`);
+      console.log(`  Relay Used: Brevo Fallback`);
       console.log("==================================================================");
       process.exit(0);
     } else {
-      console.error(`✖ FAILED: Brevo returned HTTP ${res.status}`);
+      console.error(`✖ FAILED: Brevo fallback returned HTTP ${res.status}`);
       console.error("  Error Details:", data);
       console.log("==================================================================");
       process.exit(1);
     }
   } catch (err) {
-    console.error("✖ Network Error:", err.message);
+    console.error("✖ Network Error on Brevo fallback:", err.message);
     process.exit(1);
   }
 }
 
 dispatch();
+

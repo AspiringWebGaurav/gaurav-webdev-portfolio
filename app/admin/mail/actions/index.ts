@@ -154,11 +154,13 @@ export async function sendAdminMailAction(
   await mailRepository.finalizeSendStatus(idempotencyKey, {
     status: dispatchResult.status,
     provider: dispatchResult.provider,
-    brevoMessageId: dispatchResult.messageId,
+    brevoMessageId: dispatchResult.provider === "BREVO" ? dispatchResult.messageId : undefined,
+    resendMessageId: dispatchResult.provider === "RESEND" ? dispatchResult.messageId : undefined,
     errorMessage: dispatchResult.error,
     draftIdToDelete: draftId,
     expectedRevision,
   });
+
 
   // 8. Record Rate Limit & Revalidate Paths
   if (dispatchResult.status === "SENT") {
