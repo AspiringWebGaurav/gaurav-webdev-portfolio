@@ -155,7 +155,7 @@ Official electronic communications, receipts, security notices, and legal update
 | [`hello@gauravpatil.site`](mailto:hello@gauravpatil.site) | **Gaurav Patil** | **Client & Inquiries**: Project proposals, collaboration inquiries, consulting requests, and public contact routing. | Auto-acknowledgement; personal response typically within 24 hours. |
 | [`me@gauravpatil.site`](mailto:me@gauravpatil.site) | **Gaurav Patil** | **Direct & Founder**: Direct communication, founder correspondence, and personal engineering discussions. | Personal response within 24 hours. |
 | [`work@gauravpatil.site`](mailto:work@gauravpatil.site) | **Gaurav Patil** | **Professional & Contracting**: Contract engagements, technical advisory, consulting, and recruitment dialogues. | Priority review within 12–24 hours. |
-| [`security@gauravpatil.site`](mailto:security@gauravpatil.site) | **Gaurav Security Services** | **Security Operations**: Multi-factor authentication notices, login alerts, git push audit logs, and vulnerability reports. | Urgent security disclosures triaged immediately. |
+| [`security@gauravpatil.site`](mailto:security@gauravpatil.site) | **Gaurav Patil** | **Security Operations**: Multi-factor authentication notices, login alerts, git push audit logs, and vulnerability reports. | Urgent security disclosures triaged immediately. |
 | [`help@gauravpatil.site`](mailto:help@gauravpatil.site) | **Gaurav Support** | **Technical Support**: Assistant inquiries, bug reports, user feedback, and portfolio navigation guidance. | Initial response within 12–24 business hours. |
 | [`no-reply@gauravpatil.site`](mailto:no-reply@gauravpatil.site) | **Gaurav Portfolio No-Reply** | **Automated Alerts (Do Not Reply)**: One-Time Passcodes (OTP), Live Chat verification, and mandatory legal announcements. | Automated dispatch; inbound replies are unmonitored. |
 
@@ -172,9 +172,11 @@ Official electronic communications, receipts, security notices, and legal update
 | **Styling** | [Tailwind CSS 3.4](https://tailwindcss.com/) & Tailwind Merge | Modern utility-first design system |
 | **3D Graphics** | [Three.js](https://threejs.org/) & [Three-Globe](https://github.com/vasturiano/three-globe) | Interactive WebGL globe visualization |
 | **Motion** | [Motion (Framer Motion)](https://motion.dev/) | Fluid layout animations, transitions, bento grids |
+| **Database & Auth** | [Firebase](https://firebase.google.com/) (Firestore, RTDB, Storage, Auth) | Multi-store persistence, real-time sync, file storage, Admin SDK |
+| **Cache & Rate Limit** | [Upstash Redis](https://upstash.com/) | Edge caching, distributed locks, sliding window rate-limiting |
 | **Messaging** | [Meta WhatsApp Cloud API](https://developers.facebook.com/docs/whatsapp/cloud-api) | Direct messaging, automated notification triggers, GDPR export |
 | **Bot Mitigation** | [Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/) | Privacy-preserving, non-interactive challenge verification |
-| **Email Delivery** | [Brevo REST API](https://www.brevo.com/) | Verified transactional email infrastructure |
+| **Email Infrastructure** | [Brevo REST API](https://www.brevo.com/) & [Resend](https://resend.com/) | Dual-engine transactional delivery, idempotency, push audit failover |
 | **Validation** | [Zod](https://zod.dev/) | Strict runtime data validation schemas |
 
 ---
@@ -190,10 +192,10 @@ Official electronic communications, receipts, security notices, and legal update
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/AspiringWebGaurav/devlabs.git
+git clone https://github.com/AspiringWebGaurav/gaurav-webdev-portfolio.git
 
 # 2. Navigate to project root
-cd devlabs
+cd gaurav-webdev-portfolio
 
 # 3. Install dependencies
 npm install
