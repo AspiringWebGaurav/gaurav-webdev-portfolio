@@ -16,7 +16,7 @@ An enterprise-grade, high-performance web engineering portfolio designed and bui
 * **Pre-Production Staging Preview**: [`https://devlabs.eu.cc`](https://devlabs.eu.cc)
 * **Verified Email Gateway**: `gauravpatil.site`
 
-> 📬 **Direct Inquiries & Collaboration**: To discuss project proposals, consulting engagements, or engineering opportunities, reach out directly via [`hello@gauravpatil.site`](mailto:hello@gauravpatil.site) or launch the interactive contact form at [gauravpatil.site/contact](https://gauravpatil.site/contact).
+> 📬 **Direct Inquiries & Collaboration**: To discuss project proposals, consulting engagements, or engineering opportunities, reach out directly via [`gaurav@gauravpatil.site`](mailto:gaurav@gauravpatil.site) (professional direct line) or [`hello@gauravpatil.site`](mailto:hello@gauravpatil.site) (general inquiries), or launch the interactive contact form at [gauravpatil.site/contact](https://gauravpatil.site/contact).
 
 ---
 
@@ -152,6 +152,7 @@ Official electronic communications, receipts, security notices, and legal update
 
 | Mailbox / Sender | Display Identity | Purpose & Scope | Expected Response |
 | :--- | :--- | :--- | :--- |
+| [`gaurav@gauravpatil.site`](mailto:gaurav@gauravpatil.site) | **Gaurav Patil** | **Professional Direct**: Executive direct line, bespoke engineering consulting, client contract proposals, and recruiter correspondence. | Direct personal review within 12–24 hours. |
 | [`hello@gauravpatil.site`](mailto:hello@gauravpatil.site) | **Gaurav Patil** | **Client & Inquiries**: Project proposals, collaboration inquiries, consulting requests, and public contact routing. | Auto-acknowledgement; personal response typically within 24 hours. |
 | [`me@gauravpatil.site`](mailto:me@gauravpatil.site) | **Gaurav Patil** | **Direct & Founder**: Direct communication, founder correspondence, and personal engineering discussions. | Personal response within 24 hours. |
 | [`work@gauravpatil.site`](mailto:work@gauravpatil.site) | **Gaurav Patil** | **Professional & Contracting**: Contract engagements, technical advisory, consulting, and recruitment dialogues. | Priority review within 12–24 hours. |

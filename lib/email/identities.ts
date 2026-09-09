@@ -24,6 +24,7 @@ export type EmailIdentityType =
   | "NO_REPLY"
   | "ME"
   | "WORK"
+  | "GAURAV"
   | "NEWSLETTER"
   | "BLOG"
   | "SUPPORT";
@@ -130,6 +131,33 @@ export const EMAIL_IDENTITIES: Record<EmailIdentityType, EmailIdentity> = {
       name: "Gaurav Patil",
       defaultReplyTo: "work@gauravpatil.site",
       purpose: "Professional and consulting engagements.",
+      isNoReply: false,
+    },
+  },
+  GAURAV: {
+    type: "GAURAV",
+    key: "GAURAV",
+    email: "gaurav@gauravpatil.site",
+    primaryEmail: "gaurav@gauravpatil.site",
+    legacyEmail: "gaurav@gauravpatil.site",
+    name: "Gaurav Patil",
+    displayName: "Gaurav Patil",
+    defaultReplyTo: "gaurav@gauravpatil.site",
+    purpose:
+      "Direct professional connections, engineering consulting, recruiter outreach, and contract proposals.",
+    isNoReply: false,
+    primary: {
+      email: "gaurav@gauravpatil.site",
+      name: "Gaurav Patil",
+      defaultReplyTo: "gaurav@gauravpatil.site",
+      purpose: "Professional direct outreach and engineering consulting.",
+      isNoReply: false,
+    },
+    legacy: {
+      email: "gaurav@gauravpatil.site",
+      name: "Gaurav Patil",
+      defaultReplyTo: "gaurav@gauravpatil.site",
+      purpose: "Professional direct outreach and engineering consulting.",
       isNoReply: false,
     },
   },

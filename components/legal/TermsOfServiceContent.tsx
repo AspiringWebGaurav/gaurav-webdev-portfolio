@@ -660,22 +660,36 @@ function TermsContentInner({ initialData }: TermsOfServiceContentProps) {
           </section>
 
           {/* Section 10: Legal Contact */}
-          <section id="legal-contact" className="space-y-3 scroll-mt-24 sm:scroll-mt-32">
+          <section id="legal-contact" className="space-y-4 scroll-mt-24 sm:scroll-mt-32">
             <h2 className="text-xl font-semibold text-white">
               10. Inquiries &amp; Legal Notices
             </h2>
             <p>
-              For legal inquiries, contract proposals, or engagement agreements:
+              For contract proposals, bespoke engineering consulting, or professional engagement agreements:
             </p>
-            <p className="text-purple font-medium">
-              Email:{" "}
-              <a
-                href="mailto:hello@gauravpatil.site"
-                className="hover:underline"
-              >
-                hello@gauravpatil.site
-              </a>
-            </p>
+            <div className="space-y-2 text-sm">
+              <p className="text-white-100">
+                <span className="font-semibold text-white">Direct Professional Line:</span>{" "}
+                <a
+                  href="mailto:gaurav@gauravpatil.site"
+                  className="text-purple font-medium hover:underline"
+                >
+                  gaurav@gauravpatil.site
+                </a>
+                <span className="block text-xs text-neutral-400 mt-0.5">
+                  (Reserved strictly for professional proposals, consulting contracts, and executive recruiter correspondence)
+                </span>
+              </p>
+              <p className="text-white-100 pt-1">
+                <span className="font-semibold text-white">General Inquiries &amp; Notices:</span>{" "}
+                <a
+                  href="mailto:hello@gauravpatil.site"
+                  className="text-purple font-medium hover:underline"
+                >
+                  hello@gauravpatil.site
+                </a>
+              </p>
+            </div>
           </section>
             </>
           )}

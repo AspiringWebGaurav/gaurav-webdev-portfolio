@@ -80,6 +80,7 @@ export type MailSenderKey =
   | "NO_REPLY"
   | "ME"
   | "WORK"
+  | "GAURAV"
   | "NEWSLETTER"
   | "BLOG"
   | "SUPPORT"

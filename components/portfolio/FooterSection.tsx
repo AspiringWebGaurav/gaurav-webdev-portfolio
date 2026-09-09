@@ -179,7 +179,7 @@ export const FooterSection = ({
           </Link>
           <span className="text-neutral-600">·</span>
           <Link
-            href="/chat"
+            href="/chat?guide=true"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-purple transition-colors duration-200"

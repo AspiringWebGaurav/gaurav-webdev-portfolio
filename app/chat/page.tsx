@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { ChatLearnMoreContent } from "@/components/legal/ChatLearnMoreContent";
 
 export const metadata: Metadata = {
@@ -22,6 +23,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function ChatGuidePage() {
+export default async function ChatGuidePage(props: {
+  searchParams?: Promise<{ guide?: string }>;
+}) {
+  const searchParams = props.searchParams ? await props.searchParams : undefined;
+  if (searchParams?.guide !== "true") {
+    redirect("/?chat=open");
+  }
   return <ChatLearnMoreContent />;
 }

@@ -519,6 +519,17 @@ function PrivacyContentInner({ initialData }: PrivacyPolicyContentProps) {
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div className="p-3 rounded-lg bg-black/40 border border-white/[0.08] space-y-1 sm:col-span-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                    <code className="text-xs sm:text-sm text-purple font-mono font-bold">gaurav@gauravpatil.site</code>
+                    <span className="text-[10px] text-neutral-400 font-mono tracking-wider uppercase">• Professional Direct</span>
+                  </div>
+                  <p className="text-xs text-neutral-400 pl-3.5">
+                    Direct professional contact, engineering consulting engagements, executive recruiter correspondence, and formal controller inquiries.
+                  </p>
+                </div>
+
                 <div className="p-3 rounded-lg bg-black/40 border border-white/[0.08] space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
@@ -739,22 +750,36 @@ function PrivacyContentInner({ initialData }: PrivacyPolicyContentProps) {
           )}
 
           {/* Section 9: Contact */}
-          <section id="contact-requests" className="space-y-3 scroll-mt-24 sm:scroll-mt-32">
+          <section id="contact-requests" className="space-y-4 scroll-mt-24 sm:scroll-mt-32">
             <h2 className="text-xl font-semibold text-white">
               9. Contact &amp; Data Requests
             </h2>
             <p>
-              For any privacy inquiries, data deletion requests, or security disclosures, reach out directly to:
+              For formal privacy inquiries, data deletion requests, or direct professional communication:
             </p>
-            <p className="text-purple font-medium">
-              Email:{" "}
-              <a
-                href="mailto:hello@gauravpatil.site"
-                className="hover:underline"
-              >
-                hello@gauravpatil.site
-              </a>
-            </p>
+            <div className="space-y-2 text-sm">
+              <p className="text-white-100">
+                <span className="font-semibold text-white">Direct Professional &amp; Controller Line:</span>{" "}
+                <a
+                  href="mailto:gaurav@gauravpatil.site"
+                  className="text-purple font-medium hover:underline"
+                >
+                  gaurav@gauravpatil.site
+                </a>
+                <span className="block text-xs text-neutral-400 mt-0.5">
+                  (Reserved strictly for professional proposals, consulting contracts, and formal data controller inquiries)
+                </span>
+              </p>
+              <p className="text-white-100 pt-1">
+                <span className="font-semibold text-white">General Inquiries &amp; Support:</span>{" "}
+                <a
+                  href="mailto:hello@gauravpatil.site"
+                  className="text-purple font-medium hover:underline"
+                >
+                  hello@gauravpatil.site
+                </a>
+              </p>
+            </div>
           </section>
             </>
           )}

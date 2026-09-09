@@ -76,6 +76,18 @@ export const ADMIN_MAIL_SENDERS: Record<MailSenderKey, MailSenderIdentity> = {
     domain: PRIMARY_EMAIL_DOMAIN,
     legacyEmail: EMAIL_IDENTITIES.WORK.legacy.email,
   },
+  GAURAV: {
+    key: "GAURAV",
+    logicalKey: "GAURAV",
+    email: EMAIL_IDENTITIES.GAURAV.primary.email,
+    displayName: EMAIL_IDENTITIES.GAURAV.primary.name,
+    purpose: EMAIL_IDENTITIES.GAURAV.primary.purpose,
+    defaultReplyTo: EMAIL_IDENTITIES.GAURAV.primary.defaultReplyTo,
+    isNoReply: EMAIL_IDENTITIES.GAURAV.primary.isNoReply,
+    isLegacy: false,
+    domain: PRIMARY_EMAIL_DOMAIN,
+    legacyEmail: EMAIL_IDENTITIES.GAURAV.legacy.email,
+  },
   SECURITY: {
     key: "SECURITY",
     logicalKey: "SECURITY",

@@ -6,7 +6,9 @@ import { AssistantWindow } from "./AssistantWindow";
 import { AssistantTurnstileGate } from "./auth/AssistantTurnstileGate";
 import type { AssistantBubbleProps, AssistantPositionMode, AssistantView } from "./types";
 
-const DRAG_THRESHOLD_PX = 6;
+const DRAG_THRESHOLD_PX = 10;
+const FIXED_TAP_THRESHOLD_PX = 22;
+const SCROLL_DELTA_THRESHOLD_PX = 8;
 const STORAGE_KEY = "gaurav_assistant_drag_pos";
 
 interface DragCoordinates {
@@ -26,12 +28,10 @@ export const AssistantBubble: React.FC<AssistantBubbleProps> = ({ config }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isWindowMounted, setIsWindowMounted] = useState(false);
   const [isTurnstileGateOpen, setIsTurnstileGateOpen] = useState(false);
-  const [isPreparingTurnstile, setIsPreparingTurnstile] = useState(false);
   const [initialView, setInitialView] = useState<AssistantView>("home");
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [customPosition, setCustomPosition] = useState<DragCoordinates | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
 
   const triggerButtonRef = useRef<HTMLButtonElement | null>(null);
   const dragStartRef = useRef<{ pointerX: number; pointerY: number; bubbleX: number; bubbleY: number } | null>(null);
@@ -42,7 +42,6 @@ export const AssistantBubble: React.FC<AssistantBubbleProps> = ({ config }) => {
   const lastScrollTimestampRef = useRef(0);
   const isPageScrollingRef = useRef(false);
   const scrollTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const prepIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const prefersReducedMotion = useReducedMotion();
 
   const isEnabled = config?.isEnabled !== false;
@@ -66,7 +65,7 @@ export const AssistantBubble: React.FC<AssistantBubbleProps> = ({ config }) => {
     }
   }, []);
 
-  // Continuous scroll & wheel listener: tracks active scrolling and maintains 550ms lockout buffer
+  // Continuous scroll & wheel listener: tracks active scrolling and maintains 120ms lockout buffer
   useEffect(() => {
     if (typeof window === "undefined") return;
     const onScrollOrWheel = () => {
@@ -75,7 +74,7 @@ export const AssistantBubble: React.FC<AssistantBubbleProps> = ({ config }) => {
       if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
       scrollTimerRef.current = setTimeout(() => {
         isPageScrollingRef.current = false;
-      }, 550);
+      }, 120);
     };
     window.addEventListener("scroll", onScrollOrWheel, { passive: true });
     window.addEventListener("wheel", onScrollOrWheel, { passive: true });
@@ -83,15 +82,6 @@ export const AssistantBubble: React.FC<AssistantBubbleProps> = ({ config }) => {
       window.removeEventListener("scroll", onScrollOrWheel);
       window.removeEventListener("wheel", onScrollOrWheel);
       if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
-    };
-  }, []);
-
-  // Clean up any preparation timers on unmount
-  useEffect(() => {
-    return () => {
-      if (prepIntervalRef.current) {
-        clearInterval(prepIntervalRef.current);
-      }
     };
   }, []);
 
@@ -214,46 +204,22 @@ export const AssistantBubble: React.FC<AssistantBubbleProps> = ({ config }) => {
   }, []);
 
   const handleOpen = useCallback(() => {
-    if (isPreparingTurnstile) return;
+    // If the Cloudflare gate is already open, clicking the bubble toggles it closed
+    if (isTurnstileGateOpen) {
+      setIsTurnstileGateOpen(false);
+      return;
+    }
 
+    // If Turnstile session was already verified within valid window (30m), open assistant window directly
     if (isTurnstileSessionValid()) {
       setIsWindowMounted(true);
       setIsOpen(true);
       return;
     }
 
-    // If Turnstile is already available in window or circuit is broken
-    if (
-      typeof window !== "undefined" &&
-      (window.turnstile || sessionStorage.getItem("gaurav_cf_circuit_broken") === "true")
-    ) {
-      setIsTurnstileGateOpen(true);
-      return;
-    }
-
-    // Turnstile is still loading in background -> Show dynamic animated dots on the chat bubble!
-    setIsPreparingTurnstile(true);
-
-    if (prepIntervalRef.current) {
-      clearInterval(prepIntervalRef.current);
-    }
-
-    let attempts = 0;
-    const maxAttempts = 35; // 3.5s timeout at 100ms interval
-    prepIntervalRef.current = setInterval(() => {
-      attempts++;
-      if (typeof window !== "undefined" && window.turnstile) {
-        if (prepIntervalRef.current) clearInterval(prepIntervalRef.current);
-        setIsPreparingTurnstile(false);
-        setIsTurnstileGateOpen(true);
-      } else if (attempts >= maxAttempts) {
-        if (prepIntervalRef.current) clearInterval(prepIntervalRef.current);
-        setIsPreparingTurnstile(false);
-        // Fallback: open gate anyway so visitor can authenticate via Email OTP / retry
-        setIsTurnstileGateOpen(true);
-      }
-    }, 100);
-  }, [isTurnstileSessionValid, isPreparingTurnstile]);
+    // Immediately open Cloudflare Turnstile gate on first click!
+    setIsTurnstileGateOpen(true);
+  }, [isTurnstileSessionValid, isTurnstileGateOpen]);
 
   const handleTurnstileVerified = useCallback(() => {
     setIsTurnstileGateOpen((wasGateOpen) => {
@@ -266,7 +232,6 @@ export const AssistantBubble: React.FC<AssistantBubbleProps> = ({ config }) => {
   }, []);
 
   const handleClose = useCallback(() => {
-    setIsHovered(false);
     setIsDragging(false);
     setIsOpen(false);
   }, []);
@@ -274,7 +239,6 @@ export const AssistantBubble: React.FC<AssistantBubbleProps> = ({ config }) => {
   // 6. Focus Restoration when Window finishes exit animation (Desktop only, prevents mobile sticky focus)
   const handleExitComplete = useCallback(() => {
     setIsWindowMounted(false);
-    setIsHovered(false);
     setIsDragging(false);
     if (typeof window !== "undefined" && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
       triggerButtonRef.current?.focus({ preventScroll: true });
@@ -300,16 +264,17 @@ export const AssistantBubble: React.FC<AssistantBubbleProps> = ({ config }) => {
   const handleTouchMove = (e: React.TouchEvent<HTMLButtonElement>) => {
     if (!pointerOriginRef.current) return;
     const touch = e.touches[0];
+    const threshold = positionMode === "draggable" ? DRAG_THRESHOLD_PX : FIXED_TAP_THRESHOLD_PX;
     if (touch) {
       const dx = Math.abs(touch.clientX - pointerOriginRef.current.clientX);
       const dy = Math.abs(touch.clientY - pointerOriginRef.current.clientY);
-      if (dx >= DRAG_THRESHOLD_PX || dy >= DRAG_THRESHOLD_PX) {
+      if (dx >= threshold || dy >= threshold) {
         hasMovedPastThresholdRef.current = true;
       }
     }
     if (
       typeof window !== "undefined" &&
-      Math.abs(window.scrollY - pointerOriginRef.current.scrollY) > 1.5
+      Math.abs(window.scrollY - pointerOriginRef.current.scrollY) > SCROLL_DELTA_THRESHOLD_PX
     ) {
       hasMovedPastThresholdRef.current = true;
     }
@@ -317,7 +282,7 @@ export const AssistantBubble: React.FC<AssistantBubbleProps> = ({ config }) => {
 
   const handleTouchEnd = () => {
     if (pointerOriginRef.current && typeof window !== "undefined") {
-      if (Math.abs(window.scrollY - pointerOriginRef.current.scrollY) > 1.5) {
+      if (Math.abs(window.scrollY - pointerOriginRef.current.scrollY) > SCROLL_DELTA_THRESHOLD_PX) {
         hasMovedPastThresholdRef.current = true;
       }
     }
@@ -331,10 +296,6 @@ export const AssistantBubble: React.FC<AssistantBubbleProps> = ({ config }) => {
 
   // 8. Pointer Drag & Interaction Controller
   const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
-    if (e.pointerType === "mouse") {
-      setIsHovered(true);
-    }
-
     pointerOriginRef.current = {
       pointerId: e.pointerId,
       clientX: e.clientX,
@@ -371,14 +332,15 @@ export const AssistantBubble: React.FC<AssistantBubbleProps> = ({ config }) => {
     const dx = e.clientX - pointerOriginRef.current.clientX;
     const dy = e.clientY - pointerOriginRef.current.clientY;
     const distance = Math.hypot(dx, dy);
+    const threshold = positionMode === "draggable" ? DRAG_THRESHOLD_PX : FIXED_TAP_THRESHOLD_PX;
 
-    if (distance >= DRAG_THRESHOLD_PX) {
+    if (distance >= threshold) {
       hasMovedPastThresholdRef.current = true;
     }
 
     if (
       typeof window !== "undefined" &&
-      Math.abs(window.scrollY - pointerOriginRef.current.scrollY) > 1.5
+      Math.abs(window.scrollY - pointerOriginRef.current.scrollY) > SCROLL_DELTA_THRESHOLD_PX
     ) {
       hasMovedPastThresholdRef.current = true;
     }
@@ -396,11 +358,9 @@ export const AssistantBubble: React.FC<AssistantBubbleProps> = ({ config }) => {
   };
 
   const handlePointerUp = (e: React.PointerEvent<HTMLButtonElement>) => {
-    setIsHovered(false);
-
     if (pointerOriginRef.current && typeof window !== "undefined") {
       const scrollDelta = Math.abs(window.scrollY - pointerOriginRef.current.scrollY);
-      if (scrollDelta > 1.5) {
+      if (scrollDelta > SCROLL_DELTA_THRESHOLD_PX) {
         hasMovedPastThresholdRef.current = true;
       }
     }
@@ -422,7 +382,6 @@ export const AssistantBubble: React.FC<AssistantBubbleProps> = ({ config }) => {
   };
 
   const handlePointerCancel = (e: React.PointerEvent<HTMLButtonElement>) => {
-    setIsHovered(false);
     wasCanceledRef.current = true;
     hasMovedPastThresholdRef.current = true;
     pointerOriginRef.current = null;
@@ -459,9 +418,9 @@ export const AssistantBubble: React.FC<AssistantBubbleProps> = ({ config }) => {
       return;
     }
 
-    // Layer 2: Global Scroll Lockout: Reject clicks within 550ms of any window scroll or wheel
+    // Layer 2: Global Scroll Lockout: Reject clicks within 120ms of active window scroll or wheel
     const timeSinceLastScroll = Date.now() - lastScrollTimestampRef.current;
-    if (timeSinceLastScroll < 550) {
+    if (timeSinceLastScroll < 120) {
       e.preventDefault();
       e.stopPropagation();
       pointerOriginRef.current = null;
@@ -505,9 +464,9 @@ export const AssistantBubble: React.FC<AssistantBubbleProps> = ({ config }) => {
     const { clientX, clientY, scrollY, time } = pointerOriginRef.current;
     pointerOriginRef.current = null; // Consume immediately
 
-    // Layer 7: Window scroll delta verification: if window scrolled by > 1.5px, it was a page scroll
+    // Layer 7: Window scroll delta verification: if window scrolled significantly (> 8px), it was a page scroll
     const currentScrollY = typeof window !== "undefined" ? window.scrollY : 0;
-    if (Math.abs(currentScrollY - scrollY) > 1.5) {
+    if (Math.abs(currentScrollY - scrollY) > SCROLL_DELTA_THRESHOLD_PX) {
       e.preventDefault();
       e.stopPropagation();
       return;
@@ -515,15 +474,16 @@ export const AssistantBubble: React.FC<AssistantBubbleProps> = ({ config }) => {
 
     // Layer 8: Physical distance moved verification
     const distanceMoved = Math.hypot(e.clientX - clientX, e.clientY - clientY);
-    if (distanceMoved >= DRAG_THRESHOLD_PX) {
+    const threshold = positionMode === "draggable" ? DRAG_THRESHOLD_PX : FIXED_TAP_THRESHOLD_PX;
+    if (distanceMoved >= threshold) {
       e.preventDefault();
       e.stopPropagation();
       return;
     }
 
-    // Layer 9: Deliberate tap duration verification (30ms - 850ms)
+    // Layer 9: Deliberate tap duration verification (5ms - 1200ms)
     const tapDuration = Date.now() - time;
-    if (tapDuration < 30 || tapDuration > 850) {
+    if (tapDuration < 5 || tapDuration > 1200) {
       e.preventDefault();
       e.stopPropagation();
       return;
@@ -599,19 +559,17 @@ export const AssistantBubble: React.FC<AssistantBubbleProps> = ({ config }) => {
             }
             whileHover={prefersReducedMotion ? undefined : { scale: 1.06, y: -2 }}
             whileTap={prefersReducedMotion ? undefined : { scale: 0.94 }}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
             className={`fixed z-[4900] group flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white text-neutral-900 border ${
-              isPreparingTurnstile
+              isTurnstileGateOpen
                 ? "border-[#7C3AED] shadow-[0_12px_45px_rgba(124,58,237,0.45)] ring-2 ring-[#7C3AED]/30"
                 : "border-neutral-200/90 shadow-[0_8px_30px_rgba(0,0,0,0.25)] hover:shadow-[0_12px_45px_rgba(124,58,237,0.45)] hover:border-[#7C3AED]/40"
             } transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7C3AED] focus-visible:ring-offset-2 focus-visible:ring-offset-[#000319] select-none ${
               positionMode === "draggable" ? (isDragging ? "cursor-grabbing" : "cursor-grab") : "cursor-pointer"
             }`}
             style={bubbleStyle}
-            aria-label={isPreparingTurnstile ? `Preparing ${assistantName}...` : `Open ${assistantName}`}
+            aria-label={`Open ${assistantName}`}
             aria-haspopup="dialog"
-            aria-expanded={isOpen}
+            aria-expanded={isOpen || isTurnstileGateOpen}
           >
             {/* 1. Drag Grip Indicator (Namecheap style) - Visible on hover/active when draggable mode is enabled */}
             {positionMode === "draggable" && (
@@ -640,10 +598,10 @@ export const AssistantBubble: React.FC<AssistantBubbleProps> = ({ config }) => {
               aria-hidden="true"
             />
 
-            {/* 3. Icon: Speech Bubble with Namecheap-style Sea Wave Dots Animation */}
+            {/* 3. Icon: Speech Bubble with Dynamic Sea Wave Dots Animation (Static on Hover) */}
             <div
               className={`relative z-10 flex items-center justify-center transition-colors duration-200 pointer-events-none ${
-                isPreparingTurnstile ? "text-[#7C3AED]" : "text-neutral-800 group-hover:text-[#7C3AED]"
+                isTurnstileGateOpen ? "text-[#7C3AED]" : "text-neutral-800 group-hover:text-[#7C3AED]"
               }`}
             >
               <svg
@@ -658,76 +616,10 @@ export const AssistantBubble: React.FC<AssistantBubbleProps> = ({ config }) => {
                   fill="currentColor"
                 />
 
-                {/* 3 Sea-Wave Animated Floating Dots (Static on normal, sea-wave on hover / mobile click / preparing) */}
-                <motion.circle
-                  cx="9.5"
-                  cy="13.25"
-                  r="1.45"
-                  fill="#FFFFFF"
-                  animate={
-                    prefersReducedMotion || (!isHovered && !isDragging && !isPreparingTurnstile)
-                      ? { y: 0 }
-                      : {
-                          y: [0, -3.2, 0],
-                        }
-                  }
-                  transition={
-                    prefersReducedMotion || (!isHovered && !isDragging && !isPreparingTurnstile)
-                      ? { duration: 0.15 }
-                      : {
-                          duration: 0.7,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                          delay: 0,
-                        }
-                  }
-                />
-                <motion.circle
-                  cx="14"
-                  cy="13.25"
-                  r="1.45"
-                  fill="#FFFFFF"
-                  animate={
-                    prefersReducedMotion || (!isHovered && !isDragging && !isPreparingTurnstile)
-                      ? { y: 0 }
-                      : {
-                          y: [0, -3.2, 0],
-                        }
-                  }
-                  transition={
-                    prefersReducedMotion || (!isHovered && !isDragging && !isPreparingTurnstile)
-                      ? { duration: 0.15 }
-                      : {
-                          duration: 0.7,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                          delay: 0.16,
-                        }
-                  }
-                />
-                <motion.circle
-                  cx="18.5"
-                  cy="13.25"
-                  r="1.45"
-                  fill="#FFFFFF"
-                  animate={
-                    prefersReducedMotion || (!isHovered && !isDragging && !isPreparingTurnstile)
-                      ? { y: 0 }
-                      : {
-                          y: [0, -3.2, 0],
-                        }
-                  }
-                  transition={
-                    prefersReducedMotion || (!isHovered && !isDragging && !isPreparingTurnstile)
-                      ? { duration: 0.15 }
-                      : {
-                          duration: 0.7,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                          delay: 0.32,
-                        }
-                  }
-                />
+                {/* 3 Static Dots */}
+                <circle cx="9.5" cy="13.25" r="1.45" fill="#FFFFFF" />
+                <circle cx="14" cy="13.25" r="1.45" fill="#FFFFFF" />
+                <circle cx="18.5" cy="13.25" r="1.45" fill="#FFFFFF" />
               </svg>
             </div>
           </motion.button>

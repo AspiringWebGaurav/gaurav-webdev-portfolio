@@ -86,6 +86,9 @@ export const AssistantTurnstileGate: React.FC<AssistantTurnstileGateProps> = ({
       } catch {}
       widgetIdRef.current = null;
     }
+    if (containerRef.current) {
+      containerRef.current.innerHTML = "";
+    }
   }, []);
 
   // 2. Render Turnstile Widget (Dark theme matching portfolio)
@@ -248,6 +251,13 @@ export const AssistantTurnstileGate: React.FC<AssistantTurnstileGateProps> = ({
     if (!isOpen) return;
 
     const handlePointerDownOutside = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as HTMLElement | null;
+      // If clicking on the bubble launcher button or its children, ignore outside click
+      // so the launcher button can handle its own toggle cleanly
+      if (target && target.closest('button[aria-label*="Assistant"], button[aria-haspopup="dialog"]')) {
+        return;
+      }
+
       if (cardRef.current && !cardRef.current.contains(e.target as Node)) {
         onClose();
       }
@@ -454,22 +464,22 @@ export const AssistantTurnstileGate: React.FC<AssistantTurnstileGateProps> = ({
   return (
     <motion.div
       ref={cardRef}
-      initial={false}
+      initial={{ opacity: 0, scale: 0.95, y: 6 }}
       animate={{
         opacity: isOpen ? 1 : 0,
-        scale: isOpen ? 1 : 0.92,
-        y: isOpen ? 0 : 10,
+        scale: isOpen ? 1 : 0.95,
+        y: isOpen ? 0 : 6,
       }}
-      transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.15, ease: "easeOut" }}
       style={{
         ...getPopoverStyle(),
         pointerEvents: isOpen ? "auto" : "none",
         visibility: isOpen ? "visible" : "hidden",
       }}
-      className="z-[5000] w-[calc(100vw-1.5rem)] sm:w-[350px] max-w-[350px] bg-[#000319]/95 backdrop-blur-xl border border-white/[0.15] shadow-[0_16px_50px_rgba(0,0,0,0.7),0_0_24px_rgba(124,58,237,0.2)] rounded-2xl p-3 sm:p-3.5 select-none"
+      className="z-[5000] w-[calc(100vw-1.5rem)] sm:w-[340px] max-w-[340px] bg-[#000319]/95 backdrop-blur-xl border border-white/[0.15] shadow-[0_16px_50px_rgba(0,0,0,0.7),0_0_24px_rgba(124,58,237,0.2)] rounded-2xl p-3 sm:p-3.5 select-none"
     >
       {/* Top Header */}
-      <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/[0.08]">
+      <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-white/[0.08]">
         <div className="flex items-center gap-2 min-w-0">
           {activeSubView !== "TURNSTILE" ? (
             <button
@@ -513,26 +523,19 @@ export const AssistantTurnstileGate: React.FC<AssistantTurnstileGateProps> = ({
         </button>
       </div>
 
-          {/* VIEW 1: Standard Turnstile Popover View */}
-          {activeSubView === "TURNSTILE" && (
-            <div className="flex flex-col items-center justify-center min-h-[65px] w-full">
-              {/* Turnstile Native Widget Container */}
-              <div
-                ref={containerRef}
-                className={`flex justify-center items-center w-full min-h-[65px] transition-opacity duration-150 ${
-                  activeStatus === "ERROR" || activeStatus === "TIMEOUT" ? "hidden" : "opacity-100"
-                }`}
-              />
+      {/* VIEW 1: Standard Turnstile Popover View */}
+      {activeSubView === "TURNSTILE" && (
+        <div className="flex flex-col items-center justify-center min-h-[65px] w-full">
+          {/* Turnstile Native Widget Container */}
+          <div
+            ref={containerRef}
+            className={`flex justify-center items-center w-[300px] h-[65px] mx-auto rounded-lg overflow-hidden transition-opacity duration-150 ${
+              activeStatus === "ERROR" || activeStatus === "TIMEOUT" ? "hidden" : "opacity-100"
+            }`}
+          />
 
-              {activeStatus === "LOADING" && !widgetIdRef.current && (
-                <div className="flex items-center gap-2 text-xs text-neutral-400 font-medium py-3">
-                  <CgSpinner className="w-4 h-4 animate-spin text-[#f38020]" />
-                  <span>Loading security check...</span>
-                </div>
-              )}
-
-              {/* Robust Multi-Tier Error Lifecycle */}
-              {(activeStatus === "ERROR" || activeStatus === "TIMEOUT") && (
+          {/* Robust Multi-Tier Error Lifecycle */}
+          {(activeStatus === "ERROR" || activeStatus === "TIMEOUT") && (
                 <div className="w-full space-y-2 pt-1 animate-in fade-in duration-150">
                   {/* Stage 1: 1st Retry Attempt (failureCount <= 1) */}
                   {activeFailureCount <= 1 ? (

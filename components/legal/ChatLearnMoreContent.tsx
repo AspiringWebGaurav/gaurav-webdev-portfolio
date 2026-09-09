@@ -401,17 +401,17 @@ export const ChatLearnMoreContent: React.FC = () => {
                 </p>
                 <div className="flex flex-wrap items-center gap-3 pt-2">
                   <a
-                    href="mailto:hello@gauravpatil.site"
+                    href="mailto:gaurav@gauravpatil.site"
                     className="inline-flex items-center gap-2 px-5 py-2.5 text-xs sm:text-sm font-semibold text-black bg-purple hover:bg-[#b895f5] rounded-xl transition-all shadow-md active:scale-95"
                   >
                     <FaEnvelope className="w-3.5 h-3.5" />
-                    <span>Email hello@gauravpatil.site</span>
+                    <span>Email gaurav@gauravpatil.site</span>
                   </a>
                   <Link
                     href="/#contact"
                     className="inline-flex items-center gap-2 px-5 py-2.5 text-xs sm:text-sm font-semibold text-white bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.1] rounded-xl transition-all active:scale-95"
                   >
-                    <span>Return to Portfolio</span>
+                    <span>Open Contact Form</span>
                     <IoChevronForward className="w-4 h-4" />
                   </Link>
                 </div>
