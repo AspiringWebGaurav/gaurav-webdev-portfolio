@@ -65,6 +65,38 @@ export class LegalDocumentsRepository extends BaseRepository {
   }
 
   /**
+   * Sanitizes legal document content to eliminate legacy or expired domains
+   * (e.g. gauravpatil.online, gauravservices.eu.cc) and guarantees 100% compliance with gauravpatil.site.
+   * If legacy references are detected, self-heals Firestore asynchronously.
+   */
+  private sanitizeLegalDoc(doc: LegalDocument): LegalDocument {
+    const raw = JSON.stringify(doc);
+    if (!raw.includes("gauravpatil.online") && !raw.includes("gauravservices")) {
+      return doc;
+    }
+
+    const sanitizedStr = raw
+      .replaceAll("gauravpatil.online", "gauravpatil.site")
+      .replaceAll("gauravservices.eu.cc", "gauravpatil.site")
+      .replaceAll("gauravservices.eu", "gauravpatil.site")
+      .replaceAll(" (with legacy domain `gauravservices.eu.cc`)", "")
+      .replaceAll(" (with legacy domain `gauravservices.eu`)", "")
+      .replaceAll(" (with legacy domain gauravservices.eu.cc)", "")
+      .replaceAll(" (with legacy domain gauravservices.eu)", "");
+
+    const sanitizedDoc = JSON.parse(sanitizedStr) as LegalDocument;
+
+    // Asynchronously self-heal the Firestore record in background
+    void firestoreDataSource
+      .setDocument("portfolio_legal_docs", doc.id, sanitizedDoc, false)
+      .catch((err) => {
+        adminLogger.warn("LegalDocumentsRepository:sanitizeLegalDoc", "Async self-heal write failed", { err });
+      });
+
+    return sanitizedDoc;
+  }
+
+  /**
    * Fetches the public published legal document (draft excluded).
    */
   public async getPublicDocument(
@@ -83,6 +115,8 @@ export class LegalDocumentsRepository extends BaseRepository {
       if (!doc) {
         doc = docType === "TERMS" ? SEED_TERMS_DOCUMENT : SEED_PRIVACY_DOCUMENT;
       }
+
+      doc = this.sanitizeLegalDoc(doc);
 
       // Strip private draft container from public return
       const { draft: _draft, ...publicDoc } = doc;
@@ -110,6 +144,8 @@ export class LegalDocumentsRepository extends BaseRepository {
       if (!doc) {
         doc = docType === "TERMS" ? SEED_TERMS_DOCUMENT : SEED_PRIVACY_DOCUMENT;
       }
+
+      doc = this.sanitizeLegalDoc(doc);
 
       return doc;
     });
