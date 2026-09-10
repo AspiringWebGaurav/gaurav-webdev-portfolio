@@ -1,7 +1,6 @@
 import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { FaLocationArrow, FaGithub, FaCheck, FaLightbulb, FaLayerGroup, FaBookOpen, FaShieldHalved, FaScaleBalanced } from "react-icons/fa6";
 import { ProjectImageSlider } from "@/components/portfolio/ProjectImageSlider";
 import { PROJECT_CASE_STUDIES } from "@/lib/data/case-studies";
@@ -164,10 +163,6 @@ export default async function ProjectCaseStudyPage({ params }: PageProps) {
         </div>
       </main>
     );
-  }
-
-  if (resolved.shouldRedirect) {
-    redirect(`/projects/${resolved.canonicalSlug}`);
   }
 
   const { study, canonicalSlug } = resolved;
