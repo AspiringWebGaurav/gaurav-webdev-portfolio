@@ -982,8 +982,8 @@ export const SEED_SEO: SeoDocument = {
   description:
     "Official portfolio of Gaurav Patil, a Full Stack Developer & Software Engineer based in India specializing in Next.js, React, TypeScript, and modern scalable web architecture.",
   canonicalUrl: "https://gauravpatil.site",
-  ogImageStoragePath: "",
-  ogImageUrl: "",
+  ogImageStoragePath: "/og-image.png",
+  ogImageUrl: "https://gauravpatil.site/og-image.png",
   keywords: [
     "Gaurav Patil",
     "Gaurav Patil developer",

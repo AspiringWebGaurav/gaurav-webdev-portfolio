@@ -23,12 +23,22 @@ export const metadata: Metadata = {
     url: "https://gauravpatil.site/projects",
     siteName: "Gaurav Patil Portfolio",
     type: "website",
+    images: [
+      {
+        url: "https://gauravpatil.site/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Full Stack & Software Engineering Projects | Gaurav Patil",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Full Stack & Software Engineering Projects | Gaurav Patil",
     description:
       "Explore software engineering and full-stack web applications by Gaurav Patil.",
+    creator: "@gauravpatil",
+    images: ["https://gauravpatil.site/og-image.png"],
   },
 };
 

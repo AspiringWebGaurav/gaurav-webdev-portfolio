@@ -86,7 +86,14 @@ export async function generateMetadata(): Promise<Metadata> {
         description,
         url: canonicalUrl,
         siteName: "Gaurav Patil Portfolio",
-        images: seo.ogImageUrl ? [{ url: seo.ogImageUrl, width: 1200, height: 630 }] : [],
+        images: [
+          {
+            url: seo.ogImageUrl || "https://gauravpatil.site/og-image.png",
+            width: 1200,
+            height: 630,
+            alt: "Gaurav Patil — Production Software Engineer",
+          },
+        ],
         type: "website",
       },
       twitter: {
@@ -94,7 +101,7 @@ export async function generateMetadata(): Promise<Metadata> {
         title,
         description,
         creator: seo.twitterHandle || "@gauravpatil",
-        images: seo.ogImageUrl ? [seo.ogImageUrl] : [],
+        images: [seo.ogImageUrl || "https://gauravpatil.site/og-image.png"],
       },
     };
   } catch {
@@ -129,7 +136,23 @@ export async function generateMetadata(): Promise<Metadata> {
           "Official portfolio of Gaurav Patil, a Full Stack Developer & Software Engineer based in India.",
         url: "https://gauravpatil.site",
         siteName: "Gaurav Patil Portfolio",
+        images: [
+          {
+            url: "https://gauravpatil.site/og-image.png",
+            width: 1200,
+            height: 630,
+            alt: "Gaurav Patil — Production Software Engineer",
+          },
+        ],
         type: "website",
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: "Gaurav Patil — Full Stack Developer & Software Engineer",
+        description:
+          "Official portfolio of Gaurav Patil, a Full Stack Developer & Software Engineer based in India.",
+        creator: "@gauravpatil",
+        images: ["https://gauravpatil.site/og-image.png"],
       },
     };
   }

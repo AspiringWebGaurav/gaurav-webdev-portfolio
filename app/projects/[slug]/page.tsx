@@ -1,7 +1,7 @@
 import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import { FaLocationArrow, FaGithub, FaCheck, FaLightbulb, FaLayerGroup, FaBookOpen, FaShieldHalved, FaScaleBalanced } from "react-icons/fa6";
 import { ProjectImageSlider } from "@/components/portfolio/ProjectImageSlider";
 import { PROJECT_CASE_STUDIES } from "@/lib/data/case-studies";
@@ -12,23 +12,59 @@ interface PageProps {
 
 export const revalidate = 60;
 
+const SHORT_SLUG_MAP: Record<string, string> = {
+  send2me: "send2me-p2p-file-transfer",
+  switchyy: "switchyy-mode-control",
+  daretosend: "daretosend-anonymous-feedback",
+  xurl: "xurl-smart-shortener",
+  gpmas: "gpmas-enterprise-hrms",
+  gmp: "gmp-mobile-store",
+  gpdrive: "gpdrive-cloud-storage",
+  myfit: "myfit-fitness-tracking",
+  gpnotes: "gpnotes-secure-notes",
+  bgmiid: "bgmiid-gaming-identity",
+  gauravwork: "gauravwork-freelance-platform",
+  gauravbuilds: "gauravbuilds-developer-showcase",
+  gauravwatch: "gauravwatch-movie-streaming",
+  connectgaurav: "connectgaurav-social-platform",
+};
+
+function resolveCaseStudy(slug: string) {
+  if (PROJECT_CASE_STUDIES[slug]) {
+    return { study: PROJECT_CASE_STUDIES[slug], canonicalSlug: slug, shouldRedirect: false };
+  }
+  const mappedSlug = SHORT_SLUG_MAP[slug];
+  if (mappedSlug && PROJECT_CASE_STUDIES[mappedSlug]) {
+    return { study: PROJECT_CASE_STUDIES[mappedSlug], canonicalSlug: mappedSlug, shouldRedirect: true };
+  }
+  const prefixMatch = Object.keys(PROJECT_CASE_STUDIES).find((k) => k.startsWith(`${slug}-`));
+  if (prefixMatch && PROJECT_CASE_STUDIES[prefixMatch]) {
+    return { study: PROJECT_CASE_STUDIES[prefixMatch], canonicalSlug: prefixMatch, shouldRedirect: true };
+  }
+  return null;
+}
+
 export async function generateStaticParams() {
-  return Object.keys(PROJECT_CASE_STUDIES).map((slug) => ({
+  const fullSlugs = Object.keys(PROJECT_CASE_STUDIES);
+  const shortSlugs = Object.keys(SHORT_SLUG_MAP);
+  return [...new Set([...fullSlugs, ...shortSlugs])].map((slug) => ({
     slug,
   }));
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const study = PROJECT_CASE_STUDIES[slug];
+  const resolved = resolveCaseStudy(slug);
 
-  if (!study) {
+  if (!resolved) {
     return {
       title: "Project Not Found | Gaurav Patil",
+      robots: { index: false, follow: false },
     };
   }
 
-  const canonicalUrl = `https://gauravpatil.site/projects/${slug}`;
+  const { study, canonicalSlug } = resolved;
+  const canonicalUrl = `https://gauravpatil.site/projects/${canonicalSlug}`;
 
   return {
     title: `${study.title} — Technical Case Study | Gaurav Patil`,
@@ -49,25 +85,93 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       url: canonicalUrl,
       siteName: "Gaurav Patil Portfolio",
       type: "article",
-      images: study.coverImage ? [{ url: study.coverImage, width: 1200, height: 630 }] : [],
+      images: study.coverImage
+        ? [
+            {
+              url: study.coverImage.startsWith("http")
+                ? study.coverImage
+                : `https://gauravpatil.site${study.coverImage}`,
+              width: 1200,
+              height: 630,
+              alt: study.title,
+            },
+          ]
+        : [
+            {
+              url: "https://gauravpatil.site/og-image.png",
+              width: 1200,
+              height: 630,
+              alt: "Gaurav Patil Portfolio",
+            },
+          ],
     },
     twitter: {
       card: "summary_large_image",
       title: `${study.title} — Case Study | Gaurav Patil`,
       description: study.subtitle,
+      creator: "@gauravpatil",
+      images: [
+        study.coverImage
+          ? study.coverImage.startsWith("http")
+            ? study.coverImage
+            : `https://gauravpatil.site${study.coverImage}`
+          : "https://gauravpatil.site/og-image.png",
+      ],
     },
   };
 }
 
 export default async function ProjectCaseStudyPage({ params }: PageProps) {
   const { slug } = await params;
-  const study = PROJECT_CASE_STUDIES[slug];
+  const resolved = resolveCaseStudy(slug);
 
-  if (!study) {
-    notFound();
+  if (!resolved) {
+    return (
+      <main className="min-h-screen bg-black-100 text-white flex flex-col items-center justify-center px-5 py-24 text-center relative overflow-hidden">
+        {/* Background Grid */}
+        <div className="h-full w-full dark:bg-black-100 bg-white dark:bg-grid-white/[0.03] bg-grid-black-100/[0.2] absolute top-0 left-0 flex items-center justify-center pointer-events-none -z-10">
+          <div className="absolute pointer-events-none inset-0 flex items-center justify-center dark:bg-black-100 bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]" />
+        </div>
+
+        <div className="max-w-md z-10 flex flex-col items-center">
+          <div className="w-16 h-16 rounded-full bg-purple/10 border border-purple/30 flex items-center justify-center mb-6">
+            <FaBookOpen className="w-7 h-7 text-purple" />
+          </div>
+          <span className="text-xs font-mono uppercase tracking-[0.2em] text-purple bg-purple/10 border border-purple/30 rounded-full px-4 py-1 mb-4">
+            Case Study Catalog
+          </span>
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-3">
+            Case Study Not Found
+          </h1>
+          <p className="text-white-200 text-sm sm:text-base mb-8 leading-relaxed">
+            The requested technical case study could not be located or may have been renamed. You can explore all 14 software engineering case studies in the project hub.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <Link
+              href="/projects"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-purple text-black font-semibold hover:bg-purple/90 transition-all text-sm shadow-md"
+            >
+              <span>Explore All Projects</span>
+              <FaLocationArrow className="w-3.5 h-3.5" />
+            </Link>
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white/[0.04] border border-white/10 text-white font-medium hover:bg-white/[0.08] transition-all text-sm"
+            >
+              <span>Return to Portfolio</span>
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
   }
 
-  const canonicalUrl = `https://gauravpatil.site/projects/${slug}`;
+  if (resolved.shouldRedirect) {
+    redirect(`/projects/${resolved.canonicalSlug}`);
+  }
+
+  const { study, canonicalSlug } = resolved;
+  const canonicalUrl = `https://gauravpatil.site/projects/${canonicalSlug}`;
 
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
