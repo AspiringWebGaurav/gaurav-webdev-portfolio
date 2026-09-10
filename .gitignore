@@ -4,6 +4,7 @@
 node_modules/
 /.pnp
 .pnp.*
+.pnpm-store/
 .yarn/*
 !.yarn/patches
 !.yarn/plugins
@@ -20,6 +21,8 @@ dist/
 .turbo/
 .swc/
 .cache/
+.parcel-cache/
+.rollup.cache/
 *.tsbuildinfo
 tsconfig.tsbuildinfo
 next-env.d.ts
@@ -30,6 +33,8 @@ next-env.d.ts
 .env
 .env.*
 .env*.local
+*.env
+.env.vault
 !.env.example
 *.pem
 *.key
@@ -40,11 +45,21 @@ next-env.d.ts
 *.keystore
 *.jks
 serviceAccountKey*.json
+service-account*.json
+*service-account*.json
+*service_account*.json
 firebase-admin*.json
 credentials*.json
+*.credential
+*.credentials
 google-services*.json
+client_secret*.json
+client_secrets*.json
 *secret*.json
 *.secret
+*.token
+*.tokens
+.dev.vars
 id_rsa*
 id_ed25519*
 *.kdbx
@@ -63,6 +78,15 @@ id_ed25519*
 .codeium/
 .aide/
 .devin/
+.continue/
+.copilot/
+.augment/
+.trae/
+.cody/
+.qodo/
+.void/
+.chat/
+agent_history/
 brain/
 .system_generated/
 .user_uploaded/
@@ -73,13 +97,18 @@ scratch/
 *.scratch.*
 *.prompt.md
 agent*.log
+*.agent.log
 
 # ==========================================
-# Vercel & Deployment Platforms
+# Vercel, Firebase & Cloud Deployment Platforms
 # ==========================================
 .vercel/
 .netlify/
 .serverless/
+.firebase/
+.wrangler/
+.mf/
+.sst/
 
 # ==========================================
 # Logs & Diagnostic Dumps
@@ -87,11 +116,17 @@ agent*.log
 logs/
 *.log
 *.log*
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+*.pid
+*.seed
+*.pid.lock
 
 # ==========================================
 # Testing, Coverage & Playwright Local Suites
@@ -99,6 +134,7 @@ lerna-debug.log*
 coverage/
 .nyc_output/
 playwright-report/
+playwright-results/
 test-results/
 .playwright/
 playwright/.cache/
@@ -108,6 +144,9 @@ tests/
 videos/
 screenshots/
 test-artifacts/
+.vitest/
+.jest/
+*.lcov
 
 # ==========================================
 # IDE, Editor & Tooling Workspaces
@@ -119,6 +158,10 @@ test-artifacts/
 !.vscode/extensions.json
 .idea/
 .zed/
+*.code-workspace
+.project
+.classpath
+.settings/
 *.suo
 *.ntvs*
 *.njsproj
@@ -154,8 +197,11 @@ temp/
 .Trashes
 ehthumbs.db
 Thumbs.db
+Thumbs.db:encryptable
 desktop.ini
 $RECYCLE.BIN/
+Icon?
+*.lnk
 
 # ==========================================
 # Linter & Formatting Caches

@@ -127,9 +127,11 @@ export const ProjectsManager: React.FC<{ initialProjects: ProjectDocument[] }> =
       description: editingProject.description || "",
       coverImage: editingProject.coverImage || "",
       coverImageStoragePath: editingProject.coverImageStoragePath || "",
+      images: Array.isArray(editingProject.images) ? editingProject.images : [],
       iconLists: Array.isArray(editingProject.iconLists) ? editingProject.iconLists : [],
       liveUrl: editingProject.liveUrl || "",
       githubUrl: editingProject.githubUrl || "",
+      desktopGithubUrl: editingProject.desktopGithubUrl || "",
       isFeatured: editingProject.isFeatured ?? true,
       isPublished: editingProject.isPublished ?? true,
     };
@@ -196,9 +198,11 @@ export const ProjectsManager: React.FC<{ initialProjects: ProjectDocument[] }> =
               title: "",
               description: "",
               coverImage: "/p1.svg",
-              iconLists: ["/re.svg", "/tail.svg", "/ts.svg"],
+              images: [],
+              iconLists: ["/re.svg", "/next.svg", "/webrtc.svg", "/rust.svg", "/tauri.svg", "/tail.svg", "/firebase.svg"],
               liveUrl: "https://",
               githubUrl: "https://github.com/",
+              desktopGithubUrl: "",
               isFeatured: true,
               isPublished: true,
             });
@@ -262,6 +266,24 @@ export const ProjectsManager: React.FC<{ initialProjects: ProjectDocument[] }> =
 
             <div className="space-y-1.5">
               <label className="block text-xs font-admin-mono uppercase tracking-wider text-[#475569] font-bold">
+                Auto-Slide Screenshots (Comma separated)
+              </label>
+              <input
+                type="text"
+                value={(editingProject.images || []).join(", ")}
+                onChange={(e) =>
+                  setEditingProject({
+                    ...editingProject,
+                    images: e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
+                  })
+                }
+                className="w-full px-3.5 py-2 text-sm border border-[#E2E8F0] rounded-sm bg-[#FAFAFA] focus:bg-[#FFFFFF] focus:outline-hidden focus:ring-1 focus:ring-[#7C3AED]"
+                placeholder="/projects/send2me/cover.png, /projects/send2me/transfer-ui.png"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-xs font-admin-mono uppercase tracking-wider text-[#475569] font-bold">
                 Live Deployment URL
               </label>
               <input
@@ -274,13 +296,27 @@ export const ProjectsManager: React.FC<{ initialProjects: ProjectDocument[] }> =
 
             <div className="space-y-1.5">
               <label className="block text-xs font-admin-mono uppercase tracking-wider text-[#475569] font-bold">
-                GitHub Repository URL
+                Web App GitHub Repository URL
               </label>
               <input
                 type="text"
                 value={editingProject.githubUrl || ""}
                 onChange={(e) => setEditingProject({ ...editingProject, githubUrl: e.target.value })}
                 className="w-full px-3.5 py-2 text-sm border border-[#E2E8F0] rounded-sm bg-[#FAFAFA] focus:bg-[#FFFFFF] focus:outline-hidden focus:ring-1 focus:ring-[#7C3AED]"
+                placeholder="https://github.com/..."
+              />
+            </div>
+
+            <div className="space-y-1.5 md:col-span-2">
+              <label className="block text-xs font-admin-mono uppercase tracking-wider text-[#475569] font-bold">
+                Desktop / Secondary GitHub URL (e.g. Rust PC App)
+              </label>
+              <input
+                type="text"
+                value={editingProject.desktopGithubUrl || ""}
+                onChange={(e) => setEditingProject({ ...editingProject, desktopGithubUrl: e.target.value })}
+                className="w-full px-3.5 py-2 text-sm border border-[#E2E8F0] rounded-sm bg-[#FAFAFA] focus:bg-[#FFFFFF] focus:outline-hidden focus:ring-1 focus:ring-[#7C3AED]"
+                placeholder="https://github.com/..."
               />
             </div>
           </div>

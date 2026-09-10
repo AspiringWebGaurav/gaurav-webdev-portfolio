@@ -14,6 +14,7 @@ const ACTIVE_CMS_COLLECTIONS = [
   "portfolio_social_links",
   "portfolio_seo",
   "portfolio_assistant",
+  "portfolio_cloudflare",
 ];
 
 const ACTIVE_OPERATIONAL_COLLECTIONS = [
@@ -21,6 +22,8 @@ const ACTIVE_OPERATIONAL_COLLECTIONS = [
   "admin_mails",
   "admin_mail_drafts",
   "media",
+  "whatsapp_notifications",
+  "whatsapp_sessions",
 ];
 
 const ACTIVE_SECURITY_COLLECTIONS = [

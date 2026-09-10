@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useEffect, useState, Suspense } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import {
   FaArrowLeft,
   FaShieldHalved,
@@ -21,6 +20,7 @@ import { MarkdownLegalRenderer } from "./MarkdownLegalRenderer";
 
 export interface PrivacyPolicyContentProps {
   initialData?: Omit<LegalDocument, "draft">;
+  initialFocus?: string;
 }
 
 function getPrivacySectionIcon(id: string) {
@@ -44,9 +44,16 @@ function getPrivacySectionIcon(id: string) {
   }
 }
 
-function PrivacyContentInner({ initialData }: PrivacyPolicyContentProps) {
-  const searchParams = useSearchParams();
-  const focusParam = searchParams.get("focus");
+function PrivacyContentInner({ initialData, initialFocus }: PrivacyPolicyContentProps) {
+  const [focusParam, setFocusParam] = useState<string | null>(initialFocus ?? null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && !initialFocus) {
+      const sp = new URLSearchParams(window.location.search);
+      const f = sp.get("focus");
+      if (f) setFocusParam(f);
+    }
+  }, [initialFocus]);
 
   const [filterMode, setFilterMode] = useState<"all" | "contact" | "assistant" | "whatsapp">(
     focusParam === "whatsapp"
@@ -794,10 +801,6 @@ function PrivacyContentInner({ initialData }: PrivacyPolicyContentProps) {
   );
 }
 
-export function PrivacyPolicyContent({ initialData }: PrivacyPolicyContentProps) {
-  return (
-    <Suspense fallback={<div className="min-h-screen bg-black-100 text-white flex items-center justify-center">Loading Privacy Policy...</div>}>
-      <PrivacyContentInner initialData={initialData} />
-    </Suspense>
-  );
+export function PrivacyPolicyContent(props: PrivacyPolicyContentProps = {}) {
+  return <PrivacyContentInner {...props} />;
 }

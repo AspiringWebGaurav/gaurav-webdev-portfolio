@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="ftg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06B6D4" />
+      <stop offset="100%" stop-color="#8B5CF6" />
+    </linearGradient>
+  </defs>
+  <!-- Security Vault Diamond / Cryptographic Hexagon -->
+  <polygon points="50,10 85,30 85,70 50,90 15,70 15,30" stroke="url(#ftg)" stroke-width="3" fill="rgba(6,182,212,0.08)"/>
+  <!-- Cryptographic Keyhole & Circuit Struts -->
+  <circle cx="50" cy="42" r="10" stroke="url(#ftg)" stroke-width="2.5" fill="none" />
+  <path d="M45 52 L55 52 L57 68 L43 68 Z" fill="url(#ftg)" />
+  <circle cx="50" cy="42" r="4" fill="#FFFFFF" />
+  <!-- Corner Data Nodes -->
+  <circle cx="50" cy="10" r="3" fill="#06B6D4" />
+  <circle cx="85" cy="50" r="3" fill="#8B5CF6" />
+  <circle cx="15" cy="50" r="3" fill="#8B5CF6" />
+  <circle cx="50" cy="90" r="3" fill="#06B6D4" />
+</svg>

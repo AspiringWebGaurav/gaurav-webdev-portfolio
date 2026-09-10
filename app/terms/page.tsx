@@ -21,8 +21,20 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function TermsPage() {
-  const res = await legalDocumentsRepository.getPublicDocument("TERMS");
-  return <TermsOfServiceContent initialData={res.data ?? undefined} />;
+interface TermsPageProps {
+  searchParams?: Promise<{ focus?: string }>;
+}
+
+export default async function TermsPage({ searchParams }: TermsPageProps) {
+  const [res, resolvedParams] = await Promise.all([
+    legalDocumentsRepository.getPublicDocument("TERMS"),
+    searchParams ? searchParams : Promise.resolve(undefined),
+  ]);
+  return (
+    <TermsOfServiceContent
+      initialData={res.data ?? undefined}
+      initialFocus={resolvedParams?.focus}
+    />
+  );
 }
 

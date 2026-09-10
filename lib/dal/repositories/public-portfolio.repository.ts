@@ -20,7 +20,7 @@ import {
 } from "./cms";
 import { SEED_PORTFOLIO_PROJECTION } from "./seed-data";
 
-// Process-local memory snapshot for transient read fallback
+// Process-local memory snapshot for transient read fallback (refreshed on projects sync)
 let lastKnownGoodProjection: PublicPortfolioProjection | null = null;
 
 export class PublicPortfolioRepository extends BaseRepository {

@@ -21,8 +21,20 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function PrivacyPage() {
-  const res = await legalDocumentsRepository.getPublicDocument("PRIVACY");
-  return <PrivacyPolicyContent initialData={res.data ?? undefined} />;
+interface PrivacyPageProps {
+  searchParams?: Promise<{ focus?: string }>;
+}
+
+export default async function PrivacyPage({ searchParams }: PrivacyPageProps) {
+  const [res, resolvedParams] = await Promise.all([
+    legalDocumentsRepository.getPublicDocument("PRIVACY"),
+    searchParams ? searchParams : Promise.resolve(undefined),
+  ]);
+  return (
+    <PrivacyPolicyContent
+      initialData={res.data ?? undefined}
+      initialFocus={resolvedParams?.focus}
+    />
+  );
 }
 

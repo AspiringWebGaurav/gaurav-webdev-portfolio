@@ -632,12 +632,30 @@ export async function POST(req: NextRequest): Promise<Response> {
             session.lastActivityAt = Date.now();
             await saveVisitorSession(from, session);
 
-            // 2. Canonical, high-availability public PDF URL
+            // 2. Canonical, high-availability public PDF URL with pre-flight verification
             const baseUrl = getWhatsAppBaseUrl();
             const directResumeUrl = `${baseUrl}/resume.pdf`;
             const firebaseResumeUrl =
               "https://firebasestorage.googleapis.com/v0/b/gaurav-portfolio-improved.firebasestorage.app/o/whatsapp%2FGaurav_Patil_Resume.pdf?alt=media";
-            const documentUrl = process.env.WHATSAPP_RESUME_URL || directResumeUrl;
+            
+            const candidateUrls = [
+              process.env.WHATSAPP_RESUME_URL,
+              directResumeUrl,
+              firebaseResumeUrl,
+            ].filter(Boolean) as string[];
+
+            let documentUrl = directResumeUrl;
+            for (const candidate of candidateUrls) {
+              try {
+                const checkRes = await fetch(candidate, { method: "HEAD" });
+                if (checkRes.ok) {
+                  documentUrl = candidate;
+                  break;
+                }
+              } catch {
+                // Continue to next candidate
+              }
+            }
 
             const caption = isReSend
               ? `Here is Gaurav Patil's official resume again! 📄\n\nFeel free to review or download it. To connect directly, tap 'Chat with Gaurav' or type your message below — the automated system will deliver it directly to Gaurav in real time.${STANDARD_MESSAGE_FOOTER}`

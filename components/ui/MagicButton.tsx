@@ -6,6 +6,7 @@ interface MagicButtonProps {
   position: "left" | "right" | string;
   handleClick?: () => void;
   otherClasses?: string;
+  containerClasses?: string;
 }
 
 const MagicButton: React.FC<MagicButtonProps> = ({
@@ -14,10 +15,16 @@ const MagicButton: React.FC<MagicButtonProps> = ({
   position,
   handleClick,
   otherClasses = "",
+  containerClasses,
 }) => {
+  const containerStyle =
+    containerClasses !== undefined
+      ? containerClasses
+      : "md:mt-10";
+
   return (
     <button
-      className="relative inline-flex h-12 w-full md:w-60 md:mt-10 overflow-hidden rounded-xl p-[1.5px] border border-white/[0.18] hover:border-purple/60 transition-all duration-300 focus:outline-hidden group select-none shadow-[0_0_20px_rgba(203,172,249,0.15)]"
+      className={`relative inline-flex h-12 w-full md:w-60 overflow-hidden rounded-xl p-[1.5px] border border-white/[0.18] hover:border-purple/60 transition-all duration-300 focus:outline-hidden group select-none shadow-[0_0_20px_rgba(203,172,249,0.15)] ${containerStyle}`}
       onClick={handleClick}
       type="button"
     >

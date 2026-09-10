@@ -156,7 +156,7 @@ export const CANONICAL_PILLAR_DEFINITIONS: CanonicalPillarDefinition[] = [
 export const CANONICAL_PILLAR_COUNT: number = CANONICAL_PILLAR_DEFINITIONS.length;
 
 /**
- * Dynamically derived expected document count (37).
+ * Dynamically derived expected document count (53).
  */
 export const EXPECTED_CANONICAL_DOCUMENT_COUNT: number = CANONICAL_PILLAR_DEFINITIONS.reduce(
   (sum, pillar) => sum + pillar.documents.length,

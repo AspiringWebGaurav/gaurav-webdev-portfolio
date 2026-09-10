@@ -41,6 +41,7 @@ export const ProjectSchema = z.object({
   description: z.string().min(1).max(500),
   coverImage: z.string().min(1),
   coverImageStoragePath: z.string().default(""),
+  images: z.array(z.string()).default([]),
   iconLists: z.array(z.string()).default([]),
   liveUrl: z.string().url().regex(/^https:\/\//, "Must be a secure HTTPS URL"),
   githubUrl: z
@@ -49,6 +50,20 @@ export const ProjectSchema = z.object({
     .regex(/^https:\/\/github\.com\//, "Must be a GitHub URL")
     .optional()
     .or(z.literal("")),
+  desktopGithubUrl: z
+    .string()
+    .url()
+    .regex(/^https:\/\/github\.com\//, "Must be a GitHub URL")
+    .optional()
+    .or(z.literal("")),
+  docsUrl: z
+    .string()
+    .url()
+    .regex(/^https:\/\//, "Must be a secure HTTPS URL")
+    .optional()
+    .or(z.literal("")),
+  licenseStatus: z.string().max(100).optional().or(z.literal("")),
+  contractStatus: z.string().max(100).optional().or(z.literal("")),
   isFeatured: z.boolean().default(false),
   isPublished: z.boolean().default(true),
   expectedVersion: z.number().int().optional(),

@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 106 106" fill="currentColor">
+  <path d="M53 10a43 43 0 0 0-43 43 43 43 0 0 0 43 43 43 43 0 0 0 43-43 43 43 0 0 0-43-43zm-7 18h14c6 0 11 4 11 10 0 4-2 8-6 9l8 17h-8l-7-15h-5v15h-7V28zm7 6v10h7c3 0 5-2 5-5s-2-5-5-5h-7z" fill="#DEA584"/>
+  <circle cx="53" cy="53" r="48" fill="none" stroke="#DEA584" stroke-width="4" stroke-dasharray="6,4"/>
+</svg>

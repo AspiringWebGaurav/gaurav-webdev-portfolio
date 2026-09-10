@@ -472,10 +472,12 @@ export const DatabasePurgeCanvas: React.FC<DatabasePurgeCanvasProps> = ({
             </span>
           </div>
           <div className="text-xl font-bold font-admin-sans text-black">
-            {audit?.totalStaticCanonicalDocuments ?? 0} / 37 Docs
+            {audit?.totalStaticCanonicalDocuments ?? 0} / {audit?.expectedCanonicalDocuments ?? 53} Docs
           </div>
           <div className="text-[11px] text-[#64748B] font-admin-mono">
-            {audit?.totalStaticCanonicalDocuments === 37 ? "100% Canonical Seeded" : "Missing Pillars Detected"}
+            {audit?.totalStaticCanonicalDocuments === (audit?.expectedCanonicalDocuments ?? 53)
+              ? "100% Canonical Seeded"
+              : "Missing Pillars Detected"}
           </div>
         </div>
 
@@ -565,7 +567,7 @@ export const DatabasePurgeCanvas: React.FC<DatabasePurgeCanvasProps> = ({
           </div>
 
           <p className="text-xs text-[#475569] font-admin-sans leading-relaxed">
-            Populates all <strong>14 canonical static portfolio pillars (37 documents)</strong> into Firestore as pure production content. Generates <strong>0 fake/dummy data</strong>. Emits verified dual-channel realtime CMS invalidation signals.
+            Populates all <strong>14 canonical static portfolio pillars ({audit?.expectedCanonicalDocuments ?? 53} documents)</strong> into Firestore as pure production content. Generates <strong>0 fake/dummy data</strong>. Emits verified dual-channel realtime CMS invalidation signals.
           </p>
 
           <div className="pt-2">
@@ -678,7 +680,7 @@ export const DatabasePurgeCanvas: React.FC<DatabasePurgeCanvasProps> = ({
             <div>
               <span className="text-[#64748B] block text-[10px]">STATIC CONTENT</span>
               <span className="font-bold text-[#7C3AED]">
-                {receipt.afterState?.staticCanonicalDocumentsCount ?? 37} Docs Seeded
+                {receipt.afterState?.staticCanonicalDocumentsCount ?? (audit?.expectedCanonicalDocuments ?? 53)} Docs Seeded
               </span>
             </div>
             <div>

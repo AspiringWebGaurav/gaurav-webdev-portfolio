@@ -120,9 +120,14 @@ export interface ProjectDocument {
   description: string;
   coverImageStoragePath: string; // Canonical storage reference
   coverImage: string;            // Resolved public URL
+  images?: string[];             // Optional array of screenshot paths for auto-sliding gallery
   iconLists: string[];
   liveUrl: string;               // Strictly HTTPS URL
   githubUrl?: string;            // Strictly https://github.com/...
+  desktopGithubUrl?: string;     // Strictly https://github.com/... for native desktop client
+  docsUrl?: string;              // Strictly https://... for developer documentation
+  licenseStatus?: string;        // e.g. "MIT Open Source", "Proprietary Commercial SaaS"
+  contractStatus?: string;       // e.g. "Client Contract Signed", "Commercial Agreement"
   slug?: string;                 // URL-safe route slug for technical case studies
   isFeatured: boolean;
   isPublished: boolean;
@@ -141,6 +146,7 @@ export interface TestimonialDocument {
   quote: string;
   avatarStoragePath?: string; // Canonical storage reference
   avatarUrl?: string;         // Resolved public URL
+  socialUrl?: string;         // Client profile / verification link
   isPublished: boolean;
   createdAt: string;
   updatedAt: string;

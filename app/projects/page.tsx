@@ -1,7 +1,8 @@
 import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { FaLocationArrow, FaGithub, FaArrowRight } from "react-icons/fa6";
+import { FaLocationArrow, FaGithub, FaArrowRight, FaBookOpen } from "react-icons/fa6";
+import { ProjectImageSlider } from "@/components/portfolio/ProjectImageSlider";
 import { projectsRepository } from "@/lib/dal/repositories/cms/projects.repository";
 import { SEED_PROJECTS } from "@/lib/dal/repositories/seed-data";
 import { PROJECT_CASE_STUDIES } from "@/lib/data/case-studies";
@@ -11,7 +12,7 @@ export const revalidate = 60;
 export const metadata: Metadata = {
   title: "Full Stack & Software Engineering Projects",
   description:
-    "Explore the software engineering, full-stack web applications, and architectural work by Gaurav Patil, featuring Next.js, React, TypeScript, Three.js, and cloud services.",
+    "Explore the software engineering, full-stack web applications, and architectural work by Gaurav Patil, featuring Next.js, React, TypeScript, WebRTC, Rust, and cloud services.",
   alternates: {
     canonical: "https://gauravpatil.site/projects",
   },
@@ -35,11 +36,17 @@ const getTechName = (iconUrl: string) => {
   const file = iconUrl.split("/").pop()?.replace(/\.(svg|png|webp)$/, "") || "";
   const map: Record<string, string> = {
     re: "React",
+    next: "Next.js 15",
+    webrtc: "WebRTC (P2P Data Channels)",
+    rust: "Rust (Native Systems Engine)",
+    tauri: "Tauri (Cross-Platform Desktop)",
     tail: "Tailwind CSS",
+    firebase: "Firebase (Real-time Signaling)",
+    firestore: "Firestore (Token Lifecycle)",
+    cloud: "Cloud & Edge Infrastructure",
     ts: "TypeScript",
     three: "Three.js",
     fm: "Framer Motion",
-    next: "Next.js",
     stream: "Stream API",
     c: "Cloudinary",
     gsap: "GSAP",
@@ -153,45 +160,45 @@ export default async function ProjectsHubPage() {
                 className="bg-[#04071D]/90 border border-white/[0.1] rounded-3xl overflow-hidden p-6 sm:p-8 flex flex-col justify-between hover:border-purple/50 transition-all duration-300 group"
               >
                 <div>
-                  {/* Project Image Banner */}
-                  <div className="relative w-full h-56 sm:h-64 rounded-2xl overflow-hidden bg-[#13162D] mb-6 flex items-center justify-center">
-                    <img
-                      src="/bg.png"
-                      alt=""
-                      role="presentation"
-                      className="absolute inset-0 w-full h-full object-cover opacity-60"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                    <img
-                      src={project.coverImage}
-                      alt={`${project.title} preview`}
-                      className="z-10 object-contain max-h-full transition-transform duration-300 group-hover:scale-105"
-                      loading="lazy"
-                      decoding="async"
+                  {/* Project Auto-Sliding Image Banner (CLS = 0) */}
+                  <div className="mb-6">
+                    <ProjectImageSlider
+                      images={project.images && project.images.length > 0 ? project.images : [project.coverImage]}
+                      title={project.title}
+                      aspectClass="h-56 sm:h-64"
+                      className="w-full max-w-full mb-0 rounded-2xl"
                     />
                   </div>
 
-                  {/* Project Title & Description */}
-                  <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 group-hover:text-purple transition-colors">
+                  {/* License & Contract Governance Badge */}
+                  <div className="mb-2.5 flex items-center h-6">
+                    {project.licenseStatus && (
+                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium bg-purple/10 text-purple border border-purple/30">
+                        {project.licenseStatus}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Project Title & Description with Flexible Two-Line Bounds */}
+                  <h2 className="text-xl sm:text-2xl font-bold text-white mb-2 leading-snug min-h-[3.25rem] sm:min-h-[3.75rem] flex items-center group-hover:text-purple transition-colors">
                     {caseStudyUrl ? (
-                      <Link href={caseStudyUrl}>{project.title}</Link>
+                      <Link href={caseStudyUrl} className="line-clamp-2">{project.title}</Link>
                     ) : (
-                      project.title
+                      <span className="line-clamp-2">{project.title}</span>
                     )}
                   </h2>
-                  <p className="text-white-200 text-sm sm:text-base leading-relaxed mb-6 line-clamp-3">
+                  <p className="text-white-200 text-sm sm:text-base leading-relaxed mb-6 line-clamp-2 min-h-[2.75rem] sm:min-h-[3rem]">
                     {project.description}
                   </p>
                 </div>
 
                 <div>
-                  {/* Tech stack icons */}
+                  {/* Tech stack icons with Recruiter Tooltips */}
                   <div className="flex items-center gap-2 mb-6 flex-wrap">
                     {(project.iconLists || []).map((icon, idx) => (
                       <div
                         key={idx}
-                        className="border border-white/[0.15] rounded-full bg-[#04071D] w-8 h-8 flex justify-center items-center p-1.5 shadow-sm"
+                        className="border border-white/[0.15] rounded-full bg-[#04071D] w-8 h-8 flex justify-center items-center p-1.5 shadow-sm hover:scale-110 hover:border-purple transition-all duration-200 cursor-help"
                         title={getTechName(icon)}
                       >
                         <img
@@ -217,17 +224,41 @@ export default async function ProjectsHubPage() {
                       </Link>
                     )}
 
-                    <div className="flex items-center gap-4 ml-auto">
+                    <div className="flex items-center gap-2 ml-auto flex-wrap">
                       {project.githubUrl && (
                         <a
                           href={project.githubUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs sm:text-sm text-neutral-400 hover:text-white flex items-center gap-1.5 transition-colors"
+                          className="text-xs sm:text-sm text-neutral-400 hover:text-white flex items-center gap-1.5 transition-colors py-1.5 px-2.5 rounded-md bg-white/[0.04] hover:bg-white/[0.1] border border-white/[0.08]"
                           aria-label={`View ${project.title} source code on GitHub`}
                         >
-                          <FaGithub className="w-4 h-4" />
-                          Code
+                          <FaGithub className="w-3.5 h-3.5" />
+                          <span>{project.desktopGithubUrl ? "Web" : "Code"}</span>
+                        </a>
+                      )}
+                      {project.desktopGithubUrl && (
+                        <a
+                          href={project.desktopGithubUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs sm:text-sm text-neutral-300 hover:text-purple flex items-center gap-1.5 transition-colors py-1.5 px-2.5 rounded-md bg-white/[0.04] hover:bg-purple/10 border border-white/[0.08] hover:border-purple/40"
+                          aria-label={`View ${project.title} native desktop source code on GitHub`}
+                        >
+                          <FaGithub className="w-3.5 h-3.5 text-purple" />
+                          <span>Rust</span>
+                        </a>
+                      )}
+                      {project.docsUrl && (
+                        <a
+                          href={project.docsUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs sm:text-sm text-indigo-300 hover:text-white flex items-center gap-1.5 transition-colors py-1.5 px-2.5 rounded-md bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30"
+                          aria-label={`View ${project.title} documentation`}
+                        >
+                          <FaBookOpen className="w-3.5 h-3.5 text-indigo-400" />
+                          <span>Docs</span>
                         </a>
                       )}
                       {project.liveUrl && (
@@ -235,7 +266,7 @@ export default async function ProjectsHubPage() {
                           href={project.liveUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs sm:text-sm text-purple hover:text-white flex items-center gap-1.5 font-medium transition-colors"
+                          className="text-xs sm:text-sm text-purple hover:text-white flex items-center gap-1.5 font-medium transition-colors py-1.5 px-2.5 rounded-md bg-purple/10 hover:bg-purple/20 border border-purple/30"
                         >
                           Live Site
                           <FaLocationArrow className="w-2.5 h-2.5" />

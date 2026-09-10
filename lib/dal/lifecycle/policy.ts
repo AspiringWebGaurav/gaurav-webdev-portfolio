@@ -472,6 +472,24 @@ export const LIFECYCLE_POLICY: Record<string, PolicyEntityDefinition> = {
     canSeed: false,
     isProtected: false,
   },
+  whatsapp_notifications: {
+    name: "whatsapp_notifications",
+    store: "firestore",
+    classification: "DYNAMIC_APPLICATION",
+    description: "Recruiter and visitor WhatsApp notification dispatch ledgers",
+    canDelete: true,
+    canSeed: false,
+    isProtected: false,
+  },
+  whatsapp_sessions: {
+    name: "whatsapp_sessions",
+    store: "firestore",
+    classification: "DYNAMIC_APPLICATION",
+    description: "Recruiter and visitor WhatsApp session tokens and context states",
+    canDelete: true,
+    canSeed: false,
+    isProtected: false,
+  },
 
   // =========================================================================
   // 5. DERIVED CACHE & TRANSIENT NODES (Cleared on Clean & Reset)

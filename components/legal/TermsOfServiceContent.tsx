@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useEffect, useState, Suspense } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import {
   FaArrowLeft,
   FaScaleBalanced,
@@ -21,6 +20,7 @@ import { MarkdownLegalRenderer } from "./MarkdownLegalRenderer";
 
 export interface TermsOfServiceContentProps {
   initialData?: Omit<LegalDocument, "draft">;
+  initialFocus?: string;
 }
 
 function getTermsSectionIcon(id: string) {
@@ -45,9 +45,16 @@ function getTermsSectionIcon(id: string) {
   }
 }
 
-function TermsContentInner({ initialData }: TermsOfServiceContentProps) {
-  const searchParams = useSearchParams();
-  const focusParam = searchParams.get("focus");
+function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentProps) {
+  const [focusParam, setFocusParam] = useState<string | null>(initialFocus ?? null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && !initialFocus) {
+      const sp = new URLSearchParams(window.location.search);
+      const f = sp.get("focus");
+      if (f) setFocusParam(f);
+    }
+  }, [initialFocus]);
 
   const [filterMode, setFilterMode] = useState<"all" | "contact" | "assistant" | "whatsapp">(
     focusParam === "whatsapp"
@@ -704,10 +711,6 @@ function TermsContentInner({ initialData }: TermsOfServiceContentProps) {
   );
 }
 
-export function TermsOfServiceContent({ initialData }: TermsOfServiceContentProps = {}) {
-  return (
-    <Suspense fallback={<div className="min-h-screen bg-black-100 text-white flex items-center justify-center">Loading Terms of Service...</div>}>
-      <TermsContentInner initialData={initialData} />
-    </Suspense>
-  );
+export function TermsOfServiceContent(props: TermsOfServiceContentProps = {}) {
+  return <TermsContentInner {...props} />;
 }

@@ -156,10 +156,22 @@ export const BentoGridItem = ({
             "group-hover/bento:translate-x-2 transition duration-200 relative md:h-full min-h-40 flex flex-col px-5 p-5 lg:p-10"
           )}
         >
-          <div className="font-sans font-normal text-xs md:text-sm text-[#C1C2D3] z-10 tracking-wide mb-1">
+          <div
+            className={cn(
+              "font-sans font-normal text-xs md:text-sm text-[#C1C2D3] z-10 tracking-wide mb-1",
+              isType("tech_stack", 3) && "max-w-[140px] sm:max-w-[170px] lg:max-w-[200px]"
+            )}
+          >
             {description}
           </div>
-          <div className="font-sans text-lg lg:text-3xl max-w-96 font-bold z-10 leading-tight">
+          <div
+            className={cn(
+              "font-sans text-lg lg:text-3xl font-bold z-10 leading-tight",
+              isType("tech_stack", 3)
+                ? "max-w-[130px] sm:max-w-[160px] lg:max-w-[200px]"
+                : "max-w-96"
+            )}
+          >
             {title}
           </div>
 
@@ -167,32 +179,39 @@ export const BentoGridItem = ({
           {isType("globe_timezone", 2) && <GridGlobe />}
 
           {/* Tech stack list */}
-          {isType("tech_stack", 3) && (
-            <div className="flex gap-1 lg:gap-5 w-fit absolute -right-2 sm:-right-2 lg:-right-2 scale-90 sm:scale-95 lg:scale-100 origin-right">
-              <div className="flex flex-col gap-3 md:gap-3 lg:gap-8">
-                {((techStackLeft && techStackLeft.length > 0) ? techStackLeft : ["ReactJS", "Express", "Typescript"]).map((item, i) => (
-                  <span
-                    key={i}
-                    className="lg:py-3 lg:px-3 py-2 px-3 text-xs lg:text-sm rounded-xl text-center bg-[#10132E] border border-white/[0.08] text-white font-medium shadow-sm"
-                  >
-                    {item}
-                  </span>
-                ))}
-                <span className="lg:py-3 lg:px-3 py-3 px-3 rounded-xl text-center bg-[#10132E] border border-white/[0.04]"></span>
+          {isType("tech_stack", 3) && (() => {
+            const LEFT_STACK = (techStackLeft && techStackLeft.length >= 4)
+              ? techStackLeft.slice(0, 4)
+              : ["Next.js 16", "React 19", "TypeScript", "WebRTC"];
+            const RIGHT_STACK = (techStackRight && techStackRight.length >= 4)
+              ? techStackRight.slice(0, 4)
+              : ["Rust & Tauri", "TailwindCSS", "Node.js", "Firestore"];
+
+            return (
+              <div className="flex gap-2 lg:gap-3.5 w-fit absolute -right-2 sm:right-0 lg:right-2 top-1/2 -translate-y-1/2 origin-right scale-[0.85] sm:scale-90 lg:scale-[0.95]">
+                <div className="flex flex-col gap-2 md:gap-2.5">
+                  {LEFT_STACK.map((item, i) => (
+                    <span
+                      key={i}
+                      className="py-1.5 px-3 lg:py-2 lg:px-3.5 text-xs lg:text-sm rounded-xl text-center bg-[#10132E] border border-white/[0.08] text-white font-medium shadow-sm whitespace-nowrap"
+                    >
+                      {item}
+                    </span>
+                  ))}
+                </div>
+                <div className="flex flex-col gap-2 md:gap-2.5 mt-2 lg:mt-3">
+                  {RIGHT_STACK.map((item, i) => (
+                    <span
+                      key={i}
+                      className="py-1.5 px-3 lg:py-2 lg:px-3.5 text-xs lg:text-sm rounded-xl text-center bg-[#10132E] border border-white/[0.08] text-white font-medium shadow-sm whitespace-nowrap"
+                    >
+                      {item}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <div className="flex flex-col gap-3 md:gap-3 lg:gap-8">
-                <span className="lg:py-3 lg:px-3 py-3 px-3 rounded-xl text-center bg-[#10132E] border border-white/[0.04]"></span>
-                {((techStackRight && techStackRight.length > 0) ? techStackRight : ["VueJS", "NuxtJS", "GraphQL"]).map((item, i) => (
-                  <span
-                    key={i}
-                    className="lg:py-3 lg:px-2 py-2 px-3 text-xs lg:text-sm rounded-xl text-center bg-[#10132E] border border-white/[0.08] text-white font-medium shadow-sm"
-                  >
-                    {item}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Contact CTA */}
           {isType("contact_cta", 6) && (

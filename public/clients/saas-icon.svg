@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="sg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#06B6D4" />
+    </linearGradient>
+  </defs>
+  <!-- Isometric Cloud Cluster / Microservices Cube -->
+  <path d="M50 12 L82 30 V68 L50 86 L18 68 V30 Z" stroke="url(#sg)" stroke-width="3" fill="rgba(16,185,129,0.08)"/>
+  <!-- Cube Facet Lines -->
+  <path d="M50 12 V50 L82 68 M50 50 L18 68" stroke="url(#sg)" stroke-width="2.5"/>
+  <!-- Dynamic Cloud Core -->
+  <circle cx="50" cy="50" r="5" fill="#FFFFFF" />
+  <circle cx="50" cy="28" r="3.5" fill="#34D399" />
+  <circle cx="68" cy="40" r="3.5" fill="#2DD4BF" />
+  <circle cx="32" cy="40" r="3.5" fill="#38BDF8" />
+</svg>

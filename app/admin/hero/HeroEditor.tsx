@@ -106,7 +106,7 @@ export const HeroEditor: React.FC<{ initialData: HeroDocument | null }> = ({ ini
             value={formData.eyebrow}
             onChange={(e) => setFormData({ ...formData, eyebrow: e.target.value })}
             className="w-full px-3.5 py-2.5 text-sm border border-[#E2E8F0] rounded-sm bg-[#FAFAFA] focus:bg-[#FFFFFF] focus:outline-hidden focus:ring-1 focus:ring-[#7C3AED] focus:border-[#7C3AED] transition-all"
-            placeholder="Dynamic Web Magic with Next.js"
+            placeholder="Production Software Engineer · Full Stack & Systems"
             required
           />
         </div>
@@ -120,7 +120,7 @@ export const HeroEditor: React.FC<{ initialData: HeroDocument | null }> = ({ ini
             value={formData.headingWords}
             onChange={(e) => setFormData({ ...formData, headingWords: e.target.value })}
             className="w-full px-3.5 py-2.5 text-sm border border-[#E2E8F0] rounded-sm bg-[#FAFAFA] focus:bg-[#FFFFFF] focus:outline-hidden focus:ring-1 focus:ring-[#7C3AED] focus:border-[#7C3AED] transition-all"
-            placeholder="Transforming Concepts into Seamless User Experiences"
+            placeholder="Architecting Scalable Systems & High-Performance Software"
             required
           />
         </div>
@@ -134,7 +134,7 @@ export const HeroEditor: React.FC<{ initialData: HeroDocument | null }> = ({ ini
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             className="w-full px-3.5 py-2.5 text-sm border border-[#E2E8F0] rounded-sm bg-[#FAFAFA] focus:bg-[#FFFFFF] focus:outline-hidden focus:ring-1 focus:ring-[#7C3AED] focus:border-[#7C3AED] transition-all"
-            placeholder="Hi! I'm Gaurav, a Front-End Developer based in India."
+            placeholder="I'm Gaurav Patil — a Production Software Engineer building resilient web architectures, native Rust & Tauri desktop applications, and real-time cloud automation."
             required
           />
         </div>
@@ -155,7 +155,7 @@ export const HeroEditor: React.FC<{ initialData: HeroDocument | null }> = ({ ini
               value={formData.ctaTitle}
               onChange={(e) => setFormData({ ...formData, ctaTitle: e.target.value })}
               className="w-full px-3.5 py-2.5 text-sm border border-[#E2E8F0] rounded-sm bg-[#FAFAFA] focus:bg-[#FFFFFF] focus:outline-hidden focus:ring-1 focus:ring-[#7C3AED] focus:border-[#7C3AED] transition-all"
-              placeholder="Show my work"
+              placeholder="Explore My Projects"
               required
             />
           </div>

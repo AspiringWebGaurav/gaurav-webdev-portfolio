@@ -1,6 +1,6 @@
 "use client";
 
-import { FaLocationArrow, FaChevronDown } from "react-icons/fa6";
+import { FaLocationArrow, FaChevronDown, FaEnvelope } from "react-icons/fa6";
 import { motion, useScroll, useTransform } from "motion/react";
 
 import MagicButton from "@/components/ui/MagicButton";
@@ -19,16 +19,20 @@ export const HeroSection = ({ data = SEED_HERO }: HeroSectionProps) => {
   const indicatorY = useTransform(scrollY, [0, 100], [0, 20]);
   const indicatorScale = useTransform(scrollY, [0, 100], [1, 0.9]);
 
-  const handleScrollToAbout = () => {
+  const handleScrollTo = (targetId: string, link: string) => {
     window.dispatchEvent(
       new CustomEvent("nav-scroll-start", {
-        detail: { link: "/about" },
+        detail: { link },
       })
     );
     document
-      .getElementById("about")
+      .getElementById(targetId)
       ?.scrollIntoView({ behavior: "smooth" });
-    window.history.replaceState(null, "", "/about");
+    window.history.replaceState(null, "", link);
+  };
+
+  const handleScrollToAbout = () => {
+    handleScrollTo("about", "/about");
   };
 
   return (
@@ -58,10 +62,11 @@ export const HeroSection = ({ data = SEED_HERO }: HeroSectionProps) => {
       </div>
 
       <div className="flex justify-center relative my-20 z-10">
-        <div className="max-w-[89vw] md:max-w-2xl lg:max-w-[60vw] flex flex-col items-center justify-center">
-          <p className="uppercase tracking-widest text-xs text-center text-blue-100 max-w-80">
-            {data.eyebrow || SEED_HERO.eyebrow}
-          </p>
+        <div className="max-w-[89vw] md:max-w-3xl lg:max-w-[64vw] flex flex-col items-center justify-center">
+          {/* Eyebrow Badge Pill (Clean, centered, no green dot) */}
+          <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-[#0E1328]/90 border border-white/10 text-[11px] font-mono uppercase tracking-[0.2em] text-[#C1C2D3] mb-4 shadow-xs">
+            <span className="text-center">{data.eyebrow || SEED_HERO.eyebrow}</span>
+          </div>
 
           <TextGenerateEffect
             as="h1"
@@ -69,25 +74,59 @@ export const HeroSection = ({ data = SEED_HERO }: HeroSectionProps) => {
             className="text-center text-[40px] md:text-5xl lg:text-6xl"
           />
 
-          <p className="text-center md:tracking-wider mb-4 text-sm md:text-lg lg:text-2xl text-white-200">
+          <p className="text-center md:tracking-wider mb-6 text-sm md:text-lg lg:text-xl text-white-200 max-w-2xl leading-relaxed">
             {data.description || SEED_HERO.description}
           </p>
 
-          <a
-            href={data.ctaLink || SEED_HERO.ctaLink}
-            onClick={(e) => {
-              if ((data.ctaLink || "").startsWith("#") || (data.ctaLink || "").startsWith("/")) {
+          {/* Action CTAs - Perfectly Aligned Twin Actions */}
+          <div className="flex flex-wrap items-center justify-center gap-4 mt-2">
+            <a
+              href={data.ctaLink || SEED_HERO.ctaLink}
+              onClick={(e) => {
+                const link = data.ctaLink || SEED_HERO.ctaLink;
+                if (link.startsWith("#")) {
+                  e.preventDefault();
+                  const targetId = link.replace("#", "");
+                  handleScrollTo(targetId, link);
+                }
+              }}
+              className="inline-flex items-center"
+            >
+              <MagicButton
+                title={data.ctaTitle || SEED_HERO.ctaTitle}
+                icon={<FaLocationArrow />}
+                position="right"
+                containerClasses="m-0 md:mt-0 w-auto"
+              />
+            </a>
+
+            <a
+              href="#contact"
+              onClick={(e) => {
                 e.preventDefault();
-                handleScrollToAbout();
-              }
-            }}
-          >
-            <MagicButton
-              title={data.ctaTitle || SEED_HERO.ctaTitle}
-              icon={<FaLocationArrow />}
-              position="right"
-            />
-          </a>
+                handleScrollTo("contact", "/#contact");
+              }}
+              className="relative inline-flex h-12 overflow-hidden rounded-xl p-[1.5px] border border-white/[0.18] hover:border-purple/60 transition-all duration-300 focus:outline-hidden group select-none shadow-[0_0_20px_rgba(203,172,249,0.08)] hover:shadow-[0_0_20px_rgba(203,172,249,0.2)] cursor-pointer"
+            >
+              <span className="inline-flex h-full w-full items-center justify-center rounded-[10px] bg-[#04071D] group-hover:bg-[#070B28] px-7 text-sm font-medium text-white backdrop-blur-3xl gap-2 transition-colors duration-200">
+                <FaEnvelope className="w-3.5 h-3.5 text-purple" />
+                <span>Get in Touch</span>
+              </span>
+            </a>
+          </div>
+
+          {/* Tech Badges / Stack Strip - Market Standards (Firebase, Firestore, Redis, etc.) */}
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-2 max-w-3xl text-[11px] font-mono text-[#C1C2D3]/80">
+            <span className="px-3 py-1.5 rounded-lg bg-white/[0.02] border border-white/[0.08] hover:border-purple/30 transition-colors">Next.js 15 &amp; React 19</span>
+            <span className="px-3 py-1.5 rounded-lg bg-white/[0.02] border border-white/[0.08] hover:border-purple/30 transition-colors">TypeScript</span>
+            <span className="px-3 py-1.5 rounded-lg bg-white/[0.02] border border-white/[0.08] hover:border-purple/30 transition-colors">Firebase &amp; Cloud Firestore</span>
+            <span className="px-3 py-1.5 rounded-lg bg-white/[0.02] border border-white/[0.08] hover:border-purple/30 transition-colors">Upstash Redis</span>
+            <span className="px-3 py-1.5 rounded-lg bg-white/[0.02] border border-white/[0.08] hover:border-purple/30 transition-colors">Rust &amp; Tauri</span>
+            <span className="px-3 py-1.5 rounded-lg bg-white/[0.02] border border-white/[0.08] hover:border-purple/30 transition-colors">PostgreSQL / SQL</span>
+            <span className="px-3 py-1.5 rounded-lg bg-white/[0.02] border border-white/[0.08] hover:border-purple/30 transition-colors">Node.js &amp; WebSockets</span>
+            <span className="px-3 py-1.5 rounded-lg bg-white/[0.02] border border-white/[0.08] hover:border-purple/30 transition-colors">Docker &amp; Cloudflare</span>
+            <span className="px-3 py-1.5 rounded-lg bg-white/[0.02] border border-white/[0.08] hover:border-purple/30 transition-colors">Mail &amp; API Automation</span>
+          </div>
 
           {/* Dynamic Scroll-Down Indicator */}
           <motion.div

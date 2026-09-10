@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="vg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A855F7" />
+      <stop offset="100%" stop-color="#6366F1" />
+    </linearGradient>
+    <linearGradient id="vg2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#C084FC" />
+      <stop offset="100%" stop-color="#818CF8" />
+    </linearGradient>
+  </defs>
+  <!-- Outer Precision Hexagon -->
+  <polygon points="50,6 88,27 88,73 50,94 12,73 12,27" stroke="url(#vg)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="rgba(168,85,247,0.08)"/>
+  <!-- Central Stylized Engineering Tree Canopy & Trunk (Vatvruksha) -->
+  <path d="M50 20 L64 36 L57 44 L68 54 L55 58 L55 76 L45 76 L45 58 L32 54 L43 44 L36 36 Z" fill="url(#vg)"/>
+  <!-- Precision Core Nodes -->
+  <circle cx="50" cy="20" r="4.5" fill="#FFFFFF" />
+  <circle cx="64" cy="36" r="3.5" fill="#C084FC" />
+  <circle cx="36" cy="36" r="3.5" fill="#C084FC" />
+  <circle cx="68" cy="54" r="3.5" fill="#818CF8" />
+  <circle cx="32" cy="54" r="3.5" fill="#818CF8" />
+  <circle cx="50" cy="48" r="4" fill="#FFFFFF" />
+  <!-- Root Struts -->
+  <path d="M45 76 L34 86 M55 76 L66 86 M50 76 L50 88" stroke="url(#vg2)" stroke-width="3" stroke-linecap="round"/>
+</svg>
