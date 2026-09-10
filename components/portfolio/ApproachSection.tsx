@@ -145,13 +145,13 @@ const Card = ({
         >
           {icon}
         </div>
-        <h2
+        <h3
           className={`dark:text-white text-center text-2xl sm:text-3xl relative z-10 font-bold transition-all duration-300 ${
             isRevealed ? "opacity-100 -translate-y-2 text-white" : "opacity-0 translate-y-2"
           }`}
         >
           {title}
-        </h2>
+        </h3>
         <p
           className={`text-xs sm:text-sm relative z-10 mt-4 text-center transition-all duration-300 leading-relaxed ${
             isRevealed ? "opacity-100 -translate-y-2 text-[#E4ECFF]" : "opacity-0 translate-y-2"

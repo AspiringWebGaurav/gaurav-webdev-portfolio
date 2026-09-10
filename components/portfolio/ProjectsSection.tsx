@@ -40,7 +40,7 @@ export const ProjectsSection = ({ projects = SEED_PROJECTS, limit = 4 }: Project
 
   return (
     <section className="py-20" id="projects">
-      <h2 className="heading">
+      <h2 id="featured-projects-heading" className="heading" aria-label="Featured Projects — A small selection of recent projects">
         A small selection of{" "}
         <span className="text-purple">recent projects</span>
       </h2>

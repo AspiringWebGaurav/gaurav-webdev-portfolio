@@ -210,3 +210,6 @@ Icon?
 .stylelintcache
 .prettiercache
 .hintrc
+
+# Scratch & Temporary Testing Scripts
+scratch/

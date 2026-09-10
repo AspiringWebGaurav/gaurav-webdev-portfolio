@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { TermsOfServiceContent } from "@/components/legal/TermsOfServiceContent";
-import { legalDocumentsRepository } from "@/lib/dal/repositories/legal-documents.repository";
-
-export const revalidate = 60;
+import { SEED_TERMS_DOCUMENT } from "@/lib/dal/repositories/seed-data";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
@@ -16,25 +14,28 @@ export const metadata: Metadata = {
     description:
       "Official Terms of Service, acceptable use, and engagement terms for Gaurav Portfolio.",
     url: "https://gauravpatil.site/terms",
-    siteName: "Gaurav Patil Portfolio",
+    siteName: "Gaurav Portfolio",
     type: "website",
+    images: [
+      {
+        url: "https://gauravpatil.site/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Terms of Service | Gaurav Portfolio",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Terms of Service | Gaurav Portfolio",
+    description:
+      "Official Terms of Service, acceptable use, and engagement terms for Gaurav Portfolio.",
+    creator: "@gauravpatil",
+    images: ["https://gauravpatil.site/og-image.png"],
   },
 };
 
-interface TermsPageProps {
-  searchParams?: Promise<{ focus?: string }>;
-}
-
-export default async function TermsPage({ searchParams }: TermsPageProps) {
-  const [res, resolvedParams] = await Promise.all([
-    legalDocumentsRepository.getPublicDocument("TERMS"),
-    searchParams ? searchParams : Promise.resolve(undefined),
-  ]);
-  return (
-    <TermsOfServiceContent
-      initialData={res.data ?? undefined}
-      initialFocus={resolvedParams?.focus}
-    />
-  );
+export default function TermsPage() {
+  return <TermsOfServiceContent initialData={SEED_TERMS_DOCUMENT} />;
 }
 
