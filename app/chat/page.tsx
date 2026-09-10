@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import { ChatLearnMoreContent } from "@/components/legal/ChatLearnMoreContent";
 
 export const metadata: Metadata = {
@@ -7,7 +6,7 @@ export const metadata: Metadata = {
   description:
     "Explore the architectural purpose, preview mechanics, and privacy standards for the Gaurav Portfolio Personal Assistant.",
   robots: {
-    index: false,
+    index: true,
     follow: true,
   },
   alternates: {
@@ -23,12 +22,6 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function ChatGuidePage(props: {
-  searchParams?: Promise<{ guide?: string }>;
-}) {
-  const searchParams = props.searchParams ? await props.searchParams : undefined;
-  if (searchParams?.guide !== "true") {
-    redirect("/?chat=open");
-  }
+export default function ChatGuidePage() {
   return <ChatLearnMoreContent />;
 }

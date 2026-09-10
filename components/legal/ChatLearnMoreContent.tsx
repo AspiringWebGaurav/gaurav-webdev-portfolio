@@ -55,6 +55,23 @@ export const ChatLearnMoreContent: React.FC = () => {
           <p className="text-base sm:text-lg text-neutral-300 max-w-3xl leading-relaxed mt-5">
             This guide provides transparent details on why the chat bubble exists, how the navigation options work, what is currently available versus planned, how data is handled, and how to reach Gaurav directly.
           </p>
+
+          <div className="flex flex-wrap items-center gap-3.5 mt-6">
+            <Link
+              href="/?chat=open"
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-xs sm:text-sm font-semibold text-black bg-purple hover:bg-[#b895f5] rounded-xl transition-all shadow-md active:scale-95"
+            >
+              <FaComments className="w-4 h-4" />
+              <span>Launch Interactive Assistant</span>
+            </Link>
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-xs sm:text-sm font-medium text-neutral-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.1] rounded-xl transition-all"
+            >
+              <FaArrowLeft className="w-3.5 h-3.5" />
+              <span>Return to Portfolio</span>
+            </Link>
+          </div>
         </header>
 
         {/* Content Grid */}
