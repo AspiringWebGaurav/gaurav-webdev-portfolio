@@ -4,6 +4,7 @@ import React from "react";
 import { InfiniteMovingCards } from "@/components/ui/InfiniteMovingCards";
 import type { TestimonialDocument, ClientDocument } from "@/types/portfolio";
 import { SEED_TESTIMONIALS, SEED_CLIENTS } from "@/lib/dal/repositories/seed-data";
+import { cn } from "@/lib/utils";
 
 interface TestimonialsSectionProps {
   testimonials?: TestimonialDocument[];
@@ -64,8 +65,11 @@ export const TestimonialsSection = ({
             Partner Organizations &amp; Commercial Contracts
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-4 md:gap-8 max-w-6xl">
-            {sortedClients.map((client) => {
+          <div className="grid grid-cols-2 gap-2.5 xs:gap-3 w-full max-w-sm xs:max-w-md sm:max-w-6xl sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-4 md:gap-8">
+            {sortedClients.map((client, idx) => {
+              const isLastOdd =
+                sortedClients.length % 2 === 1 && idx === sortedClients.length - 1;
+
               const content = (
                 <>
                   {client.iconUrl && (
@@ -74,7 +78,7 @@ export const TestimonialsSection = ({
                       alt={client.name}
                       loading="lazy"
                       decoding="async"
-                      className="w-7 h-7 md:w-8 md:h-8 object-contain shrink-0 transition-transform duration-300 group-hover:scale-105"
+                      className="w-5 h-5 xs:w-6 xs:h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 object-contain shrink-0 transition-transform duration-300 group-hover:scale-105"
                     />
                   )}
                   {client.nameImgUrl ? (
@@ -84,18 +88,20 @@ export const TestimonialsSection = ({
                       loading="lazy"
                       decoding="async"
                       width={client.logoWidth || 140}
-                      className="h-6 md:h-7 w-auto object-contain opacity-90 group-hover:opacity-100 transition-opacity"
+                      className="h-4.5 xs:h-5 sm:h-6 md:h-7 max-w-[95px] xs:max-w-[115px] sm:max-w-[160px] w-auto object-contain opacity-90 group-hover:opacity-100 transition-opacity"
                     />
                   ) : (
-                    <span className="text-sm font-semibold text-white/90 group-hover:text-white transition-colors">
+                    <span className="text-xs sm:text-sm font-semibold text-white/90 group-hover:text-white transition-colors truncate">
                       {client.name}
                     </span>
                   )}
                 </>
               );
 
-              const cardClasses =
-                "group flex items-center gap-2.5 sm:gap-3 px-4 py-2.5 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.07] hover:border-purple/40 transition-all duration-300 shadow-sm backdrop-blur-xs";
+              const cardClasses = cn(
+                "group flex items-center justify-center gap-1.5 xs:gap-2 sm:gap-3 px-2.5 xs:px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.07] hover:border-purple/40 transition-all duration-300 shadow-xs backdrop-blur-xs w-full sm:w-auto",
+                isLastOdd && "col-span-2 max-w-[180px] xs:max-w-[200px] sm:max-w-none mx-auto sm:mx-0"
+              );
 
               return client.websiteUrl ? (
                 <a

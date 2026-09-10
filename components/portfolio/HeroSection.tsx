@@ -36,7 +36,7 @@ export const HeroSection = ({ data = SEED_HERO }: HeroSectionProps) => {
   };
 
   return (
-    <div className="pb-12 pt-28 md:pb-16 md:pt-36 relative">
+    <div className="min-h-screen min-h-[100dvh] w-full flex flex-col justify-center items-center relative pt-20 sm:pt-24 pb-10 sm:pb-14">
       {/* Spotlights */}
       <div className="pointer-events-none select-none">
         <Spotlight
@@ -52,8 +52,8 @@ export const HeroSection = ({ data = SEED_HERO }: HeroSectionProps) => {
 
       {/* Grid Pattern Background */}
       <div
-        className="h-screen w-full dark:bg-black-100 bg-white dark:bg-grid-white/[0.03] bg-grid-black-100/[0.2]
-       absolute top-0 left-0 flex items-center justify-center pointer-events-none"
+        className="h-full w-full dark:bg-black-100 bg-white dark:bg-grid-white/[0.03] bg-grid-black-100/[0.2]
+       absolute inset-0 flex items-center justify-center pointer-events-none"
       >
         <div
           className="absolute pointer-events-none inset-0 flex items-center justify-center dark:bg-black-100
@@ -61,25 +61,31 @@ export const HeroSection = ({ data = SEED_HERO }: HeroSectionProps) => {
         />
       </div>
 
-      <div className="flex justify-center relative my-20 z-10">
-        <div className="max-w-[89vw] md:max-w-3xl lg:max-w-[64vw] flex flex-col items-center justify-center">
-          {/* Eyebrow Badge Pill (Clean, centered, no green dot) */}
-          <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-[#0E1328]/90 border border-white/10 text-[11px] font-mono uppercase tracking-[0.2em] text-[#C1C2D3] mb-4 shadow-xs">
+      <div className="flex justify-center relative z-10 w-full my-auto py-4 sm:py-6">
+        <div className="max-w-[89vw] md:max-w-5xl lg:max-w-[920px] flex flex-col items-center justify-center">
+          {/* Eyebrow Badge Pill (Clean, centered, subtle mono hierarchy) */}
+          <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-[11px] font-mono uppercase tracking-[0.22em] text-[#C1C2D3] mb-4 sm:mb-5 shadow-xs backdrop-blur-md">
             <span className="text-center">{data.eyebrow || SEED_HERO.eyebrow}</span>
           </div>
 
           <TextGenerateEffect
             as="h1"
             words={data.headingWords || SEED_HERO.headingWords}
-            className="text-center text-[40px] md:text-5xl lg:text-6xl"
+            className="text-center text-[34px] sm:text-[42px] md:text-5xl lg:text-6xl tracking-tight"
           />
 
-          <p className="text-center md:tracking-wider mb-6 text-sm md:text-lg lg:text-xl text-white-200 max-w-2xl leading-relaxed">
-            {data.description || SEED_HERO.description}
+          <p className="text-center mt-2 sm:mt-3 mb-7 sm:mb-8 text-sm sm:text-base md:text-lg lg:text-[19px] text-[#C1C2D3] max-w-4xl lg:max-w-[920px] leading-relaxed tracking-normal">
+            I&apos;m{" "}
+            <span className="text-white font-medium">Gaurav Patil</span>{" "}
+            &mdash; a{" "}
+            <span className="text-purple/90 font-medium">Production Software Engineer</span>{" "}
+            building high&#8209;throughput web architectures,<br className="hidden md:inline" />{" "}
+            native Rust &amp; Tauri desktop applications, and scalable cloud backends<br className="hidden md:inline" />{" "}
+            with Next.js, Firebase/Firestore, and Redis.
           </p>
 
           {/* Action CTAs - Perfectly Aligned Twin Actions */}
-          <div className="flex flex-wrap items-center justify-center gap-4 mt-2">
+          <div className="flex flex-wrap items-center justify-center gap-4">
             <a
               href={data.ctaLink || SEED_HERO.ctaLink}
               onClick={(e) => {
@@ -115,27 +121,14 @@ export const HeroSection = ({ data = SEED_HERO }: HeroSectionProps) => {
             </a>
           </div>
 
-          {/* Tech Badges / Stack Strip - Market Standards (Firebase, Firestore, Redis, etc.) */}
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-2 max-w-3xl text-[11px] font-mono text-[#C1C2D3]/80">
-            <span className="px-3 py-1.5 rounded-lg bg-white/[0.02] border border-white/[0.08] hover:border-purple/30 transition-colors">Next.js 15 &amp; React 19</span>
-            <span className="px-3 py-1.5 rounded-lg bg-white/[0.02] border border-white/[0.08] hover:border-purple/30 transition-colors">TypeScript</span>
-            <span className="px-3 py-1.5 rounded-lg bg-white/[0.02] border border-white/[0.08] hover:border-purple/30 transition-colors">Firebase &amp; Cloud Firestore</span>
-            <span className="px-3 py-1.5 rounded-lg bg-white/[0.02] border border-white/[0.08] hover:border-purple/30 transition-colors">Upstash Redis</span>
-            <span className="px-3 py-1.5 rounded-lg bg-white/[0.02] border border-white/[0.08] hover:border-purple/30 transition-colors">Rust &amp; Tauri</span>
-            <span className="px-3 py-1.5 rounded-lg bg-white/[0.02] border border-white/[0.08] hover:border-purple/30 transition-colors">PostgreSQL / SQL</span>
-            <span className="px-3 py-1.5 rounded-lg bg-white/[0.02] border border-white/[0.08] hover:border-purple/30 transition-colors">Node.js &amp; WebSockets</span>
-            <span className="px-3 py-1.5 rounded-lg bg-white/[0.02] border border-white/[0.08] hover:border-purple/30 transition-colors">Docker &amp; Cloudflare</span>
-            <span className="px-3 py-1.5 rounded-lg bg-white/[0.02] border border-white/[0.08] hover:border-purple/30 transition-colors">Mail &amp; API Automation</span>
-          </div>
-
-          {/* Dynamic Scroll-Down Indicator */}
+          {/* Dynamic Scroll-Down Indicator (Placed directly below CTAs with a balanced, cohesive gap) */}
           <motion.div
             style={{
               opacity: indicatorOpacity,
               y: indicatorY,
               scale: indicatorScale,
             }}
-            className="mt-8 md:mt-10 flex flex-col items-center gap-2 cursor-pointer select-none group"
+            className="mt-8 sm:mt-10 md:mt-12 flex flex-col items-center gap-2 cursor-pointer select-none group"
             onClick={handleScrollToAbout}
           >
             <span className="text-[10px] md:text-xs font-mono uppercase tracking-[0.25em] text-[#BEC1DD]/60 group-hover:text-purple transition-colors duration-300">
