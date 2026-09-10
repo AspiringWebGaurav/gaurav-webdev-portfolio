@@ -12,7 +12,7 @@ export const ExperienceSection = ({ experience = SEED_EXPERIENCE }: ExperienceSe
 
   return (
     <section className="py-20 w-full">
-      <h2 id="experience-heading" className="heading" aria-label="Work Experience">
+      <h2 id="experience-heading" className="heading">
         My <span className="text-purple">work experience</span>
       </h2>
 

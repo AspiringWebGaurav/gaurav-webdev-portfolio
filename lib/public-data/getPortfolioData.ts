@@ -17,7 +17,7 @@ export const getPortfolioData = unstable_cache(
       return SEED_PORTFOLIO_PROJECTION;
     }
   },
-  ["portfolio-data-cache-v7"],
+  ["portfolio-data-cache-v8"],
   {
     tags: [
       "portfolio-cms",
