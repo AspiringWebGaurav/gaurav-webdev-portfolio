@@ -14,7 +14,7 @@ export function PortfolioJsonLd({ siteUrl }: PortfolioJsonLdProps = {}) {
         "@type": "Person",
         "@id": `${baseUrl}/#person`,
         name: "Gaurav Patil",
-        url: baseUrl,
+        url: `${baseUrl}/`,
         jobTitle: ["Full Stack Developer", "Software Engineer"],
         description:
           "Full Stack Developer & Software Engineer based in India specializing in Next.js, React, TypeScript, and modern scalable web architecture.",
@@ -39,7 +39,7 @@ export function PortfolioJsonLd({ siteUrl }: PortfolioJsonLdProps = {}) {
       {
         "@type": "WebSite",
         "@id": `${baseUrl}/#website`,
-        url: baseUrl,
+        url: `${baseUrl}/`,
         name: "Gaurav Patil Portfolio",
         description:
           "Official personal portfolio of Gaurav Patil — Full Stack Developer & Software Engineer.",
@@ -51,12 +51,15 @@ export function PortfolioJsonLd({ siteUrl }: PortfolioJsonLdProps = {}) {
       {
         "@type": "ProfilePage",
         "@id": `${baseUrl}/#webpage`,
-        url: baseUrl,
+        url: `${baseUrl}/`,
         name: "Gaurav Patil — Full Stack Developer & Software Engineer",
         isPartOf: {
           "@id": `${baseUrl}/#website`,
         },
         about: {
+          "@id": `${baseUrl}/#person`,
+        },
+        mainEntity: {
           "@id": `${baseUrl}/#person`,
         },
         description:

@@ -203,14 +203,16 @@ export default async function ProjectCaseStudyPage({ params }: PageProps) {
     image: `https://gauravpatil.site${study.coverImage}`,
     author: {
       "@type": "Person",
+      "@id": "https://gauravpatil.site/#person",
       name: "Gaurav Patil",
-      url: "https://gauravpatil.site",
+      url: "https://gauravpatil.site/",
       sameAs: ["https://github.com/AspiringWebGaurav"],
     },
     publisher: {
       "@type": "Person",
+      "@id": "https://gauravpatil.site/#person",
       name: "Gaurav Patil",
-      url: "https://gauravpatil.site",
+      url: "https://gauravpatil.site/",
     },
     inLanguage: "en-US",
     about: study.technologies.map((t) => ({

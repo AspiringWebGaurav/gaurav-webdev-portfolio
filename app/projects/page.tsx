@@ -102,6 +102,9 @@ export default async function ProjectsHubPage() {
     about: {
       "@id": "https://gauravpatil.site/#person",
     },
+    author: {
+      "@id": "https://gauravpatil.site/#person",
+    },
   };
 
   return (
