@@ -15,9 +15,9 @@ export function PortfolioJsonLd({ siteUrl }: PortfolioJsonLdProps = {}) {
         "@id": `${baseUrl}/#person`,
         name: "Gaurav Patil",
         url: `${baseUrl}/`,
-        jobTitle: ["Full Stack Developer", "Software Engineer"],
+        jobTitle: ["Full Stack Software Engineer", "Software Engineer"],
         description:
-          "Full Stack Developer & Software Engineer based in India specializing in Next.js, React, TypeScript, and modern scalable web architecture.",
+          "Full Stack Software Engineer building production-ready digital systems, scalable web applications, and high-performance software architectures.",
         email: "mailto:hello@gauravpatil.site",
         nationality: {
           "@type": "Country",
@@ -31,6 +31,11 @@ export function PortfolioJsonLd({ siteUrl }: PortfolioJsonLdProps = {}) {
           "JavaScript",
           "Tailwind CSS",
           "Node.js",
+          "Software Engineering",
+          "Production-Ready Software",
+          "Web Applications",
+          "AI-Assisted Development",
+          "Technical Case Studies",
           "Three.js",
           "Web Performance Optimization",
           "Cloud Architecture",
@@ -42,7 +47,7 @@ export function PortfolioJsonLd({ siteUrl }: PortfolioJsonLdProps = {}) {
         url: `${baseUrl}/`,
         name: "Gaurav Patil Portfolio",
         description:
-          "Official personal portfolio of Gaurav Patil — Full Stack Developer & Software Engineer.",
+          "Official personal portfolio and software engineering showcase of Gaurav Patil — Full Stack Software Engineer building production-ready digital systems.",
         publisher: {
           "@id": `${baseUrl}/#person`,
         },
@@ -52,7 +57,7 @@ export function PortfolioJsonLd({ siteUrl }: PortfolioJsonLdProps = {}) {
         "@type": "ProfilePage",
         "@id": `${baseUrl}/#webpage`,
         url: `${baseUrl}/`,
-        name: "Gaurav Patil — Full Stack Developer & Software Engineer",
+        name: "Gaurav Patil — Full Stack Software Engineer Building Production-Ready Digital Systems",
         isPartOf: {
           "@id": `${baseUrl}/#website`,
         },
@@ -63,7 +68,7 @@ export function PortfolioJsonLd({ siteUrl }: PortfolioJsonLdProps = {}) {
           "@id": `${baseUrl}/#person`,
         },
         description:
-          "Official portfolio of Gaurav Patil, showcasing software engineering projects, web applications, tech stack, and experience.",
+          "Official portfolio of Gaurav Patil — Full Stack Software Engineer showcasing production-ready digital systems, web applications, and in-depth technical case studies.",
         inLanguage: "en-US",
       },
     ],

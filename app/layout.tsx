@@ -40,10 +40,10 @@ export async function generateMetadata(): Promise<Metadata> {
     const seo = seoResult.data || SEED_SEO;
 
     const canonicalUrl = seo.canonicalUrl || "https://gauravpatil.site";
-    const title = seo.title || "Gaurav Patil — Full Stack Developer & Software Engineer";
+    const title = seo.title || "Gaurav Patil — Full Stack Software Engineer Building Production-Ready Digital Systems";
     const description =
       seo.description ||
-      "Official portfolio of Gaurav Patil, a Full Stack Developer & Software Engineer based in India specializing in Next.js, React, TypeScript, and modern scalable web architecture.";
+      "Official portfolio of Gaurav Patil — Full Stack Software Engineer building production-ready digital systems, modern web applications, and high-performance software architectures.";
 
     const googleVerificationToken = seo.googleSiteVerification?.trim() || envGoogleVerification || undefined;
 
@@ -75,10 +75,13 @@ export async function generateMetadata(): Promise<Metadata> {
           : [
               "Gaurav Patil",
               "Gaurav Patil developer",
-              "Gaurav Patil full stack developer",
-              "Gaurav Patil software developer",
-              "Gaurav Patil portfolio",
-              "Gaurav Patil India",
+              "Gaurav Patil full stack software engineer",
+              "Full Stack Software Engineer",
+              "Software Engineering",
+              "Production-Ready Software",
+              "Web Applications",
+              "AI-Assisted Development",
+              "Technical Case Studies",
               "Next.js",
               "React",
               "TypeScript",
@@ -110,7 +113,7 @@ export async function generateMetadata(): Promise<Metadata> {
             url: seo.ogImageUrl || "https://gauravpatil.site/og-image.png",
             width: 1200,
             height: 630,
-            alt: "Gaurav Patil — Full Stack Developer & Software Engineer",
+            alt: title,
             type: "image/png",
           },
         ],
@@ -125,14 +128,17 @@ export async function generateMetadata(): Promise<Metadata> {
       },
     };
   } catch {
+    const fallbackTitle = "Gaurav Patil — Full Stack Software Engineer Building Production-Ready Digital Systems";
+    const fallbackDescription =
+      "Official portfolio of Gaurav Patil — Full Stack Software Engineer building production-ready digital systems, modern web applications, and high-performance software architectures.";
+
     return {
       metadataBase: new URL("https://gauravpatil.site"),
       title: {
-        default: "Gaurav Patil — Full Stack Developer & Software Engineer",
+        default: fallbackTitle,
         template: "%s | Gaurav Patil",
       },
-      description:
-        "Official portfolio of Gaurav Patil, a Full Stack Developer & Software Engineer based in India specializing in Next.js, React, TypeScript, and modern scalable web architecture.",
+      description: fallbackDescription,
       alternates: {
         canonical: "https://gauravpatil.site",
       },
@@ -163,9 +169,8 @@ export async function generateMetadata(): Promise<Metadata> {
       },
       manifest: "/manifest.webmanifest",
       openGraph: {
-        title: "Gaurav Patil — Full Stack Developer & Software Engineer",
-        description:
-          "Official portfolio of Gaurav Patil, a Full Stack Developer & Software Engineer based in India.",
+        title: fallbackTitle,
+        description: fallbackDescription,
         url: "https://gauravpatil.site",
         siteName: "Gaurav Patil Portfolio",
         locale: "en_US",
@@ -174,7 +179,7 @@ export async function generateMetadata(): Promise<Metadata> {
             url: "https://gauravpatil.site/og-image.png",
             width: 1200,
             height: 630,
-            alt: "Gaurav Patil — Full Stack Developer & Software Engineer",
+            alt: fallbackTitle,
             type: "image/png",
           },
         ],
@@ -182,9 +187,8 @@ export async function generateMetadata(): Promise<Metadata> {
       },
       twitter: {
         card: "summary_large_image",
-        title: "Gaurav Patil — Full Stack Developer & Software Engineer",
-        description:
-          "Official portfolio of Gaurav Patil, a Full Stack Developer & Software Engineer based in India.",
+        title: fallbackTitle,
+        description: fallbackDescription,
         creator: "@gauravpatil",
         images: ["https://gauravpatil.site/og-image.png"],
       },
