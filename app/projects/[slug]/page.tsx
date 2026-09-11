@@ -56,9 +56,51 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const resolved = resolveCaseStudy(slug);
 
   if (!resolved) {
+    const canonicalUrl = `https://gauravpatil.site/projects/${slug}`;
+    const formattedTitle = slug
+      .split("-")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+
     return {
-      title: "Project Not Found | Gaurav Patil",
-      robots: { index: false, follow: false },
+      title: `${formattedTitle} — Project Case Study | Gaurav Patil`,
+      description: `Explore the technical case study, software architecture, and implementation details for ${formattedTitle} by Gaurav Patil.`,
+      alternates: {
+        canonical: canonicalUrl,
+      },
+      robots: {
+        index: true,
+        follow: true,
+        googleBot: {
+          index: true,
+          follow: true,
+          "max-video-preview": -1,
+          "max-image-preview": "large",
+          "max-snippet": -1,
+        },
+      },
+      openGraph: {
+        title: `${formattedTitle} — Project Case Study | Gaurav Patil`,
+        description: `Explore the technical case study, software architecture, and implementation details for ${formattedTitle} by Gaurav Patil.`,
+        url: canonicalUrl,
+        siteName: "Gaurav Patil Portfolio",
+        type: "article",
+        images: [
+          {
+            url: "https://gauravpatil.site/og-image.png",
+            width: 1200,
+            height: 630,
+            alt: `${formattedTitle} | Gaurav Patil Portfolio`,
+          },
+        ],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: `${formattedTitle} — Project Case Study | Gaurav Patil`,
+        description: `Explore the technical case study and implementation details for ${formattedTitle} by Gaurav Patil.`,
+        creator: "@gauravpatil",
+        images: ["https://gauravpatil.site/og-image.png"],
+      },
     };
   }
 
@@ -77,6 +119,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     ],
     alternates: {
       canonical: canonicalUrl,
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
     },
     openGraph: {
       title: `${study.title} — Technical Case Study | Gaurav Patil`,
