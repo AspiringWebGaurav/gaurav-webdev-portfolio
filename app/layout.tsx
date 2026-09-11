@@ -31,6 +31,10 @@ export const viewport: Viewport = {
 };
 
 export async function generateMetadata(): Promise<Metadata> {
+  const envGoogleVerification =
+    process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim() ||
+    process.env.GOOGLE_SITE_VERIFICATION?.trim();
+
   try {
     const seoResult = await seoRepository.getSeo();
     const seo = seoResult.data || SEED_SEO;
@@ -40,6 +44,8 @@ export async function generateMetadata(): Promise<Metadata> {
     const description =
       seo.description ||
       "Official portfolio of Gaurav Patil, a Full Stack Developer & Software Engineer based in India specializing in Next.js, React, TypeScript, and modern scalable web architecture.";
+
+    const googleVerificationToken = seo.googleSiteVerification?.trim() || envGoogleVerification || undefined;
 
     return {
       metadataBase: new URL(canonicalUrl),
@@ -51,6 +57,18 @@ export async function generateMetadata(): Promise<Metadata> {
       alternates: {
         canonical: canonicalUrl,
       },
+      robots: {
+        index: true,
+        follow: true,
+        googleBot: {
+          index: true,
+          follow: true,
+          "max-video-preview": -1,
+          "max-image-preview": "large",
+          "max-snippet": -1,
+        },
+      },
+      verification: googleVerificationToken ? { google: googleVerificationToken } : undefined,
       keywords:
         seo.keywords && seo.keywords.length > 0
           ? seo.keywords
@@ -86,12 +104,14 @@ export async function generateMetadata(): Promise<Metadata> {
         description,
         url: canonicalUrl,
         siteName: "Gaurav Patil Portfolio",
+        locale: "en_US",
         images: [
           {
             url: seo.ogImageUrl || "https://gauravpatil.site/og-image.png",
             width: 1200,
             height: 630,
-            alt: "Gaurav Patil — Production Software Engineer",
+            alt: "Gaurav Patil — Full Stack Developer & Software Engineer",
+            type: "image/png",
           },
         ],
         type: "website",
@@ -116,6 +136,18 @@ export async function generateMetadata(): Promise<Metadata> {
       alternates: {
         canonical: "https://gauravpatil.site",
       },
+      robots: {
+        index: true,
+        follow: true,
+        googleBot: {
+          index: true,
+          follow: true,
+          "max-video-preview": -1,
+          "max-image-preview": "large",
+          "max-snippet": -1,
+        },
+      },
+      verification: envGoogleVerification ? { google: envGoogleVerification } : undefined,
       icons: {
         icon: [
           { url: "/favicon.ico", sizes: "any" },
@@ -136,12 +168,14 @@ export async function generateMetadata(): Promise<Metadata> {
           "Official portfolio of Gaurav Patil, a Full Stack Developer & Software Engineer based in India.",
         url: "https://gauravpatil.site",
         siteName: "Gaurav Patil Portfolio",
+        locale: "en_US",
         images: [
           {
             url: "https://gauravpatil.site/og-image.png",
             width: 1200,
             height: 630,
-            alt: "Gaurav Patil — Production Software Engineer",
+            alt: "Gaurav Patil — Full Stack Developer & Software Engineer",
+            type: "image/png",
           },
         ],
         type: "website",

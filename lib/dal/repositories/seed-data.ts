@@ -1000,6 +1000,7 @@ export const SEED_SEO: SeoDocument = {
   ],
   author: "Gaurav Patil",
   twitterHandle: "@gauravpatil",
+  googleSiteVerification: "",
   updatedAt: new Date().toISOString(),
   version: 1,
 };

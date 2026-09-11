@@ -1,39 +1,5 @@
-import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { HeroSection } from "@/components/portfolio/HeroSection";
-
-export const metadata: Metadata = {
-  title: "Gaurav Patil — Full Stack Developer & Software Engineer",
-  description:
-    "Official portfolio of Gaurav Patil, a Full Stack Developer & Software Engineer based in India specializing in Next.js, React, TypeScript, and modern scalable web architecture.",
-  alternates: {
-    canonical: "https://gauravpatil.site",
-  },
-  openGraph: {
-    title: "Gaurav Patil — Full Stack Developer & Software Engineer",
-    description:
-      "Official portfolio of Gaurav Patil, a Full Stack Developer & Software Engineer based in India specializing in Next.js, React, TypeScript, and modern scalable web architecture.",
-    url: "https://gauravpatil.site",
-    siteName: "Gaurav Patil Portfolio",
-    images: [
-      {
-        url: "https://gauravpatil.site/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Gaurav Patil — Production Software Engineer",
-      },
-    ],
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Gaurav Patil — Full Stack Developer & Software Engineer",
-    description:
-      "Official portfolio of Gaurav Patil, a Full Stack Developer & Software Engineer based in India specializing in Next.js, React, TypeScript, and modern scalable web architecture.",
-    creator: "@gauravpatil",
-    images: ["https://gauravpatil.site/og-image.png"],
-  },
-};
 import { FloatingNav } from "@/components/ui/FloatingNav";
 import ScrollToTop from "@/components/ui/ScrollToTop";
 import { LivePortfolioSync } from "@/components/portfolio/LivePortfolioSync";

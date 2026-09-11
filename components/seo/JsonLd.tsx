@@ -1,14 +1,20 @@
 import React from "react";
 
-export function PortfolioJsonLd() {
+interface PortfolioJsonLdProps {
+  siteUrl?: string;
+}
+
+export function PortfolioJsonLd({ siteUrl }: PortfolioJsonLdProps = {}) {
+  const baseUrl = (siteUrl || process.env.NEXT_PUBLIC_APP_URL || "https://gauravpatil.site").replace(/\/$/, "");
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "Person",
-        "@id": "https://gauravpatil.site/#person",
+        "@id": `${baseUrl}/#person`,
         name: "Gaurav Patil",
-        url: "https://gauravpatil.site",
+        url: baseUrl,
         jobTitle: ["Full Stack Developer", "Software Engineer"],
         description:
           "Full Stack Developer & Software Engineer based in India specializing in Next.js, React, TypeScript, and modern scalable web architecture.",
@@ -32,26 +38,26 @@ export function PortfolioJsonLd() {
       },
       {
         "@type": "WebSite",
-        "@id": "https://gauravpatil.site/#website",
-        url: "https://gauravpatil.site",
+        "@id": `${baseUrl}/#website`,
+        url: baseUrl,
         name: "Gaurav Patil Portfolio",
         description:
           "Official personal portfolio of Gaurav Patil — Full Stack Developer & Software Engineer.",
         publisher: {
-          "@id": "https://gauravpatil.site/#person",
+          "@id": `${baseUrl}/#person`,
         },
         inLanguage: "en-US",
       },
       {
         "@type": "ProfilePage",
-        "@id": "https://gauravpatil.site/#webpage",
-        url: "https://gauravpatil.site",
+        "@id": `${baseUrl}/#webpage`,
+        url: baseUrl,
         name: "Gaurav Patil — Full Stack Developer & Software Engineer",
         isPartOf: {
-          "@id": "https://gauravpatil.site/#website",
+          "@id": `${baseUrl}/#website`,
         },
         about: {
-          "@id": "https://gauravpatil.site/#person",
+          "@id": `${baseUrl}/#person`,
         },
         description:
           "Official portfolio of Gaurav Patil, showcasing software engineering projects, web applications, tech stack, and experience.",

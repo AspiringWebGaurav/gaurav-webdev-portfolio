@@ -211,6 +211,7 @@ export const SeoUpdateSchema = z.object({
   keywords: z.array(z.string()).default([]),
   author: z.string().min(1).max(100),
   twitterHandle: z.string().max(50).optional().or(z.literal("")),
+  googleSiteVerification: z.string().max(255).optional().or(z.literal("")),
   expectedVersion: z.number().int().optional(),
 });
 

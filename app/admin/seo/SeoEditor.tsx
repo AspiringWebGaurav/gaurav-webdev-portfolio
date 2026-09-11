@@ -10,6 +10,18 @@ import { BUTTON_HELP } from "@/lib/admin/constants/button-help";
 
 import { FaCheck, FaRotateRight, FaFloppyDisk } from "react-icons/fa6";
 
+function extractGoogleVerificationToken(input: string): string {
+  const trimmed = input.trim();
+  if (!trimmed) return "";
+  if (trimmed.includes("<meta") && trimmed.includes("google-site-verification")) {
+    const match = trimmed.match(/content=["']([^"']+)["']/i);
+    if (match && match[1]) {
+      return match[1].trim();
+    }
+  }
+  return trimmed;
+}
+
 export const SeoEditor: React.FC<{ initialData: SeoDocument | null }> = ({ initialData }) => {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -21,6 +33,7 @@ export const SeoEditor: React.FC<{ initialData: SeoDocument | null }> = ({ initi
     keywords: (initialData?.keywords || ["Developer", "Portfolio", "Frontend", "Next.js"]).join(", "),
     author: initialData?.author || "Gaurav Patil",
     twitterHandle: initialData?.twitterHandle || "@gauravpatil",
+    googleSiteVerification: initialData?.googleSiteVerification || "",
   });
 
   const [isPending, setIsPending] = useState(false);
@@ -37,6 +50,7 @@ export const SeoEditor: React.FC<{ initialData: SeoDocument | null }> = ({ initi
         keywords: (initialData.keywords || ["Developer", "Portfolio", "Frontend", "Next.js"]).join(", "),
         author: initialData.author || "Gaurav Patil",
         twitterHandle: initialData.twitterHandle || "@gauravpatil",
+        googleSiteVerification: initialData.googleSiteVerification || "",
       });
     }
   }, [initialData]);
@@ -62,6 +76,11 @@ export const SeoEditor: React.FC<{ initialData: SeoDocument | null }> = ({ initi
     setIsPending(true);
     setStatusMessage(null);
 
+    const cleanedVerification = extractGoogleVerificationToken(formData.googleSiteVerification);
+    if (cleanedVerification !== formData.googleSiteVerification) {
+      setFormData((prev) => ({ ...prev, googleSiteVerification: cleanedVerification }));
+    }
+
     const payload = {
       title: formData.title,
       description: formData.description,
@@ -70,6 +89,7 @@ export const SeoEditor: React.FC<{ initialData: SeoDocument | null }> = ({ initi
       keywords: formData.keywords.split(",").map((s) => s.trim()).filter(Boolean),
       author: formData.author,
       twitterHandle: formData.twitterHandle,
+      googleSiteVerification: cleanedVerification,
     };
 
     const res = await updateSeoAction(payload);
@@ -209,6 +229,28 @@ export const SeoEditor: React.FC<{ initialData: SeoDocument | null }> = ({ initi
               placeholder="@gauravpatil"
             />
           </div>
+        </div>
+      </div>
+
+      <div className="bg-[#FFFFFF] border border-[#E5E7EB] rounded-sm p-6 sm:p-7 space-y-6 shadow-2xs w-full">
+        <h2 className="text-lg font-bold font-admin-sans text-black border-b border-[#F1F5F9] pb-3.5">
+          Google Search Console Verification
+        </h2>
+
+        <div className="space-y-2">
+          <label className="block text-xs font-admin-mono uppercase tracking-wider text-[#475569] font-bold">
+            Google Search Console Verification Token
+          </label>
+          <input
+            type="text"
+            value={formData.googleSiteVerification}
+            onChange={(e) => setFormData({ ...formData, googleSiteVerification: e.target.value })}
+            className="w-full px-3.5 py-2.5 text-sm border border-[#E2E8F0] rounded-sm bg-[#FAFAFA] focus:bg-[#FFFFFF] focus:ring-1 focus:ring-[#7C3AED] focus:border-[#7C3AED] transition-all font-mono text-xs"
+            placeholder='ABC123xyz... or <meta name="google-site-verification" content="..." />'
+          />
+          <p className="text-xs text-[#64748B] font-admin-sans leading-relaxed">
+            Paste the verification token provided by Google Search Console. You may paste either the raw token or the complete google-site-verification meta tag.
+          </p>
         </div>
       </div>
 

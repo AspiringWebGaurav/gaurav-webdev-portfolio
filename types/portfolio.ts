@@ -265,6 +265,7 @@ export interface SeoDocument {
   keywords: string[];
   author: string;
   twitterHandle?: string;
+  googleSiteVerification?: string;
   updatedAt: string;
   version: number;
 }
