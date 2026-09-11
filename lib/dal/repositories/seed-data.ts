@@ -559,6 +559,30 @@ export const SEED_PROJECTS: ProjectDocument[] = [
     updatedAt: new Date().toISOString(),
     version: 1,
   },
+  {
+    id: "proj_15",
+    order: 15,
+    title: "Deggy — Enterprise Guard Tour System & B2B Platform",
+    slug: "deggy",
+    description: "Official commercial platform for Deggy Guard Tour Systems, engineered with WordPress, WooCommerce, SiteOrigin Page Builder, and bespoke responsive CSS architecture.",
+    coverImageStoragePath: "/og-image.png",
+    coverImage: "/og-image.png",
+    images: ["/og-image.png"],
+    iconLists: [
+      "/host.svg",
+      "/cloud.svg",
+      "/link.svg",
+    ],
+    liveUrl: "https://deggy.com/",
+    docsUrl: "https://helpcenter.deggy.com/",
+    licenseStatus: "Commercial Enterprise Platform · Proprietary",
+    contractStatus: "Commercial Enterprise Software SLA",
+    isFeatured: true,
+    isPublished: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    version: 1,
+  },
 ];
 
 export const SEED_TESTIMONIALS: TestimonialDocument[] = [

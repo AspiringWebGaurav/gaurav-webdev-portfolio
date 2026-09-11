@@ -795,4 +795,72 @@ export const PROJECT_CASE_STUDIES: Record<string, ProjectCaseStudy> = {
       "Seamless client and recruiter onboarding hub",
     ],
   },
+  deggy: {
+    slug: "deggy",
+    projectId: "proj_15",
+    title: "Deggy — Enterprise Guard Tour System & B2B E-Commerce Platform",
+    subtitle:
+      "Official commercial platform for Deggy Guard Tour Systems, engineered with WordPress, WooCommerce, SiteOrigin Page Builder, and bespoke responsive CSS architecture.",
+    category: "WordPress, WooCommerce & Enterprise B2B Platform",
+    role: "Frontend Web Developer & WordPress Engineer",
+    timeline: "2024 – 2026",
+    technologies: [
+      "WordPress",
+      "WooCommerce",
+      "SiteOrigin Page Builder",
+      "PHP",
+      "Custom CSS3 / Flexbox",
+      "JavaScript",
+      "YITH Request a Quote",
+      "Yoast SEO",
+      "Tiered Pricing Engine",
+    ],
+    liveUrl: "https://deggy.com/",
+    docsUrl: "https://helpcenter.deggy.com/",
+    coverImage: "/og-image.png",
+    images: ["/og-image.png"],
+    licenseStatus: "Commercial Enterprise Platform · Proprietary",
+    contractStatus: "Commercial Enterprise Software SLA",
+    licenseDetails:
+      "Deggy Guard Tour Systems is an enterprise security equipment and checkpoint software manufacturer trusted by over 10,000 corporate clients globally across 35+ years. The web portal is a proprietary commercial B2B platform operating under client agreement.",
+    overview:
+      "Deggy is the official digital presence and B2B commercial store for Deggy Guard Tour Systems, an industry leader in security patrol tracking and checkpoint verification. The platform features an extensive catalog of industrial-grade security equipment—including the rugged Deggy Steel Pen data reader, cloud download stations, RFID checkpoints, and the AI-driven Deggy NXT mobile app. Built on WordPress and WooCommerce using SiteOrigin Page Builder, I engineered custom responsive CSS modules (such as bespoke business solution cards, mobile-responsive grids, and interactive blue statistics counters), configured an enterprise Request a Quote system, structured multi-tiered volume pricing for hardware purchases, and optimized SEO structured data graphs.",
+    architecture: {
+      title: "WordPress & WooCommerce Architecture with Bespoke Component Styling",
+      description:
+        "Architected on a robust WordPress and WooCommerce core, leveraging SiteOrigin modular panels styled with custom CSS and enhanced with B2B quotation workflows.",
+      points: [
+        "Bespoke UI & Custom CSS Modules: Handcrafted responsive card containers, interactive telemetry statistics bars, and cross-breakpoint flexbox layouts.",
+        "WooCommerce B2B Request a Quote: Integrated YITH Request a Quote allowing security contractors and facility managers to submit custom bulk quotation requests.",
+        "Tiered Pricing Tables: Configured dynamic volume pricing tables for checkpoint buttons, steel wands, and docking stations to support wholesale purchasing.",
+        "Technical SEO & Structured Graphs: Configured comprehensive Schema.org JSON-LD FAQPage and Organization graphs using Yoast SEO to maximize search visibility.",
+        "Performance & Mobile Layout Tuning: Styled SiteOrigin grid panels and responsive menus (RMP) to eliminate layout shift and horizontal scrollbars across all screen sizes.",
+      ],
+    },
+    challenges: [
+      {
+        title: "Translating complex enterprise hardware tiers into an intuitive B2B buyer journey",
+        solution:
+          "Implemented dynamic tiered pricing tables alongside a custom YITH Request a Quote workflow, allowing facility managers to either purchase equipment packages directly or request custom enterprise quotes.",
+      },
+      {
+        title: "Achieving seamless cross-device responsiveness on complex SiteOrigin multi-column panels",
+        solution:
+          "Authored custom scoped CSS media queries and flex-basis calculations, ensuring hardware showcase cards, video embeds, and technical specification grids adapt smoothly without horizontal overflow.",
+      },
+    ],
+    features: [
+      "Custom responsive business solution cards and interactive hardware showcases",
+      "WooCommerce store with B2B Request a Quote workflow for enterprise inquiries",
+      "Volume-based tiered pricing tables for RFID checkpoints and steel pen readers",
+      "Dynamic interactive company statistics bar with custom mobile flex layouts",
+      "Multi-step international lead capture powered by Forminator and custom JS",
+      "Schema.org FAQ and Organization structured data for enhanced search presence",
+    ],
+    results: [
+      "Modernized B2B user experience serving over 10,000 international security clients",
+      "Zero layout shifts across complex multi-column SiteOrigin hardware displays",
+      "Streamlined enterprise quoting pipeline from visitor inquiry to sales follow-up",
+    ],
+  },
 };

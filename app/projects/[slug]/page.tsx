@@ -26,6 +26,7 @@ const SHORT_SLUG_MAP: Record<string, string> = {
   gauravbuilds: "gauravbuilds-developer-showcase",
   gauravwatch: "gauravwatch-movie-streaming",
   connectgaurav: "connectgaurav-social-platform",
+  "deggy-guard-tour-system": "deggy",
 };
 
 function resolveCaseStudy(slug: string) {
@@ -63,7 +64,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       .join(" ");
 
     return {
-      title: `${formattedTitle} — Project Case Study | Gaurav Patil`,
+      title: `${formattedTitle} — Project Case Study`,
       description: `Explore the technical case study, software architecture, and implementation details for ${formattedTitle} by Gaurav Patil.`,
       alternates: {
         canonical: canonicalUrl,
@@ -108,7 +109,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const canonicalUrl = `https://gauravpatil.site/projects/${canonicalSlug}`;
 
   return {
-    title: `${study.title} — Technical Case Study | Gaurav Patil`,
+    title: `${study.title} — Technical Case Study`,
     description: study.subtitle,
     keywords: [
       study.title,
