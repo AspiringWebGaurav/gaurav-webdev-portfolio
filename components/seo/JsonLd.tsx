@@ -7,40 +7,44 @@ interface PortfolioJsonLdProps {
 export function PortfolioJsonLd({ siteUrl }: PortfolioJsonLdProps = {}) {
   const baseUrl = (siteUrl || process.env.NEXT_PUBLIC_APP_URL || "https://gauravpatil.site").replace(/\/$/, "");
 
+  const personEntity = {
+    "@type": "Person",
+    "@id": `${baseUrl}/#person`,
+    name: "Gaurav Patil",
+    alternateName: "AspiringWebGaurav",
+    url: `${baseUrl}/`,
+    image: `${baseUrl}/og-image.png`,
+    jobTitle: ["Full Stack Software Engineer", "Software Engineer"],
+    description:
+      "Full Stack Software Engineer building production-ready digital systems, scalable web applications, and high-performance software architectures.",
+    email: "mailto:hello@gauravpatil.site",
+    nationality: {
+      "@type": "Country",
+      name: "India",
+    },
+    sameAs: ["https://github.com/AspiringWebGaurav"],
+    knowsAbout: [
+      "Next.js",
+      "React",
+      "TypeScript",
+      "JavaScript",
+      "Tailwind CSS",
+      "Node.js",
+      "Software Engineering",
+      "Production-Ready Software",
+      "Web Applications",
+      "AI-Assisted Development",
+      "Technical Case Studies",
+      "Three.js",
+      "Web Performance Optimization",
+      "Cloud Architecture",
+    ],
+  };
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
-      {
-        "@type": "Person",
-        "@id": `${baseUrl}/#person`,
-        name: "Gaurav Patil",
-        url: `${baseUrl}/`,
-        jobTitle: ["Full Stack Software Engineer", "Software Engineer"],
-        description:
-          "Full Stack Software Engineer building production-ready digital systems, scalable web applications, and high-performance software architectures.",
-        email: "mailto:hello@gauravpatil.site",
-        nationality: {
-          "@type": "Country",
-          name: "India",
-        },
-        sameAs: ["https://github.com/AspiringWebGaurav"],
-        knowsAbout: [
-          "Next.js",
-          "React",
-          "TypeScript",
-          "JavaScript",
-          "Tailwind CSS",
-          "Node.js",
-          "Software Engineering",
-          "Production-Ready Software",
-          "Web Applications",
-          "AI-Assisted Development",
-          "Technical Case Studies",
-          "Three.js",
-          "Web Performance Optimization",
-          "Cloud Architecture",
-        ],
-      },
+      personEntity,
       {
         "@type": "WebSite",
         "@id": `${baseUrl}/#website`,
@@ -64,11 +68,11 @@ export function PortfolioJsonLd({ siteUrl }: PortfolioJsonLdProps = {}) {
         about: {
           "@id": `${baseUrl}/#person`,
         },
-        mainEntity: {
-          "@id": `${baseUrl}/#person`,
-        },
+        mainEntity: personEntity,
         description:
           "Official portfolio of Gaurav Patil — Full Stack Software Engineer showcasing production-ready digital systems, web applications, and in-depth technical case studies.",
+        dateCreated: "2024-01-01T00:00:00+00:00",
+        dateModified: "2026-09-13T00:00:00+00:00",
         inLanguage: "en-US",
       },
     ],
