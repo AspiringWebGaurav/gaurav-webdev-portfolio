@@ -90,11 +90,11 @@ const nextConfig: NextConfig = {
 
   async redirects() {
     return [
-      { source: "/about", destination: "/#about", permanent: true },
-      { source: "/testimonials", destination: "/#testimonials", permanent: true },
-      { source: "/experience", destination: "/#experience", permanent: true },
-      { source: "/approach", destination: "/#approach", permanent: true },
-      { source: "/contact", destination: "/#contact", permanent: true },
+      { source: "/about", destination: "/", permanent: true },
+      { source: "/testimonials", destination: "/", permanent: true },
+      { source: "/experience", destination: "/", permanent: true },
+      { source: "/approach", destination: "/", permanent: true },
+      { source: "/contact", destination: "/", permanent: true },
     ];
   },
 

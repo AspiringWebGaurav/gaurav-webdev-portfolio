@@ -61,7 +61,7 @@ async function main() {
       // Check footer links
       const termsLink = footer.locator('a[href="/terms"]');
       const privacyLink = footer.locator('a[href="/privacy"]');
-      const chatGuideLink = footer.locator('a[href="/chat?guide=true"]');
+      const chatGuideLink = footer.locator('a[href="/chat"]');
       const securityLink = footer.locator('a[href="/security"]');
       const accessibilityLink = footer.locator('a[href="/accessibility"]');
 

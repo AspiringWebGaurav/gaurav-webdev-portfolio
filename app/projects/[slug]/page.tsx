@@ -1,6 +1,7 @@
 import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { permanentRedirect } from "next/navigation";
 import { FaLocationArrow, FaGithub, FaCheck, FaLightbulb, FaLayerGroup, FaBookOpen, FaShieldHalved, FaScaleBalanced } from "react-icons/fa6";
 import { ProjectImageSlider } from "@/components/portfolio/ProjectImageSlider";
 import { PROJECT_CASE_STUDIES } from "@/lib/data/case-studies";
@@ -15,17 +16,17 @@ const SHORT_SLUG_MAP: Record<string, string> = {
   send2me: "send2me-p2p-file-transfer",
   switchyy: "switchyy-mode-control",
   daretosend: "daretosend-anonymous-feedback",
-  xurl: "xurl-smart-shortener",
-  gpmas: "gpmas-enterprise-hrms",
-  gmp: "gmp-mobile-store",
+  xurl: "xurl-smart-url-shortener",
+  gpmas: "gpmas-mail-automation",
+  gmp: "gmp-enterprise-portal",
   gpdrive: "gpdrive-cloud-storage",
-  myfit: "myfit-fitness-tracking",
-  gpnotes: "gpnotes-secure-notes",
+  myfit: "myfit-fitness-tracker",
+  gpnotes: "gpnotes-encrypted-notes",
   bgmiid: "bgmiid-gaming-identity",
-  gauravwork: "gauravwork-freelance-platform",
-  gauravbuilds: "gauravbuilds-developer-showcase",
-  gauravwatch: "gauravwatch-movie-streaming",
-  connectgaurav: "connectgaurav-social-platform",
+  gauravwork: "gauravwork-developer-workspace",
+  gauravbuilds: "gauravbuilds-artifacts-hub",
+  gauravwatch: "gauravwatch-precision-chronograph",
+  connectgaurav: "connectgaurav-developer-hub",
   "deggy-guard-tour-system": "deggy",
 };
 
@@ -45,9 +46,7 @@ function resolveCaseStudy(slug: string) {
 }
 
 export async function generateStaticParams() {
-  const fullSlugs = Object.keys(PROJECT_CASE_STUDIES);
-  const shortSlugs = Object.keys(SHORT_SLUG_MAP);
-  return [...new Set([...fullSlugs, ...shortSlugs])].map((slug) => ({
+  return Object.keys(PROJECT_CASE_STUDIES).map((slug) => ({
     slug,
   }));
 }
@@ -217,6 +216,10 @@ export default async function ProjectCaseStudyPage({ params }: PageProps) {
         </div>
       </main>
     );
+  }
+
+  if (resolved.shouldRedirect) {
+    permanentRedirect(`/projects/${resolved.canonicalSlug}`);
   }
 
   const { study, canonicalSlug } = resolved;
