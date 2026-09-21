@@ -116,6 +116,7 @@ export async function createProjectAction(formData: unknown): Promise<ActionResu
     revalidateTag("portfolio-cms");
     revalidateTag("portfolio-projects");
     revalidatePath("/");
+    revalidatePath("/projects");
     await emitCmsChangeSignal("projects", result.data.version);
     return { success: true, data: result.data };
   } catch (err: unknown) {
@@ -133,6 +134,7 @@ export async function updateProjectAction(id: string, formData: unknown): Promis
     revalidateTag("portfolio-cms");
     revalidateTag("portfolio-projects");
     revalidatePath("/");
+    revalidatePath("/projects");
     await emitCmsChangeSignal("projects", result.data.version);
     return { success: true, data: result.data };
   } catch (err: unknown) {
@@ -149,6 +151,7 @@ export async function deleteProjectAction(id: string): Promise<ActionResult> {
     revalidateTag("portfolio-cms");
     revalidateTag("portfolio-projects");
     revalidatePath("/");
+    revalidatePath("/projects");
     await emitCmsChangeSignal("projects");
     return { success: true };
   } catch (err: unknown) {
@@ -166,6 +169,7 @@ export async function reorderProjectsAction(orderedIds: string[]): Promise<Actio
     revalidateTag("portfolio-cms");
     revalidateTag("portfolio-projects");
     revalidatePath("/");
+    revalidatePath("/projects");
     await emitCmsChangeSignal("projects");
     return { success: true };
   } catch (err: unknown) {

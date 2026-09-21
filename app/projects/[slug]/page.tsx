@@ -10,8 +10,6 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-export const revalidate = 60;
-
 const SHORT_SLUG_MAP: Record<string, string> = {
   send2me: "send2me-p2p-file-transfer",
   switchyy: "switchyy-mode-control",

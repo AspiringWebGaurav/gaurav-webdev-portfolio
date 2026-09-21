@@ -110,20 +110,12 @@ export function LivePortfolioSync() {
       }
     } catch {}
 
-    // 4. Reconnection & Visibility Resync Handler
+    // 4. Reconnection Handler
     const handleReconnection = () => {
       triggerRefresh({ timestamp: Date.now() });
     };
 
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        // Quick coalesced refresh on tab refocus after potential idle time
-        triggerRefresh({ timestamp: Date.now() });
-      }
-    };
-
     window.addEventListener("online", handleReconnection);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       isMounted = false;
@@ -148,7 +140,6 @@ export function LivePortfolioSync() {
       }
 
       window.removeEventListener("online", handleReconnection);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [router]);
 
