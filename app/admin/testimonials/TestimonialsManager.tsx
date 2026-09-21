@@ -127,7 +127,7 @@ export const TestimonialsManager: React.FC<{ initialTestimonials: TestimonialDoc
       role: editingItem.role || "",
       company: editingItem.company || "",
       quote: editingItem.quote || "",
-      avatarUrl: editingItem.avatarUrl || "/profile.svg",
+      avatarUrl: editingItem.avatarUrl || "/profile.webp",
       avatarStoragePath: editingItem.avatarStoragePath || "",
       isPublished: editingItem.isPublished ?? true,
     };
@@ -193,7 +193,7 @@ export const TestimonialsManager: React.FC<{ initialTestimonials: TestimonialDoc
               role: "Director of Technology",
               company: "Company Inc",
               quote: "",
-              avatarUrl: "/profile.svg",
+              avatarUrl: "/profile.webp",
               isPublished: true,
             });
           }}

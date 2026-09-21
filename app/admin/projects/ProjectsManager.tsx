@@ -197,7 +197,7 @@ export const ProjectsManager: React.FC<{ initialProjects: ProjectDocument[] }> =
             setEditingProject({
               title: "",
               description: "",
-              coverImage: "/p1.svg",
+              coverImage: "/p1.webp",
               images: [],
               iconLists: ["/re.svg", "/next.svg", "/webrtc.svg", "/rust.svg", "/tauri.svg", "/tail.svg", "/firebase.svg"],
               liveUrl: "https://",

@@ -533,7 +533,7 @@ export const CardsEditor: React.FC<{ initialCards: BentoCardDocument[] }> = ({ i
                 value={currentCard.img || ""}
                 onChange={(e) => handleUpdateField("img", e.target.value)}
                 className="w-full px-3.5 py-2.5 text-sm border border-[#E2E8F0] rounded-sm bg-[#FAFAFA] focus:bg-[#FFFFFF] focus:outline-hidden focus:ring-1 focus:ring-[#7C3AED] focus:border-[#7C3AED] transition-all"
-                placeholder="/b1.svg, /b4.svg, /b5.svg"
+                placeholder="/b1.webp, /b4.svg, /b5.webp"
               />
             </div>
 
@@ -546,7 +546,7 @@ export const CardsEditor: React.FC<{ initialCards: BentoCardDocument[] }> = ({ i
                 value={currentCard.spareImg || ""}
                 onChange={(e) => handleUpdateField("spareImg", e.target.value)}
                 className="w-full px-3.5 py-2.5 text-sm border border-[#E2E8F0] rounded-sm bg-[#FAFAFA] focus:bg-[#FFFFFF] focus:outline-hidden focus:ring-1 focus:ring-[#7C3AED] focus:border-[#7C3AED] transition-all"
-                placeholder="/grid.svg"
+                placeholder="/grid.webp"
               />
             </div>
           </div>
