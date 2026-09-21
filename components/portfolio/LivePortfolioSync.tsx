@@ -110,13 +110,6 @@ export function LivePortfolioSync() {
       }
     } catch {}
 
-    // 4. Reconnection Handler
-    const handleReconnection = () => {
-      triggerRefresh({ timestamp: Date.now() });
-    };
-
-    window.addEventListener("online", handleReconnection);
-
     return () => {
       isMounted = false;
 
@@ -138,8 +131,6 @@ export function LivePortfolioSync() {
           firestoreUnsub();
         } catch {}
       }
-
-      window.removeEventListener("online", handleReconnection);
     };
   }, [router]);
 

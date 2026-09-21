@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { ADMIN_COOKIE_NAME } from "@/lib/admin/constants";
 import { verifyAdminSession } from "@/lib/admin/auth";
 import { legalDocumentsRepository } from "@/lib/dal/repositories/legal-documents.repository";
-import { resolveAppUrl } from "@/lib/email/brevo";
+import { executeLegalJobWorker } from "@/lib/legal/legal-job-runner";
 import type { LegalNotificationJobDocument } from "@/types/legal";
 
 export const dynamic = "force-dynamic";
@@ -48,26 +48,14 @@ export async function GET(req: NextRequest): Promise<Response> {
     }
   }
 
-  // 3. Trigger processor for each recoverable job asynchronously
-  const appBaseUrl = resolveAppUrl(req.headers);
-  const workerSecret =
-    process.env.CRON_SECRET ||
-    process.env.JWT_SECRET ||
-    "internal_legal_worker_secret";
-
+  // 3. Trigger worker for each recoverable job directly in-process asynchronously
   after(async () => {
     await Promise.allSettled(
       recoverableJobs.map(async (job) => {
         try {
-          await fetch(`${appBaseUrl}/api/admin/legal/jobs/${job.id}/process`, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${workerSecret}`,
-              "Content-Type": "application/json",
-            },
-          });
+          await executeLegalJobWorker(job.id);
         } catch (err) {
-          console.error(`[LegalCronRecovery] Failed to trigger job ${job.id}:`, err);
+          console.error(`[LegalCronRecovery] Failed to execute job ${job.id}:`, err);
         }
       })
     );

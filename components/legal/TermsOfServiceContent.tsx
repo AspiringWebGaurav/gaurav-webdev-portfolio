@@ -650,7 +650,7 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
                 <span>8. Administrative Subsystem Isolation &amp; 2FA Governance</span>
               </h2>
               <p>
-                The administrative panel (<code className="text-purple font-mono">/admin/*</code>) is an isolated workspace strictly restricted to authorized Superadmins. Administrative access requires Google OAuth 2.0 PKCE, salted HMAC-SHA256 Two-Factor Authentication (OTP), and zero-lockout IP security verification. Administrative access and data operations are governed separately under the <Link href="/admin/terms" className="text-purple hover:underline font-semibold">Administrator Terms of Service</Link>.
+                The administrative panel (<code className="text-purple font-mono">/admin/*</code>) is an isolated workspace strictly restricted to authorized Superadmins. Administrative access requires Google OAuth 2.0 PKCE, salted HMAC-SHA256 Two-Factor Authentication (OTP), and zero-lockout IP security verification. Administrative access and data operations are governed separately under the <Link href="/admin/terms" prefetch={false} className="text-purple hover:underline font-semibold">Administrator Terms of Service</Link>.
               </p>
             </section>
           )}

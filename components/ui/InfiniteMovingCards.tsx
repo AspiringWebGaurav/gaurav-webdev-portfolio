@@ -114,7 +114,7 @@ export const InfiniteMovingCards = ({
                       </div>
                     ) : (
                       <img
-                        src={item.avatar || "/profile.svg"}
+                        src={item.avatar || "/profile.webp"}
                         alt={item.name}
                         className="w-[50px] h-[50px] rounded-full object-cover border border-white/[0.12] shadow-md"
                       />

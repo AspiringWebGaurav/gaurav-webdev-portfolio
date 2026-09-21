@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { cloudflareRepository } from "@/lib/dal/repositories/cms/cloudflare.repository";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+export const dynamic = "force-static";
+export const revalidate = 86400;
 
 export async function GET() {
   try {

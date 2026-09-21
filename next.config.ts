@@ -95,6 +95,22 @@ const nextConfig: NextConfig = {
       { source: "/experience", destination: "/", permanent: true },
       { source: "/approach", destination: "/", permanent: true },
       { source: "/contact", destination: "/", permanent: true },
+      // Case study short-slug aliases (Edge-level 308 redirects, 0 serverless invocations)
+      { source: "/projects/send2me", destination: "/projects/send2me-p2p-file-transfer", permanent: true },
+      { source: "/projects/switchyy", destination: "/projects/switchyy-mode-control", permanent: true },
+      { source: "/projects/daretosend", destination: "/projects/daretosend-anonymous-feedback", permanent: true },
+      { source: "/projects/xurl", destination: "/projects/xurl-smart-url-shortener", permanent: true },
+      { source: "/projects/gpmas", destination: "/projects/gpmas-mail-automation", permanent: true },
+      { source: "/projects/gmp", destination: "/projects/gmp-enterprise-portal", permanent: true },
+      { source: "/projects/gpdrive", destination: "/projects/gpdrive-cloud-storage", permanent: true },
+      { source: "/projects/myfit", destination: "/projects/myfit-fitness-tracker", permanent: true },
+      { source: "/projects/gpnotes", destination: "/projects/gpnotes-encrypted-notes", permanent: true },
+      { source: "/projects/bgmiid", destination: "/projects/bgmiid-gaming-identity", permanent: true },
+      { source: "/projects/gauravwork", destination: "/projects/gauravwork-developer-workspace", permanent: true },
+      { source: "/projects/gauravbuilds", destination: "/projects/gauravbuilds-artifacts-hub", permanent: true },
+      { source: "/projects/gauravwatch", destination: "/projects/gauravwatch-precision-chronograph", permanent: true },
+      { source: "/projects/connectgaurav", destination: "/projects/connectgaurav-developer-hub", permanent: true },
+      { source: "/projects/deggy-guard-tour-system", destination: "/projects/deggy", permanent: true },
     ];
   },
 
