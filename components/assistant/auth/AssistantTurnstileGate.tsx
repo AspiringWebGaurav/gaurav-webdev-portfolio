@@ -273,7 +273,7 @@ export const AssistantTurnstileGate: React.FC<AssistantTurnstileGateProps> = ({
     };
   }, [cleanupWidget]);
 
-  // Lifecycle handler for closing with X button (resets state so next open retriggers cleanly)
+  // Lifecycle handler for closing (resets state so next open retriggers cleanly)
   const handleCloseClick = useCallback(
     (e?: React.MouseEvent) => {
       if (e) {
@@ -282,15 +282,18 @@ export const AssistantTurnstileGate: React.FC<AssistantTurnstileGateProps> = ({
       }
 
       // Reset transient error/timeout states on user dismissal
-      if (activeStatus === "ERROR" || activeStatus === "TIMEOUT") {
-        setStatus("READY");
-        setErrorMessage(null);
-        setFailureCount(0);
-      }
+      setStatus((prev) => {
+        if (prev === "ERROR" || prev === "TIMEOUT") {
+          setErrorMessage(null);
+          setFailureCount(0);
+          return "READY";
+        }
+        return prev;
+      });
 
       onClose();
     },
-    [activeStatus, onClose]
+    [onClose]
   );
 
   // 4. Click outside to dismiss popover (active when open)
@@ -317,7 +320,7 @@ export const AssistantTurnstileGate: React.FC<AssistantTurnstileGateProps> = ({
       document.removeEventListener("mousedown", handlePointerDownOutside);
       document.removeEventListener("touchstart", handlePointerDownOutside);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, handleCloseClick]);
 
   // 5. Countdown timer for Fallback OTP
   useEffect(() => {
