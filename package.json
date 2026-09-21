@@ -6,15 +6,9 @@
     "dev": "next dev --turbo",
     "dev:webpack": "next dev",
     "dev:turbo": "next dev --turbo",
-    "clear": "node scripts/clear.js",
-    "clean": "node scripts/clean.js",
-    "dev:clear": "node scripts/clear.js && next dev --turbo",
-    "dev:clean": "node scripts/clean.js && npm install && next dev --turbo",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "push:notify": "node scripts/notify-push.mjs",
-    "firestore:indexes": "node scripts/deploy-firestore-indexes.mjs"
+    "lint": "next lint"
   },
   "dependencies": {
     "@js-sdsl/ordered-map": "^4.4.2",
