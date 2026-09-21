@@ -17,6 +17,7 @@ import {
   EMAIL_TYPOGRAPHY,
 } from "./layout";
 import { fetchWithTimeout } from "@/lib/api/fetcher";
+import { sendResendEmail } from "./resend";
 
 const BREVO_API_ENDPOINT = "https://api.brevo.com/v3/smtp/email";
 
@@ -198,12 +199,6 @@ export async function sendTransactionalEmail(
   options: SendTransactionalEmailOptions
 ): Promise<SendEmailResult> {
   const apiKey = process.env.BREVO_API_KEY;
-  if (!apiKey) {
-    return {
-      success: false,
-      error: "BREVO_API_KEY is not configured in server environment.",
-    };
-  }
 
   // Determine sender identity: explicit identity > purpose-derived identity > default HELLO
   const senderIdentity =
@@ -211,6 +206,29 @@ export async function sendTransactionalEmail(
     (options.purpose
       ? getEmailIdentityForPurpose(options.purpose)
       : EMAIL_IDENTITIES.HELLO);
+
+  if (!apiKey) {
+    if (process.env.RESEND_API_KEY?.trim()) {
+      const resendRes = await sendResendEmail({
+        from: `${options.senderName?.trim() || senderIdentity.name} <${senderIdentity.email}>`,
+        to: options.to.map((rec) => ({ email: rec.email.trim().toLowerCase(), name: rec.name?.trim() || undefined })),
+        subject: options.subject || "Notification",
+        html: options.htmlContent || options.textContent || "",
+        text: options.textContent,
+        replyTo: options.replyTo ? options.replyTo.email : senderIdentity.defaultReplyTo,
+      });
+      return {
+        success: resendRes.success,
+        messageId: resendRes.messageId,
+        error: resendRes.error,
+        statusCode: resendRes.statusCode,
+      };
+    }
+    return {
+      success: false,
+      error: "BREVO_API_KEY is not configured in server environment.",
+    };
+  }
 
   const payload: Record<string, unknown> = {
     sender: {
@@ -306,6 +324,26 @@ export async function sendTransactionalEmail(
       `Brevo API returned HTTP ${res.status}`;
     console.warn(`Brevo API Error (HTTP ${res.status}):`, data);
 
+    // Seamless failover to Resend if Brevo is unauthorized, down, or fails
+    if (process.env.RESEND_API_KEY?.trim()) {
+      console.info("Failing over transactional email dispatch to Resend...");
+      const resendRes = await sendResendEmail({
+        from: `${options.senderName?.trim() || senderIdentity.name} <${senderIdentity.email}>`,
+        to: options.to.map((rec) => ({ email: rec.email.trim().toLowerCase(), name: rec.name?.trim() || undefined })),
+        subject: options.subject || "Notification",
+        html: options.htmlContent || options.textContent || "",
+        text: options.textContent,
+        replyTo: options.replyTo ? options.replyTo.email : senderIdentity.defaultReplyTo,
+      });
+      if (resendRes.success) {
+        return {
+          success: true,
+          messageId: resendRes.messageId,
+          statusCode: 200,
+        };
+      }
+    }
+
     return {
       success: false,
       error: errorMessage,
@@ -316,6 +354,27 @@ export async function sendTransactionalEmail(
     const isTimeout =
       error.name === "AbortError" ||
       (typeof error === "object" && error !== null && "code" in error && (error as { code?: unknown }).code === "GATEWAY_TIMEOUT");
+
+    // Seamless failover to Resend on network error or timeout
+    if (process.env.RESEND_API_KEY?.trim()) {
+      console.info("Failing over transactional email dispatch to Resend (network error)...");
+      const resendRes = await sendResendEmail({
+        from: `${options.senderName?.trim() || senderIdentity.name} <${senderIdentity.email}>`,
+        to: options.to.map((rec) => ({ email: rec.email.trim().toLowerCase(), name: rec.name?.trim() || undefined })),
+        subject: options.subject || "Notification",
+        html: options.htmlContent || options.textContent || "",
+        text: options.textContent,
+        replyTo: options.replyTo ? options.replyTo.email : senderIdentity.defaultReplyTo,
+      });
+      if (resendRes.success) {
+        return {
+          success: true,
+          messageId: resendRes.messageId,
+          statusCode: 200,
+        };
+      }
+    }
+
     return {
       success: false,
       error: isTimeout

@@ -203,6 +203,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className="dark">
+      <head>
+        <link rel="preconnect" href="https://challenges.cloudflare.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://challenges.cloudflare.com" />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <ThemeProvider
           attribute="class"

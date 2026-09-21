@@ -636,16 +636,14 @@ export const AssistantBubble: React.FC<AssistantBubbleProps> = ({ config }) => {
         initialView={initialView}
       />
 
-      {/* Cloudflare Turnstile Verification Dynamic Popover */}
-      {isTurnstileGateOpen && (
-        <AssistantTurnstileGate
-          isOpen={isTurnstileGateOpen}
-          onClose={() => setIsTurnstileGateOpen(false)}
-          onVerified={handleTurnstileVerified}
-          positionMode={positionMode}
-          customPosition={customPosition}
-        />
-      )}
+      {/* Cloudflare Turnstile Verification Dynamic Popover (persistent in DOM) */}
+      <AssistantTurnstileGate
+        isOpen={isTurnstileGateOpen}
+        onClose={() => setIsTurnstileGateOpen(false)}
+        onVerified={handleTurnstileVerified}
+        positionMode={positionMode}
+        customPosition={customPosition}
+      />
     </>
   );
 };
