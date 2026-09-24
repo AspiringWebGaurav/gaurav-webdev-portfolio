@@ -9,10 +9,10 @@ export function PortfolioJsonLd({ siteUrl }: PortfolioJsonLdProps = {}) {
 
   const personEntity = {
     "@type": "Person",
-    "@id": `${baseUrl}/#person`,
+    "@id": `${baseUrl}#person`,
     name: "Gaurav Patil",
     alternateName: "AspiringWebGaurav",
-    url: `${baseUrl}/`,
+    url: baseUrl,
     image: `${baseUrl}/og-image.png`,
     jobTitle: ["Full Stack Software Engineer", "Software Engineer"],
     description:
@@ -47,20 +47,20 @@ export function PortfolioJsonLd({ siteUrl }: PortfolioJsonLdProps = {}) {
       personEntity,
       {
         "@type": "WebSite",
-        "@id": `${baseUrl}/#website`,
-        url: `${baseUrl}/`,
+        "@id": `${baseUrl}#website`,
+        url: baseUrl,
         name: "Gaurav Patil Portfolio",
         description:
           "Official personal portfolio and software engineering showcase of Gaurav Patil — Full Stack Software Engineer building production-ready digital systems.",
         publisher: {
-          "@id": `${baseUrl}/#person`,
+          "@id": `${baseUrl}#person`,
         },
         inLanguage: "en-US",
       },
       {
         "@type": "ProfilePage",
-        "@id": `${baseUrl}/#webpage`,
-        url: `${baseUrl}/`,
+        "@id": `${baseUrl}#webpage`,
+        url: baseUrl,
         name: "Gaurav Patil — Full Stack Software Engineer Building Production-Ready Digital Systems",
         isPartOf: {
           "@id": `${baseUrl}/#website`,
