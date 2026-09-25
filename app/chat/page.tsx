@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { ChatLearnMoreContent } from "@/components/legal/ChatLearnMoreContent";
 
+export const revalidate = 86400;
+
 export const metadata: Metadata = {
   title: "Personal Assistant & Chat Guide",
   description:

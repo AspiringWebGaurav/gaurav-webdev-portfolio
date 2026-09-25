@@ -43,6 +43,8 @@ function resolveCaseStudy(slug: string) {
   return null;
 }
 
+export const revalidate = 86400;
+
 export async function generateStaticParams() {
   return Object.keys(PROJECT_CASE_STUDIES).map((slug) => ({
     slug,

@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/next";
+import { VercelInsights } from "@/components/analytics/VercelInsights";
 import "./globals.css";
 import { ThemeProvider } from "./provider";
 import { RouteProgressBar } from "@/components/ui/RouteProgressBar";
@@ -230,8 +229,7 @@ export default function RootLayout({
         >
           <RouteProgressBar />
           {children}
-          <Analytics />
-          <SpeedInsights />
+          <VercelInsights />
         </ThemeProvider>
       </body>
     </html>

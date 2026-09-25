@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { TermsOfServiceContent } from "@/components/legal/TermsOfServiceContent";
 import { SEED_TERMS_DOCUMENT } from "@/lib/dal/repositories/seed-data";
 
+export const revalidate = 86400;
+
 export const metadata: Metadata = {
   title: "Terms of Service",
   description:

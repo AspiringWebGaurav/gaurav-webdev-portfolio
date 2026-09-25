@@ -46,6 +46,8 @@ const AssistantBubble = dynamic(
   { loading: () => <AssistantBubbleSkeleton /> }
 );
 
+export const revalidate = 3600;
+
 export default async function Home() {
   const data = await getPortfolioData();
 

@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { PrivacyPolicyContent } from "@/components/legal/PrivacyPolicyContent";
 import { SEED_PRIVACY_DOCUMENT } from "@/lib/dal/repositories/seed-data";
 
+export const revalidate = 86400;
+
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
