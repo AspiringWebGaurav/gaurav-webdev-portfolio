@@ -39,7 +39,7 @@ export async function generateMetadata(): Promise<Metadata> {
     const seoResult = await seoRepository.getSeo();
     const seo = seoResult.data || SEED_SEO;
 
-    const canonicalUrl = seo.canonicalUrl || "https://gauravpatil.site";
+    const canonicalUrl = seo.canonicalUrl || "https://gauravjpatil.com";
     const title = seo.title || "Gaurav Patil — Full Stack Software Engineer Building Production-Ready Digital Systems";
     const description =
       seo.description ||
@@ -110,7 +110,7 @@ export async function generateMetadata(): Promise<Metadata> {
         locale: "en_US",
         images: [
           {
-            url: seo.ogImageUrl || "https://gauravpatil.site/og-image.png",
+            url: seo.ogImageUrl || "https://gauravjpatil.com/og-image.png",
             width: 1200,
             height: 630,
             alt: title,
@@ -124,7 +124,7 @@ export async function generateMetadata(): Promise<Metadata> {
         title,
         description,
         creator: seo.twitterHandle || "@gauravpatil",
-        images: [seo.ogImageUrl || "https://gauravpatil.site/og-image.png"],
+        images: [seo.ogImageUrl || "https://gauravjpatil.com/og-image.png"],
       },
     };
   } catch {
@@ -133,14 +133,14 @@ export async function generateMetadata(): Promise<Metadata> {
       "Official portfolio of Gaurav Patil — Full Stack Software Engineer building production-ready digital systems, modern web applications, and high-performance software architectures.";
 
     return {
-      metadataBase: new URL("https://gauravpatil.site"),
+      metadataBase: new URL("https://gauravjpatil.com"),
       title: {
         default: fallbackTitle,
         template: "%s | Gaurav Patil",
       },
       description: fallbackDescription,
       alternates: {
-        canonical: "https://gauravpatil.site",
+        canonical: "https://gauravjpatil.com",
       },
       robots: {
         index: true,
@@ -171,12 +171,12 @@ export async function generateMetadata(): Promise<Metadata> {
       openGraph: {
         title: fallbackTitle,
         description: fallbackDescription,
-        url: "https://gauravpatil.site",
+        url: "https://gauravjpatil.com",
         siteName: "Gaurav Patil Portfolio",
         locale: "en_US",
         images: [
           {
-            url: "https://gauravpatil.site/og-image.png",
+            url: "https://gauravjpatil.com/og-image.png",
             width: 1200,
             height: 630,
             alt: fallbackTitle,
@@ -190,7 +190,7 @@ export async function generateMetadata(): Promise<Metadata> {
         title: fallbackTitle,
         description: fallbackDescription,
         creator: "@gauravpatil",
-        images: ["https://gauravpatil.site/og-image.png"],
+        images: ["https://gauravjpatil.com/og-image.png"],
       },
     };
   }

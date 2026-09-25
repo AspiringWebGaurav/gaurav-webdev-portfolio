@@ -4,7 +4,7 @@ import { seoRepository } from "@/lib/dal/repositories/cms/seo.repository";
 import { projectsRepository } from "@/lib/dal/repositories/cms/projects.repository";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = "https://gauravpatil.site";
+  const baseUrl = "https://gauravjpatil.com";
   const releaseDate = new Date("2026-09-15T00:00:00.000Z");
 
   // Retrieve dynamic SEO document for genuine homepage modified date

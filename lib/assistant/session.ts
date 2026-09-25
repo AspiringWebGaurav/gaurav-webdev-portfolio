@@ -146,6 +146,8 @@ export function validateCsrfOrigin(req: NextRequest): boolean {
 
   // 4. Canonical Production & Supported Custom Domains
   const trustedDomains = [
+    "https://gauravjpatil.com",
+    "https://www.gauravjpatil.com",
     "https://devlabs.eu.cc",
     "https://www.devlabs.eu.cc",
     "https://gauravpatil.site",

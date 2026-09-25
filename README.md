@@ -1,6 +1,6 @@
 # Gaurav Portfolio &mdash; Modern Web Engineering Platform
 
-[![Production](https://img.shields.io/badge/Production-gauravpatil.site-6366f1?style=flat-square&logo=vercel)](https://gauravpatil.site)
+[![Production](https://img.shields.io/badge/Production-gauravjpatil.com-6366f1?style=flat-square&logo=vercel)](https://gauravjpatil.com)
 [![Staging](https://img.shields.io/badge/Staging-devlabs.eu.cc-7c3aed?style=flat-square)](https://devlabs.eu.cc)
 [![Next.js](https://img.shields.io/badge/Next.js-15.5-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.2-blue?style=flat-square&logo=react)](https://react.dev/)
@@ -12,11 +12,11 @@
 
 An enterprise-grade, high-performance web engineering portfolio designed and built by **Gaurav Patil**. Engineered with **Next.js 15 (App Router)**, **React 19**, **Three.js WebGL**, and modern cloud infrastructure. Architected with isolated presentation layers, touch ergonomics, privacy-first communication channels, and zero cumulative layout shift (`CLS = 0`).
 
-* **Production URL**: [`https://gauravpatil.site`](https://gauravpatil.site)
+* **Production URL**: [`https://gauravjpatil.com`](https://gauravjpatil.com)
 * **Pre-Production Staging Preview**: [`https://devlabs.eu.cc`](https://devlabs.eu.cc)
 * **Verified Email Gateway**: `gauravpatil.site`
 
-> 📬 **Direct Inquiries & Collaboration**: To discuss project proposals, consulting engagements, or engineering opportunities, reach out directly via [`gaurav@gauravpatil.site`](mailto:gaurav@gauravpatil.site) (professional direct line) or [`hello@gauravpatil.site`](mailto:hello@gauravpatil.site) (general inquiries), or launch the interactive contact form at [gauravpatil.site/contact](https://gauravpatil.site/contact).
+> 📬 **Direct Inquiries & Collaboration**: To discuss project proposals, consulting engagements, or engineering opportunities, reach out directly via [`gaurav@gauravpatil.site`](mailto:gaurav@gauravpatil.site) (professional direct line) or [`hello@gauravpatil.site`](mailto:hello@gauravpatil.site) (general inquiries), or launch the interactive contact form at [gauravjpatil.com/contact](https://gauravjpatil.com/contact).
 
 ---
 
@@ -132,11 +132,11 @@ The platform includes comprehensive transparency documentation accessible direct
 
 | Route | Document Title | Active Version | Scope & Responsibility |
 | :--- | :--- | :--- | :--- |
-| [`/terms`](https://gauravpatil.site/terms) | **Terms of Service** | `v0.0.1` | Operating terms, intellectual property, acceptable use, and communication standards. |
-| [`/privacy`](https://gauravpatil.site/privacy) | **Privacy Policy** | `v0.0.1` | Data minimization principles, anonymity rights, encryption standards, and GDPR compliance. |
-| [`/security`](https://gauravpatil.site/security) | **Security Policy** | `v0.0.1` | Infrastructure defenses, authentication standards, and vulnerability disclosure policies. |
-| [`/accessibility`](https://gauravpatil.site/accessibility) | **Accessibility Statement** | `v0.0.1` | Mobile-first 10/10 standards, touch ergonomics, and WCAG 2.1 AA conformance details. |
-| [`/chat`](https://gauravpatil.site/chat) | **Assistant & Chat Guide** | `v0.0.1` | Complete technical breakdown of the personal assistant and live chat architecture. |
+| [`/terms`](https://gauravjpatil.com/terms) | **Terms of Service** | `v0.0.1` | Operating terms, intellectual property, acceptable use, and communication standards. |
+| [`/privacy`](https://gauravjpatil.com/privacy) | **Privacy Policy** | `v0.0.1` | Data minimization principles, anonymity rights, encryption standards, and GDPR compliance. |
+| [`/security`](https://gauravjpatil.com/security) | **Security Policy** | `v0.0.1` | Infrastructure defenses, authentication standards, and vulnerability disclosure policies. |
+| [`/accessibility`](https://gauravjpatil.com/accessibility) | **Accessibility Statement** | `v0.0.1` | Mobile-first 10/10 standards, touch ergonomics, and WCAG 2.1 AA conformance details. |
+| [`/chat`](https://gauravjpatil.com/chat) | **Assistant & Chat Guide** | `v0.0.1` | Complete technical breakdown of the personal assistant and live chat architecture. |
 
 ### Mandatory Legal Update Dispatches (Strict Non-Marketing Standard)
 Submitting an email address through any feature of this portfolio &mdash; including Contact Form submissions, Assistant/Live Chat OTP authentication, support requests, or direct messaging &mdash; registers that address to receive mandatory policy, legal, and security announcements in accordance with the user's acceptance of use.

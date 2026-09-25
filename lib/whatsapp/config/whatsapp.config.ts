@@ -64,7 +64,7 @@ export function validateWhatsAppConfig(): { valid: boolean; missingKeys: string[
  * Resolves the public application base URL for all WhatsApp links,
  * 1-click notification links in admin emails, guidelines links, and GDPR data export archives.
  *
- * Defaults to: https://gauravpatil.site
+ * Defaults to: https://gauravjpatil.com
  */
 export function getWhatsAppBaseUrl(): string {
   const customUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL;
@@ -72,5 +72,5 @@ export function getWhatsAppBaseUrl(): string {
     return customUrl.replace(/\/+$/, "");
   }
 
-  return "https://gauravpatil.site";
+  return "https://gauravjpatil.com";
 }

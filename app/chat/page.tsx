@@ -10,13 +10,13 @@ export const metadata: Metadata = {
     follow: true,
   },
   alternates: {
-    canonical: "https://gauravpatil.site/chat",
+    canonical: "https://gauravjpatil.com/chat",
   },
   openGraph: {
     title: "Personal Assistant & Chat Guide | Gaurav Portfolio",
     description:
       "Architectural purpose, option mechanics, and privacy standards for the portfolio assistant.",
-    url: "https://gauravpatil.site/chat",
+    url: "https://gauravjpatil.com/chat",
     siteName: "Gaurav Portfolio",
     type: "website",
   },

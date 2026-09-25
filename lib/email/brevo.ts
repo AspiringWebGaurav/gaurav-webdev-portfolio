@@ -167,7 +167,7 @@ export function resolveAppUrl(requestHeaders?: Headers | null): string {
   }
 
   // 5. Canonical production domain fallback
-  return "https://gauravpatil.site";
+  return "https://gauravjpatil.com";
 }
 
 /**

@@ -1005,9 +1005,9 @@ export const SEED_SEO: SeoDocument = {
   title: "Gaurav Patil — Full Stack Software Engineer Building Production-Ready Digital Systems",
   description:
     "Official portfolio of Gaurav Patil — Full Stack Software Engineer building production-ready digital systems, modern web applications, and high-performance software architectures.",
-  canonicalUrl: "https://gauravpatil.site",
+  canonicalUrl: "https://gauravjpatil.com",
   ogImageStoragePath: "/og-image.png",
-  ogImageUrl: "https://gauravpatil.site/og-image.png",
+  ogImageUrl: "https://gauravjpatil.com/og-image.png",
   keywords: [
     "Gaurav Patil",
     "Gaurav Patil developer",

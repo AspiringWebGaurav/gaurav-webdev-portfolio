@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/admin", "/api", "/wa", "/chat/room"],
       },
     ],
-    sitemap: "https://gauravpatil.site/sitemap.xml",
-    host: "https://gauravpatil.site",
+    sitemap: "https://gauravjpatil.com/sitemap.xml",
+    host: "https://gauravjpatil.com",
   };
 }

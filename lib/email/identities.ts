@@ -2,7 +2,7 @@
  * Central Email Identity & Sender Configuration
  * Primary Domain: gauravpatil.site (Verified Brevo Gateway)
  * Pre-Production Link: devlabs.eu.cc
- * Production Link: gauravpatil.site
+ * Production Link: gauravjpatil.com
  *
  * Single Source of Truth for all portfolio email senders, purposes, and reply-to routing.
  */
@@ -10,7 +10,7 @@
 export const PRIMARY_EMAIL_DOMAIN = "gauravpatil.site";
 export const LEGACY_EMAIL_DOMAIN = "gauravpatil.site";
 export const PRE_PRODUCTION_DOMAIN = "devlabs.eu.cc";
-export const PRODUCTION_DOMAIN = "gauravpatil.site";
+export const PRODUCTION_DOMAIN = "gauravjpatil.com";
 
 /**
  * Backwards compatibility alias for the active authenticated email domain.

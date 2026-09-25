@@ -7,18 +7,18 @@ export const metadata: Metadata = {
   description:
     "Official Privacy Policy, data governance, and anonymity rights for Gaurav Portfolio.",
   alternates: {
-    canonical: "https://gauravpatil.site/privacy",
+    canonical: "https://gauravjpatil.com/privacy",
   },
   openGraph: {
     title: "Privacy Policy | Gaurav Portfolio",
     description:
       "Official Privacy Policy, data governance, and anonymity rights for Gaurav Portfolio.",
-    url: "https://gauravpatil.site/privacy",
+    url: "https://gauravjpatil.com/privacy",
     siteName: "Gaurav Portfolio",
     type: "website",
     images: [
       {
-        url: "https://gauravpatil.site/og-image.png",
+        url: "https://gauravjpatil.com/og-image.png",
         width: 1200,
         height: 630,
         alt: "Privacy Policy | Gaurav Portfolio",
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     description:
       "Official Privacy Policy, data governance, and anonymity rights for Gaurav Portfolio.",
     creator: "@gauravpatil",
-    images: ["https://gauravpatil.site/og-image.png"],
+    images: ["https://gauravjpatil.com/og-image.png"],
   },
 };
 

@@ -7,18 +7,18 @@ export const metadata: Metadata = {
   description:
     "Official Terms of Service, acceptable use, and engagement terms for Gaurav Portfolio.",
   alternates: {
-    canonical: "https://gauravpatil.site/terms",
+    canonical: "https://gauravjpatil.com/terms",
   },
   openGraph: {
     title: "Terms of Service | Gaurav Portfolio",
     description:
       "Official Terms of Service, acceptable use, and engagement terms for Gaurav Portfolio.",
-    url: "https://gauravpatil.site/terms",
+    url: "https://gauravjpatil.com/terms",
     siteName: "Gaurav Portfolio",
     type: "website",
     images: [
       {
-        url: "https://gauravpatil.site/og-image.png",
+        url: "https://gauravjpatil.com/og-image.png",
         width: 1200,
         height: 630,
         alt: "Terms of Service | Gaurav Portfolio",
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     description:
       "Official Terms of Service, acceptable use, and engagement terms for Gaurav Portfolio.",
     creator: "@gauravpatil",
-    images: ["https://gauravpatil.site/og-image.png"],
+    images: ["https://gauravjpatil.com/og-image.png"],
   },
 };
 

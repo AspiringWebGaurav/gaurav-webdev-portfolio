@@ -37,7 +37,7 @@ export function buildLegalNotificationEmail(params: BuildLegalNotificationParams
 } {
   const docTitle = params.docType === "TERMS" ? "Terms of Service" : "Privacy Policy";
   const rawBaseUrl = resolveAppUrl();
-  const appBaseUrl = rawBaseUrl.includes("localhost") ? "https://gauravpatil.site" : rawBaseUrl;
+  const appBaseUrl = rawBaseUrl.includes("localhost") ? "https://gauravjpatil.com" : rawBaseUrl;
   const termsUrl = `${appBaseUrl}/terms`;
   const privacyUrl = `${appBaseUrl}/privacy`;
   const securityUrl = `${appBaseUrl}/security`;

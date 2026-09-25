@@ -14,18 +14,18 @@ export const metadata: Metadata = {
   description:
     "Explore the software engineering, full-stack web applications, and architectural work by Gaurav Patil, featuring Next.js, React, TypeScript, WebRTC, Rust, and cloud services.",
   alternates: {
-    canonical: "https://gauravpatil.site/projects",
+    canonical: "https://gauravjpatil.com/projects",
   },
   openGraph: {
     title: "Full Stack & Software Engineering Projects | Gaurav Patil",
     description:
       "Explore the software engineering, full-stack web applications, and architectural work by Gaurav Patil.",
-    url: "https://gauravpatil.site/projects",
+    url: "https://gauravjpatil.com/projects",
     siteName: "Gaurav Patil Portfolio",
     type: "website",
     images: [
       {
-        url: "https://gauravpatil.site/og-image.png",
+        url: "https://gauravjpatil.com/og-image.png",
         width: 1200,
         height: 630,
         alt: "Full Stack & Software Engineering Projects | Gaurav Patil",
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     description:
       "Explore software engineering and full-stack web applications by Gaurav Patil.",
     creator: "@gauravpatil",
-    images: ["https://gauravpatil.site/og-image.png"],
+    images: ["https://gauravjpatil.com/og-image.png"],
   },
 };
 
@@ -77,13 +77,13 @@ export default async function ProjectsHubPage() {
         "@type": "ListItem",
         position: 1,
         name: "Home",
-        item: "https://gauravpatil.site",
+        item: "https://gauravjpatil.com",
       },
       {
         "@type": "ListItem",
         position: 2,
         name: "Projects",
-        item: "https://gauravpatil.site/projects",
+        item: "https://gauravjpatil.com/projects",
       },
     ],
   };
@@ -91,19 +91,19 @@ export default async function ProjectsHubPage() {
   const collectionJsonLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    "@id": "https://gauravpatil.site/projects#collection",
-    url: "https://gauravpatil.site/projects",
+    "@id": "https://gauravjpatil.com/projects#collection",
+    url: "https://gauravjpatil.com/projects",
     name: "Full Stack & Software Engineering Projects | Gaurav Patil",
     description:
       "Comprehensive directory of software engineering, 3D interactive graphics, and full-stack web applications developed by Gaurav Patil.",
     isPartOf: {
-      "@id": "https://gauravpatil.site/#website",
+      "@id": "https://gauravjpatil.com/#website",
     },
     about: {
-      "@id": "https://gauravpatil.site/#person",
+      "@id": "https://gauravjpatil.com/#person",
     },
     author: {
-      "@id": "https://gauravpatil.site/#person",
+      "@id": "https://gauravjpatil.com/#person",
     },
   };
 
