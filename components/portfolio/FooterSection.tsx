@@ -160,6 +160,8 @@ export const FooterSection = ({
             © {new Date().getFullYear()} {footer.copyrightName || "Gaurav Patil"}
           </span>
           <span className="text-neutral-600">·</span>
+          <span>Kolhapur, India</span>
+          <span className="text-neutral-600">·</span>
           <Link
             href={footer.termsUrl || "/terms"}
             className="hover:text-purple transition-colors duration-200"

@@ -40,10 +40,10 @@ export async function generateMetadata(): Promise<Metadata> {
     const seo = seoResult.data || SEED_SEO;
 
     const canonicalUrl = seo.canonicalUrl || "https://gauravjpatil.com";
-    const title = seo.title || "Gaurav Patil — Full Stack Software Engineer Building Production-Ready Digital Systems";
+    const title = seo.title || "Gaurav Patil | Full Stack Software Engineer & Web Developer (Gaurav Jayendra Patil)";
     const description =
       seo.description ||
-      "Official portfolio of Gaurav Patil — Full Stack Software Engineer building production-ready digital systems, modern web applications, and high-performance software architectures.";
+      "Official portfolio of Gaurav Patil (Gaurav Jayendra Patil) — Full Stack Software Engineer and Web Developer from Kolhapur, Maharashtra, India, building production-ready digital systems, modern web applications, and high-performance software architectures.";
 
     const googleVerificationToken = seo.googleSiteVerification?.trim() || envGoogleVerification || undefined;
 
@@ -74,9 +74,22 @@ export async function generateMetadata(): Promise<Metadata> {
           ? seo.keywords
           : [
               "Gaurav Patil",
+              "gaurav patil",
+              "Gaurav Jayendra Patil",
+              "Gaurav Jayendra Patil kolhapur",
+              "Gaurav Patil kolhapur",
+              "Gaurav Patil Dev",
+              "Gaurav Patil Dev full stack",
               "Gaurav Patil developer",
+              "Gaurav Patil web developer",
+              "Gaurav Patil software engineer",
               "Gaurav Patil full stack software engineer",
+              "Gaurav Patil portfolio",
+              "gauravjpatil",
+              "gauravjpatil.com",
+              "AspiringWebGaurav",
               "Full Stack Software Engineer",
+              "Full Stack Developer Kolhapur",
               "Software Engineering",
               "Production-Ready Software",
               "Web Applications",
@@ -85,6 +98,7 @@ export async function generateMetadata(): Promise<Metadata> {
               "Next.js",
               "React",
               "TypeScript",
+              "Tailwind CSS",
             ],
       authors: [{ name: seo.author || "Gaurav Patil", url: canonicalUrl }],
       creator: "Gaurav Patil",
@@ -128,9 +142,9 @@ export async function generateMetadata(): Promise<Metadata> {
       },
     };
   } catch {
-    const fallbackTitle = "Gaurav Patil — Full Stack Software Engineer Building Production-Ready Digital Systems";
+    const fallbackTitle = "Gaurav Patil | Full Stack Software Engineer & Web Developer (Gaurav Jayendra Patil)";
     const fallbackDescription =
-      "Official portfolio of Gaurav Patil — Full Stack Software Engineer building production-ready digital systems, modern web applications, and high-performance software architectures.";
+      "Official portfolio of Gaurav Patil (Gaurav Jayendra Patil) — Full Stack Software Engineer and Web Developer from Kolhapur, Maharashtra, India, building production-ready digital systems, modern web applications, and high-performance software architectures.";
 
     return {
       metadataBase: new URL("https://gauravjpatil.com"),

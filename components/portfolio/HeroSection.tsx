@@ -77,9 +77,9 @@ export const HeroSection = ({ data = SEED_HERO }: HeroSectionProps) => {
           <p className="text-center mt-2 sm:mt-3 mb-7 sm:mb-8 text-sm sm:text-base md:text-lg lg:text-[19px] text-[#C1C2D3] max-w-4xl lg:max-w-[920px] leading-relaxed tracking-normal">
             I&apos;m{" "}
             <span className="text-white font-medium">Gaurav Patil</span>{" "}
-            &mdash; a{" "}
-            <span className="text-purple/90 font-medium">Production Software Engineer</span>{" "}
-            building high&#8209;throughput web architectures,<br className="hidden md:inline" />{" "}
+            <span className="text-white/60 font-normal text-xs sm:text-sm">(Gaurav Jayendra Patil)</span> &mdash; a{" "}
+            <span className="text-purple/90 font-medium">Full Stack Software Engineer &amp; Systems Developer</span>{" "}
+            based in <span className="text-white/90">Kolhapur, India</span>, building high&#8209;throughput web architectures,<br className="hidden md:inline" />{" "}
             native Rust &amp; Tauri desktop applications, and scalable cloud backends<br className="hidden md:inline" />{" "}
             with Next.js, Firebase/Firestore, and Redis.
           </p>
