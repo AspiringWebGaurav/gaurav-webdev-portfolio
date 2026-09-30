@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { PROJECT_CASE_STUDIES } from "@/lib/data/case-studies";
 import { seoRepository } from "@/lib/dal/repositories/cms/seo.repository";
 import { projectsRepository } from "@/lib/dal/repositories/cms/projects.repository";
+export const revalidate = 86400;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://gauravpatil.site";
