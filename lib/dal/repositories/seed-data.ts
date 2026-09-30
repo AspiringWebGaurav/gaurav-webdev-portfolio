@@ -21,7 +21,7 @@ export const SEED_HERO: HeroDocument = {
   id: "hero_main",
   eyebrow: "Production Software Engineer · Full Stack & Systems",
   headingWords: "Architecting Scalable Systems & High-Performance Software",
-  description: "I'm Gaurav Patil (Gaurav Jayendra Patil) — a Full Stack Software Engineer & Systems Developer based in Kolhapur, India, building high-throughput web architectures, native Rust & Tauri desktop applications, and scalable cloud backends with Next.js, Firebase/Firestore, and Redis.",
+  description: "I'm Gaurav Patil — a Full Stack Software Engineer & Systems Developer building high-throughput web architectures, native Rust & Tauri desktop applications, and scalable cloud backends with Next.js, Firebase/Firestore, and Redis.",
   ctaTitle: "Explore My Projects",
   ctaLink: "#projects",
   scrollText: "Scroll Down",
@@ -1037,18 +1037,15 @@ export const SEED_SOCIAL_LINKS: SocialLinkDocument[] = [
 
 export const SEED_SEO: SeoDocument = {
   id: "seo_main",
-  title: "Gaurav Patil | Full Stack Software Engineer & Web Developer (Gaurav Jayendra Patil)",
+  title: "Gaurav Patil | Full Stack Software Engineer & Web Developer",
   description:
-    "Official portfolio of Gaurav Patil (Gaurav Jayendra Patil) — Full Stack Software Engineer and Web Developer from Kolhapur, Maharashtra, India, building scalable digital systems, Next.js web applications, and high-performance software.",
+    "Official portfolio of Gaurav Patil — Full Stack Software Engineer and Web Developer building scalable digital systems, Next.js web applications, and high-performance software.",
   canonicalUrl: "https://gauravpatil.site",
   ogImageStoragePath: "/og-image.png",
   ogImageUrl: "https://gauravpatil.site/og-image.png",
   keywords: [
     "Gaurav Patil",
     "gaurav patil",
-    "Gaurav Jayendra Patil",
-    "Gaurav Jayendra Patil kolhapur",
-    "Gaurav Patil kolhapur",
     "Gaurav Patil Dev",
     "Gaurav Patil Dev full stack",
     "Gaurav Patil developer",
@@ -1060,7 +1057,6 @@ export const SEED_SEO: SeoDocument = {
     "gauravpatil.site",
     "AspiringWebGaurav",
     "Full Stack Software Engineer",
-    "Full Stack Developer Kolhapur",
     "Software Engineering",
     "Production-Ready Software",
     "Web Applications",

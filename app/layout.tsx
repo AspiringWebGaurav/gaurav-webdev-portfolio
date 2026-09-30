@@ -39,10 +39,10 @@ export async function generateMetadata(): Promise<Metadata> {
     const seo = seoResult.data || SEED_SEO;
 
     const canonicalUrl = seo.canonicalUrl || "https://gauravpatil.site";
-    const title = seo.title || "Gaurav Patil | Full Stack Software Engineer & Web Developer (Gaurav Jayendra Patil)";
+    const title = seo.title || "Gaurav Patil | Full Stack Software Engineer & Web Developer";
     const description =
       seo.description ||
-      "Official portfolio of Gaurav Patil (Gaurav Jayendra Patil) — Full Stack Software Engineer and Web Developer from Kolhapur, Maharashtra, India, building production-ready digital systems, modern web applications, and high-performance software architectures.";
+      "Official portfolio of Gaurav Patil — Full Stack Software Engineer and Web Developer building production-ready digital systems, modern web applications, and high-performance software architectures.";
 
     const googleVerificationToken = seo.googleSiteVerification?.trim() || envGoogleVerification || undefined;
 
@@ -74,9 +74,6 @@ export async function generateMetadata(): Promise<Metadata> {
           : [
               "Gaurav Patil",
               "gaurav patil",
-              "Gaurav Jayendra Patil",
-              "Gaurav Jayendra Patil kolhapur",
-              "Gaurav Patil kolhapur",
               "Gaurav Patil Dev",
               "Gaurav Patil Dev full stack",
               "Gaurav Patil developer",
@@ -88,7 +85,6 @@ export async function generateMetadata(): Promise<Metadata> {
               "gauravpatil.site",
               "AspiringWebGaurav",
               "Full Stack Software Engineer",
-              "Full Stack Developer Kolhapur",
               "Software Engineering",
               "Production-Ready Software",
               "Web Applications",
@@ -141,9 +137,9 @@ export async function generateMetadata(): Promise<Metadata> {
       },
     };
   } catch {
-    const fallbackTitle = "Gaurav Patil | Full Stack Software Engineer & Web Developer (Gaurav Jayendra Patil)";
+    const fallbackTitle = "Gaurav Patil | Full Stack Software Engineer & Web Developer";
     const fallbackDescription =
-      "Official portfolio of Gaurav Patil (Gaurav Jayendra Patil) — Full Stack Software Engineer and Web Developer from Kolhapur, Maharashtra, India, building production-ready digital systems, modern web applications, and high-performance software architectures.";
+      "Official portfolio of Gaurav Patil — Full Stack Software Engineer and Web Developer building production-ready digital systems, modern web applications, and high-performance software architectures.";
 
     return {
       metadataBase: new URL("https://gauravpatil.site"),
