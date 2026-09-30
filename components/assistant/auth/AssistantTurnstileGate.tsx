@@ -34,10 +34,26 @@ interface AssistantTurnstileGateProps {
   forcedFailureCount?: number;
 }
 
-const TURNSTILE_SITE_KEY =
+const TEST_INTERACTIVE_KEY = "3x00000000000000000000FF";
+
+const PRODUCTION_SITE_KEY =
   process.env.NEXT_PUBLIC_ASSISTANT_TURNSTILE_SITE_KEY ||
   process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY ||
   "0x4AAAAAAEilFWDvwBZ3NPSK";
+
+const getActiveSiteKey = (): string => {
+  if (typeof window !== "undefined") {
+    const hostname = window.location.hostname;
+    const isLocalhost =
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname.endsWith(".local");
+    if (isLocalhost && !process.env.NEXT_PUBLIC_ASSISTANT_TURNSTILE_SITE_KEY) {
+      return TEST_INTERACTIVE_KEY;
+    }
+  }
+  return PRODUCTION_SITE_KEY;
+};
 
 const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
 
@@ -105,8 +121,9 @@ export const AssistantTurnstileGate: React.FC<AssistantTurnstileGateProps> = ({
       setStatus("READY");
       setErrorMessage(null);
 
+      const siteKeyToUse = getActiveSiteKey();
       const wId = window.turnstile.render(containerRef.current, {
-        sitekey: TURNSTILE_SITE_KEY,
+        sitekey: siteKeyToUse,
         theme: "dark",
         size: "normal",
         callback: async (token: string) => {
@@ -188,12 +205,12 @@ export const AssistantTurnstileGate: React.FC<AssistantTurnstileGateProps> = ({
     }
   }, [cleanupWidget]);
 
-  // 3. Render Cloudflare Turnstile when popover opens (persists once loaded)
+  // 3. Render Cloudflare Turnstile eagerly in background (so it opens instantly on click)
   useEffect(() => {
     const justOpened = !prevIsOpenRef.current && isOpen;
     prevIsOpenRef.current = isOpen;
 
-    if (!isOpen || typeof window === "undefined") {
+    if (typeof window === "undefined") {
       return;
     }
 
@@ -526,8 +543,8 @@ export const AssistantTurnstileGate: React.FC<AssistantTurnstileGateProps> = ({
       style={{
         ...getPopoverStyle(),
         pointerEvents: isOpen ? "auto" : "none",
-        visibility: isOpen ? "visible" : "hidden",
       }}
+      aria-hidden={!isOpen}
       className={`z-[5000] select-none outline-none ring-0 border-0 focus:outline-none focus:ring-0 active:outline-none active:ring-0 ${
         activeSubView === "TURNSTILE"
           ? "w-[300px] max-w-full h-[65px] p-0 bg-transparent border-0 shadow-none overflow-visible"
@@ -582,10 +599,25 @@ export const AssistantTurnstileGate: React.FC<AssistantTurnstileGateProps> = ({
               activeStatus === "ERROR" || activeStatus === "TIMEOUT" ? "hidden" : "opacity-100"
             }`}
           >
+            {/* Loading placeholder while Turnstile is initializing/fetching challenge */}
+            {(!widgetIdRef.current || activeStatus === "LOADING") && (
+              <div className="absolute inset-0 z-0 flex items-center justify-between px-3.5 bg-[#222222] text-neutral-400 select-none">
+                <div className="flex items-center gap-2">
+                  <CgSpinner className="w-4 h-4 animate-spin text-[#f38020]" />
+                  <span className="text-xs font-medium text-neutral-300">
+                    Connecting security check...
+                  </span>
+                </div>
+                <span className="text-[10px] font-semibold tracking-wider uppercase text-neutral-500">
+                  Cloudflare
+                </span>
+              </div>
+            )}
+
             <div
               ref={containerRef}
               style={{ clipPath: "inset(1px round 4px)" }}
-              className="w-[300px] max-w-full h-[65px] overflow-hidden outline-none ring-0 border-0 focus:outline-none focus:ring-0 active:outline-none active:ring-0 [&_iframe]:outline-none [&_iframe]:border-0 [&_iframe]:ring-0"
+              className="relative z-10 w-[300px] max-w-full h-[65px] overflow-hidden outline-none ring-0 border-0 focus:outline-none focus:ring-0 active:outline-none active:ring-0 [&_iframe]:outline-none [&_iframe]:border-0 [&_iframe]:ring-0"
             />
           </div>
 
