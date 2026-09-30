@@ -8,13 +8,13 @@ export const metadata: Metadata = {
   description:
     "Overview of security architecture, authentication standards, spam protection, and responsible disclosure.",
   alternates: {
-    canonical: "https://gauravjpatil.com/security",
+    canonical: "https://gauravpatil.site/security",
   },
   openGraph: {
     title: "Security Architecture & Trust | Gaurav Portfolio",
     description:
       "Overview of defensive security architecture, authentication standards, and responsible disclosure.",
-    url: "https://gauravjpatil.com/security",
+    url: "https://gauravpatil.site/security",
     siteName: "Gaurav Portfolio",
     type: "website",
   },

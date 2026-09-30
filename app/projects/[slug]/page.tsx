@@ -56,7 +56,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const resolved = resolveCaseStudy(slug);
 
   if (!resolved) {
-    const canonicalUrl = `https://gauravjpatil.com/projects/${slug}`;
+    const canonicalUrl = `https://gauravpatil.site/projects/${slug}`;
     const formattedTitle = slug
       .split("-")
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
@@ -87,7 +87,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         type: "article",
         images: [
           {
-            url: "https://gauravjpatil.com/og-image.png",
+            url: "https://gauravpatil.site/og-image.png",
             width: 1200,
             height: 630,
             alt: `${formattedTitle} | Gaurav Patil Portfolio`,
@@ -99,13 +99,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         title: `${formattedTitle} — Project Case Study | Gaurav Patil`,
         description: `Explore the technical case study and implementation details for ${formattedTitle} by Gaurav Patil.`,
         creator: "@gauravpatil",
-        images: ["https://gauravjpatil.com/og-image.png"],
+        images: ["https://gauravpatil.site/og-image.png"],
       },
     };
   }
 
   const { study, canonicalSlug } = resolved;
-  const canonicalUrl = `https://gauravjpatil.com/projects/${canonicalSlug}`;
+  const canonicalUrl = `https://gauravpatil.site/projects/${canonicalSlug}`;
 
   return {
     title: `${study.title} — Technical Case Study`,
@@ -142,7 +142,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
             {
               url: study.coverImage.startsWith("http")
                 ? study.coverImage
-                : `https://gauravjpatil.com${study.coverImage}`,
+                : `https://gauravpatil.site${study.coverImage}`,
               width: 1200,
               height: 630,
               alt: study.title,
@@ -150,7 +150,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
           ]
         : [
             {
-              url: "https://gauravjpatil.com/og-image.png",
+              url: "https://gauravpatil.site/og-image.png",
               width: 1200,
               height: 630,
               alt: "Gaurav Patil Portfolio",
@@ -166,8 +166,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         study.coverImage
           ? study.coverImage.startsWith("http")
             ? study.coverImage
-            : `https://gauravjpatil.com${study.coverImage}`
-          : "https://gauravjpatil.com/og-image.png",
+            : `https://gauravpatil.site${study.coverImage}`
+          : "https://gauravpatil.site/og-image.png",
       ],
     },
   };
@@ -223,7 +223,7 @@ export default async function ProjectCaseStudyPage({ params }: PageProps) {
   }
 
   const { study, canonicalSlug } = resolved;
-  const canonicalUrl = `https://gauravjpatil.com/projects/${canonicalSlug}`;
+  const canonicalUrl = `https://gauravpatil.site/projects/${canonicalSlug}`;
 
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
@@ -233,13 +233,13 @@ export default async function ProjectCaseStudyPage({ params }: PageProps) {
         "@type": "ListItem",
         position: 1,
         name: "Home",
-        item: "https://gauravjpatil.com",
+        item: "https://gauravpatil.site",
       },
       {
         "@type": "ListItem",
         position: 2,
         name: "Projects",
-        item: "https://gauravjpatil.com/projects",
+        item: "https://gauravpatil.site/projects",
       },
       {
         "@type": "ListItem",
@@ -257,19 +257,19 @@ export default async function ProjectCaseStudyPage({ params }: PageProps) {
     headline: `${study.title} — Technical Case Study`,
     description: study.subtitle,
     url: canonicalUrl,
-    image: `https://gauravjpatil.com${study.coverImage}`,
+    image: `https://gauravpatil.site${study.coverImage}`,
     author: {
       "@type": "Person",
-      "@id": "https://gauravjpatil.com/#person",
+      "@id": "https://gauravpatil.site/#person",
       name: "Gaurav Patil",
-      url: "https://gauravjpatil.com/",
+      url: "https://gauravpatil.site/",
       sameAs: ["https://github.com/AspiringWebGaurav"],
     },
     publisher: {
       "@type": "Person",
-      "@id": "https://gauravjpatil.com/#person",
+      "@id": "https://gauravpatil.site/#person",
       name: "Gaurav Patil",
-      url: "https://gauravjpatil.com/",
+      url: "https://gauravpatil.site/",
     },
     inLanguage: "en-US",
     about: study.technologies.map((t) => ({

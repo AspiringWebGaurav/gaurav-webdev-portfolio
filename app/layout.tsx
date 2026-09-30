@@ -38,7 +38,7 @@ export async function generateMetadata(): Promise<Metadata> {
     const seoResult = await seoRepository.getSeo();
     const seo = seoResult.data || SEED_SEO;
 
-    const canonicalUrl = seo.canonicalUrl || "https://gauravjpatil.com";
+    const canonicalUrl = seo.canonicalUrl || "https://gauravpatil.site";
     const title = seo.title || "Gaurav Patil | Full Stack Software Engineer & Web Developer (Gaurav Jayendra Patil)";
     const description =
       seo.description ||
@@ -84,8 +84,8 @@ export async function generateMetadata(): Promise<Metadata> {
               "Gaurav Patil software engineer",
               "Gaurav Patil full stack software engineer",
               "Gaurav Patil portfolio",
-              "gauravjpatil",
-              "gauravjpatil.com",
+              "gauravpatil",
+              "gauravpatil.site",
               "AspiringWebGaurav",
               "Full Stack Software Engineer",
               "Full Stack Developer Kolhapur",
@@ -123,7 +123,7 @@ export async function generateMetadata(): Promise<Metadata> {
         locale: "en_US",
         images: [
           {
-            url: seo.ogImageUrl || "https://gauravjpatil.com/og-image.png",
+            url: seo.ogImageUrl || "https://gauravpatil.site/og-image.png",
             width: 1200,
             height: 630,
             alt: title,
@@ -137,7 +137,7 @@ export async function generateMetadata(): Promise<Metadata> {
         title,
         description,
         creator: seo.twitterHandle || "@gauravpatil",
-        images: [seo.ogImageUrl || "https://gauravjpatil.com/og-image.png"],
+        images: [seo.ogImageUrl || "https://gauravpatil.site/og-image.png"],
       },
     };
   } catch {
@@ -146,14 +146,14 @@ export async function generateMetadata(): Promise<Metadata> {
       "Official portfolio of Gaurav Patil (Gaurav Jayendra Patil) — Full Stack Software Engineer and Web Developer from Kolhapur, Maharashtra, India, building production-ready digital systems, modern web applications, and high-performance software architectures.";
 
     return {
-      metadataBase: new URL("https://gauravjpatil.com"),
+      metadataBase: new URL("https://gauravpatil.site"),
       title: {
         default: fallbackTitle,
         template: "%s | Gaurav Patil",
       },
       description: fallbackDescription,
       alternates: {
-        canonical: "https://gauravjpatil.com",
+        canonical: "https://gauravpatil.site",
       },
       robots: {
         index: true,
@@ -184,12 +184,12 @@ export async function generateMetadata(): Promise<Metadata> {
       openGraph: {
         title: fallbackTitle,
         description: fallbackDescription,
-        url: "https://gauravjpatil.com",
+        url: "https://gauravpatil.site",
         siteName: "Gaurav Patil Portfolio",
         locale: "en_US",
         images: [
           {
-            url: "https://gauravjpatil.com/og-image.png",
+            url: "https://gauravpatil.site/og-image.png",
             width: 1200,
             height: 630,
             alt: fallbackTitle,
@@ -203,7 +203,7 @@ export async function generateMetadata(): Promise<Metadata> {
         title: fallbackTitle,
         description: fallbackDescription,
         creator: "@gauravpatil",
-        images: ["https://gauravjpatil.com/og-image.png"],
+        images: ["https://gauravpatil.site/og-image.png"],
       },
     };
   }

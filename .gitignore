@@ -221,3 +221,5 @@ scripts/
 *.tgz
 *.bak
 *.old
+.vercel
+.env*

@@ -1005,9 +1005,9 @@ export const SEED_SEO: SeoDocument = {
   title: "Gaurav Patil | Full Stack Software Engineer & Web Developer (Gaurav Jayendra Patil)",
   description:
     "Official portfolio of Gaurav Patil (Gaurav Jayendra Patil) — Full Stack Software Engineer and Web Developer from Kolhapur, Maharashtra, India, building scalable digital systems, Next.js web applications, and high-performance software.",
-  canonicalUrl: "https://gauravjpatil.com",
+  canonicalUrl: "https://gauravpatil.site",
   ogImageStoragePath: "/og-image.png",
-  ogImageUrl: "https://gauravjpatil.com/og-image.png",
+  ogImageUrl: "https://gauravpatil.site/og-image.png",
   keywords: [
     "Gaurav Patil",
     "gaurav patil",
@@ -1021,8 +1021,8 @@ export const SEED_SEO: SeoDocument = {
     "Gaurav Patil software engineer",
     "Gaurav Patil full stack software engineer",
     "Gaurav Patil portfolio",
-    "gauravjpatil",
-    "gauravjpatil.com",
+    "gauravpatil",
+    "gauravpatil.site",
     "AspiringWebGaurav",
     "Full Stack Software Engineer",
     "Full Stack Developer Kolhapur",

@@ -5,7 +5,7 @@ interface PortfolioJsonLdProps {
 }
 
 export function PortfolioJsonLd({ siteUrl }: PortfolioJsonLdProps = {}) {
-  const baseUrl = (siteUrl || process.env.NEXT_PUBLIC_APP_URL || "https://gauravjpatil.com").replace(/\/$/, "");
+  const baseUrl = (siteUrl || process.env.NEXT_PUBLIC_APP_URL || "https://gauravpatil.site").replace(/\/$/, "");
 
   const personEntity = {
     "@type": "Person",
@@ -48,7 +48,7 @@ export function PortfolioJsonLd({ siteUrl }: PortfolioJsonLdProps = {}) {
     },
     sameAs: [
       "https://github.com/AspiringWebGaurav",
-      "https://gauravjpatil.com",
+      "https://gauravpatil.site",
     ],
     knowsAbout: [
       "Full Stack Development",
