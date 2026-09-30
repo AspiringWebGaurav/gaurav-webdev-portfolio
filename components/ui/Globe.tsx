@@ -282,17 +282,19 @@ export function Globe({ globeConfig, data }: WorldProps) {
   return <group ref={groupRef} />;
 }
 
+type CanvasEventsProp = NonNullable<React.ComponentProps<typeof Canvas>["events"]>;
+
 // Resilient event manager that guards against null rootElement/target
 // preventing "Cannot read properties of null (reading 'addEventListener') at Provider"
-const safePointerEvents = (store: any) => {
+const safePointerEvents: CanvasEventsProp = (store) => {
   const defaultEvents = typeof createPointerEvents === "function" ? createPointerEvents(store) : null;
   return {
     priority: 1,
     enabled: true,
     ...defaultEvents,
-    connect: (target: any) => {
-      if (!target || typeof target.addEventListener !== "function") return;
-      return defaultEvents?.connect?.(target);
+    connect: (target: unknown) => {
+      if (!target || typeof (target as { addEventListener?: unknown }).addEventListener !== "function") return;
+      return defaultEvents?.connect?.(target as HTMLElement);
     },
     disconnect: () => {
       try {

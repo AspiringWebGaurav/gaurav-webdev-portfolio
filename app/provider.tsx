@@ -34,7 +34,7 @@ if (typeof window !== "undefined") {
             listener: EventListenerOrEventListenerObject
           ) {
             if (typeof result.addListener === "function") {
-              (result.addListener as Function)(listener);
+              (result.addListener as (cb: unknown) => void)(listener);
             }
           };
         }
@@ -44,7 +44,7 @@ if (typeof window !== "undefined") {
             listener: EventListenerOrEventListenerObject
           ) {
             if (typeof result.removeListener === "function") {
-              (result.removeListener as Function)(listener);
+              (result.removeListener as (cb: unknown) => void)(listener);
             }
           };
         }

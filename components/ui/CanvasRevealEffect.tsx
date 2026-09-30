@@ -325,11 +325,12 @@ const ShaderMaterial = ({
 
 // CanvasRevealEffect is purely a visual background shader (pointer-events-none).
 // Providing a no-op event manager disables R3F pointer event listener attachment,
-// completely eliminating any "Cannot read properties of null (reading 'addEventListener') at Provider" errors.
-const disablePointerEvents = (): any => ({
+type CanvasEventsProp = NonNullable<React.ComponentProps<typeof Canvas>["events"]>;
+
+const disablePointerEvents: CanvasEventsProp = () => ({
   priority: 0,
   enabled: false,
-  connected: false,
+  connected: undefined,
   handlers: undefined,
   connect: () => {},
   disconnect: () => {},
