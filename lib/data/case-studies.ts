@@ -28,9 +28,97 @@ export interface ProjectCaseStudy {
   }[];
   features: string[];
   results: string[];
+  publishedDate?: string;
+  readingTime?: string;
 }
 
 export const PROJECT_CASE_STUDIES: Record<string, ProjectCaseStudy> = {
+  "gphost-cloud-transit": {
+    slug: "gphost-cloud-transit",
+    projectId: "proj_16",
+    title: "GPHost — Smart Ephemeral File Transit & Direct Cloud Sharing",
+    subtitle:
+      "Fast, simple file sharing and direct-to-cloud transit up to 1 GB with zero wait times, secret password locks, auto-expiring links, and live visitor stats.",
+    category: "Cloud File Transit & Zero-Knowledge Storage",
+    role: "Lead Full Stack & Cloud Systems Engineer",
+    timeline: "September 2026",
+    publishedDate: "September 14, 2026",
+    readingTime: "4 min read",
+    technologies: [
+      "Next.js 16 (Turbopack)",
+      "React 19",
+      "TypeScript",
+      "Tailwind CSS v4",
+      "Cloudflare R2 (S3 API)",
+      "Supabase PostgreSQL",
+      "Upstash Redis",
+      "Web Crypto API (AES-GCM-256)",
+      "XURL Shortlink Integration",
+    ],
+    liveUrl: "https://gphost.eu.cc/",
+    docsUrl: "https://gphost.eu.cc/docs",
+    githubUrl: "https://github.com/AspiringWebGaurav/gphost",
+    coverImage: "/projects/gphost/cover.webp",
+    images: [
+      "/projects/gphost/cover.webp",
+      "/projects/gphost/features.webp",
+      "/projects/gphost/dashboard.webp",
+      "/projects/gphost/mobile.webp",
+      "/projects/gphost/api.webp",
+    ],
+    licenseStatus: "Proprietary Cloud Platform · Zero Egress Architecture",
+    contractStatus: "Independent Production Platform & Production Terms",
+    licenseDetails:
+      "GPHost is an independent, production-grade cloud transit platform engineered by Gaurav Patil. All frontend UI components, direct-to-object presigned upload handlers, and zero-knowledge cryptographic modules are governed under proprietary IP and production service terms.",
+    overview:
+      "GPHost is a modern web application designed to make sharing files as quick, simple, and safe as possible. Most traditional file transfer sites make your files wait in long server lines, which slows down transfers and can compromise privacy. GPHost solves this by letting your web browser upload directly to high-speed Cloudflare R2 cloud storage. You can send large files up to 1 GB in seconds, protect them with secret passwords, set them to self-destruct after one download, and get clean direct links to display photos or play videos on blogs and websites without annoying ads or wrapper pages.",
+    architecture: {
+      title: "Direct Browser-to-Cloud Transit (No Slow Middleman)",
+      description:
+        "Engineered with a direct-to-storage design: your web browser sends files straight to Cloudflare R2 storage using secure temporary upload leases, completely avoiding slow web servers.",
+      points: [
+        "Lightning-Fast Uploads: Files stream directly from your device to Cloudflare R2 without going through intermediary servers, giving you maximum upload speed.",
+        "Smart Piece-by-Piece Uploading: Big files up to 1 GB are split into small 5 MB pieces and uploaded in parallel, with automatic retries if your internet hiccups.",
+        "Secret In-Browser Encryption: Before any sensitive file leaves your computer, your browser can lock it with bank-grade AES-256 encryption. The secret key stays in the URL link and is never sent to our servers.",
+        "Automatic Self-Destruction: Supports 'Burn-on-Open' (destroys the file 60 seconds after first viewing) and single-use links that delete the file as soon as it is downloaded once.",
+        "Real-Time Visitor Insights: See live download counts and an interactive world map showing which countries your visitors came from, without any tracking cookies.",
+      ],
+    },
+    challenges: [
+      {
+        title: "Uploading large 1 GB files smoothly without freezing the browser or dropping out",
+        solution:
+          "Built a smart upload manager that slices large files into 5 MB chunks, handles parallel uploads, and verifies every chunk with a SHA-256 checksum so you never lose progress.",
+      },
+      {
+        title: "Keeping confidential files 100% private without having to trust server administrators",
+        solution:
+          "Implemented native browser-based Web Crypto AES-256 encryption. The encryption key is stored only in the URL hash fragment (#key=...), which web browsers never transmit across the internet to the server.",
+      },
+      {
+        title: "Preventing old, forgotten files from lingering forever and wasting cloud storage space",
+        solution:
+          "Created automated self-destruct timers and database cleanups. The instant a countdown timer hits zero or a single-use download finishes, the file is permanently deleted from cloud storage.",
+      },
+    ],
+    features: [
+      "Fast uploads up to 1 GB for videos, photos, PDFs, documents, and zip archives",
+      "Burn-on-open links that self-destruct 60 seconds after the recipient opens them",
+      "Single-use download links that permanently delete the file after 1 download",
+      "Custom PIN and password locks to keep shared files safe from strangers",
+      "Flexible expiry timers: 10 minutes, 1 hour, 1 day, 7 days, 30 days, or permanent",
+      "Direct raw CDN links (/raw/[slug]) for embedding photos and media in READMEs and blogs",
+      "Live view statistics with an interactive world map showing visitor country locations",
+      "Developer API for uploading files right from your computer terminal using curl or Node.js",
+      "Instant QR code generation for quick file downloads using any smartphone camera",
+    ],
+    results: [
+      "Over 95% faster initial upload start times by bypassing intermediate web servers",
+      "Zero server bandwidth and disk storage costs for all file transits",
+      "100% client-side cryptographic privacy with zero plain-text leaks to backend servers",
+      "Live production platform running on gphost.eu.cc backed by Vercel Edge compute and Cloudflare R2",
+    ],
+  },
   "send2me-p2p-file-transfer": {
     slug: "send2me-p2p-file-transfer",
     projectId: "proj_01",

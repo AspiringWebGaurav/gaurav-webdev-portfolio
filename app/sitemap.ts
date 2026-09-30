@@ -37,6 +37,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }[] = [
     { path: "", priority: 1.0, changeFrequency: "weekly", lastModified: homeLastModified },
     { path: "/projects", priority: 0.9, changeFrequency: "weekly", lastModified: homeLastModified },
+    { path: "/blog", priority: 0.9, changeFrequency: "weekly", lastModified: homeLastModified },
     { path: "/chat", priority: 0.8, changeFrequency: "weekly", lastModified: releaseDate },
     { path: "/privacy", priority: 0.7, changeFrequency: "monthly", lastModified: releaseDate },
     { path: "/terms", priority: 0.7, changeFrequency: "monthly", lastModified: releaseDate },
@@ -55,6 +56,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       if (!isNaN(parsed.getTime())) {
         projectLastModified = parsed;
       }
+    } else if (study?.publishedDate) {
+      const parsed = new Date(study.publishedDate);
+      if (!isNaN(parsed.getTime())) {
+        projectLastModified = parsed;
+      }
     }
 
     return {
@@ -65,7 +71,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     };
   });
 
-  const allRoutes = [...coreRoutes, ...projectRoutes];
+  const blogRoutes = Object.keys(PROJECT_CASE_STUDIES).map((slug) => {
+    const study = PROJECT_CASE_STUDIES[slug];
+    let blogLastModified = releaseDate;
+    if (study?.publishedDate) {
+      const parsed = new Date(study.publishedDate);
+      if (!isNaN(parsed.getTime())) {
+        blogLastModified = parsed;
+      }
+    }
+
+    return {
+      path: `/blog/${slug}`,
+      priority: 0.8,
+      changeFrequency: "weekly" as const,
+      lastModified: blogLastModified,
+    };
+  });
+
+  const allRoutes = [...coreRoutes, ...projectRoutes, ...blogRoutes];
 
   return allRoutes.map((item) => ({
     url: `${baseUrl}${item.path}`,

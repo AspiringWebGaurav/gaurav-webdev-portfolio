@@ -34,7 +34,7 @@ const getTechName = (iconUrl: string) => {
   return map[file] || `${file || "Technology"} Icon`;
 };
 
-export const ProjectsSection = ({ projects = SEED_PROJECTS, limit = 4 }: ProjectsSectionProps) => {
+export const ProjectsSection = ({ projects = SEED_PROJECTS, limit = 6 }: ProjectsSectionProps) => {
   const sortedProjects = [...projects].sort((a, b) => (a.order || 0) - (b.order || 0));
   const displayedProjects = limit ? sortedProjects.slice(0, limit) : sortedProjects;
 

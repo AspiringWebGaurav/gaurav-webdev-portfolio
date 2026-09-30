@@ -2,15 +2,29 @@ import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { permanentRedirect } from "next/navigation";
-import { FaLocationArrow, FaGithub, FaCheck, FaLightbulb, FaLayerGroup, FaBookOpen, FaShieldHalved, FaScaleBalanced } from "react-icons/fa6";
+import {
+  FaLocationArrow,
+  FaGithub,
+  FaCheck,
+  FaLightbulb,
+  FaLayerGroup,
+  FaBookOpen,
+  FaShieldHalved,
+  FaScaleBalanced,
+  FaArrowLeft,
+  FaCalendarDays,
+  FaClock,
+} from "react-icons/fa6";
 import { ProjectImageSlider } from "@/components/portfolio/ProjectImageSlider";
 import { PROJECT_CASE_STUDIES } from "@/lib/data/case-studies";
+import { FloatingNav } from "@/components/ui/FloatingNav";
+import { SEED_NAVIGATION } from "@/lib/dal/repositories/seed-data";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-const SHORT_SLUG_MAP: Record<string, string> = {
+const BLOG_SLUG_MAP: Record<string, string> = {
   gphost: "gphost-cloud-transit",
   "gphost-eu-cc": "gphost-cloud-transit",
   send2me: "send2me-p2p-file-transfer",
@@ -30,17 +44,17 @@ const SHORT_SLUG_MAP: Record<string, string> = {
   "deggy-guard-tour-system": "deggy",
 };
 
-function resolveCaseStudy(slug: string) {
+function resolveBlogArticle(slug: string) {
   if (PROJECT_CASE_STUDIES[slug]) {
-    return { study: PROJECT_CASE_STUDIES[slug], canonicalSlug: slug, shouldRedirect: false };
+    return { article: PROJECT_CASE_STUDIES[slug], canonicalSlug: slug, shouldRedirect: false };
   }
-  const mappedSlug = SHORT_SLUG_MAP[slug];
-  if (mappedSlug && PROJECT_CASE_STUDIES[mappedSlug]) {
-    return { study: PROJECT_CASE_STUDIES[mappedSlug], canonicalSlug: mappedSlug, shouldRedirect: true };
+  const mapped = BLOG_SLUG_MAP[slug];
+  if (mapped && PROJECT_CASE_STUDIES[mapped]) {
+    return { article: PROJECT_CASE_STUDIES[mapped], canonicalSlug: mapped, shouldRedirect: true };
   }
   const prefixMatch = Object.keys(PROJECT_CASE_STUDIES).find((k) => k.startsWith(`${slug}-`));
   if (prefixMatch && PROJECT_CASE_STUDIES[prefixMatch]) {
-    return { study: PROJECT_CASE_STUDIES[prefixMatch], canonicalSlug: prefixMatch, shouldRedirect: true };
+    return { article: PROJECT_CASE_STUDIES[prefixMatch], canonicalSlug: prefixMatch, shouldRedirect: true };
   }
   return null;
 }
@@ -55,177 +69,89 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const resolved = resolveCaseStudy(slug);
+  const resolved = resolveBlogArticle(slug);
 
   if (!resolved) {
-    const canonicalUrl = `https://gauravpatil.site/projects/${slug}`;
-    const formattedTitle = slug
-      .split("-")
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(" ");
-
     return {
-      title: `${formattedTitle} — Project Case Study`,
-      description: `Explore the technical case study, software architecture, and implementation details for ${formattedTitle} by Gaurav Patil.`,
-      alternates: {
-        canonical: canonicalUrl,
-      },
-      robots: {
-        index: true,
-        follow: true,
-        googleBot: {
-          index: true,
-          follow: true,
-          "max-video-preview": -1,
-          "max-image-preview": "large",
-          "max-snippet": -1,
-        },
-      },
-      openGraph: {
-        title: `${formattedTitle} — Project Case Study | Gaurav Patil`,
-        description: `Explore the technical case study, software architecture, and implementation details for ${formattedTitle} by Gaurav Patil.`,
-        url: canonicalUrl,
-        siteName: "Gaurav Patil Portfolio",
-        type: "article",
-        images: [
-          {
-            url: "https://gauravpatil.site/og-image.png",
-            width: 1200,
-            height: 630,
-            alt: `${formattedTitle} | Gaurav Patil Portfolio`,
-          },
-        ],
-      },
-      twitter: {
-        card: "summary_large_image",
-        title: `${formattedTitle} — Project Case Study | Gaurav Patil`,
-        description: `Explore the technical case study and implementation details for ${formattedTitle} by Gaurav Patil.`,
-        creator: "@gauravpatil",
-        images: ["https://gauravpatil.site/og-image.png"],
-      },
+      title: "Article Not Found | Gaurav Patil Blog",
+      description: "The requested engineering blog article could not be located.",
     };
   }
 
-  const { study, canonicalSlug } = resolved;
-  const canonicalUrl = `https://gauravpatil.site/projects/${canonicalSlug}`;
+  const { article, canonicalSlug } = resolved;
+  const canonicalUrl = `https://gauravpatil.site/blog/${canonicalSlug}`;
 
   return {
-    title: `${study.title} — Technical Case Study`,
-    description: study.subtitle,
-    keywords: [
-      study.title,
-      `${study.title} Case Study`,
-      "Software Architecture",
-      ...study.technologies,
-      "Gaurav Patil Engineering",
-    ],
+    title: `${article.title} — Engineering Deep Dive`,
+    description: article.subtitle,
     alternates: {
       canonical: canonicalUrl,
     },
-    robots: {
-      index: true,
-      follow: true,
-      googleBot: {
-        index: true,
-        follow: true,
-        "max-video-preview": -1,
-        "max-image-preview": "large",
-        "max-snippet": -1,
-      },
-    },
     openGraph: {
-      title: `${study.title} — Technical Case Study | Gaurav Patil`,
-      description: study.subtitle,
+      title: `${article.title} — Engineering Article | Gaurav Patil`,
+      description: article.subtitle,
       url: canonicalUrl,
       siteName: "Gaurav Patil Portfolio",
       type: "article",
-      images: study.coverImage
-        ? [
-            {
-              url: study.coverImage.startsWith("http")
-                ? study.coverImage
-                : `https://gauravpatil.site${study.coverImage}`,
-              width: 1200,
-              height: 630,
-              alt: study.title,
-            },
-          ]
-        : [
-            {
-              url: "https://gauravpatil.site/og-image.png",
-              width: 1200,
-              height: 630,
-              alt: "Gaurav Patil Portfolio",
-            },
-          ],
+      publishedTime: article.publishedDate ? new Date(article.publishedDate).toISOString() : "2026-09-14T00:00:00.000Z",
+      images: [
+        {
+          url: article.coverImage.startsWith("http")
+            ? article.coverImage
+            : `https://gauravpatil.site${article.coverImage}`,
+          width: 1200,
+          height: 630,
+          alt: article.title,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
-      title: `${study.title} — Case Study | Gaurav Patil`,
-      description: study.subtitle,
+      title: `${article.title} — Engineering Article`,
+      description: article.subtitle,
       creator: "@gauravpatil",
       images: [
-        study.coverImage
-          ? study.coverImage.startsWith("http")
-            ? study.coverImage
-            : `https://gauravpatil.site${study.coverImage}`
-          : "https://gauravpatil.site/og-image.png",
+        article.coverImage.startsWith("http")
+          ? article.coverImage
+          : `https://gauravpatil.site${article.coverImage}`,
       ],
     },
   };
 }
 
-export default async function ProjectCaseStudyPage({ params }: PageProps) {
+export default async function BlogPostPage({ params }: PageProps) {
   const { slug } = await params;
-  const resolved = resolveCaseStudy(slug);
+  const resolved = resolveBlogArticle(slug);
 
   if (!resolved) {
     return (
       <main className="min-h-screen bg-black-100 text-white flex flex-col items-center justify-center px-5 py-24 text-center relative overflow-hidden">
-        {/* Background Grid */}
-        <div className="h-full w-full dark:bg-black-100 bg-white dark:bg-grid-white/[0.03] bg-grid-black-100/[0.2] absolute top-0 left-0 flex items-center justify-center pointer-events-none -z-10">
-          <div className="absolute pointer-events-none inset-0 flex items-center justify-center dark:bg-black-100 bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]" />
-        </div>
-
         <div className="max-w-md z-10 flex flex-col items-center">
           <div className="w-16 h-16 rounded-full bg-purple/10 border border-purple/30 flex items-center justify-center mb-6">
             <FaBookOpen className="w-7 h-7 text-purple" />
           </div>
-          <span className="text-xs font-mono uppercase tracking-[0.2em] text-purple bg-purple/10 border border-purple/30 rounded-full px-4 py-1 mb-4">
-            Case Study Catalog
-          </span>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-3">
-            Case Study Not Found
-          </h1>
-          <p className="text-white-200 text-sm sm:text-base mb-8 leading-relaxed">
-            The requested technical case study could not be located or may have been renamed. You can explore all 14 software engineering case studies in the project hub.
+          <h1 className="text-3xl font-extrabold text-white mb-3">Article Not Found</h1>
+          <p className="text-white-200 text-sm mb-8 leading-relaxed">
+            The requested engineering article could not be located.
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-4">
-            <Link
-              href="/projects"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-purple text-black font-semibold hover:bg-purple/90 transition-all text-sm shadow-md"
-            >
-              <span>Explore All Projects</span>
-              <FaLocationArrow className="w-3.5 h-3.5" />
-            </Link>
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white/[0.04] border border-white/10 text-white font-medium hover:bg-white/[0.08] transition-all text-sm"
-            >
-              <span>Return to Portfolio</span>
-            </Link>
-          </div>
+          <Link
+            href="/blog"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-purple text-black font-semibold text-sm hover:bg-purple/90 transition-all"
+          >
+            <FaArrowLeft className="w-3.5 h-3.5" />
+            <span>Return to Engineering Blog</span>
+          </Link>
         </div>
       </main>
     );
   }
 
   if (resolved.shouldRedirect) {
-    permanentRedirect(`/projects/${resolved.canonicalSlug}`);
+    permanentRedirect(`/blog/${resolved.canonicalSlug}`);
   }
 
-  const { study, canonicalSlug } = resolved;
-  const canonicalUrl = `https://gauravpatil.site/projects/${canonicalSlug}`;
+  const { article, canonicalSlug } = resolved;
+  const canonicalUrl = `https://gauravpatil.site/blog/${canonicalSlug}`;
 
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
@@ -240,43 +166,41 @@ export default async function ProjectCaseStudyPage({ params }: PageProps) {
       {
         "@type": "ListItem",
         position: 2,
-        name: "Projects",
-        item: "https://gauravpatil.site/projects",
+        name: "Blog",
+        item: "https://gauravpatil.site/blog",
       },
       {
         "@type": "ListItem",
         position: 3,
-        name: study.title,
+        name: article.title,
         item: canonicalUrl,
       },
     ],
   };
 
-  const articleJsonLd = {
+  const blogPostJsonLd = {
     "@context": "https://schema.org",
     "@type": "TechArticle",
     "@id": `${canonicalUrl}#article`,
-    headline: `${study.title} — Technical Case Study`,
-    description: study.subtitle,
+    headline: article.title,
+    description: article.subtitle,
     url: canonicalUrl,
-    image: `https://gauravpatil.site${study.coverImage}`,
+    image: `https://gauravpatil.site${article.coverImage}`,
+    datePublished: article.publishedDate ? new Date(article.publishedDate).toISOString() : "2026-09-14T00:00:00.000Z",
+    dateModified: "2026-09-14T21:01:38.000Z",
     author: {
       "@type": "Person",
-      "@id": "https://gauravpatil.site/#person",
       name: "Gaurav Patil",
       url: "https://gauravpatil.site/",
       sameAs: ["https://github.com/AspiringWebGaurav"],
     },
     publisher: {
       "@type": "Person",
-      "@id": "https://gauravpatil.site/#person",
       name: "Gaurav Patil",
       url: "https://gauravpatil.site/",
     },
-    datePublished: study.publishedDate ? new Date(study.publishedDate).toISOString() : "2026-09-14T00:00:00.000Z",
-    dateModified: "2026-09-14T21:01:38.000Z",
     inLanguage: "en-US",
-    about: study.technologies.map((t) => ({
+    about: article.technologies.map((t) => ({
       "@type": "Thing",
       name: t,
     })),
@@ -291,8 +215,11 @@ export default async function ProjectCaseStudyPage({ params }: PageProps) {
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostJsonLd) }}
       />
+
+      {/* Navigation */}
+      <FloatingNav navItems={SEED_NAVIGATION.items} />
 
       {/* Ambient Grid Pattern */}
       <div
@@ -305,79 +232,70 @@ export default async function ProjectCaseStudyPage({ params }: PageProps) {
         />
       </div>
 
-      <div className="max-w-4xl w-full pt-16 sm:pt-24 pb-20 relative z-10">
+      <div className="max-w-4xl w-full pt-20 sm:pt-28 pb-20 relative z-10">
         {/* Breadcrumb Navigation */}
         <nav aria-label="Breadcrumb" className="mb-8 flex items-center gap-2 text-sm text-[#C1C2D3] flex-wrap">
           <Link href="/" className="hover:text-purple transition-colors duration-200">
             Home
           </Link>
           <span className="text-white/40">/</span>
-          <Link href="/projects" className="hover:text-purple transition-colors duration-200">
-            Projects
+          <Link href="/blog" className="hover:text-purple transition-colors duration-200">
+            Blog
           </Link>
           <span className="text-white/40">/</span>
           <span className="text-purple font-medium truncate max-w-xs sm:max-w-md" aria-current="page">
-            {study.title}
+            {article.title}
           </span>
         </nav>
 
-        {/* Case Study Header */}
-        <header className="mb-12">
+        {/* Article Header */}
+        <header className="mb-10">
           <div className="flex items-center gap-2.5 mb-4 flex-wrap">
             <span className="px-3 py-1 rounded-full text-xs font-mono font-medium bg-purple/10 text-purple border border-purple/30">
-              {study.category}
+              {article.category}
             </span>
-            <span className="px-3 py-1 rounded-full text-xs font-mono text-neutral-300 bg-white/[0.05] border border-white/[0.1]">
-              {study.role}
-            </span>
-            <span className="px-3 py-1 rounded-full text-xs font-mono text-neutral-400 bg-white/[0.05] border border-white/[0.1]">
-              {study.timeline}
-            </span>
-            {study.publishedDate && (
-              <span className="px-3 py-1 rounded-full text-xs font-mono text-neutral-300 bg-white/[0.05] border border-white/[0.1]" title="Original Launch Date">
-                📅 Created: {study.publishedDate}
+            {article.publishedDate && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono text-purple bg-purple/10 border border-purple/30 font-medium">
+                <FaCalendarDays className="w-3 h-3" />
+                <span>Published: {article.publishedDate}</span>
               </span>
             )}
-            {study.readingTime && (
-              <span className="px-3 py-1 rounded-full text-xs font-mono text-neutral-400 bg-white/[0.05] border border-white/[0.1]">
-                ⏱️ {study.readingTime}
+            {article.readingTime && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono text-neutral-300 bg-white/[0.05] border border-white/[0.1]">
+                <FaClock className="w-3 h-3 text-neutral-400" />
+                <span>{article.readingTime}</span>
               </span>
             )}
-            {study.licenseStatus && (
+            {article.licenseStatus && (
               <span className="px-3 py-1 rounded-full text-xs font-mono font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                {study.licenseStatus}
-              </span>
-            )}
-            {study.contractStatus && (
-              <span className="px-3 py-1 rounded-full text-xs font-mono text-neutral-300 bg-white/[0.05] border border-white/[0.1]">
-                {study.contractStatus}
+                {article.licenseStatus}
               </span>
             )}
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-white mb-4 leading-tight">
-            {study.title}
+            {article.title}
           </h1>
 
           <p className="text-base sm:text-xl text-white-200 leading-relaxed">
-            {study.subtitle}
+            {article.subtitle}
           </p>
         </header>
 
-        {/* Image Showcase Banner (Auto-Sliding Multi-Screenshot Engine) */}
-        <div className="mb-12">
+        {/* Multi-Screenshot Gallery Slider */}
+        <div className="mb-10">
           <ProjectImageSlider
-            images={study.images && study.images.length > 0 ? study.images : [study.coverImage]}
-            title={study.title}
+            images={article.images && article.images.length > 0 ? article.images : [article.coverImage]}
+            title={article.title}
             aspectClass="h-64 sm:h-[450px]"
             className="w-full max-w-full mb-0 rounded-3xl"
           />
         </div>
 
         {/* Action Links Bar */}
-        <div className="flex items-center gap-4 mb-14 p-4 rounded-2xl bg-[#04071D] border border-white/[0.1] flex-wrap justify-between">
+        <div className="flex items-center gap-4 mb-12 p-4 rounded-2xl bg-[#04071D] border border-white/[0.1] flex-wrap justify-between">
           <div className="flex items-center gap-2 flex-wrap">
-            {study.technologies.map((tech) => (
+            {article.technologies.slice(0, 6).map((tech) => (
               <span
                 key={tech}
                 className="px-2.5 py-1 text-xs font-mono rounded-lg bg-white/[0.06] text-white/90 border border-white/[0.08]"
@@ -388,74 +306,63 @@ export default async function ProjectCaseStudyPage({ params }: PageProps) {
           </div>
 
           <div className="flex items-center gap-3 ml-auto flex-wrap">
-            {study.githubUrl && (
+            {article.githubUrl && (
               <a
-                href={study.githubUrl}
+                href={article.githubUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-neutral-300 hover:text-white px-3.5 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] transition-colors border border-white/[0.08]"
               >
                 <FaGithub className="w-4 h-4" />
-                <span>{study.desktopGithubUrl ? "Web App Code" : "Source Code"}</span>
+                <span>Source Code</span>
               </a>
             )}
-            {study.desktopGithubUrl && (
+            {article.docsUrl && (
               <a
-                href={study.desktopGithubUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-purple hover:text-white px-3.5 py-2 rounded-xl bg-purple/10 hover:bg-purple/20 transition-colors border border-purple/30"
-              >
-                <FaGithub className="w-4 h-4 text-purple" />
-                <span>Rust PC App Code</span>
-              </a>
-            )}
-            {study.docsUrl && (
-              <a
-                href={study.docsUrl}
+                href={article.docsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-indigo-300 hover:text-white px-3.5 py-2 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 transition-colors border border-indigo-500/30"
               >
                 <FaBookOpen className="w-4 h-4 text-indigo-400" />
-                <span>Documentation</span>
+                <span>Docs</span>
               </a>
             )}
-            {study.liveUrl && (
+            {article.liveUrl && (
               <a
-                href={study.liveUrl}
+                href={article.liveUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-black bg-purple hover:bg-purple/90 px-4 py-2 rounded-xl transition-colors shadow-md shadow-purple/20"
               >
-                Live Demo
+                <span>Live Site</span>
                 <FaLocationArrow className="w-3 h-3" />
               </a>
             )}
           </div>
         </div>
 
-        {/* Section 1: Overview */}
-        <section aria-labelledby="overview-heading" className="mb-14">
+        {/* Section 1: Plain Language Overview */}
+        <section aria-labelledby="overview-heading" className="mb-12">
           <h2 id="overview-heading" className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
             <FaLayerGroup className="w-5 h-5 text-purple" />
-            Project Overview
+            <span>How It Works &amp; Why It Matters</span>
           </h2>
           <p className="text-base sm:text-lg text-white-200 leading-relaxed">
-            {study.overview}
+            {article.overview}
           </p>
         </section>
 
-        {/* Section 2: Architecture */}
-        <section aria-labelledby="architecture-heading" className="mb-14 p-6 sm:p-8 rounded-3xl bg-[#04071D] border border-white/[0.1]">
+        {/* Section 2: Architecture & System Design */}
+        <section aria-labelledby="architecture-heading" className="mb-12 p-6 sm:p-8 rounded-3xl bg-[#04071D] border border-white/[0.1]">
           <h2 id="architecture-heading" className="text-2xl font-bold text-white mb-3">
-            {study.architecture.title}
+            {article.architecture.title}
           </h2>
           <p className="text-white-200 text-sm sm:text-base leading-relaxed mb-6">
-            {study.architecture.description}
+            {article.architecture.description}
           </p>
           <ul className="space-y-3">
-            {study.architecture.points.map((point, idx) => (
+            {article.architecture.points.map((point, idx) => (
               <li key={idx} className="flex items-start gap-3 text-sm sm:text-base text-neutral-300">
                 <FaCheck className="w-4 h-4 text-purple mt-1 flex-shrink-0" />
                 <span>{point}</span>
@@ -464,14 +371,14 @@ export default async function ProjectCaseStudyPage({ params }: PageProps) {
           </ul>
         </section>
 
-        {/* Section 3: Key Challenges & Solutions */}
-        <section aria-labelledby="challenges-heading" className="mb-14">
+        {/* Section 3: Engineering Challenges */}
+        <section aria-labelledby="challenges-heading" className="mb-12">
           <h2 id="challenges-heading" className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
             <FaLightbulb className="w-5 h-5 text-purple" />
-            Engineering Challenges & Solutions
+            <span>Technical Challenges &amp; Practical Solutions</span>
           </h2>
           <div className="space-y-6">
-            {study.challenges.map((c, idx) => (
+            {article.challenges.map((c, idx) => (
               <div
                 key={idx}
                 className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.08]"
@@ -487,15 +394,14 @@ export default async function ProjectCaseStudyPage({ params }: PageProps) {
           </div>
         </section>
 
-        {/* Section 4: Key Features & Results */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-14">
-          {/* Features */}
+        {/* Section 4: Features & Outcomes */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
           <section aria-labelledby="features-heading" className="p-6 rounded-3xl bg-[#04071D] border border-white/[0.1]">
             <h2 id="features-heading" className="text-xl font-bold text-white mb-4">
               Core Capabilities
             </h2>
             <ul className="space-y-3">
-              {study.features.map((feature, idx) => (
+              {article.features.map((feature, idx) => (
                 <li key={idx} className="flex items-start gap-2.5 text-sm text-neutral-300">
                   <span className="w-1.5 h-1.5 rounded-full bg-purple mt-2 flex-shrink-0" />
                   <span>{feature}</span>
@@ -504,13 +410,12 @@ export default async function ProjectCaseStudyPage({ params }: PageProps) {
             </ul>
           </section>
 
-          {/* Results */}
           <section aria-labelledby="results-heading" className="p-6 rounded-3xl bg-[#04071D] border border-white/[0.1]">
             <h2 id="results-heading" className="text-xl font-bold text-white mb-4">
               Validated Outcomes
             </h2>
             <ul className="space-y-3">
-              {study.results.map((result, idx) => (
+              {article.results.map((result, idx) => (
                 <li key={idx} className="flex items-start gap-2.5 text-sm text-neutral-300">
                   <FaCheck className="w-3.5 h-3.5 text-purple mt-1 flex-shrink-0" />
                   <span>{result}</span>
@@ -520,57 +425,60 @@ export default async function ProjectCaseStudyPage({ params }: PageProps) {
           </section>
         </div>
 
-        {/* Section 5: Governance, Licensing & Contract Status */}
-        <section aria-labelledby="governance-heading" className="mb-16 p-6 sm:p-8 rounded-3xl bg-[#04071D] border border-white/[0.1]">
+        {/* Section 5: Governance & Licensing */}
+        <section aria-labelledby="governance-heading" className="mb-14 p-6 sm:p-8 rounded-3xl bg-[#04071D] border border-white/[0.1]">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-xl bg-purple/10 border border-purple/30 flex items-center justify-center text-purple">
               <FaShieldHalved className="w-5 h-5" />
             </div>
             <div>
               <h2 id="governance-heading" className="text-xl sm:text-2xl font-bold text-white">
-                Licensing, IP &amp; Contract Governance
+                Licensing &amp; Open Governance
               </h2>
               <p className="text-xs sm:text-sm text-neutral-400">
-                Transparent disclosure on source code distribution, client contracts, and commercial terms
+                Transparent information about source code terms and service architecture
               </p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-6">
             <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08]">
-              <p className="text-xs font-mono uppercase text-neutral-400 mb-1">Software License Status</p>
+              <p className="text-xs font-mono uppercase text-neutral-400 mb-1">Software License</p>
               <p className="text-sm sm:text-base font-semibold text-emerald-400 flex items-center gap-2">
                 <FaScaleBalanced className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                <span>{study.licenseStatus}</span>
+                <span>{article.licenseStatus}</span>
               </p>
             </div>
             <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08]">
-              <p className="text-xs font-mono uppercase text-neutral-400 mb-1">Contract &amp; Engagement Model</p>
+              <p className="text-xs font-mono uppercase text-neutral-400 mb-1">Deployment Model</p>
               <p className="text-sm sm:text-base font-semibold text-purple flex items-center gap-2">
                 <FaCheck className="w-4 h-4 text-purple flex-shrink-0" />
-                <span>{study.contractStatus}</span>
+                <span>{article.contractStatus}</span>
               </p>
             </div>
           </div>
 
           <p className="text-sm sm:text-base text-neutral-300 leading-relaxed bg-white/[0.02] p-4 rounded-xl border border-white/[0.06]">
-            {study.licenseDetails}
+            {article.licenseDetails}
           </p>
         </section>
 
         {/* Navigation Footer */}
         <div className="flex items-center justify-between pt-8 border-t border-white/[0.08] flex-wrap gap-4">
           <Link
-            href="/projects"
-            className="inline-flex items-center gap-2 text-sm text-neutral-400 hover:text-white transition-colors"
+            href="/blog"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white font-medium hover:bg-white/[0.08] transition-all text-sm"
           >
-            ← Back to All Projects
+            <FaArrowLeft className="w-3.5 h-3.5" />
+            <span>Back to All Articles</span>
           </Link>
+
           <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-sm text-purple hover:text-white transition-colors"
+            href={`/projects/${article.slug}`}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple text-black font-semibold hover:bg-purple/90 transition-all text-sm shadow-md"
           >
-            Go to Homepage →
+            <span>View in Project Hub</span>
+            <FaLocationArrow className="w-3.5 h-3.5" />
           </Link>
         </div>
       </div>

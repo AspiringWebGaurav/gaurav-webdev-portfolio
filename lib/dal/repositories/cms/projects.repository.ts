@@ -24,7 +24,15 @@ export class ProjectsRepository extends BaseRepository {
         return SEED_PROJECTS;
       }
 
-      return docs.sort((a, b) => (a.order || 0) - (b.order || 0));
+      // Merge any new seed projects (such as GPHost) that are not yet stored in Firestore
+      const existingIds = new Set(docs.map((d) => d.id));
+      const existingSlugs = new Set(docs.map((d) => d.slug).filter(Boolean));
+      const missingSeeds = SEED_PROJECTS.filter(
+        (p) => !existingIds.has(p.id) && (!p.slug || !existingSlugs.has(p.slug))
+      );
+
+      const merged = missingSeeds.length > 0 ? [...docs, ...missingSeeds] : docs;
+      return merged.sort((a, b) => (a.order || 0) - (b.order || 0));
     });
   }
 
