@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Color, Group } from "three";
 import ThreeGlobe from "three-globe";
-import { Canvas, extend } from "@react-three/fiber";
+import { Canvas, extend, events as createPointerEvents } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import countries from "@/data/globe.json";
 declare module "@react-three/fiber" {
@@ -282,52 +282,104 @@ export function Globe({ globeConfig, data }: WorldProps) {
   return <group ref={groupRef} />;
 }
 
+// Resilient event manager that guards against null rootElement/target
+// preventing "Cannot read properties of null (reading 'addEventListener') at Provider"
+const safePointerEvents = (store: any) => {
+  const defaultEvents = typeof createPointerEvents === "function" ? createPointerEvents(store) : null;
+  return {
+    priority: 1,
+    enabled: true,
+    ...defaultEvents,
+    connect: (target: any) => {
+      if (!target || typeof target.addEventListener !== "function") return;
+      return defaultEvents?.connect?.(target);
+    },
+    disconnect: () => {
+      try {
+        defaultEvents?.disconnect?.();
+      } catch {
+        // Suppress unmount errors if element was already detached
+      }
+    },
+  };
+};
+
+class GlobeErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: unknown) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("Globe recovered from render error:", error);
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return null;
+    }
+    return this.props.children;
+  }
+}
+
 export function World(props: WorldProps) {
   const { globeConfig } = props;
   return (
-    <Canvas
-      dpr={[1, 2]}
-      style={{ touchAction: "pan-y" }}
-      className="pointer-events-none md:pointer-events-auto"
-      camera={{
-        fov: 50,
-        aspect: aspect,
-        near: 180,
-        far: 1800,
-        position: [0, 0, cameraZ],
-      }}
-    >
-      <fog attach="fog" args={["#ffffff", 400, 2000]} />
-      <ambientLight color={globeConfig.ambientLight} intensity={0.6} />
-      <directionalLight
-        color={globeConfig.directionalLeftLight}
-        position={[-400, 100, 400]}
-      />
-      <directionalLight
-        color={globeConfig.directionalTopLight}
-        position={[-200, 500, 200]}
-      />
-      <pointLight
-        color={globeConfig.pointLight}
-        position={[-200, 500, 200]}
-        intensity={0.8}
-      />
-      <Globe {...props} />
-      <OrbitControls
-        enablePan={false}
-        enableZoom={false}
-        minDistance={cameraZ}
-        maxDistance={cameraZ}
-        autoRotateSpeed={1}
-        autoRotate={true}
-        minPolarAngle={Math.PI / 3.5}
-        maxPolarAngle={Math.PI - Math.PI / 3}
-        touches={{
-          ONE: 0, // Single-finger drag passes through to vertical page scrolling
-          TWO: 1, // Two-finger gesture allows 3D globe orbit
+    <GlobeErrorBoundary>
+      <Canvas
+        dpr={[1, 2]}
+        events={safePointerEvents}
+        style={{ touchAction: "pan-y" }}
+        className="pointer-events-none md:pointer-events-auto"
+        camera={{
+          fov: 50,
+          aspect: aspect,
+          near: 180,
+          far: 1800,
+          position: [0, 0, cameraZ],
         }}
-      />
-    </Canvas>
+      >
+        <fog attach="fog" args={["#ffffff", 400, 2000]} />
+        <ambientLight color={globeConfig.ambientLight} intensity={0.6} />
+        <directionalLight
+          color={globeConfig.directionalLeftLight}
+          position={[-400, 100, 400]}
+        />
+        <directionalLight
+          color={globeConfig.directionalTopLight}
+          position={[-200, 500, 200]}
+        />
+        <pointLight
+          color={globeConfig.pointLight}
+          position={[-200, 500, 200]}
+          intensity={0.8}
+        />
+        <Globe {...props} />
+        <OrbitControls
+          enablePan={false}
+          enableZoom={false}
+          minDistance={cameraZ}
+          maxDistance={cameraZ}
+          autoRotateSpeed={1}
+          autoRotate={true}
+          minPolarAngle={Math.PI / 3.5}
+          maxPolarAngle={Math.PI - Math.PI / 3}
+          touches={{
+            ONE: 0, // Single-finger drag passes through to vertical page scrolling
+            TWO: 1, // Two-finger gesture allows 3D globe orbit
+          }}
+        />
+      </Canvas>
+    </GlobeErrorBoundary>
   );
 }
 

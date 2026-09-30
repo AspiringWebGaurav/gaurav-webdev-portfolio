@@ -56,7 +56,7 @@ function ProgressBarInternal() {
 
   // Intercept internal navigation clicks
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || typeof document === "undefined" || !document) return;
 
     const handleLinkClick = (e: MouseEvent) => {
       const target = (e.target as HTMLElement).closest("a");

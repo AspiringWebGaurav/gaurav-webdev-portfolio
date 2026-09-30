@@ -323,15 +323,59 @@ const ShaderMaterial = ({
 };
 
 
+// CanvasRevealEffect is purely a visual background shader (pointer-events-none).
+// Providing a no-op event manager disables R3F pointer event listener attachment,
+// completely eliminating any "Cannot read properties of null (reading 'addEventListener') at Provider" errors.
+const disablePointerEvents = (): any => ({
+  priority: 0,
+  enabled: false,
+  connected: false,
+  handlers: undefined,
+  connect: () => {},
+  disconnect: () => {},
+  update: () => {},
+  compute: () => {},
+});
+
+class CanvasErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: unknown) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("CanvasRevealEffect recovered from render error:", error);
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return null;
+    }
+    return this.props.children;
+  }
+}
+
 const Shader: React.FC<ShaderProps> = ({ source, uniforms, maxFps = 60 }) => {
   return (
-    <Canvas
-      dpr={[1, 2]}
-      gl={{ powerPreference: "high-performance" }}
-      className="absolute inset-0 h-full w-full pointer-events-none"
-    >
-      <ShaderMaterial source={source} uniforms={uniforms} maxFps={maxFps} />
-    </Canvas>
+    <CanvasErrorBoundary>
+      <Canvas
+        dpr={[1, 2]}
+        gl={{ powerPreference: "high-performance" }}
+        className="absolute inset-0 h-full w-full pointer-events-none"
+        events={disablePointerEvents}
+      >
+        <ShaderMaterial source={source} uniforms={uniforms} maxFps={maxFps} />
+      </Canvas>
+    </CanvasErrorBoundary>
   );
 };
 interface ShaderProps {
@@ -344,3 +388,4 @@ interface ShaderProps {
   };
   maxFps?: number;
 }
+
