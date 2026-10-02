@@ -54,7 +54,9 @@ const nextConfig: NextConfig = {
   compress: true,
   images: {
     formats: ["image/avif", "image/webp"],
-    minimumCacheTTL: 2678400,
+    minimumCacheTTL: 31536000,
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     remotePatterns: [
       {
         protocol: "https",
@@ -76,6 +78,17 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "15mb",
     },
+  },
+  outputFileTracingExcludes: {
+    "*": [
+      "node_modules/@playwright/**",
+      "node_modules/playwright-core/**",
+      "node_modules/@esbuild/**",
+      "node_modules/typescript/**",
+      "tests/**",
+      "test-results/**",
+      "playwright-report/**",
+    ],
   },
   turbopack: {
     resolveAlias: {},
@@ -122,7 +135,18 @@ const nextConfig: NextConfig = {
         headers: securityHeaders,
       },
       {
-        source: "/:all*(svg|jpg|jpeg|png|webp|avif|ico|woff|woff2)",
+        // 1-Year Immutable Caching for Static Media, Images, Fonts, 3D Assets & Manifests
+        source: "/:path*.(ico|png|svg|jpg|jpeg|gif|webp|avif|woff|woff2|ttf|otf|eot|pdf|json|webmanifest|glb|gltf|mp4|webm)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
+        // 1-Year Immutable Caching for Hashed Next.js Static Bundles
+        source: "/_next/static/:path*",
         headers: [
           {
             key: "Cache-Control",

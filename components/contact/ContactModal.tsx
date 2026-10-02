@@ -1063,6 +1063,23 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                     <span className="text-xs text-neutral-400 font-bold">›</span>
                   </div>
                 </div>
+
+                {selectedRole === "Recruiter / Talent" && (
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-[#7C3AED]/15 border border-[#7C3AED]/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 animate-in fade-in duration-200">
+                    <div className="text-[11px] text-neutral-300">
+                      <span className="font-semibold text-white">Recruiter Portal:</span> Looking for direct phone, WhatsApp line, &amp; verified resume?
+                    </div>
+                    <a
+                      href="https://contact.gauravpatil.site"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-2.5 py-1 rounded-lg bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-[11px] font-semibold shrink-0 transition-colors inline-flex items-center gap-1 shadow-sm"
+                    >
+                      <span>contact.gauravpatil.site</span>
+                      <span>→</span>
+                    </a>
+                  </div>
+                )}
                 <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-neutral-400 pt-0.5">
                   <span>You have the right to stay anonymous &amp; confidential.</span>
                   <div className="flex items-center gap-1.5">

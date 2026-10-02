@@ -149,6 +149,18 @@ export const FooterSection = ({
             position="right"
             handleClick={handleOpenContact}
           />
+          <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-1.5 text-xs text-neutral-400 font-admin-mono">
+            <span>Hiring or Recruiter Inquiry?</span>
+            <a
+              href="https://contact.gauravpatil.site"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-purple hover:underline font-semibold inline-flex items-center gap-1 transition-colors"
+            >
+              <span>Access Recruiter Portal (contact.gauravpatil.site)</span>
+              <span>→</span>
+            </a>
+          </div>
         </div>
       )}
 
@@ -159,6 +171,15 @@ export const FooterSection = ({
           <span>
             © {new Date().getFullYear()} {footer.copyrightName || "Gaurav Patil"}
           </span>
+          <span className="text-neutral-600">·</span>
+          <a
+            href="https://contact.gauravpatil.site"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-purple transition-colors duration-200"
+          >
+            Recruiter Portal
+          </a>
           <span className="text-neutral-600">·</span>
           <Link
             href={footer.termsUrl || "/terms"}

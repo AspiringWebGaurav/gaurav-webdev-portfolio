@@ -129,7 +129,7 @@ lerna-debug.log*
 *.pid.lock
 
 # ==========================================
-# Testing, Coverage & Playwright Local Suites
+# Testing, Coverage & Playwright Local Suites (Strictly Local)
 # ==========================================
 coverage/
 .nyc_output/
@@ -137,16 +137,24 @@ playwright-report/
 playwright-results/
 test-results/
 .playwright/
+playwright/
 playwright/.cache/
+playwright.config.*
 playwright.config.ts
 playwright.config.js
+playwright.config.mjs
 tests/
+test/
+e2e/
 videos/
 screenshots/
 test-artifacts/
 .vitest/
 .jest/
 *.lcov
+*.test.*
+*.spec.*
+*.log
 
 # ==========================================
 # IDE, Editor & Tooling Workspaces
@@ -211,12 +219,19 @@ Icon?
 .prettiercache
 .hintrc
 
-# Scratch & Temporary Testing Scripts
+# Scratch, Local QA & Temporary Testing Artifacts
 scratch/
 scripts/
 .local-test-otp.json
+*.local-test-otp.json
+*.local.json
+.local*
 test-results/
 playwright-report/
+app/temp-contact/
+temp-contact/
+tsconfig.tsbuildinfo
+*.tsbuildinfo
 
 # Archives & Backups
 *.zip
@@ -226,4 +241,5 @@ playwright-report/
 *.old
 .vercel
 .env*
+
 

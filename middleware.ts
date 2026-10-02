@@ -164,10 +164,10 @@ export const config = {
      * - api (API routes, kept fast and unredirected for webhook/M2M performance)
      * - _next/static (static files)
      * - _next/image (image optimization files)
-     * - favicon.ico, icon.png, icon.svg, apple-icon.png, manifest.webmanifest, robots.txt, sitemap.xml
-     * - Static asset extensions (.png, .webp, .svg, .jpg, .jpeg, .pdf, etc.)
+     * - Well-known static metadata files (favicon.ico, icon.png, icon.svg, apple-icon.png, apple-touch-icon.png, og-image.png, manifest.webmanifest, robots.txt, sitemap.xml)
+     * - Static asset extensions (.png, .webp, .avif, .svg, .jpg, .jpeg, .pdf, .woff, .woff2, .ttf, .otf, .eot, .glb, .gltf, .mp4, .webm, .mp3, .wav, .ogg, .json, .txt, .xml, .map)
      */
-    "/((?!api|_next/static|_next/image|favicon.ico|icon\\.png|icon\\.svg|apple-icon\\.png|manifest\\.webmanifest|robots\\.txt|sitemap\\.xml|.*\\.(?:jpg|jpeg|gif|png|webp|svg|ico|pdf|mp4|webm|json)$).*)",
+    "/((?!api|_next/static|_next/image|favicon\\.ico|icon\\.png|icon\\.svg|apple-icon\\.png|apple-touch-icon\\.png|og-image\\.png|manifest\\.webmanifest|robots\\.txt|sitemap\\.xml|.*\\.(?:jpg|jpeg|gif|png|webp|avif|svg|ico|pdf|mp4|webm|json|woff|woff2|ttf|otf|eot|glb|gltf|mp3|wav|ogg|xml|txt|map)$).*)",
   ],
 };
 

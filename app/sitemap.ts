@@ -39,6 +39,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: "/projects", priority: 0.9, changeFrequency: "weekly", lastModified: homeLastModified },
     { path: "/blog", priority: 0.9, changeFrequency: "weekly", lastModified: homeLastModified },
     { path: "/chat", priority: 0.8, changeFrequency: "weekly", lastModified: releaseDate },
+    { path: "/contact-portal", priority: 0.9, changeFrequency: "weekly", lastModified: homeLastModified },
     { path: "/privacy", priority: 0.7, changeFrequency: "monthly", lastModified: releaseDate },
     { path: "/terms", priority: 0.7, changeFrequency: "monthly", lastModified: releaseDate },
     { path: "/security", priority: 0.7, changeFrequency: "monthly", lastModified: releaseDate },
@@ -91,10 +92,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const allRoutes = [...coreRoutes, ...projectRoutes, ...blogRoutes];
 
-  return allRoutes.map((item) => ({
+  const sitemapItems: MetadataRoute.Sitemap = allRoutes.map((item) => ({
     url: `${baseUrl}${item.path}`,
     lastModified: item.lastModified,
     changeFrequency: item.changeFrequency,
     priority: item.priority,
   }));
+
+  // Authoritative dedicated recruiter subdomain
+  sitemapItems.push({
+    url: "https://contact.gauravpatil.site",
+    lastModified: homeLastModified,
+    changeFrequency: "weekly",
+    priority: 0.95,
+  });
+
+  return sitemapItems;
 }
