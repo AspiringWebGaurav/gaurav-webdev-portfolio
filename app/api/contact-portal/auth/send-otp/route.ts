@@ -9,7 +9,7 @@ import { getRequestContext } from "@/lib/api/context";
 import { verifyTurnstileToken } from "@/lib/security/turnstile";
 import { checkSendOtpRateLimit } from "@/lib/recruiter/services/recruiter-rate-limiter";
 import { createOtpChallenge } from "@/lib/recruiter/services/recruiter-otp.service";
-import { validateWorkEmail } from "@/lib/recruiter/validation";
+import { validateWorkEmail, getAutocorrectedEmail } from "@/lib/recruiter/validation";
 
 const sendOtpSchema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters").max(100, "Name too long"),
@@ -32,8 +32,9 @@ export async function POST(req: NextRequest) {
 
     const { name, company, email, phone, turnstileToken } = parseResult.data;
 
-    // Strict Corporate Work Email Validation
-    const emailValidationError = validateWorkEmail(email);
+    // Autocorrect domain typos (e.g. gmal.com -> gmail.com) & validate
+    const normalizedEmail = getAutocorrectedEmail(email);
+    const emailValidationError = validateWorkEmail(normalizedEmail);
     if (emailValidationError) {
       return NextResponse.json({ ok: false, error: emailValidationError }, { status: 400 });
     }
@@ -51,7 +52,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Multi-tier rate limiting
-    const rateLimit = await checkSendOtpRateLimit(clientIp, email);
+    const rateLimit = await checkSendOtpRateLimit(clientIp, normalizedEmail);
     if (!rateLimit.allowed) {
       return NextResponse.json(
         { ok: false, error: rateLimit.reason || "Rate limit exceeded. Please try again later." },
@@ -75,7 +76,7 @@ export async function POST(req: NextRequest) {
     const challengeResult = await createOtpChallenge({
       name,
       company,
-      email,
+      email: normalizedEmail,
       phone: phone || null,
       clientIp,
       countryCode,
@@ -93,7 +94,7 @@ export async function POST(req: NextRequest) {
       data: {
         challengeId: challengeResult.challengeId,
         expiresInSeconds: challengeResult.expiresInSeconds,
-        message: `Verification code sent to ${email}`,
+        message: `Verification code sent to ${normalizedEmail}`,
       },
     });
   } catch (err) {

@@ -14,7 +14,7 @@ import {
   FaSearch,
   FaChevronDown,
 } from "react-icons/fa";
-import { validateWorkEmail } from "@/lib/recruiter/validation";
+import { validateWorkEmail, validateEmailWithTypo, getAutocorrectedEmail } from "@/lib/recruiter/validation";
 
 interface CountryOption {
   code: string;
@@ -114,10 +114,12 @@ export function RecruiterAccessGate({ onSuccess }: RecruiterAccessGateProps) {
   // Field validation and touched tracking
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
+  const emailValidation = validateEmailWithTypo(email);
+
   const fieldErrors = {
     name: validateName(name),
     company: validateCompany(company),
-    email: validateEmail(email),
+    email: emailValidation.isValid ? null : (emailValidation.error || "Please enter a valid email."),
     phone: validatePhone(phoneNumber),
   };
 
@@ -272,8 +274,15 @@ export function RecruiterAccessGate({ onSuccess }: RecruiterAccessGateProps) {
     e.preventDefault();
     setTouched({ name: true, company: true, email: true, phone: true });
 
-    if (fieldErrors.name || fieldErrors.company || fieldErrors.email || fieldErrors.phone) {
-      setErrorMessage("Please correct the highlighted fields before proceeding.");
+    // Autocorrect common domain typos like gmal.com -> gmail.com
+    const finalEmail = getAutocorrectedEmail(email.trim());
+    if (finalEmail !== email) {
+      setEmail(finalEmail);
+    }
+
+    const currentEmailValidation = validateEmailWithTypo(finalEmail);
+    if (fieldErrors.name || fieldErrors.company || !currentEmailValidation.isValid || fieldErrors.phone) {
+      setErrorMessage(currentEmailValidation.error || "Please correct the highlighted fields before proceeding.");
       return;
     }
 
@@ -295,7 +304,7 @@ export function RecruiterAccessGate({ onSuccess }: RecruiterAccessGateProps) {
         body: JSON.stringify({
           name: name.trim(),
           company: company.trim(),
-          email: email.trim(),
+          email: finalEmail,
           phone: fullPhone,
           turnstileToken: turnstileToken || "client_direct_token",
         }),
@@ -368,13 +377,15 @@ export function RecruiterAccessGate({ onSuccess }: RecruiterAccessGateProps) {
       const cleanPhone = phoneNumber.trim();
       const fullPhone = cleanPhone ? `${selectedCountry.dialCode} ${cleanPhone}` : undefined;
 
+      const finalEmail = getAutocorrectedEmail(email.trim());
+
       const res = await fetch("/api/contact-portal/auth/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: name.trim(),
           company: company.trim(),
-          email: email.trim(),
+          email: finalEmail,
           phone: fullPhone,
           turnstileToken: turnstileToken || "client_direct_token",
         }),
@@ -481,7 +492,7 @@ export function RecruiterAccessGate({ onSuccess }: RecruiterAccessGateProps) {
 
             <div className="pt-8 text-xs text-gray-500 flex items-center gap-2">
               <FaShieldAlt className="text-emerald-600 text-xs" />
-              <span>Quick 1-step work email verification • No signup or password needed</span>
+              <span>Quick 1-step email verification • No signup or password needed</span>
             </div>
           </div>
 
@@ -570,19 +581,34 @@ export function RecruiterAccessGate({ onSuccess }: RecruiterAccessGateProps) {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="block text-[11px] sm:text-xs font-semibold text-gray-700 uppercase font-admin-mono tracking-wider">
-                      Work Email *
+                      Email or Work Email *
                     </label>
-                    <span className="text-[10px] text-gray-400 font-admin-mono uppercase tracking-wider">
-                      Company Domain Required
-                    </span>
+                    {email.trim().length > 4 && !emailValidation.isValid && emailValidation.suggestion && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEmail(emailValidation.suggestion!);
+                          setTouched((prev) => ({ ...prev, email: false }));
+                        }}
+                        className="text-[10px] sm:text-xs font-semibold text-[#7C3AED] hover:underline cursor-pointer flex items-center gap-1 animate-pulse"
+                      >
+                        Use {emailValidation.suggestion}?
+                      </button>
+                    )}
                   </div>
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    onBlur={() => handleBlur("email")}
-                    placeholder="e.g. name@company.com"
+                    onBlur={() => {
+                      handleBlur("email");
+                      const corrected = getAutocorrectedEmail(email);
+                      if (corrected !== email) {
+                        setEmail(corrected);
+                      }
+                    }}
+                    placeholder="john.doe@company.com or personal email"
                     className={`w-full h-10 sm:h-10.5 px-3 rounded-lg bg-[#FFFFFF] border text-black placeholder:text-gray-400 text-sm focus:outline-none transition shadow-2xs ${
                       (touched.email || (email.trim().length > 3 && (email.includes("@") || email.includes(".")))) && fieldErrors.email
                         ? "border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-red-50/10"
@@ -590,10 +616,24 @@ export function RecruiterAccessGate({ onSuccess }: RecruiterAccessGateProps) {
                     }`}
                   />
                   {(touched.email || (email.trim().length > 3 && (email.includes("@") || email.includes(".")))) && fieldErrors.email && (
-                    <p className="text-[10px] text-red-600 mt-1 flex items-start gap-1 animate-in fade-in duration-150 leading-tight">
-                      <FaExclamationTriangle className="text-[9px] shrink-0 mt-0.5" />
-                      <span>{fieldErrors.email}</span>
-                    </p>
+                    <div className="mt-1 flex items-start justify-between gap-1 text-[10px] leading-tight">
+                      <p className="text-red-600 flex items-start gap-1">
+                        <FaExclamationTriangle className="text-[9px] shrink-0 mt-0.5" />
+                        <span>{fieldErrors.email}</span>
+                      </p>
+                      {emailValidation.suggestion && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEmail(emailValidation.suggestion!);
+                            setTouched((prev) => ({ ...prev, email: false }));
+                          }}
+                          className="text-[#7C3AED] font-semibold underline shrink-0 hover:text-[#6D28D9] cursor-pointer ml-1"
+                        >
+                          Use {emailValidation.suggestion}
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
 

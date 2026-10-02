@@ -1,7 +1,7 @@
 /**
- * Recruiter Portal Work Email & Intake Validation
- * Strictly enforces corporate/work email addresses.
- * Rejects personal webmail (Gmail, Yahoo, Outlook, etc.), disposable domains, and candidate personal emails.
+ * Recruiter Portal Email Validation & Typo Autocorrection
+ * Accepts all corporate and personal emails (including Gmail, Yahoo, Outlook, and candidate emails).
+ * Detects and autocorrects domain typos (e.g. gmal.com -> gmail.com).
  */
 
 // Common domain typos mapped to their canonical equivalents
@@ -16,23 +16,32 @@ export const DOMAIN_TYPO_MAP: Record<string, string> = {
   "gmail.con": "gmail.com",
   "gmail.co": "gmail.com",
   "gemail.com": "gmail.com",
+  "gmal": "gmail.com",
+  "gmail": "gmail.com",
+  "googlemail.con": "googlemail.com",
 
   "hotmial.com": "hotmail.com",
   "hotmai.com": "hotmail.com",
   "hotmil.com": "hotmail.com",
   "hotmale.com": "hotmail.com",
   "hotmail.con": "hotmail.com",
+  "hotmial": "hotmail.com",
+  "hotmail": "hotmail.com",
 
   "yaho.com": "yahoo.com",
   "yahooo.com": "yahoo.com",
   "yaboo.com": "yahoo.com",
   "yaho.co": "yahoo.com",
   "yahoo.con": "yahoo.com",
+  "yaho": "yahoo.com",
+  "yahoo": "yahoo.com",
 
   "outlok.com": "outlook.com",
   "outloo.com": "outlook.com",
   "outllok.com": "outlook.com",
   "outlook.con": "outlook.com",
+  "outlok": "outlook.com",
+  "outlook": "outlook.com",
 
   "iclud.com": "icloud.com",
   "iclou.com": "icloud.com",
@@ -42,258 +51,112 @@ export const DOMAIN_TYPO_MAP: Record<string, string> = {
   "protonmial.com": "protonmail.com",
 };
 
-// Known free / personal webmail domains that MUST be blocked for recruiter intake
-export const FREE_EMAIL_DOMAINS = new Set([
-  // Google
-  "gmail.com",
-  "googlemail.com",
-
-  // Microsoft
-  "outlook.com",
-  "hotmail.com",
-  "live.com",
-  "msn.com",
-  "passport.com",
-  "windowslive.com",
-  "hotmail.co.uk",
-  "hotmail.fr",
-  "hotmail.de",
-  "hotmail.it",
-  "hotmail.es",
-  "outlook.in",
-  "outlook.de",
-  "outlook.fr",
-  "outlook.es",
-  "outlook.it",
-  "live.co.uk",
-  "live.fr",
-  "live.de",
-  "live.it",
-
-  // Yahoo
-  "yahoo.com",
-  "ymail.com",
-  "rocketmail.com",
-  "yahoo.co.in",
-  "yahoo.in",
-  "yahoo.co.uk",
-  "yahoo.ca",
-  "yahoo.fr",
-  "yahoo.de",
-  "yahoo.es",
-  "yahoo.it",
-  "yahoo.com.br",
-  "yahoo.com.au",
-  "yahoo.co.jp",
-
-  // Apple
-  "icloud.com",
-  "me.com",
-  "mac.com",
-
-  // Proton
-  "proton.me",
-  "protonmail.com",
-  "protonmail.ch",
-  "pm.me",
-
-  // AOL
-  "aol.com",
-  "aim.com",
-
-  // Zoho personal
-  "zoho.com",
-  "zohomail.com",
-
-  // Generic / Personal mail services
-  "mail.com",
-  "email.com",
-  "usa.com",
-  "post.com",
-  "myself.com",
-  "consultant.com",
-  "europe.com",
-  "asia.com",
-  "dr.com",
-  "techie.com",
-  "engineer.com",
-  "cheerful.com",
-  "gmx.com",
-  "gmx.net",
-  "gmx.de",
-  "gmx.at",
-  "gmx.ch",
-
-  // International personal providers
-  "yandex.com",
-  "yandex.ru",
-  "ya.ru",
-  "tutanota.com",
-  "tutamail.com",
-  "tuta.com",
-  "fastmail.com",
-  "fastmail.fm",
-  "rediffmail.com",
-  "inbox.com",
-  "lycos.com",
-  "naver.com",
-  "daum.net",
-  "hanmail.net",
-  "qq.com",
-  "163.com",
-  "126.com",
-  "sina.com",
-  "sohu.com",
-  "web.de",
-  "freenet.de",
-  "t-online.de",
-  "laposte.net",
-  "orange.fr",
-  "free.fr",
-  "sfr.fr",
-  "libero.it",
-  "virgilio.it",
-  "bol.com.br",
-  "uol.com.br",
-  "terra.com.br",
-  "ig.com.br",
-]);
-
-// Known disposable, temporary, and test domains
-export const DISPOSABLE_OR_TEST_DOMAINS = new Set([
-  "tempmail.com",
-  "temp-mail.org",
-  "10minutemail.com",
-  "guerrillamail.com",
-  "guerrillamailblock.com",
-  "sharklasers.com",
-  "throwaway.com",
-  "mailinator.com",
-  "trashmail.com",
-  "dispostable.com",
-  "yopmail.com",
-  "fakeinbox.com",
-  "burnermail.io",
-  "getairmail.com",
-  "mohmal.com",
-  "crazymailing.com",
-  "dropmail.me",
+// Known test/disposable domains to reject
+export const BLOCKED_DOMAINS = new Set([
   "test.com",
   "testing.com",
   "fake.com",
-  "example.com",
-  "sample.com",
   "asdf.com",
-  "localhost",
-  "domain.com",
+  "tempmail.com",
+  "mailinator.com",
+  "10minutemail.com",
+  "guerrillamail.com",
+  "throwaway.com",
 ]);
 
-// Candidate / Owner reserved emails and identifiers
-export const OWNER_RESERVED_EMAILS = new Set([
-  "gauravpatil9262@gmail.com",
-  "gauravpatil5737@gmail.com",
-  "aspiringwebgaurav@gmail.com",
-  "gaurav@gauravpatil.site",
-  "hello@gauravpatil.site",
-  "me@gauravpatil.site",
-  "work@gauravpatil.site",
-  "security@gauravpatil.site",
-  "help@gauravpatil.site",
-  "no-reply@gauravpatil.site",
-]);
-
-const OWNER_USERNAME_PATTERNS = [
-  "gauravpatil9262",
-  "gauravpatil5737",
-  "aspiringwebgaurav",
-  "gauravpatil",
-  "gaurav.patil",
-];
+export interface EmailValidationResult {
+  isValid: boolean;
+  error?: string;
+  suggestion?: string;
+  autocorrected?: string;
+}
 
 /**
- * Validates whether an email is a legitimate corporate / work email.
- * Returns null if valid, or a descriptive error message if invalid.
+ * Validates email with domain typo detection and autocorrection suggestion.
+ * Fully accepts Gmail, personal emails, work emails, and candidate Gmail addresses.
  */
-export function validateWorkEmail(val: string): string | null {
+export function validateEmailWithTypo(val: string): EmailValidationResult {
   const trimmed = val.trim().toLowerCase();
   if (!trimmed) {
-    return "Please enter your official company work email.";
+    return { isValid: false, error: "Please enter your email." };
   }
 
-  // Basic format check
+  // Check for common typo domains before general regex check
+  if (trimmed.includes("@")) {
+    const parts = trimmed.split("@");
+    if (parts.length === 2) {
+      const [username, domain] = parts;
+      if (DOMAIN_TYPO_MAP[domain]) {
+        const canonicalDomain = DOMAIN_TYPO_MAP[domain];
+        const suggested = `${username}@${canonicalDomain}`;
+        return {
+          isValid: false,
+          error: `Invalid domain @${domain}. Did you mean @${canonicalDomain}?`,
+          suggestion: suggested,
+          autocorrected: suggested,
+        };
+      }
+    }
+  }
+
+  // RFC standard email check
   const emailRegex =
     /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
 
   if (!emailRegex.test(trimmed) || trimmed.includes("..")) {
-    return "Please enter a valid email address (e.g. name@company.com).";
+    return {
+      isValid: false,
+      error: "Please enter a valid email address (e.g. name@company.com or name@gmail.com).",
+    };
   }
 
   const parts = trimmed.split("@");
   if (parts.length !== 2) {
-    return "Invalid email address structure.";
+    return { isValid: false, error: "Invalid email address." };
   }
 
-  const [username, domain] = parts;
+  const domain = parts[1];
 
-  // 1. Candidate / Owner email reservation check
-  if (OWNER_RESERVED_EMAILS.has(trimmed)) {
-    return "This email belongs to Gaurav Patil. Please provide your official recruiter or company work email.";
+  // Blocked disposable domain check
+  if (BLOCKED_DOMAINS.has(domain)) {
+    return {
+      isValid: false,
+      error: "Disposable or temporary email addresses are not accepted.",
+    };
   }
 
-  if (domain === "gauravpatil.site" || domain.endsWith(".gauravpatil.site")) {
-    return "This domain belongs to Gaurav Patil. Recruiter access requires your company work email.";
-  }
-
-  if (OWNER_USERNAME_PATTERNS.includes(username)) {
-    return "This email belongs to Gaurav Patil. Please provide your official recruiter or company work email.";
-  }
-
-  // 2. Check for domain typos (e.g. gmal.com, hotmial.com)
-  if (DOMAIN_TYPO_MAP[domain]) {
-    return `Invalid domain @${domain}. Personal and misspelled email addresses are not accepted. Please use your official company email.`;
-  }
-
-  // 3. Free / Personal Webmail check (Gmail, Yahoo, Outlook, etc.)
-  if (FREE_EMAIL_DOMAINS.has(domain)) {
-    return `Personal email addresses (@${domain}) are not accepted for recruiter access. Please provide your official company or work email (e.g. name@company.com).`;
-  }
-
-  // Check subdomains of free providers (e.g. *.gmail.com)
-  for (const freeDomain of FREE_EMAIL_DOMAINS) {
-    if (domain.endsWith(`.${freeDomain}`)) {
-      return `Personal email addresses are not accepted. Please provide your official company or work email.`;
-    }
-  }
-
-  // 4. Disposable or Test domains check
-  if (DISPOSABLE_OR_TEST_DOMAINS.has(domain)) {
-    return `Disposable or temporary email addresses are not permitted. Please use your verified corporate email.`;
-  }
-
-  for (const blocked of DISPOSABLE_OR_TEST_DOMAINS) {
-    if (domain.endsWith(`.${blocked}`)) {
-      return `Disposable or temporary email addresses are not permitted. Please use your verified corporate email.`;
-    }
-  }
-
-  // 5. Domain structure validation
+  // Check TLD length
   const dotIndex = domain.lastIndexOf(".");
   if (dotIndex === -1 || domain.substring(dotIndex + 1).length < 2) {
-    return "Email domain must include a valid top-level domain (e.g. .com, .org, .co).";
+    return {
+      isValid: false,
+      error: "Please enter an email with a valid domain (e.g. .com, .org).",
+    };
   }
 
-  // Ensure domain has at least a 2-char label before the TLD
-  const domainParts = domain.split(".");
-  if (domainParts.some((p) => p.length === 0)) {
-    return "Please enter a valid domain name.";
-  }
-
-  return null;
+  return { isValid: true };
 }
 
 /**
- * Convenience helper returning boolean
+ * Returns error string or null if valid (compatible with form validation)
  */
-export function isWorkEmailValid(val: string): boolean {
-  return validateWorkEmail(val) === null;
+export function validateWorkEmail(val: string): string | null {
+  const result = validateEmailWithTypo(val);
+  return result.isValid ? null : (result.error || "Please enter a valid email address.");
+}
+
+/**
+ * Helper to autocorrect known typos (e.g. user@gmal.com -> user@gmail.com)
+ */
+export function getAutocorrectedEmail(val: string): string {
+  const trimmed = val.trim();
+  if (!trimmed.includes("@")) return trimmed;
+  const parts = trimmed.split("@");
+  if (parts.length !== 2) return trimmed;
+  const [username, domain] = parts;
+  const lowerDomain = domain.toLowerCase();
+  if (DOMAIN_TYPO_MAP[lowerDomain]) {
+    return `${username}@${DOMAIN_TYPO_MAP[lowerDomain]}`;
+  }
+  return trimmed;
 }
