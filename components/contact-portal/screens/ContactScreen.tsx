@@ -231,6 +231,9 @@ export function ContactScreen({ recruiter, onTrackAction }: ContactScreenProps) 
     }, 2000);
   };
 
+  const contactDataRef = useRef(contactData);
+  contactDataRef.current = contactData;
+
   // Fetch initial protected contact payload
   useEffect(() => {
     let isMounted = true;
@@ -242,20 +245,21 @@ export function ContactScreen({ recruiter, onTrackAction }: ContactScreenProps) 
           if (res.ok && json.ok) {
             let freshData = json.data as ProtectedContactPayload;
             // Session persistence: if previously unmasked in this session, keep unmasked!
+            const currentData = contactDataRef.current;
             const isSessionUnmasked =
               typeof window !== "undefined" &&
               (sessionStorage.getItem("recruiter_phone_unmasked") === "true" ||
-                Boolean(contactData && !contactData.isMasked));
+                Boolean(currentData && !currentData.isMasked));
 
-            if (isSessionUnmasked && freshData.isMasked && contactData && !contactData.isMasked) {
+            if (isSessionUnmasked && freshData.isMasked && currentData && !currentData.isMasked) {
               freshData = {
                 ...freshData,
                 isMasked: false,
-                phone: contactData.phone,
-                phoneDisplay: contactData.phoneDisplay,
-                whatsappUrl: contactData.whatsappUrl,
-                secondaryPhone: contactData.secondaryPhone,
-                secondaryPhoneDisplay: contactData.secondaryPhoneDisplay,
+                phone: currentData.phone,
+                phoneDisplay: currentData.phoneDisplay,
+                whatsappUrl: currentData.whatsappUrl,
+                secondaryPhone: currentData.secondaryPhone,
+                secondaryPhoneDisplay: currentData.secondaryPhoneDisplay,
               };
             }
 
@@ -271,7 +275,7 @@ export function ContactScreen({ recruiter, onTrackAction }: ContactScreenProps) 
               }
             }
           } else {
-            if (!contactData) {
+            if (!contactDataRef.current) {
               setError(json.error || "Failed to load protected contact data.");
             }
           }
@@ -279,7 +283,7 @@ export function ContactScreen({ recruiter, onTrackAction }: ContactScreenProps) 
         }
       } catch {
         if (isMounted) {
-          if (!contactData) {
+          if (!contactDataRef.current) {
             setError("Network error fetching direct contact info.");
           }
           setIsLoading(false);

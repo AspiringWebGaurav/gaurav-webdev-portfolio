@@ -36,7 +36,6 @@ interface LiveChatScreenProps {
 export function LiveChatScreen({
   recruiter,
   onTrackAction,
-  onSignOut,
 }: LiveChatScreenProps) {
   const firstName = recruiter.name.split(" ")[0] || recruiter.name || "there";
 
@@ -303,7 +302,7 @@ export function LiveChatScreen({
         setIsInitialLoading(false);
       }
     },
-    [welcomeMessage, isCircuitBroken, onSignOut]
+    [welcomeMessage, isCircuitBroken]
   );
 
   // Multi-Tab & In-App Shared Broadcast Sync Channel
