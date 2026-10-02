@@ -27,6 +27,7 @@ import {
   FaWhatsapp,
   FaScaleBalanced,
   FaUserCheck,
+  FaFileLines,
 } from "react-icons/fa6";
 
 import { useAdminSession } from "@/components/admin/context";
@@ -154,6 +155,7 @@ export const AdminSidebar: React.FC = () => {
     { id: "19", label: "Database Reset", href: "/admin/purge", icon: FaRotate },
     { id: "20", label: "WhatsApp Recruiter", href: "/admin/whatsapp", icon: FaWhatsapp },
     { id: "21", label: "Recruiter Portal", href: "/admin/recruiters", icon: FaUserCheck },
+    { id: "22", label: "Resume Studio", href: "/admin/resume", icon: FaFileLines },
   ];
 
   const isProfileActive = pathname === "/admin/profile";

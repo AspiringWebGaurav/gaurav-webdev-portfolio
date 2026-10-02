@@ -51,7 +51,27 @@ export const revalidate = 3600;
 export default async function Home() {
   const data = await getPortfolioData();
 
-  const formattedNav = (data.navigation || []).map((item) => ({
+  const rawNav = data.navigation && data.navigation.length > 0 ? [...data.navigation] : [];
+  const hasResume = rawNav.some(
+    (item) => item.link.includes("resume") || item.name.toLowerCase() === "resume"
+  );
+  if (!hasResume) {
+    const contactIdx = rawNav.findIndex((i) => i.link.includes("contact"));
+    const resumeItem = {
+      id: "nav_resume",
+      name: "Resume",
+      link: "https://resume.gauravpatil.site",
+      order: 4,
+      isVisible: true,
+    };
+    if (contactIdx !== -1) {
+      rawNav.splice(contactIdx, 0, resumeItem);
+    } else {
+      rawNav.push(resumeItem);
+    }
+  }
+
+  const formattedNav = rawNav.map((item) => ({
     name: item.name,
     link: item.link,
   }));

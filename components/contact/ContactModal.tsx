@@ -21,6 +21,7 @@ import {
 
 const TURNSTILE_SITE_KEY =
   process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY ||
+  process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ||
   "0x4AAAAAABe0jAr2HXu1hIs4";
 
 const DRAFT_STORAGE_KEY = "gaurav_portfolio_contact_draft";
@@ -104,6 +105,8 @@ export const ContactModal: React.FC<ContactModalProps> = ({
   const [submissionStage, setSubmissionStage] = useState<"idle" | "verifying" | "encrypting">("idle");
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [isTurnstileReady, setIsTurnstileReady] = useState(false);
 
   // Success Snapshot
   const [submittedData, setSubmittedData] = useState<SubmittedContactData | null>(null);
@@ -208,6 +211,8 @@ export const ContactModal: React.FC<ContactModalProps> = ({
       setIsSubmitting(false);
       setSubmissionStage("idle");
       setIsInputFocused(false);
+      setTurnstileToken(null);
+      setIsTurnstileReady(false);
       isSubmittingRef.current = false;
       pendingSubmitPayloadRef.current = null;
       setIsClosing(false);
@@ -242,12 +247,12 @@ export const ContactModal: React.FC<ContactModalProps> = ({
 
     if (typeof window !== "undefined" && window.turnstile && turnstileWidgetIdRef.current) {
       try {
-        window.turnstile.remove(turnstileWidgetIdRef.current);
+        window.turnstile.reset(turnstileWidgetIdRef.current);
       } catch {
         // Ignore
       }
-      turnstileWidgetIdRef.current = null;
     }
+    setTurnstileToken(null);
 
     // Safely focus the first form input after the form DOM mounts
     requestAnimationFrame(() => {
@@ -481,6 +486,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
             category: selectedRole,
             message: trimmedMessage,
             turnstileToken: token || undefined,
+            "cf-turnstile-response": token || undefined,
           }),
           signal: controller.signal,
         });
@@ -526,6 +532,14 @@ export const ContactModal: React.FC<ContactModalProps> = ({
           variant,
         });
         setIsSuccess(true);
+        if (typeof window !== "undefined" && window.turnstile && turnstileWidgetIdRef.current) {
+          try {
+            window.turnstile.reset(turnstileWidgetIdRef.current);
+          } catch {
+            // Ignore
+          }
+        }
+        setTurnstileToken(null);
         triggerHaptic([30, 60, 40]); // Celebratory haptic buzz on mobile
       } catch (err: unknown) {
         clearTimeout(timeoutId);
@@ -550,6 +564,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
             // Ignore
           }
         }
+        setTurnstileToken(null);
       } finally {
         if (isMountedRef.current && requestId === currentRequestIdRef.current) {
           setIsSubmitting(false);
@@ -563,7 +578,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
   );
 
   // =========================================================================
-  // 11. Dynamic Cloudflare Turnstile Challenge Mounting on Submit
+  // 11. Canonical Cloudflare Turnstile Challenge Mounting (Non-interactive)
   // =========================================================================
   const renderTurnstileWidget = useCallback(() => {
     if (!turnstileContainerRef.current) return;
@@ -571,8 +586,16 @@ export const ContactModal: React.FC<ContactModalProps> = ({
 
     try {
       if (turnstileWidgetIdRef.current) {
-        window.turnstile.remove(turnstileWidgetIdRef.current);
+        try {
+          window.turnstile.remove(turnstileWidgetIdRef.current);
+        } catch {
+          // Ignore
+        }
         turnstileWidgetIdRef.current = null;
+      }
+
+      if (turnstileContainerRef.current) {
+        turnstileContainerRef.current.innerHTML = "";
       }
 
       const widgetId = window.turnstile.render(turnstileContainerRef.current, {
@@ -582,6 +605,8 @@ export const ContactModal: React.FC<ContactModalProps> = ({
         action: "contact_inquiry",
         callback: (token: string) => {
           if (isMountedRef.current) {
+            setTurnstileToken(token);
+            setIsTurnstileReady(true);
             if (pendingSubmitPayloadRef.current) {
               const payload = pendingSubmitPayloadRef.current;
               pendingSubmitPayloadRef.current = null;
@@ -589,18 +614,24 @@ export const ContactModal: React.FC<ContactModalProps> = ({
             }
           }
         },
-        "error-callback": () => {
+        "error-callback": (err: unknown) => {
+          console.warn("Turnstile challenge error:", err);
           if (isMountedRef.current) {
-            const fallbackToken = "cf_client_token";
+            setTurnstileToken(null);
+            setIsTurnstileReady(false);
             if (pendingSubmitPayloadRef.current) {
-              const payload = pendingSubmitPayloadRef.current;
+              setSubmissionStage("idle");
+              setIsSubmitting(false);
+              isSubmittingRef.current = false;
               pendingSubmitPayloadRef.current = null;
-              submitWithToken(fallbackToken, payload.name, payload.email, payload.message);
+              setSubmissionError("Security verification failed. Please check your connection and retry.");
             }
           }
         },
         "expired-callback": () => {
           if (isMountedRef.current) {
+            setTurnstileToken(null);
+            setIsTurnstileReady(false);
             if (window.turnstile && turnstileWidgetIdRef.current) {
               try {
                 window.turnstile.reset(turnstileWidgetIdRef.current);
@@ -613,46 +644,47 @@ export const ContactModal: React.FC<ContactModalProps> = ({
       });
 
       turnstileWidgetIdRef.current = widgetId;
+      setIsTurnstileReady(true);
     } catch (err) {
       console.warn("Turnstile initialization note:", err);
-      if (isMountedRef.current) {
-        const fallbackToken = "cf_fallback_token";
-        if (pendingSubmitPayloadRef.current) {
-          const payload = pendingSubmitPayloadRef.current;
-          pendingSubmitPayloadRef.current = null;
-          submitWithToken(fallbackToken, payload.name, payload.email, payload.message);
-        }
-      }
     }
   }, [submitWithToken]);
 
-  // Mount Turnstile whenever isSubmitting transitions to true
+  // Mount Turnstile whenever modal is open and form is active
   useEffect(() => {
-    if (!isSubmitting) return;
+    if (!isOpen || isSuccess) {
+      setTurnstileToken(null);
+      setIsTurnstileReady(false);
+      return;
+    }
+
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+    let cancelled = false;
+
+    const tryRender = () => {
+      if (cancelled) return;
+      if (typeof window !== "undefined" && window.turnstile && turnstileContainerRef.current) {
+        renderTurnstileWidget();
+        if (intervalId) {
+          clearInterval(intervalId);
+          intervalId = null;
+        }
+      }
+    };
 
     if (typeof window !== "undefined") {
       if (window.turnstile) {
-        renderTurnstileWidget();
+        tryRender();
       } else {
-        let attempts = 0;
-        const interval = setInterval(() => {
-          attempts += 1;
-          if (window.turnstile) {
-            clearInterval(interval);
-            renderTurnstileWidget();
-          } else if (attempts >= 40) {
-            clearInterval(interval);
-            if (isMountedRef.current && pendingSubmitPayloadRef.current) {
-              const payload = pendingSubmitPayloadRef.current;
-              pendingSubmitPayloadRef.current = null;
-              submitWithToken("cf_fallback_token", payload.name, payload.email, payload.message);
-            }
-          }
-        }, 100);
-        return () => clearInterval(interval);
+        intervalId = setInterval(tryRender, 200);
       }
     }
-  }, [isSubmitting, renderTurnstileWidget, submitWithToken]);
+
+    return () => {
+      cancelled = true;
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isOpen, isSuccess, renderTurnstileWidget]);
 
   // =========================================================================
   // 12. Submit Trigger
@@ -696,14 +728,46 @@ export const ContactModal: React.FC<ContactModalProps> = ({
 
     setSubmissionError(null);
     setIsSubmitting(true);
-    setSubmissionStage("verifying");
     isSubmittingRef.current = true;
 
-    pendingSubmitPayloadRef.current = {
-      name: trimmedName,
-      email: trimmedEmail,
-      message: trimmedMessage,
-    };
+    // Fast path: Token already solved by Turnstile background check (either React state or DOM)
+    const domToken =
+      typeof document !== "undefined"
+        ? turnstileContainerRef.current?.querySelector<HTMLInputElement>(
+            'input[name="cf-turnstile-response"]'
+          )?.value
+        : null;
+    const effectiveToken = turnstileToken || domToken || null;
+
+    if (effectiveToken) {
+      submitWithToken(effectiveToken, trimmedName, trimmedEmail, trimmedMessage);
+    } else {
+      // Waiting for background Turnstile verification to finish
+      setSubmissionStage("verifying");
+      pendingSubmitPayloadRef.current = {
+        name: trimmedName,
+        email: trimmedEmail,
+        message: trimmedMessage,
+      };
+
+      // Watchdog timeout (12s)
+      setTimeout(() => {
+        if (isMountedRef.current && pendingSubmitPayloadRef.current) {
+          pendingSubmitPayloadRef.current = null;
+          setIsSubmitting(false);
+          isSubmittingRef.current = false;
+          setSubmissionStage("idle");
+          setSubmissionError("Security verification took longer than expected. Please tap Send again.");
+          if (window.turnstile && turnstileWidgetIdRef.current) {
+            try {
+              window.turnstile.reset(turnstileWidgetIdRef.current);
+            } catch {
+              // Ignore
+            }
+          }
+        }
+      }, 12000);
+    }
   };
 
   // High-Performance Memoized Validation Checks
@@ -1067,17 +1131,28 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                 {selectedRole === "Recruiter / Talent" && (
                   <div className="p-2 sm:p-2.5 rounded-xl bg-[#7C3AED]/15 border border-[#7C3AED]/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 animate-in fade-in duration-200">
                     <div className="text-[11px] text-neutral-300">
-                      <span className="font-semibold text-white">Recruiter Portal:</span> Looking for direct phone, WhatsApp line, &amp; verified resume?
+                      <span className="font-semibold text-white">Recruiter &amp; Resume Portal:</span> Looking for direct phone, WhatsApp line, &amp; verified live resume?
                     </div>
-                    <a
-                      href="https://contact.gauravpatil.site"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-2.5 py-1 rounded-lg bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-[11px] font-semibold shrink-0 transition-colors inline-flex items-center gap-1 shadow-sm"
-                    >
-                      <span>contact.gauravpatil.site</span>
-                      <span>→</span>
-                    </a>
+                    <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
+                      <a
+                        href="https://resume.gauravpatil.site"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-semibold transition-colors inline-flex items-center gap-1 shadow-sm"
+                      >
+                        <span>resume.gauravpatil.site</span>
+                        <span>→</span>
+                      </a>
+                      <a
+                        href="https://contact.gauravpatil.site"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-2.5 py-1 rounded-lg bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-[11px] font-semibold transition-colors inline-flex items-center gap-1 shadow-sm"
+                      >
+                        <span>contact.gauravpatil.site</span>
+                        <span>→</span>
+                      </a>
+                    </div>
                   </div>
                 )}
                 <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-neutral-400 pt-0.5">
@@ -1237,23 +1312,27 @@ export const ContactModal: React.FC<ContactModalProps> = ({
 
               {/* 4. Action Footer */}
               <div className="pt-1 sm:pt-2 flex flex-col items-center gap-1.5 sm:gap-2 shrink-0 transition-all duration-200 ease-out">
-                {/* Dynamic Cloudflare Widget / Badge Box ABOVE Submit Button */}
-                {isSubmitting ? (
-                  <div className="w-full flex items-center justify-center min-h-[65px] transition-all duration-200 animate-in fade-in zoom-in-95">
-                    <div
-                      ref={turnstileContainerRef}
-                      className="w-full max-w-[300px] flex items-center justify-center min-h-[65px] transition-transform duration-200"
-                      style={{ minHeight: "65px" }}
-                    />
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center gap-1.5 text-xs sm:text-sm text-neutral-400 py-0.5">
-                    <SiCloudflare className="w-4 h-4 text-[#F38020]" />
-                    <span className="font-medium text-neutral-300">
-                      Cloudflare Protected
-                    </span>
-                  </div>
-                )}
+                {/* Cloudflare Turnstile Verification Box ABOVE Submit Button */}
+                <div className="w-full flex flex-col items-center justify-center min-h-[65px] my-1">
+                  <div
+                    ref={turnstileContainerRef}
+                    className="w-full max-w-[300px] flex items-center justify-center min-h-[65px]"
+                    style={{ minHeight: "65px" }}
+                  />
+                  <input
+                    type="hidden"
+                    name="cf-turnstile-response"
+                    value={turnstileToken || ""}
+                  />
+                  {!isTurnstileReady && (
+                    <div className="flex items-center justify-center gap-1.5 text-xs text-neutral-400 py-1">
+                      <SiCloudflare className="w-4 h-4 text-[#F38020]" />
+                      <span className="font-medium text-neutral-300">
+                        Cloudflare Protected
+                      </span>
+                    </div>
+                  )}
+                </div>
 
                 {/* Submit & Cancel Actions */}
                 <div className="flex items-center gap-2 w-full">

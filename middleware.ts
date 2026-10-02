@@ -78,7 +78,77 @@ export async function middleware(request: NextRequest) {
     });
   }
 
-  // 3. Dynamic Admin Gatekeeper Routing (/admin/*)
+  // 3. Resume Portal Edge Router (resume.gauravpatil.site & resume.localhost:3000)
+  const RESUME_PORTAL_HOST = "resume.gauravpatil.site";
+  const isDedicatedResumeSubdomain =
+    host === RESUME_PORTAL_HOST ||
+    ((isLocalHost || process.env.NODE_ENV === "development") && (
+      host === "resume.localhost:3000" ||
+      host === "resume.localhost" ||
+      host.startsWith("resume.localhost") ||
+      request.headers.get("x-dev-subdomain") === "resume"
+    ));
+
+  // Case A: Request is on the Dedicated Resume Subdomain (resume.gauravpatil.site or resume.localhost:3000)
+  if (isDedicatedResumeSubdomain) {
+    // 1. If user accesses /resume or /resume/ on the subdomain, redirect cleanly to root /
+    if (pathname === "/resume" || pathname === "/resume/") {
+      const cleanUrl = new URL(`/${search}`, request.url);
+      return NextResponse.redirect(cleanUrl, 301);
+    }
+
+    // 2. Strict Domain Isolation: Only root / and asset routes are valid on resume.gauravpatil.site
+    const isImageOrStatic =
+      pathname.includes("opengraph-image") ||
+      pathname.includes("twitter-image") ||
+      pathname.includes("icon") ||
+      pathname.includes("favicon") ||
+      pathname.includes("robots.txt") ||
+      pathname.includes("sitemap.xml");
+
+    if (
+      pathname !== "/" &&
+      !pathname.startsWith("/api") &&
+      !pathname.startsWith("/_next") &&
+      !isImageOrStatic
+    ) {
+      const rootUrl = new URL(`/${search}`, request.url);
+      return NextResponse.redirect(rootUrl, 302);
+    }
+
+    // 3. Rewrite root / to internal /resume page
+    requestHeaders.set("x-is-resume-portal", "true");
+    const targetPath =
+      pathname === "/"
+        ? "/resume"
+        : pathname.startsWith("/resume")
+        ? pathname
+        : `/resume${pathname}`;
+    const rewriteUrl = new URL(`${targetPath}${search}`, request.url);
+    return NextResponse.rewrite(rewriteUrl, {
+      request: {
+        headers: requestHeaders,
+      },
+    });
+  }
+
+  // Case B: Request is on the Main Domain (gauravpatil.site, www, or localhost:3000 without resume subdomain)
+  const isResumeAsset = pathname.includes("opengraph-image") || pathname.includes("twitter-image");
+
+  // If someone visits /resume on production main domain, 301 redirect to https://resume.gauravpatil.site/
+  if (!isLocalHost && !isVercelPreview && process.env.NODE_ENV !== "development") {
+    if (pathname.startsWith("/resume") && !isResumeAsset) {
+      return NextResponse.redirect(new URL(`https://${RESUME_PORTAL_HOST}/${search}`, request.url), 301);
+    }
+  }
+
+  // On local development, if someone visits http://localhost:3000/resume, redirect to proper http://resume.localhost:3000/
+  if ((isLocalHost || process.env.NODE_ENV === "development") && pathname.startsWith("/resume") && !isResumeAsset) {
+    const port = host.includes(":") ? `:${host.split(":")[1]}` : ":3000";
+    return NextResponse.redirect(new URL(`http://resume.localhost${port}/${search}`, request.url), 307);
+  }
+
+  // 4. Dynamic Admin Gatekeeper Routing (/admin/*)
   if (pathname.startsWith("/admin")) {
     const sessionCookie = request.cookies.get(ADMIN_COOKIE_NAME)?.value;
     const verifiedSession = sessionCookie ? await verifyAdminSession(sessionCookie) : null;

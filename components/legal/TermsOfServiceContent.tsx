@@ -13,6 +13,7 @@ import {
   FaEye,
   FaBullseye,
   FaWhatsapp,
+  FaFileLines,
 } from "react-icons/fa6";
 import { IoChatbubbleEllipses } from "react-icons/io5";
 import type { LegalDocument } from "@/types/legal";
@@ -38,6 +39,8 @@ function getTermsSectionIcon(id: string) {
       return <IoChatbubbleEllipses className="w-5 h-5 text-purple" />;
     case "whatsapp-terms":
       return <FaWhatsapp className="w-5 h-5 text-[#25D366]" />;
+    case "resume-terms":
+      return <FaFileLines className="w-4 h-4 text-purple" />;
     case "admin-governance":
       return <FaShieldHalved className="w-4 h-4 text-purple" />;
     default:

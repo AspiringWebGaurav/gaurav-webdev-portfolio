@@ -107,5 +107,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.95,
   });
 
+  // Authoritative dedicated verified resume portal subdomain
+  sitemapItems.push({
+    url: "https://resume.gauravpatil.site",
+    lastModified: homeLastModified,
+    changeFrequency: "weekly",
+    priority: 0.95,
+  });
+
   return sitemapItems;
 }

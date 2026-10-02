@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { FaDownload, FaEnvelope, FaFilePdf, FaCheck, FaGraduationCap, FaAward } from "react-icons/fa";
+import { FaDownload, FaEnvelope, FaFilePdf, FaCheck, FaGraduationCap, FaAward, FaExternalLinkAlt } from "react-icons/fa";
 
 interface ResumeScreenProps {
   recruiter: { name: string; company: string; email: string };
@@ -53,7 +53,17 @@ export function ResumeScreen({ recruiter, onTrackAction }: ResumeScreenProps) {
           Resume & Experience Hub<span className="text-[#7C3AED]">.</span>
         </h2>
         <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-          Download the latest comprehensive CV or have a copy dispatched directly to your inbox.
+          Explore the live interactive resume on{" "}
+          <a
+            href="https://resume.gauravpatil.site"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => onTrackAction("VIEW_INTERACTIVE_RESUME")}
+            className="text-[#7C3AED] hover:underline font-semibold"
+          >
+            resume.gauravpatil.site
+          </a>
+          , download the comprehensive CV PDF, or have a copy dispatched directly to your inbox.
         </p>
       </div>
 
@@ -74,7 +84,18 @@ export function ResumeScreen({ recruiter, onTrackAction }: ResumeScreenProps) {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+            <a
+              href="https://resume.gauravpatil.site"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => onTrackAction("VIEW_INTERACTIVE_RESUME")}
+              className="px-3.5 py-2 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-md text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs"
+            >
+              <FaExternalLinkAlt className="text-[10px]" />
+              <span>Interactive Resume</span>
+            </a>
+
             <button
               onClick={handleEmailToMe}
               disabled={emailStatus === "SENDING" || emailStatus === "SENT"}
@@ -150,12 +171,23 @@ export function ResumeScreen({ recruiter, onTrackAction }: ResumeScreenProps) {
       </div>
 
       {/* Footer Dispatch Channel Note */}
-      <div className="p-3 rounded-lg bg-white border border-[#E2E8F0] shadow-2xs flex items-center justify-between text-xs font-admin-mono text-gray-500">
+      <div className="p-3 rounded-lg bg-white border border-[#E2E8F0] shadow-2xs flex items-center justify-between text-xs font-admin-mono text-gray-500 flex-wrap gap-2">
         <span className="flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
           <span className="font-semibold text-gray-700">Official Candidate Credentials</span>
         </span>
-        <span className="text-gray-500">Immediate 1-Click Dispatch &bull; Updated 2026</span>
+        <div className="flex items-center gap-2 text-gray-500">
+          <a
+            href="https://resume.gauravpatil.site"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#7C3AED] hover:underline font-semibold"
+          >
+            resume.gauravpatil.site
+          </a>
+          <span>&bull;</span>
+          <span>1-Click Dispatch &bull; Updated 2026</span>
+        </div>
       </div>
     </div>
   );

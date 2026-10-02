@@ -14,7 +14,7 @@ import {
   FaSearch,
   FaChevronDown,
 } from "react-icons/fa";
-import { validateWorkEmail, validateEmailWithTypo, getAutocorrectedEmail } from "@/lib/recruiter/validation";
+import { validateEmailWithTypo, getAutocorrectedEmail } from "@/lib/recruiter/validation";
 
 interface CountryOption {
   code: string;
@@ -75,9 +75,6 @@ const validateCompany = (val: string): string | null => {
   return null;
 };
 
-const validateEmail = (val: string): string | null => {
-  return validateWorkEmail(val);
-};
 
 const validatePhone = (val: string): string | null => {
   const trimmed = val.trim();
@@ -858,7 +855,18 @@ export function RecruiterAccessGate({ onSuccess }: RecruiterAccessGateProps) {
 
       {/* 3. Edge-to-Edge Footer */}
       <footer className="w-full h-10 sm:h-[45px] bg-[#FFFFFF] px-4 sm:px-10 lg:px-16 flex items-center justify-between text-[11px] sm:text-xs text-[#64748B] z-20 relative shrink-0 border-t border-[#E2E8F0]">
-        <span>recruiter portal · Gaurav Patil</span>
+        <div className="flex items-center gap-2">
+          <span>recruiter portal · Gaurav Patil</span>
+          <span>·</span>
+          <a
+            href="https://resume.gauravpatil.site"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#7C3AED] hover:underline font-medium"
+          >
+            resume.gauravpatil.site
+          </a>
+        </div>
         <span className="hidden sm:inline">Direct hiring & candidate contact</span>
       </footer>
     </div>

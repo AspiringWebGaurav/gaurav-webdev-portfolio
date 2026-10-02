@@ -217,12 +217,16 @@ export default async function RootLayout({
     headersList.get("x-is-contact-portal") === "true" ||
     host.startsWith("contact.localhost") ||
     host === "contact.gauravpatil.site";
+  const isResumePortal =
+    headersList.get("x-is-resume-portal") === "true" ||
+    host.startsWith("resume.localhost") ||
+    host === "resume.gauravpatil.site";
 
   return (
     <html
       lang="en"
       suppressHydrationWarning
-      className={isContactPortal ? "light" : "dark"}
+      className={isContactPortal || isResumePortal ? "light" : "dark"}
     >
       <head>
         <link rel="preconnect" href="https://challenges.cloudflare.com" crossOrigin="anonymous" />
@@ -230,12 +234,16 @@ export default async function RootLayout({
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${
-          isContactPortal ? "bg-[#FFFFFF] text-black" : ""
+          isContactPortal
+            ? "bg-[#FFFFFF] text-black"
+            : isResumePortal
+            ? "bg-[#FAFAFA] dark:bg-[#0A0A0C] text-slate-900 dark:text-zinc-100 transition-colors duration-200"
+            : ""
         }`}
       >
         <ThemeProvider
           attribute="class"
-          defaultTheme={isContactPortal ? "light" : "dark"}
+          defaultTheme={isContactPortal || isResumePortal ? "light" : "dark"}
           forcedTheme={isContactPortal ? "light" : undefined}
           enableSystem={false}
           disableTransitionOnChange

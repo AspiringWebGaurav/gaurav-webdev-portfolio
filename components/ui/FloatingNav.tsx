@@ -285,7 +285,12 @@ export const FloatingNav = ({
   // =========================================================================
   const handleNavClick = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>, link: string) => {
-      if (link === "/blog" || link.startsWith("/blog")) {
+      if (
+        link.startsWith("http://") ||
+        link.startsWith("https://") ||
+        link === "/blog" ||
+        link.startsWith("/blog")
+      ) {
         return;
       }
 
@@ -365,19 +370,27 @@ export const FloatingNav = ({
           top: "calc(1rem + env(safe-area-inset-top, 0px))",
         }}
       >
-        {navItems.map((navItem, idx: number) => (
-          <Link
-            key={`nav-link-${idx}-${navItem.name}`}
-            href={navItem.link}
-            onClick={(e) => handleNavClick(e, navItem.link)}
-            className={cn(
-              "relative dark:text-neutral-50 items-center flex space-x-1 text-neutral-400 dark:hover:text-neutral-200 hover:text-neutral-500 touch-manipulation py-2 px-1.5 sm:px-2.5 min-h-[44px] transition-colors"
-            )}
-          >
-            {navItem.icon && <span className="block sm:hidden">{navItem.icon}</span>}
-            <span className="text-[11px] xs:text-xs sm:text-sm !cursor-pointer font-medium whitespace-nowrap">{navItem.name}</span>
-          </Link>
-        ))}
+        {navItems.map((navItem, idx: number) => {
+          const isExternal =
+            navItem.link.startsWith("http://") || navItem.link.startsWith("https://");
+          return (
+            <Link
+              key={`nav-link-${idx}-${navItem.name}`}
+              href={navItem.link}
+              target={isExternal ? "_blank" : undefined}
+              rel={isExternal ? "noopener noreferrer" : undefined}
+              onClick={(e) => handleNavClick(e, navItem.link)}
+              className={cn(
+                "relative dark:text-neutral-50 items-center flex space-x-1 text-neutral-400 dark:hover:text-neutral-200 hover:text-neutral-500 touch-manipulation py-2 px-1.5 sm:px-2.5 min-h-[44px] transition-colors"
+              )}
+            >
+              {navItem.icon && <span className="block sm:hidden">{navItem.icon}</span>}
+              <span className="text-[11px] xs:text-xs sm:text-sm !cursor-pointer font-medium whitespace-nowrap">
+                {navItem.name}
+              </span>
+            </Link>
+          );
+        })}
       </motion.div>
     </AnimatePresence>
   );

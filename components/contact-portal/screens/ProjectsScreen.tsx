@@ -18,7 +18,7 @@ interface ProjectItem {
 const projects: ProjectItem[] = [
   {
     id: "send2me",
-    title: "Send2Me",
+    title: "Sendme.alt",
     tagline: "Peer-to-Peer Large File Transfer Engine",
     description:
       "Direct browser-to-browser P2P file transfers up to 10GB with zero cloud storage, end-to-end data encryption, and desktop apps built in Rust and Tauri.",
@@ -28,7 +28,7 @@ const projects: ProjectItem[] = [
       "Chunked binary streaming with SHA-256 integrity verification prevents corruption.",
     ],
     tech: ["WebRTC", "Rust", "Tauri", "React", "Next.js", "Firebase RTDB"],
-    liveUrl: "https://www.send2me.site/",
+    liveUrl: "https://send2me.eu.cc/",
     githubUrl: "https://github.com/AspiringWebGaurav/sendme.alt",
     status: "Live & Open Source",
   },

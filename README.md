@@ -13,11 +13,12 @@
 An enterprise-grade, high-performance web engineering portfolio designed and built by **Gaurav Patil**. Engineered with **Next.js 15 (App Router)**, **React 19**, **Three.js WebGL**, and modern cloud infrastructure. Architected with isolated presentation layers, touch ergonomics, privacy-first communication channels, and zero cumulative layout shift (`CLS = 0`).
 
 * **Production URL**: [`https://gauravpatil.site`](https://gauravpatil.site)
+* **Verified Interactive Resume Portal**: [`https://resume.gauravpatil.site`](https://resume.gauravpatil.site)
 * **Verified Recruiter Contact Portal**: [`https://contact.gauravpatil.site`](https://contact.gauravpatil.site)
 * **Pre-Production Staging Preview**: [`https://devlabs.eu.cc`](https://devlabs.eu.cc)
 * **Verified Email Gateway**: `gauravpatil.site`
 
-> 📬 **Direct Inquiries & Collaboration**: To discuss project proposals, consulting engagements, or hiring/recruiter access, reach out directly via the verified Recruiter Portal at [`https://contact.gauravpatil.site`](https://contact.gauravpatil.site), launch the interactive contact modal at [gauravpatil.site/contact](https://gauravpatil.site/contact), or email [`gaurav@gauravpatil.site`](mailto:gaurav@gauravpatil.site) (professional direct line) / [`hello@gauravpatil.site`](mailto:hello@gauravpatil.site) (general inquiries).
+> 📬 **Direct Inquiries & Collaboration**: To discuss project proposals, consulting engagements, or hiring/recruiter access, reach out directly via the verified Recruiter Portal at [`https://contact.gauravpatil.site`](https://contact.gauravpatil.site), view the verified interactive resume at [`https://resume.gauravpatil.site`](https://resume.gauravpatil.site), launch the interactive contact modal at [gauravpatil.site/contact](https://gauravpatil.site/contact), or email [`gaurav@gauravpatil.site`](mailto:gaurav@gauravpatil.site) (professional direct line) / [`hello@gauravpatil.site`](mailto:hello@gauravpatil.site) (general inquiries).
 
 ---
 
@@ -89,6 +90,13 @@ The platform follows clean separation of concerns, ensuring high maintainability
 * **Instant Recruiter Verification**: Single-step email verification with automated domain typo autocorrection (`gmal` ➔ `gmail.com`) and zero passwords or friction.
 * **Direct Access Unlocked**: Candidate resume download, verified direct phone/WhatsApp lines, candidate dossier, and real-time live chat session.
 
+### 3.0.1 Verified Interactive Resume Portal (`resume.gauravpatil.site`)
+* **Dedicated Candidate Credentials Gateway**: Hosted at [`https://resume.gauravpatil.site`](https://resume.gauravpatil.site) (isolated Edge routing from `http://resume.localhost:3000` or `/resume`).
+* **Session Security & Anti-Tamper**: Cryptographic HMAC session tokens with enforced 30-minute inactivity auto-logout, in-memory client purge, and dedicated `/api/resume/auth/logout`.
+* **Bot Mitigation & Cloudflare Turnstile**: Automated abuse defense protecting credential disclosure and PDF download streams.
+* **Dynamic Lifecycle & Admin Governance**: Real-time admin control over resume status (`active`, `hired`, `suspended`) with executive suspended view states.
+* **Fluid Responsive Paper View**: Mobile-first touch-ergonomic design rendering crisply across mobile (down to 320px), tablet, and desktop screens with zero cumulative layout shift.
+
 ### 3.1 Shareable Dynamic Contact Form (`/contact`)
 * **Dynamic Route Launch**: Direct navigation to `/contact` loads the portfolio and automatically launches the interactive contact modal with centered focus.
 * **Address Bar Synchronization**: Opening the contact modal anywhere on the page dynamically updates the browser URL to `/contact` using the History API without page reload.
@@ -138,6 +146,7 @@ The platform includes comprehensive transparency documentation accessible direct
 
 | Route | Document Title | Active Version | Scope & Responsibility |
 | :--- | :--- | :--- | :--- |
+| [`resume.gauravpatil.site`](https://resume.gauravpatil.site) | **Verified Resume Portal** | `v1.0.0` | Dedicated verified interactive candidate resume, credentials verification, and PDF download hub. |
 | [`contact.gauravpatil.site`](https://contact.gauravpatil.site) | **Recruiter Contact Portal** | `v1.0.0` | Dedicated portal for recruiters, talent teams, candidate resume, and verified live communication. |
 | [`/terms`](https://gauravpatil.site/terms) | **Terms of Service** | `v0.0.1` | Operating terms, intellectual property, acceptable use, and communication standards. |
 | [`/privacy`](https://gauravpatil.site/privacy) | **Privacy Policy** | `v0.0.1` | Data minimization principles, anonymity rights, encryption standards, and GDPR compliance. |

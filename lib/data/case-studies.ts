@@ -128,7 +128,7 @@ export const PROJECT_CASE_STUDIES: Record<string, ProjectCaseStudy> = {
     role: "Lead Systems & Full-Stack Engineer",
     timeline: "2026",
     technologies: ["Next.js 15", "WebRTC", "Rust", "Tauri", "TypeScript", "Tailwind CSS", "Firebase Signaling", "End-to-End Encryption"],
-    liveUrl: "https://www.send2me.site/",
+    liveUrl: "https://send2me.eu.cc/",
     githubUrl: "https://github.com/AspiringWebGaurav/sendme.alt",
     desktopGithubUrl: "https://github.com/AspiringWebGaurav/send2me-rust-app",
     coverImage: "/projects/send2me/cover.webp",

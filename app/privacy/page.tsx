@@ -7,14 +7,14 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
-    "Official Privacy Policy, data governance, and anonymity rights for Gaurav Portfolio.",
+    "Official Privacy Policy, data governance, and anonymity rights for Gaurav Portfolio and verified subdomains (gauravpatil.site, contact.gauravpatil.site, resume.gauravpatil.site).",
   alternates: {
     canonical: "https://gauravpatil.site/privacy",
   },
   openGraph: {
     title: "Privacy Policy | Gaurav Portfolio",
     description:
-      "Official Privacy Policy, data governance, and anonymity rights for Gaurav Portfolio.",
+      "Official Privacy Policy, data governance, and anonymity rights for Gaurav Portfolio and verified subdomains (gauravpatil.site, contact.gauravpatil.site, resume.gauravpatil.site).",
     url: "https://gauravpatil.site/privacy",
     siteName: "Gaurav Portfolio",
     type: "website",
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Privacy Policy | Gaurav Portfolio",
     description:
-      "Official Privacy Policy, data governance, and anonymity rights for Gaurav Portfolio.",
+      "Official Privacy Policy, data governance, and anonymity rights for Gaurav Portfolio and verified subdomains (gauravpatil.site, contact.gauravpatil.site, resume.gauravpatil.site).",
     creator: "@gauravpatil",
     images: ["https://gauravpatil.site/og-image.png"],
   },

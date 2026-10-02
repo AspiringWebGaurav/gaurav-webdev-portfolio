@@ -7,14 +7,14 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: "Terms of Service",
   description:
-    "Official Terms of Service, acceptable use, and engagement terms for Gaurav Portfolio.",
+    "Official Terms of Service, acceptable use, and engagement terms for Gaurav Portfolio and verified subdomains (gauravpatil.site, contact.gauravpatil.site, resume.gauravpatil.site).",
   alternates: {
     canonical: "https://gauravpatil.site/terms",
   },
   openGraph: {
     title: "Terms of Service | Gaurav Portfolio",
     description:
-      "Official Terms of Service, acceptable use, and engagement terms for Gaurav Portfolio.",
+      "Official Terms of Service, acceptable use, and engagement terms for Gaurav Portfolio and verified subdomains (gauravpatil.site, contact.gauravpatil.site, resume.gauravpatil.site).",
     url: "https://gauravpatil.site/terms",
     siteName: "Gaurav Portfolio",
     type: "website",
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Terms of Service | Gaurav Portfolio",
     description:
-      "Official Terms of Service, acceptable use, and engagement terms for Gaurav Portfolio.",
+      "Official Terms of Service, acceptable use, and engagement terms for Gaurav Portfolio and verified subdomains (gauravpatil.site, contact.gauravpatil.site, resume.gauravpatil.site).",
     creator: "@gauravpatil",
     images: ["https://gauravpatil.site/og-image.png"],
   },

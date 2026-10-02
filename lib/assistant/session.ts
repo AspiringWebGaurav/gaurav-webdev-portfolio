@@ -177,17 +177,19 @@ export function validateCsrfOrigin(req: NextRequest): boolean {
     "https://gauravpatil.site",
     "https://www.gauravpatil.site",
     "https://contact.gauravpatil.site",
+    "https://resume.gauravpatil.site",
     "https://devlabs.eu.cc",
     "https://www.devlabs.eu.cc",
     "http://localhost:3000",
     "http://contact.localhost:3000",
+    "http://resume.localhost:3000",
     "http://127.0.0.1:3000",
   ];
 
   if (trustedDomains.includes(cleanOrigin)) return true;
 
   // 5. Allow any localhost / 127.0.0.1 port in development
-  if (/^http:\/\/(localhost|contact\.localhost|127\.0\.0\.1)(:\d+)?$/.test(cleanOrigin)) {
+  if (/^http:\/\/(localhost|contact\.localhost|resume\.localhost|127\.0\.0\.1)(:\d+)?$/.test(cleanOrigin)) {
     return true;
   }
 

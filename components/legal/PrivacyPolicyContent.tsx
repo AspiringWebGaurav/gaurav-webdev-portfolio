@@ -13,6 +13,7 @@ import {
   FaBullseye,
   FaWhatsapp,
   FaDownload,
+  FaFileLines,
 } from "react-icons/fa6";
 import { IoChatbubbleEllipses } from "react-icons/io5";
 import type { LegalDocument } from "@/types/legal";
@@ -37,6 +38,8 @@ function getPrivacySectionIcon(id: string) {
       return <IoChatbubbleEllipses className="w-5 h-5 text-purple" />;
     case "whatsapp-data-export":
       return <FaWhatsapp className="w-5 h-5 text-[#25D366]" />;
+    case "resume-privacy":
+      return <FaFileLines className="w-4 h-4 text-purple" />;
     case "admin-privacy":
       return <FaShieldHalved className="w-4 h-4 text-purple" />;
     default:

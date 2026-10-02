@@ -32,6 +32,7 @@ const ContactSchema = z.object({
     .min(MESSAGE_MIN_CHARS, `Message must be at least ${MESSAGE_MIN_CHARS} characters`)
     .max(MESSAGE_MAX_CHARS, `Message must be under ${MESSAGE_MAX_CHARS} characters`),
   turnstileToken: z.string().optional(),
+  "cf-turnstile-response": z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -103,9 +104,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const rawRecord = typeof rawBody === "object" && rawBody !== null ? (rawBody as Record<string, unknown>) : {};
+    const candidateToken =
+      turnstileToken ||
+      (typeof rawRecord["cf-turnstile-response"] === "string" ? rawRecord["cf-turnstile-response"] : undefined);
+
     // 4. Concurrent Security Gate: Turnstile Bot Verification + AI Moderation
     const [turnstileResult, aiModeration] = await Promise.all([
-      turnstileToken ? verifyTurnstileToken(turnstileToken, clientIp) : Promise.resolve({ success: true, error: undefined }),
+      verifyTurnstileToken(candidateToken, clientIp, {
+        expectedAction: ["contact", "contact_inquiry"],
+      }),
       evaluateContentModeration(message),
     ]);
 

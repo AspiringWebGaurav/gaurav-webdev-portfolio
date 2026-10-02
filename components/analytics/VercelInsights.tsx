@@ -14,10 +14,12 @@ export function VercelInsights() {
     <>
       <Analytics
         beforeSend={(event) => {
-          if (typeof window !== "undefined" && window.location.pathname.startsWith("/admin")) {
-            return null;
+          if (typeof window !== "undefined") {
+            const h = window.location.hostname;
+            if (h === "localhost" || h === "127.0.0.1" || h.includes(".local")) return null;
+            if (window.location.pathname.startsWith("/admin")) return null;
           }
-          if (event.url && event.url.includes("/admin")) {
+          if (event.url && (event.url.includes("/admin") || event.url.includes("localhost"))) {
             return null;
           }
           return event;
@@ -26,10 +28,12 @@ export function VercelInsights() {
       <SpeedInsights
         sampleRate={0.5}
         beforeSend={(event) => {
-          if (typeof window !== "undefined" && window.location.pathname.startsWith("/admin")) {
-            return null;
+          if (typeof window !== "undefined") {
+            const h = window.location.hostname;
+            if (h === "localhost" || h === "127.0.0.1" || h.includes(".local")) return null;
+            if (window.location.pathname.startsWith("/admin")) return null;
           }
-          if (event.url && event.url.includes("/admin")) {
+          if (event.url && (event.url.includes("/admin") || event.url.includes("localhost"))) {
             return null;
           }
           return event;

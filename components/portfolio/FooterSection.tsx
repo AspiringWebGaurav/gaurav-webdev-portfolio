@@ -149,17 +149,29 @@ export const FooterSection = ({
             position="right"
             handleClick={handleOpenContact}
           />
-          <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-1.5 text-xs text-neutral-400 font-admin-mono">
+          <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-2 text-xs text-neutral-400 font-admin-mono">
             <span>Hiring or Recruiter Inquiry?</span>
-            <a
-              href="https://contact.gauravpatil.site"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-purple hover:underline font-semibold inline-flex items-center gap-1 transition-colors"
-            >
-              <span>Access Recruiter Portal (contact.gauravpatil.site)</span>
-              <span>→</span>
-            </a>
+            <div className="flex items-center gap-2 flex-wrap justify-center">
+              <a
+                href="https://resume.gauravpatil.site"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-purple hover:underline font-semibold inline-flex items-center gap-1 transition-colors"
+              >
+                <span>Verified Resume (resume.gauravpatil.site)</span>
+                <span>→</span>
+              </a>
+              <span className="text-neutral-600 hidden sm:inline">·</span>
+              <a
+                href="https://contact.gauravpatil.site"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-purple hover:underline font-semibold inline-flex items-center gap-1 transition-colors"
+              >
+                <span>Recruiter Portal (contact.gauravpatil.site)</span>
+                <span>→</span>
+              </a>
+            </div>
           </div>
         </div>
       )}
@@ -171,6 +183,15 @@ export const FooterSection = ({
           <span>
             © {new Date().getFullYear()} {footer.copyrightName || "Gaurav Patil"}
           </span>
+          <span className="text-neutral-600">·</span>
+          <a
+            href="https://resume.gauravpatil.site"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-purple transition-colors duration-200"
+          >
+            Resume
+          </a>
           <span className="text-neutral-600">·</span>
           <a
             href="https://contact.gauravpatil.site"

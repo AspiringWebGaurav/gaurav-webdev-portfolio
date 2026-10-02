@@ -78,7 +78,7 @@ export const SecurityPolicyContent: React.FC = () => {
                   Security Architecture Philosophy
                 </h2>
                 <p className="text-sm sm:text-base text-neutral-300 leading-relaxed">
-                  The security posture of Gaurav Portfolio is rooted in the principle of defense-in-depth and minimal attack surface. Rather than relying on monolithic perimeter controls, every subsystem—from visitor contact routing to administrative consoles—is compartmentalized with explicit boundary validation.
+                  The security posture of Gaurav Portfolio and its verified subdomains (<code className="text-xs text-purple font-mono">gauravpatil.site</code>, <code className="text-xs text-purple font-mono">contact.gauravpatil.site</code>, <code className="text-xs text-purple font-mono">resume.gauravpatil.site</code>) is rooted in the principle of defense-in-depth and minimal attack surface. Rather than relying on monolithic perimeter controls, every subsystem—from visitor contact routing and verified candidate resume presentation to administrative consoles—is compartmentalized with explicit boundary validation.
                 </p>
               </div>
             </div>
@@ -156,7 +156,7 @@ export const SecurityPolicyContent: React.FC = () => {
                   Edge Protection &amp; Bot Defense
                 </h2>
                 <p className="text-sm sm:text-base text-neutral-300 leading-relaxed">
-                  Public endpoints—including the contact modal—are protected against automated abuse, denial-of-service, and spam enumeration through <strong>Cloudflare Turnstile</strong>.
+                  Public endpoints and access gates—including the contact modal, recruiter portal, and interactive resume access on <code className="text-xs text-purple font-mono">resume.gauravpatil.site</code>—are protected against automated abuse, denial-of-service, and credential enumeration through <strong>Cloudflare Turnstile</strong>. Unlocked candidate resume sessions enforce a strict 30-minute inactivity TTL with HMAC-signed session destruction.
                 </p>
                 <p className="text-sm sm:text-base text-neutral-300 leading-relaxed">
                   Turnstile validates human traffic using non-interactive browser challenges without tracking cookies or cross-site user profiling. Submissions that fail validation are dropped at the API boundary before reaching backend mail dispatchers or persistence layers.
@@ -239,7 +239,7 @@ export const SecurityPolicyContent: React.FC = () => {
                   </h2>
                 </div>
                 <p className="text-sm sm:text-base text-neutral-300 leading-relaxed">
-                  If you discover a security vulnerability, configuration flaw, or potential exploit in this portfolio or associated subdomains, you are encouraged to report it responsibly.
+                  If you discover a security vulnerability, configuration flaw, or potential exploit in this portfolio or associated subdomains (<code className="text-xs text-purple font-mono">gauravpatil.site</code>, <code className="text-xs text-purple font-mono">contact.gauravpatil.site</code>, <code className="text-xs text-purple font-mono">resume.gauravpatil.site</code>), you are encouraged to report it responsibly.
                 </p>
                 <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.08] space-y-2">
                   <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed">

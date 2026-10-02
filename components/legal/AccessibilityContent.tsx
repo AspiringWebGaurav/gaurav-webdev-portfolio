@@ -78,7 +78,7 @@ export const AccessibilityContent: React.FC = () => {
                   Our Accessibility Commitment
                 </h2>
                 <p className="text-sm sm:text-base text-neutral-300 leading-relaxed">
-                  Web experiences should be intuitive and universally navigable. This portfolio is engineered from the ground up to support modern assistive devices, keyboard-only navigation, screen readers, and variable viewport environments without functional degradation.
+                  Web experiences should be intuitive and universally navigable. This portfolio and its official subdomains (<code className="text-xs text-purple font-mono">gauravpatil.site</code>, <code className="text-xs text-purple font-mono">contact.gauravpatil.site</code>, <code className="text-xs text-purple font-mono">resume.gauravpatil.site</code>) are engineered from the ground up to support modern assistive devices, keyboard-only navigation, screen readers, fluid typography, and variable viewport environments without functional degradation.
                 </p>
               </div>
             </div>

@@ -1236,6 +1236,129 @@ export async function dispatchRecruiterVerifiedAdminNotification(params: {
 }
 
 /**
+ * Dispatches a 6-digit OTP verification code to unlock Gaurav's Resume on resume.gauravpatil.site.
+ */
+export async function dispatchResumeOtpEmail(params: {
+  email: string;
+  name: string;
+  company?: string | null;
+  otp: string;
+  expiresInMinutes?: number;
+}): Promise<SendEmailResult> {
+  const expiresIn = params.expiresInMinutes || 5;
+  const safeName = escapeHtml(params.name.trim());
+  const safeCompany = params.company ? escapeHtml(params.company.trim()) : null;
+  const safeOtp = escapeHtml(params.otp.trim());
+
+  const bodyContentHtml = `
+    <p style="${EMAIL_SPACING.greetingMargin}font-weight:600;color:#111827;font-size:15px;">Hi ${safeName},</p>
+    <p style="${EMAIL_SPACING.paragraphMargin}color:#374151;font-size:14px;line-height:1.5;">
+      Use the 6-digit security code below to unlock and view Gaurav Patil's official Resume${safeCompany ? ` for <strong>${safeCompany}</strong>` : ""}:
+    </p>
+    <div style="margin:16px 0;text-align:center;padding:16px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;">
+      <span style="font-family:${EMAIL_TYPOGRAPHY.fontMono};font-size:32px;font-weight:700;letter-spacing:6px;color:#7C3AED;">
+        ${safeOtp}
+      </span>
+    </div>
+    <p style="${EMAIL_SPACING.helperTextMargin}color:#6B7280;font-size:12px;line-height:1.4;">
+      This single-use code expires in <strong>${expiresIn} minutes</strong>. If you did not request to view this resume, you can safely disregard this email.
+    </p>
+  `;
+
+  const htmlContent = renderCompactEmailLayout({
+    title: "Resume Access Verification Code",
+    bodyContentHtml,
+    footerType: "SECURITY",
+    footerContext: {
+      brandName: "Gaurav Patil | Official Resume",
+      replyToEmail: "no-reply@gauravpatil.site",
+    },
+  });
+
+  const textContent = `Hi ${params.name.trim()},\n\nYour 6-digit verification code to view Gaurav Patil's Resume is:\n\n${params.otp.trim()}\n\nThis single-use code expires in ${expiresIn} minutes.\nIf you did not request this, please disregard this email.\n\n-- Gaurav Patil`;
+
+  return sendTransactionalEmail({
+    purpose: "SECURITY_OTP",
+    identity: EMAIL_IDENTITIES.NO_REPLY,
+    to: [{ email: params.email.trim().toLowerCase(), name: params.name.trim() }],
+    subject: `Your Access Code for Gaurav Patil's Resume: ${params.otp.trim()}`,
+    htmlContent,
+    textContent,
+    tags: ["resume", "otp"],
+  });
+}
+
+/**
+ * Dispatches an instant notification to Gaurav when someone unlocks and views their resume on resume.gauravpatil.site.
+ */
+export async function dispatchResumeViewedAdminNotification(params: {
+  name: string;
+  email: string;
+  company?: string | null;
+  countryCode?: string | null;
+  viewedAt: number;
+}): Promise<SendEmailResult> {
+  const safeName = escapeHtml(params.name.trim());
+  const safeEmail = escapeHtml(params.email.trim().toLowerCase());
+  const safeCompany = params.company ? escapeHtml(params.company.trim()) : "Individual / Not specified";
+
+  let countryDisplay: string | null = null;
+  if (params.countryCode && /^[A-Z]{2}$/.test(params.countryCode)) {
+    try {
+      const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
+      const name = regionNames.of(params.countryCode);
+      countryDisplay = name ? `${params.countryCode} (${name})` : params.countryCode;
+    } catch {
+      countryDisplay = params.countryCode;
+    }
+  }
+
+  const timestampStr = formatSubmissionTimestamp(new Date(params.viewedAt));
+  const adminEmail = process.env.ADMIN_EMAIL || "gauravpatil5737@gmail.com";
+
+  const bodyContentHtml = `
+    <p style="${EMAIL_SPACING.greetingMargin}font-weight:600;color:#111827;font-size:15px;">📄 Resume Viewed on resume.gauravpatil.site</p>
+    <p style="${EMAIL_SPACING.paragraphMargin}color:#374151;font-size:14px;line-height:1.5;">
+      A verified visitor has completed security verification and opened your Official Resume:
+    </p>
+    <div style="margin:12px 0;padding:12px 14px;background:#F8FAFC;border:1px solid #E2E8F0;border-left:3px solid #7C3AED;border-radius:6px;font-size:13px;color:#111827;line-height:1.6;">
+      <div><strong>Name:</strong> ${safeName}</div>
+      <div><strong>Company / Role:</strong> ${safeCompany}</div>
+      <div><strong>Email:</strong> <a href="mailto:${safeEmail}" style="color:#2563EB;">${safeEmail}</a></div>
+      ${countryDisplay ? `<div><strong>Country:</strong> ${escapeHtml(countryDisplay)}</div>` : ""}
+      <div><strong>Viewed At:</strong> ${timestampStr}</div>
+    </div>
+    <p style="margin:10px 0 0 0;font-size:12px;">
+      <a href="https://gauravpatil.site/admin/resume" style="display:inline-block;padding:7px 14px;background:#111827;color:#FFFFFF;text-decoration:none;border-radius:5px;font-weight:500;">
+        Open Resume Studio in Admin &rarr;
+      </a>
+    </p>
+  `;
+
+  const htmlContent = renderCompactEmailLayout({
+    title: "Resume Viewed Notification",
+    bodyContentHtml,
+    footerType: "SECURITY",
+    footerContext: {
+      brandName: "Gaurav Patil Security Monitor",
+      replyToEmail: adminEmail,
+    },
+  });
+
+  const textContent = `Resume Viewed on resume.gauravpatil.site\n\nName: ${params.name.trim()}\nCompany: ${params.company || "N/A"}\nEmail: ${params.email.trim()}\nCountry: ${countryDisplay || "Unknown"}\nTime: ${timestampStr}\n\n-- Security Monitor`;
+
+  return sendTransactionalEmail({
+    purpose: "SECURITY_ALERT",
+    identity: EMAIL_IDENTITIES.SECURITY,
+    to: [{ email: adminEmail, name: "Gaurav Patil" }],
+    subject: `📄 Resume Viewed by ${params.name.trim()}${params.company ? ` (${params.company.trim()})` : ""}`,
+    htmlContent,
+    textContent,
+    tags: ["resume", "admin_alert"],
+  });
+}
+
+/**
  * Dispatches Gaurav's resume directly to a verified recruiter upon their one-click request.
  */
 export async function dispatchRecruiterResumeEmail(params: {
