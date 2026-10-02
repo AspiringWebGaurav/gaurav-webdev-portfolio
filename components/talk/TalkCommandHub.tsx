@@ -88,26 +88,51 @@ function getFileIcon(mime: string, name: string) {
 
 export const TalkCommandHub: React.FC = () => {
   const router = useRouter();
-  const { resolvedTheme, setTheme } = useTheme();
+  const { setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [themeMode, setThemeMode] = useState<"light" | "dark">("light");
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    try {
+      const saved = localStorage.getItem("talk_theme");
+      if (saved === "dark") {
+        setThemeMode("dark");
+        setTheme("dark");
+        document.documentElement.classList.add("dark");
+        document.documentElement.classList.remove("light");
+        if (document.body) document.body.style.backgroundColor = "#07090E";
+      } else {
+        setThemeMode("light");
+        setTheme("light");
+        document.documentElement.classList.remove("dark");
+        document.documentElement.classList.add("light");
+        if (document.body) document.body.style.backgroundColor = "#FAFAFA";
+      }
+    } catch {
+      setThemeMode("light");
+      setTheme("light");
+    }
+  }, [setTheme]);
 
-  const isDark = mounted
-    ? resolvedTheme === "dark" ||
-      (typeof document !== "undefined" && document.documentElement.classList.contains("dark"))
-    : false;
+  const isDark = mounted ? themeMode === "dark" : false;
 
   const toggleTheme = () => {
-    const nextTheme = isDark ? "light" : "dark";
+    const nextTheme = themeMode === "dark" ? "light" : "dark";
+    setThemeMode(nextTheme);
     setTheme(nextTheme);
+    try {
+      localStorage.setItem("talk_theme", nextTheme);
+    } catch {}
     if (typeof document !== "undefined") {
       if (nextTheme === "dark") {
         document.documentElement.classList.add("dark");
+        document.documentElement.classList.remove("light");
+        if (document.body) document.body.style.backgroundColor = "#07090E";
       } else {
         document.documentElement.classList.remove("dark");
+        document.documentElement.classList.add("light");
+        if (document.body) document.body.style.backgroundColor = "#FAFAFA";
       }
     }
   };

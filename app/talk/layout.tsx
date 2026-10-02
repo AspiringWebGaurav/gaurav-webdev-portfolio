@@ -19,7 +19,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
-  themeColor: "#0B0F19",
+  themeColor: "#FAFAFA",
 };
 
 export const metadata: Metadata = {
@@ -40,6 +40,28 @@ export default function TalkLayout({
       data-portal="talk"
       className={`${adminSans.variable} ${adminMono.variable} font-admin-sans relative h-[100dvh] w-full bg-[#FAFAFA] dark:bg-[#07090E] text-slate-900 dark:text-slate-100 flex flex-col antialiased transition-colors duration-200 selection:bg-[#7C3AED]/20 selection:text-[#7C3AED] overflow-hidden`}
     >
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `(function(){
+            try {
+              var saved = localStorage.getItem('talk_theme');
+              if (saved === 'dark') {
+                document.documentElement.classList.add('dark');
+                document.documentElement.classList.remove('light');
+                if (document.body) document.body.style.backgroundColor = '#07090E';
+              } else {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.classList.add('light');
+                if (document.body) document.body.style.backgroundColor = '#FAFAFA';
+              }
+            } catch(e) {
+              document.documentElement.classList.remove('dark');
+              document.documentElement.classList.add('light');
+              if (document.body) document.body.style.backgroundColor = '#FAFAFA';
+            }
+          })();`,
+        }}
+      />
       {/* Background Architectural Dashed Vertical Guides (Shiro Style: 4px dash, 4px gap) */}
       <div className="fixed inset-0 pointer-events-none flex justify-center z-0">
         <div className="w-full max-w-[1700px] h-full relative px-4 sm:px-6 md:px-8">
