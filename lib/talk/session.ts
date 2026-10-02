@@ -62,13 +62,17 @@ export async function signTalkSession(session: TalkSession): Promise<string> {
 
   const key = await crypto.subtle.importKey(
     "raw",
-    enc.encode(SESSION_SECRET),
+    enc.encode(SESSION_SECRET) as unknown as BufferSource,
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign"]
   );
 
-  const sigBuf = await crypto.subtle.sign("HMAC", key, enc.encode(payloadB64));
+  const sigBuf = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    enc.encode(payloadB64) as unknown as BufferSource
+  );
   const sigB64 = toB64Url(sigBuf);
 
   return `${payloadB64}.${sigB64}`;
@@ -101,7 +105,7 @@ export async function verifyTalkSession(token?: string | null): Promise<TalkSess
 
     const key = await crypto.subtle.importKey(
       "raw",
-      enc.encode(SESSION_SECRET),
+      enc.encode(SESSION_SECRET) as unknown as BufferSource,
       { name: "HMAC", hash: "SHA-256" },
       false,
       ["verify"]
@@ -111,8 +115,8 @@ export async function verifyTalkSession(token?: string | null): Promise<TalkSess
     const isValid = await crypto.subtle.verify(
       "HMAC",
       key,
-      sigBytes,
-      enc.encode(payloadB64)
+      sigBytes as unknown as BufferSource,
+      enc.encode(payloadB64) as unknown as BufferSource
     );
 
     if (!isValid) return null;
