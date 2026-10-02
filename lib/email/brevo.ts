@@ -198,7 +198,10 @@ export function formatSubmissionTimestamp(date = new Date()): string {
 export async function sendTransactionalEmail(
   options: SendTransactionalEmailOptions
 ): Promise<SendEmailResult> {
-  const apiKey = process.env.BREVO_API_KEY;
+  const apiKey = process.env.BREVO_API_KEY?.trim();
+  const resendApiKey = process.env.RESEND_API_KEY?.trim();
+  const primaryProvider = process.env.PRIMARY_EMAIL_PROVIDER?.trim().toUpperCase();
+  const isBrevoSmtpKey = Boolean(apiKey && apiKey.startsWith("xsmtpsib-"));
 
   // Determine sender identity: explicit identity > purpose-derived identity > default HELLO
   const senderIdentity =
@@ -207,8 +210,17 @@ export async function sendTransactionalEmail(
       ? getEmailIdentityForPurpose(options.purpose)
       : EMAIL_IDENTITIES.HELLO);
 
-  if (!apiKey) {
-    if (process.env.RESEND_API_KEY?.trim()) {
+  // If primary provider is explicitly RESEND, or if Brevo key is absent, or if Brevo key is an SMTP key
+  // ('xsmtpsib-...') which is rejected by Brevo REST API v3, dispatch directly via Resend to eliminate
+  // the 401 error and 2-5 second failover latency.
+  if (primaryProvider === "RESEND" || !apiKey || (isBrevoSmtpKey && resendApiKey)) {
+    if (resendApiKey) {
+      if (isBrevoSmtpKey && primaryProvider !== "RESEND") {
+        console.warn(
+          "[Email Engine] BREVO_API_KEY is an SMTP key ('xsmtpsib-...') rather than a REST API v3 key ('xkeysib-...'). " +
+          "Routing directly to Resend to eliminate HTTP 401 failover latency."
+        );
+      }
       const resendRes = await sendResendEmail({
         from: `${options.senderName?.trim() || senderIdentity.name} <${senderIdentity.email}>`,
         to: options.to.map((rec) => ({ email: rec.email.trim().toLowerCase(), name: rec.name?.trim() || undefined })),
@@ -226,7 +238,9 @@ export async function sendTransactionalEmail(
     }
     return {
       success: false,
-      error: "BREVO_API_KEY is not configured in server environment.",
+      error: isBrevoSmtpKey
+        ? "BREVO_API_KEY is an SMTP key (xsmtpsib-...) and RESEND_API_KEY is not configured."
+        : "BREVO_API_KEY is not configured in server environment.",
     };
   }
 
@@ -1095,6 +1109,294 @@ export async function dispatchLiveChatVisitorReplyEmail(
     idempotencyKey: params.applicationDispatchId,
   });
 }
+
+/**
+ * Dispatches a 6-digit OTP verification code to a recruiter requesting access to contact.gauravpatil.site.
+ */
+export async function dispatchRecruiterOtpEmail(params: {
+  email: string;
+  name: string;
+  company: string;
+  otp: string;
+  expiresInMinutes?: number;
+}): Promise<SendEmailResult> {
+  const expiresIn = params.expiresInMinutes || 5;
+  const safeName = escapeHtml(params.name.trim());
+  const safeCompany = escapeHtml(params.company.trim());
+  const safeOtp = escapeHtml(params.otp.trim());
+
+  const bodyContentHtml = `
+    <p style="${EMAIL_SPACING.greetingMargin}font-weight:600;color:#111827;font-size:15px;">Hi ${safeName},</p>
+    <p style="${EMAIL_SPACING.paragraphMargin}color:#374151;font-size:14px;line-height:1.5;">
+      Use the 6-digit verification code below to access Gaurav Patil's private Recruiter Contact Portal for <strong>${safeCompany}</strong>:
+    </p>
+    <div style="margin:16px 0;text-align:center;padding:16px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;">
+      <span style="font-family:${EMAIL_TYPOGRAPHY.fontMono};font-size:32px;font-weight:700;letter-spacing:6px;color:#4F46E5;">
+        ${safeOtp}
+      </span>
+    </div>
+    <p style="${EMAIL_SPACING.helperTextMargin}color:#6B7280;font-size:12px;line-height:1.4;">
+      This single-use code expires in <strong>${expiresIn} minutes</strong>. If you did not request this code, you can safely disregard this email.
+    </p>
+  `;
+
+  const htmlContent = renderCompactEmailLayout({
+    title: "Recruiter Portal Access Code",
+    bodyContentHtml,
+    footerType: "SECURITY",
+    footerContext: {
+      brandName: "Gaurav Patil | Recruiter Portal",
+      replyToEmail: "no-reply@gauravpatil.site",
+    },
+  });
+
+  const textContent = `Hi ${params.name.trim()},\n\nYour 6-digit verification code for Gaurav Patil's Recruiter Contact Portal (${params.company.trim()}) is:\n\n${params.otp.trim()}\n\nThis single-use code expires in ${expiresIn} minutes.\nIf you did not request this, please disregard this email.\n\n-- Gaurav Patil`;
+
+  return sendTransactionalEmail({
+    purpose: "SECURITY_OTP",
+    identity: EMAIL_IDENTITIES.NO_REPLY,
+    to: [{ email: params.email.trim().toLowerCase(), name: params.name.trim() }],
+    subject: `Your Access Code for Gaurav Patil's Recruiter Portal: ${params.otp.trim()}`,
+    htmlContent,
+    textContent,
+    tags: ["recruiter", "otp"],
+  });
+}
+
+/**
+ * Dispatches an immediate security notification to Gaurav when a recruiter verifies OTP on contact.gauravpatil.site.
+ */
+export async function dispatchRecruiterVerifiedAdminNotification(params: {
+  name: string;
+  company: string;
+  email: string;
+  phone?: string | null;
+  countryCode?: string | null;
+  verifiedAt: number;
+}): Promise<SendEmailResult> {
+  const safeName = escapeHtml(params.name.trim());
+  const safeCompany = escapeHtml(params.company.trim());
+  const safeEmail = escapeHtml(params.email.trim().toLowerCase());
+  const safePhone = params.phone ? escapeHtml(params.phone.trim()) : null;
+
+  let countryDisplay: string | null = null;
+  if (params.countryCode && /^[A-Z]{2}$/.test(params.countryCode)) {
+    try {
+      const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
+      const name = regionNames.of(params.countryCode);
+      countryDisplay = name ? `${params.countryCode} (${name})` : params.countryCode;
+    } catch {
+      countryDisplay = params.countryCode;
+    }
+  }
+
+  const timestampStr = formatSubmissionTimestamp(new Date(params.verifiedAt));
+  const adminEmail = process.env.ADMIN_EMAIL || "gauravpatil5737@gmail.com";
+
+  const bodyContentHtml = `
+    <p style="${EMAIL_SPACING.greetingMargin}font-weight:600;color:#111827;font-size:15px;">New Recruiter Verified</p>
+    <p style="${EMAIL_SPACING.paragraphMargin}color:#374151;font-size:14px;line-height:1.5;">
+      A recruiter has authenticated on <strong>contact.gauravpatil.site</strong>:
+    </p>
+    <div style="margin:12px 0;padding:12px 14px;background:#F8FAFC;border:1px solid #E2E8F0;border-left:3px solid #10B981;border-radius:6px;font-size:13px;color:#111827;line-height:1.6;">
+      <div><strong>Name:</strong> ${safeName}</div>
+      <div><strong>Company:</strong> ${safeCompany}</div>
+      <div><strong>Email:</strong> <a href="mailto:${safeEmail}" style="color:#2563EB;">${safeEmail}</a></div>
+      ${safePhone ? `<div><strong>Phone:</strong> <a href="tel:${safePhone}" style="color:#2563EB;">${safePhone}</a></div>` : ""}
+      ${countryDisplay ? `<div><strong>Country:</strong> ${escapeHtml(countryDisplay)}</div>` : ""}
+      <div><strong>Verified At:</strong> ${timestampStr}</div>
+    </div>
+    <p style="margin:10px 0 0 0;font-size:12px;">
+      <a href="https://gauravpatil.site/admin/recruiters" style="display:inline-block;padding:7px 14px;background:#111827;color:#FFFFFF;text-decoration:none;border-radius:5px;font-weight:500;">
+        Open Admin Recruiter Hub &rarr;
+      </a>
+    </p>
+  `;
+
+  const htmlContent = renderCompactEmailLayout({
+    title: "Recruiter Verified Notification",
+    bodyContentHtml,
+    footerType: "SECURITY",
+    footerContext: {
+      brandName: "Gaurav Patil | Security Ops",
+    },
+  });
+
+  const textContent = `New Recruiter Verified:\n\nName: ${params.name.trim()}\nCompany: ${params.company.trim()}\nEmail: ${params.email.trim()}\n${params.phone ? `Phone: ${params.phone.trim()}\n` : ""}${countryDisplay ? `Country: ${countryDisplay}\n` : ""}Verified At: ${timestampStr}\n\nView at: https://gauravpatil.site/admin/recruiters`;
+
+  return sendTransactionalEmail({
+    purpose: "SECURITY_ALERT",
+    identity: EMAIL_IDENTITIES.SECURITY,
+    to: [{ email: adminEmail, name: "Gaurav Patil" }],
+    subject: `Recruiter Verified: ${params.name.trim()} from ${params.company.trim()}`,
+    htmlContent,
+    textContent,
+    tags: ["recruiter", "admin_alert"],
+  });
+}
+
+/**
+ * Dispatches Gaurav's resume directly to a verified recruiter upon their one-click request.
+ */
+export async function dispatchRecruiterResumeEmail(params: {
+  name: string;
+  company: string;
+  email: string;
+}): Promise<SendEmailResult> {
+  const safeName = escapeHtml(params.name.trim());
+  const safeCompany = escapeHtml(params.company.trim());
+  const resumeDownloadUrl = "https://gauravpatil.site/resume.pdf";
+
+  const bodyContentHtml = `
+    <p style="${EMAIL_SPACING.greetingMargin}font-weight:600;color:#111827;font-size:15px;">Hi ${safeName},</p>
+    <p style="${EMAIL_SPACING.paragraphMargin}color:#374151;font-size:14px;line-height:1.5;">
+      Thank you for exploring my Recruiter Contact Portal for <strong>${safeCompany}</strong>. As requested, here is a direct link to my latest Resume / CV:
+    </p>
+    <div style="margin:16px 0;text-align:center;">
+      <a href="${resumeDownloadUrl}" target="_blank" rel="noopener noreferrer" style="background-color:#4F46E5;color:#FFFFFF;font-size:13px;font-weight:600;text-decoration:none;padding:10px 20px;border-radius:6px;display:inline-block;">
+        Download Gaurav Patil's Resume (PDF) &rarr;
+      </a>
+    </div>
+    <p style="${EMAIL_SPACING.paragraphMargin}color:#374151;font-size:13px;line-height:1.5;">
+      You can also reach out to me directly by replying to this email or through my Recruiter Contact Portal.
+    </p>
+    <p style="margin:12px 0 0 0;color:#6B7280;font-size:13px;">
+      Best regards,<br />
+      <strong>Gaurav Patil</strong><br />
+      Full-Stack & Systems Engineer
+    </p>
+  `;
+
+  const htmlContent = renderCompactEmailLayout({
+    title: "Gaurav Patil - Resume / CV",
+    bodyContentHtml,
+    footerType: "STANDARD",
+    footerContext: {
+      brandName: "Gaurav Patil",
+      replyToEmail: "work@gauravpatil.site",
+    },
+  });
+
+  const textContent = `Hi ${params.name.trim()},\n\nThank you for exploring my Recruiter Contact Portal for ${params.company.trim()}.\n\nYou can download my latest Resume (PDF) directly using this link:\n${resumeDownloadUrl}\n\nFeel free to reach out by replying to this email directly or via the Recruiter Contact Portal.\n\nBest regards,\nGaurav Patil\nFull-Stack & Systems Engineer`;
+
+  return sendTransactionalEmail({
+    purpose: "SYSTEM_NOTIFICATION",
+    identity: EMAIL_IDENTITIES.WORK,
+    to: [{ email: params.email.trim().toLowerCase(), name: params.name.trim() }],
+    subject: `Gaurav Patil — Resume & Engineering Background (${params.company.trim()})`,
+    htmlContent,
+    textContent,
+    tags: ["recruiter", "resume_request"],
+  });
+}
+
+/**
+ * Dispatches a 6-digit OTP verification code specifically for unmasking Gaurav's direct phone number.
+ */
+export async function dispatchPhoneUnmaskOtpEmail(params: {
+  email: string;
+  name: string;
+  company: string;
+  otp: string;
+  expiresInMinutes?: number;
+}): Promise<SendEmailResult> {
+  const expiresIn = params.expiresInMinutes || 5;
+  const safeName = escapeHtml(params.name.trim());
+  const safeCompany = escapeHtml(params.company.trim());
+  const safeOtp = escapeHtml(params.otp.trim());
+
+  const bodyContentHtml = `
+    <p style="${EMAIL_SPACING.greetingMargin}font-weight:600;color:#111827;font-size:15px;">Hi ${safeName},</p>
+    <p style="${EMAIL_SPACING.paragraphMargin}color:#374151;font-size:14px;line-height:1.5;">
+      Use the 6-digit verification code below to reveal Gaurav Patil's direct cellular phone number and WhatsApp line for <strong>${safeCompany}</strong>:
+    </p>
+    <div style="margin:16px 0;text-align:center;padding:16px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;">
+      <span style="font-family:${EMAIL_TYPOGRAPHY.fontMono};font-size:32px;font-weight:700;letter-spacing:6px;color:#059669;">
+        ${safeOtp}
+      </span>
+    </div>
+    <p style="${EMAIL_SPACING.helperTextMargin}color:#6B7280;font-size:12px;line-height:1.4;">
+      This security measure ensures direct lines are shared strictly with verified recruiters and eliminates automated spam.
+      Valid for <strong>${expiresIn} minutes</strong>. If you did not request this, you can safely disregard this email.
+    </p>
+  `;
+
+  const htmlContent = renderCompactEmailLayout({
+    title: "Direct Contact Access Code",
+    bodyContentHtml,
+    footerType: "SECURITY",
+    footerContext: {
+      brandName: "Gaurav Patil | Security Ops",
+      replyToEmail: "no-reply@gauravpatil.site",
+    },
+  });
+
+  const textContent = `Hi ${params.name.trim()},\n\nYour 6-digit verification code to unmask Gaurav Patil's direct phone and WhatsApp line for ${params.company.trim()} is:\n\n${params.otp.trim()}\n\nThis code expires in ${expiresIn} minutes.\n\n-- Gaurav Patil`;
+
+  return sendTransactionalEmail({
+    purpose: "SECURITY_OTP",
+    identity: EMAIL_IDENTITIES.NO_REPLY,
+    to: [{ email: params.email.trim().toLowerCase(), name: params.name.trim() }],
+    subject: `Access Code to Unmask Gaurav Patil's Direct Phone: ${params.otp.trim()}`,
+    htmlContent,
+    textContent,
+    tags: ["recruiter", "phone_unmask_otp"],
+  });
+}
+
+/**
+ * Notifies Gaurav when a recruiter unmasks his direct cellular phone number.
+ */
+export async function dispatchRecruiterPhoneUnmaskedAdminNotification(params: {
+  name: string;
+  company: string;
+  email: string;
+  clientIp?: string;
+  unmaskedAt: number;
+}): Promise<SendEmailResult> {
+  const safeName = escapeHtml(params.name.trim());
+  const safeCompany = escapeHtml(params.company.trim());
+  const safeEmail = escapeHtml(params.email.trim().toLowerCase());
+  const timestampStr = formatSubmissionTimestamp(new Date(params.unmaskedAt));
+  const adminEmail = process.env.ADMIN_EMAIL || "gauravpatil5737@gmail.com";
+
+  const bodyContentHtml = `
+    <p style="${EMAIL_SPACING.greetingMargin}font-weight:600;color:#111827;font-size:15px;">Direct Phone Unmasked</p>
+    <p style="${EMAIL_SPACING.paragraphMargin}color:#374151;font-size:14px;line-height:1.5;">
+      A verified recruiter has verified OTP and unlocked your direct phone number &amp; WhatsApp:
+    </p>
+    <div style="margin:12px 0;padding:12px 14px;background:#F8FAFC;border:1px solid #E2E8F0;border-left:3px solid #059669;border-radius:6px;font-size:13px;color:#111827;line-height:1.6;">
+      <div><strong>Recruiter:</strong> ${safeName}</div>
+      <div><strong>Company:</strong> ${safeCompany}</div>
+      <div><strong>Email:</strong> <a href="mailto:${safeEmail}" style="color:#2563EB;">${safeEmail}</a></div>
+      ${params.clientIp ? `<div><strong>IP:</strong> ${escapeHtml(params.clientIp)}</div>` : ""}
+      <div><strong>Unlocked At:</strong> ${timestampStr}</div>
+    </div>
+  `;
+
+  const htmlContent = renderCompactEmailLayout({
+    title: "Direct Phone Unmasked Alert",
+    bodyContentHtml,
+    footerType: "SECURITY",
+    footerContext: {
+      brandName: "Gaurav Patil | Security Ops",
+    },
+  });
+
+  const textContent = `Direct Phone Unmasked:\n\nRecruiter: ${params.name.trim()}\nCompany: ${params.company.trim()}\nEmail: ${params.email.trim()}\nUnlocked At: ${timestampStr}`;
+
+  return sendTransactionalEmail({
+    purpose: "SECURITY_ALERT",
+    identity: EMAIL_IDENTITIES.SECURITY,
+    to: [{ email: adminEmail, name: "Gaurav Patil" }],
+    subject: `[Phone Unmasked] ${params.name.trim()} from ${params.company.trim()}`,
+    htmlContent,
+    textContent,
+    tags: ["recruiter", "phone_unmasked"],
+  });
+}
+
+
 
 
 

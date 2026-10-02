@@ -26,6 +26,7 @@ import {
   FaRightFromBracket,
   FaWhatsapp,
   FaScaleBalanced,
+  FaUserCheck,
 } from "react-icons/fa6";
 
 import { useAdminSession } from "@/components/admin/context";
@@ -152,6 +153,7 @@ export const AdminSidebar: React.FC = () => {
     { id: "18", label: "Cloudflare Security", href: "/admin/cloudflare", icon: FaShieldHalved },
     { id: "19", label: "Database Reset", href: "/admin/purge", icon: FaRotate },
     { id: "20", label: "WhatsApp Recruiter", href: "/admin/whatsapp", icon: FaWhatsapp },
+    { id: "21", label: "Recruiter Portal", href: "/admin/recruiters", icon: FaUserCheck },
   ];
 
   const isProfileActive = pathname === "/admin/profile";

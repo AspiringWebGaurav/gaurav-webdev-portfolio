@@ -523,24 +523,33 @@ async function dispatchSingleAttempt(
     provider = "AUTO",
   } = params;
 
-  // 1. Direct Resend Dispatch requested
-  if (provider === "RESEND") {
+  const primaryConfigProvider = process.env.PRIMARY_EMAIL_PROVIDER?.trim().toUpperCase();
+  const apiKey = process.env.BREVO_API_KEY?.trim();
+  const isBrevoSmtpKey = Boolean(apiKey && apiKey.startsWith("xsmtpsib-"));
+
+  // 1. Direct Resend Dispatch requested or configured as primary
+  if (provider === "RESEND" || (provider === "AUTO" && primaryConfigProvider === "RESEND")) {
     return dispatchViaResend(params);
   }
 
   // 2. Primary Brevo Dispatch (with Resend failover when provider is AUTO)
-  const apiKey = process.env.BREVO_API_KEY;
-  if (!apiKey) {
+  if (!apiKey || (isBrevoSmtpKey && process.env.RESEND_API_KEY)) {
     if (provider === "AUTO" && process.env.RESEND_API_KEY) {
-      adminLogger.info("dispatchAdminMail:FallbackToResend", "BREVO_API_KEY absent; routing via Resend", {
-        idempotencyKey,
-      });
+      adminLogger.info(
+        "dispatchAdminMail:FallbackToResend",
+        isBrevoSmtpKey
+          ? "BREVO_API_KEY is an SMTP key (xsmtpsib-); routing directly via Resend"
+          : "BREVO_API_KEY absent; routing via Resend",
+        { idempotencyKey }
+      );
       return dispatchViaResend(params);
     }
     return {
       success: false,
       status: "FAILED",
-      error: "BREVO_API_KEY is not configured in server environment.",
+      error: isBrevoSmtpKey
+        ? "BREVO_API_KEY is an SMTP key (xsmtpsib-) rather than a REST API key."
+        : "BREVO_API_KEY is not configured in server environment.",
     };
   }
 

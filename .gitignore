@@ -214,6 +214,9 @@ Icon?
 # Scratch & Temporary Testing Scripts
 scratch/
 scripts/
+.local-test-otp.json
+test-results/
+playwright-report/
 
 # Archives & Backups
 *.zip
@@ -223,3 +226,4 @@ scripts/
 *.old
 .vercel
 .env*
+

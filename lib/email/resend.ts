@@ -103,9 +103,19 @@ export async function sendResendEmail(
   }
 
   const from = options.from?.trim() || "Gaurav Patil <security@gauravpatil.site>";
-  const to = normalizeRecipients(options.to);
+  let to = normalizeRecipients(options.to);
   const cc = normalizeRecipients(options.cc);
   const bcc = normalizeRecipients(options.bcc);
+
+  // In development / local testing, map test domains (e.g. @example.com) to Resend's official test sink
+  if (process.env.NODE_ENV !== "production") {
+    to = to.map((r) => {
+      if (r.includes("@example.com") || r.includes("@test.") || r.includes("@localhost")) {
+        return "delivered@resend.dev";
+      }
+      return r;
+    });
+  }
 
   if (to.length === 0) {
     return {

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import { VercelInsights } from "@/components/analytics/VercelInsights";
 import "./globals.css";
@@ -205,21 +206,37 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headersList = await headers();
+  const host = headersList.get("host") || "";
+  const isContactPortal =
+    headersList.get("x-is-contact-portal") === "true" ||
+    host.startsWith("contact.localhost") ||
+    host === "contact.gauravpatil.site";
+
   return (
-    <html lang="en" suppressHydrationWarning className="dark">
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={isContactPortal ? "light" : "dark"}
+    >
       <head>
         <link rel="preconnect" href="https://challenges.cloudflare.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://challenges.cloudflare.com" />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} ${
+          isContactPortal ? "bg-[#FFFFFF] text-black" : ""
+        }`}
+      >
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme={isContactPortal ? "light" : "dark"}
+          forcedTheme={isContactPortal ? "light" : undefined}
           enableSystem={false}
           disableTransitionOnChange
         >

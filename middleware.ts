@@ -8,7 +8,7 @@ export async function middleware(request: NextRequest) {
   const host = request.headers.get("host") || "";
   const forwardedProto = request.headers.get("x-forwarded-proto");
   const isLocalHost =
-    host.startsWith("localhost") ||
+    host.includes("localhost") ||
     host.startsWith("127.0.0.1") ||
     host.startsWith("192.168.") ||
     host.startsWith("10.") ||
@@ -19,7 +19,7 @@ export async function middleware(request: NextRequest) {
   // Automatically consolidates www -> non-www and http -> https at the edge layer.
   // Preserves link equity in a single hop and eliminates duplicate crawl variations.
   // Bypassed on local dev and preview deployments to guarantee zero-env development.
-  if (!isLocalHost && !isVercelPreview && host) {
+  if (process.env.NODE_ENV !== "development" && !isLocalHost && !isVercelPreview && host) {
     const isWww = host.startsWith("www.");
     const isHttp = forwardedProto === "http" || request.nextUrl.protocol === "http:";
 
@@ -33,7 +33,52 @@ export async function middleware(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-pathname", pathname);
 
-  // 2. Dynamic Admin Gatekeeper Routing (/admin/*)
+  // 2. Recruiter Contact Portal Edge Router (contact.gauravpatil.site)
+  const RECRUITER_PORTAL_HOST = "contact.gauravpatil.site";
+  const isDedicatedSubdomain =
+    host === RECRUITER_PORTAL_HOST ||
+    ((isLocalHost || process.env.NODE_ENV === "development") && (
+      host === "contact.localhost:3000" ||
+      host === "contact.localhost" ||
+      host.startsWith("contact.localhost") ||
+      request.headers.get("x-dev-subdomain") === "contact"
+    ));
+
+  // In production, strictly enforce contact.gauravpatil.site
+  if (!isLocalHost && !isVercelPreview && process.env.NODE_ENV !== "development") {
+    if (!isDedicatedSubdomain && pathname.startsWith("/contact-portal")) {
+      const cleanPath = pathname.replace(/^\/contact-portal/, "") || "/";
+      return NextResponse.redirect(new URL(`https://${RECRUITER_PORTAL_HOST}${cleanPath}${search}`), 301);
+    }
+  }
+
+  // Handle Dedicated Subdomain rewriting (e.g. contact.gauravpatil.site or contact.localhost:3000)
+  if (isDedicatedSubdomain) {
+    requestHeaders.set("x-is-contact-portal", "true");
+    const targetPath = pathname.startsWith("/contact-portal")
+      ? pathname
+      : pathname === "/"
+      ? "/contact-portal"
+      : `/contact-portal${pathname}`;
+    const rewriteUrl = new URL(`${targetPath}${search}`, request.url);
+    return NextResponse.rewrite(rewriteUrl, {
+      request: {
+        headers: requestHeaders,
+      },
+    });
+  }
+
+  // On local development, also allow direct http://localhost:3000/contact-portal for browsers without wildcard localhost DNS
+  if (pathname.startsWith("/contact-portal")) {
+    requestHeaders.set("x-is-contact-portal", "true");
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
+  }
+
+  // 3. Dynamic Admin Gatekeeper Routing (/admin/*)
   if (pathname.startsWith("/admin")) {
     const sessionCookie = request.cookies.get(ADMIN_COOKIE_NAME)?.value;
     const verifiedSession = sessionCookie ? await verifyAdminSession(sessionCookie) : null;

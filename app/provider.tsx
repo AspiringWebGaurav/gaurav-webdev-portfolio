@@ -105,21 +105,11 @@ class ThemeErrorBoundary extends React.Component<
   }
 }
 
-// 3. Mount-guarded ThemeProvider with error boundary wrapper
+// 3. Resilient ThemeProvider with error boundary wrapper (Guarantees persistent DOM tree without unmount/remount glitches)
 export function ThemeProvider({
   children,
   ...props
 }: React.ComponentProps<typeof NextThemesProvider>) {
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return <>{children}</>;
-  }
-
   return (
     <ThemeErrorBoundary>
       <NextThemesProvider {...props}>{children}</NextThemesProvider>

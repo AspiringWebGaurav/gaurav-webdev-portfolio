@@ -86,9 +86,11 @@
     width: 100%;
     overflow-x: hidden;
   }
+  body:has([data-portal="true"]),
+  [data-portal="true"],
   body:has([data-admin="true"]),
   [data-admin="true"] {
-    background-color: #FAFAFA !important;
+    background-color: #FFFFFF !important;
     color: #000000 !important;
   }
   button,

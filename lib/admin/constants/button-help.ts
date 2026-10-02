@@ -58,6 +58,10 @@ export const BUTTON_HELP = {
   LEGAL_DISCARD_DRAFT: "Discards private unpublished draft changes and restores the current published state.",
   LEGAL_RESTORE_VERSION: "Loads this historical version into the draft editor so you can review and republish it.",
   LEGAL_RETRY_JOB: "Re-queues failed recipient notifications for this legal update and re-triggers the background processor.",
+
+  // Recruiter Portal (/admin/recruiters)
+  RECRUITER_EXPORT: "Downloads the verified recruiter roster as a formatted CSV or JSON file for reporting and CRM importing.",
 } as const;
+
 
 export type ButtonHelpKey = keyof typeof BUTTON_HELP;

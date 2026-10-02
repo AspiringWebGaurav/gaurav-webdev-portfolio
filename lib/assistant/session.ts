@@ -15,6 +15,10 @@ import {
   liveChatSessionsRepository,
   type LiveChatSessionDocument,
 } from "@/lib/dal/repositories/live-chat-sessions.repository";
+import {
+  RECRUITER_SESSION_COOKIE_NAME,
+  validateRecruiterSession,
+} from "@/lib/recruiter/services/recruiter-auth.service";
 import crypto from "crypto";
 
 export interface AuthenticatedVisitorContext {
@@ -47,50 +51,74 @@ export async function getAuthenticatedVisitor(
   req: NextRequest
 ): Promise<AuthenticatedVisitorContext | null> {
   const cookie = req.cookies.get(LIVE_CHAT_COOKIE_NAME);
-  if (!cookie?.value) return null;
+  if (cookie?.value) {
+    // 1. Cryptographic token verification
+    const session = verifyVisitorSession(cookie.value);
+    if (session) {
+      // 2. Server-Authoritative Session Registry Check (In-Memory L1 Cache + Firestore)
+      const now = Date.now();
+      let dbSession: LiveChatSessionDocument | null = null;
+      const cached = visitorSessionCache.get(session.sessionId);
 
-  // 1. Cryptographic token verification
-  const session = verifyVisitorSession(cookie.value);
-  if (!session) return null;
-
-  // 2. Server-Authoritative Session Registry Check (In-Memory L1 Cache + Firestore)
-  const now = Date.now();
-  let dbSession: LiveChatSessionDocument | null = null;
-  const cached = visitorSessionCache.get(session.sessionId);
-
-  if (cached && now < cached.cachedUntil) {
-    dbSession = cached.dbSession;
-  } else {
-    dbSession = await liveChatSessionsRepository.getSession(session.sessionId);
-    if (dbSession) {
-      if (visitorSessionCache.size > 500) {
-        visitorSessionCache.clear();
+      if (cached && now < cached.cachedUntil) {
+        dbSession = cached.dbSession;
+      } else {
+        dbSession = await liveChatSessionsRepository.getSession(session.sessionId);
+        if (dbSession) {
+          if (visitorSessionCache.size > 500) {
+            visitorSessionCache.clear();
+          }
+          visitorSessionCache.set(session.sessionId, {
+            dbSession,
+            cachedUntil: Math.min(now + VISITOR_SESSION_CACHE_TTL_MS, dbSession.expiresAt),
+          });
+        }
       }
-      visitorSessionCache.set(session.sessionId, {
-        dbSession,
-        cachedUntil: Math.min(now + VISITOR_SESSION_CACHE_TTL_MS, dbSession.expiresAt),
-      });
+
+      if (dbSession && dbSession.status === "ACTIVE" && now < dbSession.expiresAt) {
+        // Ensure email matches
+        if (dbSession.email.toLowerCase() === session.email.toLowerCase()) {
+          return {
+            session,
+            sessionId: session.sessionId,
+            email: session.email,
+            name: session.name,
+          };
+        }
+      } else if (dbSession) {
+        visitorSessionCache.delete(session.sessionId);
+      }
     }
   }
 
-  if (!dbSession) return null;
+  // 3. Fallback: Authenticated Recruiter Portal Session Bridge (contact.gauravpatil.site)
+  const recruiterCookie = req.cookies.get(RECRUITER_SESSION_COOKIE_NAME);
+  if (recruiterCookie?.value) {
+    const validation = await validateRecruiterSession(recruiterCookie.value);
+    if (validation.isValid && validation.payload) {
+      const payload = validation.payload;
+      const recruiterSessionId = payload.sessionId;
+      const recruiterDisplayName = payload.company?.trim()
+        ? `${payload.name} (${payload.company.trim()})`
+        : payload.name;
 
-  if (dbSession.status !== "ACTIVE" || now >= dbSession.expiresAt) {
-    visitorSessionCache.delete(session.sessionId);
-    return null;
+      return {
+        session: {
+          sessionId: recruiterSessionId,
+          email: payload.email.toLowerCase(),
+          name: recruiterDisplayName,
+          clientIp: extractClientIp(req),
+          createdAt: Date.now(),
+          expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+        },
+        sessionId: recruiterSessionId,
+        email: payload.email.toLowerCase(),
+        name: recruiterDisplayName,
+      };
+    }
   }
 
-  // Ensure email matches
-  if (dbSession.email.toLowerCase() !== session.email.toLowerCase()) {
-    return null;
-  }
-
-  return {
-    session,
-    sessionId: session.sessionId,
-    email: session.email,
-    name: session.name,
-  };
+  return null;
 }
 
 /**
@@ -148,16 +176,18 @@ export function validateCsrfOrigin(req: NextRequest): boolean {
   const trustedDomains = [
     "https://gauravpatil.site",
     "https://www.gauravpatil.site",
+    "https://contact.gauravpatil.site",
     "https://devlabs.eu.cc",
     "https://www.devlabs.eu.cc",
     "http://localhost:3000",
+    "http://contact.localhost:3000",
     "http://127.0.0.1:3000",
   ];
 
   if (trustedDomains.includes(cleanOrigin)) return true;
 
   // 5. Allow any localhost / 127.0.0.1 port in development
-  if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(cleanOrigin)) {
+  if (/^http:\/\/(localhost|contact\.localhost|127\.0\.0\.1)(:\d+)?$/.test(cleanOrigin)) {
     return true;
   }
 

@@ -490,6 +490,42 @@ export const LIFECYCLE_POLICY: Record<string, PolicyEntityDefinition> = {
     canSeed: false,
     isProtected: false,
   },
+  recruiter_profiles: {
+    name: "recruiter_profiles",
+    store: "firestore",
+    classification: "DYNAMIC_APPLICATION",
+    description: "Recruiter contact portal verified recruiter profiles and engagement metadata",
+    canDelete: true,
+    canSeed: false,
+    isProtected: false,
+  },
+  recruiter_challenges: {
+    name: "recruiter_challenges",
+    store: "firestore",
+    classification: "DYNAMIC_APPLICATION",
+    description: "Recruiter OTP verification challenge tokens and attempt states",
+    canDelete: true,
+    canSeed: false,
+    isProtected: false,
+  },
+  recruiter_sessions: {
+    name: "recruiter_sessions",
+    store: "firestore",
+    classification: "DYNAMIC_APPLICATION",
+    description: "Recruiter contact portal active browser sessions and revocation ledger",
+    canDelete: true,
+    canSeed: false,
+    isProtected: false,
+  },
+  recruiter_activity: {
+    name: "recruiter_activity",
+    store: "firestore",
+    classification: "DYNAMIC_APPLICATION",
+    description: "Recruiter contact portal high-signal engagement activity stream",
+    canDelete: true,
+    canSeed: false,
+    isProtected: false,
+  },
 
   // =========================================================================
   // 5. DERIVED CACHE & TRANSIENT NODES (Cleared on Clean & Reset)
@@ -528,6 +564,12 @@ export const REDIS_NAMESPACE_POLICY = {
     pattern: "ratelimit:*",
     classification: "DERIVED_CACHE" as LifecycleClassification,
     description: "Contact and Live Chat API rate limits",
+    isDisposable: true,
+  },
+  "ratelimit:recruiter:*": {
+    pattern: "ratelimit:recruiter:*",
+    classification: "DERIVED_CACHE" as LifecycleClassification,
+    description: "Recruiter portal OTP burst and hourly rate limiting quotas",
     isDisposable: true,
   },
   "cache:*": {
