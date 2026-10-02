@@ -8,7 +8,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: ["/", "/projects", "/blog", "/privacy", "/terms", "/security", "/accessibility", "/chat", "/contact-portal"],
-        disallow: ["/admin", "/api", "/wa", "/chat/room"],
+        disallow: ["/admin", "/api", "/wa", "/chat/room", "/talk"],
       },
     ],
     sitemap: "https://gauravpatil.site/sitemap.xml",

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { ADMIN_COOKIE_NAME } from "@/lib/admin/constants";
 import { verifyAdminSession } from "@/lib/admin/auth";
+import { TALK_COOKIE_NAME, TALK_PORTAL_HOST } from "@/lib/talk/constants";
+import { verifyTalkSession } from "@/lib/talk/session";
 
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
@@ -148,7 +150,83 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(`http://resume.localhost${port}/${search}`, request.url), 307);
   }
 
-  // 4. Dynamic Admin Gatekeeper Routing (/admin/*)
+  // 4. Talk Command Hub Edge Router (talk.gauravpatil.site & talk.localhost:3000)
+  const isDedicatedTalkSubdomain =
+    host === TALK_PORTAL_HOST ||
+    ((isLocalHost || process.env.NODE_ENV === "development") && (
+      host === "talk.localhost:3000" ||
+      host === "talk.localhost" ||
+      host.startsWith("talk.localhost") ||
+      request.headers.get("x-dev-subdomain") === "talk"
+    ));
+
+  // Case A: Request is on the Dedicated Talk Subdomain (talk.gauravpatil.site or talk.localhost:3000)
+  if (isDedicatedTalkSubdomain) {
+    requestHeaders.set("x-is-talk-portal", "true");
+
+    const talkToken = request.cookies.get(TALK_COOKIE_NAME)?.value;
+    const isTalkAuth = talkToken ? await verifyTalkSession(talkToken) : null;
+    const isLogin = pathname === "/login" || pathname === "/talk/login";
+
+    if (!isTalkAuth && !isLogin && !pathname.startsWith("/api")) {
+      const loginUrl = new URL(`/login${search}`, request.url);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    if (isTalkAuth && isLogin) {
+      const homeUrl = new URL(`/${search}`, request.url);
+      return NextResponse.redirect(homeUrl);
+    }
+
+    const targetPath =
+      pathname === "/"
+        ? "/talk"
+        : pathname.startsWith("/talk")
+        ? pathname
+        : `/talk${pathname}`;
+
+    const rewriteUrl = new URL(`${targetPath}${search}`, request.url);
+    return NextResponse.rewrite(rewriteUrl, {
+      request: {
+        headers: requestHeaders,
+      },
+    });
+  }
+
+  // Case B: Request is on the Main Domain
+  // In production, strictly enforce talk.gauravpatil.site
+  if (!isLocalHost && !isVercelPreview && process.env.NODE_ENV !== "development") {
+    if (pathname.startsWith("/talk")) {
+      const cleanPath = pathname.replace(/^\/talk/, "") || "/";
+      return NextResponse.redirect(new URL(`https://${TALK_PORTAL_HOST}${cleanPath}${search}`), 301);
+    }
+  }
+
+  // On local development, also allow direct http://localhost:3000/talk
+  if (pathname.startsWith("/talk")) {
+    requestHeaders.set("x-is-talk-portal", "true");
+    const talkToken = request.cookies.get(TALK_COOKIE_NAME)?.value;
+    const isTalkAuth = talkToken ? await verifyTalkSession(talkToken) : null;
+    const isLogin = pathname === "/talk/login";
+
+    if (!isTalkAuth && !isLogin && !pathname.startsWith("/api")) {
+      const loginUrl = new URL(`/talk/login${search}`, request.url);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    if (isTalkAuth && isLogin) {
+      const homeUrl = new URL(`/talk${search}`, request.url);
+      return NextResponse.redirect(homeUrl);
+    }
+
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
+  }
+
+  // 5. Dynamic Admin Gatekeeper Routing (/admin/*)
   if (pathname.startsWith("/admin")) {
     const sessionCookie = request.cookies.get(ADMIN_COOKIE_NAME)?.value;
     const verifiedSession = sessionCookie ? await verifyAdminSession(sessionCookie) : null;

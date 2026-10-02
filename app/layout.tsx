@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { headers } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import { VercelInsights } from "@/components/analytics/VercelInsights";
 import "./globals.css";
@@ -206,45 +205,25 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const headersList = await headers();
-  const host = headersList.get("host") || "";
-  const isContactPortal =
-    headersList.get("x-is-contact-portal") === "true" ||
-    host.startsWith("contact.localhost") ||
-    host === "contact.gauravpatil.site";
-  const isResumePortal =
-    headersList.get("x-is-resume-portal") === "true" ||
-    host.startsWith("resume.localhost") ||
-    host === "resume.gauravpatil.site";
-
   return (
     <html
       lang="en"
       suppressHydrationWarning
-      className={isContactPortal || isResumePortal ? "light" : "dark"}
+      className="dark"
     >
       <head>
         <link rel="preconnect" href="https://challenges.cloudflare.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://challenges.cloudflare.com" />
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${
-          isContactPortal
-            ? "bg-[#FFFFFF] text-black"
-            : isResumePortal
-            ? "bg-[#FAFAFA] dark:bg-[#0A0A0C] text-slate-900 dark:text-zinc-100 transition-colors duration-200"
-            : ""
-        }`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} bg-[#000319] text-white`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme={isContactPortal || isResumePortal ? "light" : "dark"}
-          forcedTheme={isContactPortal ? "light" : undefined}
+          defaultTheme="dark"
           enableSystem={false}
           disableTransitionOnChange
         >

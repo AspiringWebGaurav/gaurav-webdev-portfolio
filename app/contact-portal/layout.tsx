@@ -140,6 +140,11 @@ export default function RecruiterPortalLayout({
       className={`${adminSans.variable} ${adminMono.variable} font-admin-sans relative h-[100dvh] max-h-[100dvh] w-full overflow-hidden bg-[#FAFAFA] text-black flex flex-col`}
     >
       <script
+        dangerouslySetInnerHTML={{
+          __html: `document.documentElement.classList.add('light');document.documentElement.classList.remove('dark');`,
+        }}
+      />
+      <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(recruiterPortalJsonLd) }}
       />
