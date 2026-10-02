@@ -7,8 +7,6 @@
  */
 
 import crypto from "crypto";
-import fs from "fs";
-import path from "path";
 import { getAdminFirestore } from "@/lib/admin/firebase-admin";
 import {
   recruiterRepository,
@@ -23,6 +21,7 @@ import {
   dispatchPhoneUnmaskOtpEmail,
   dispatchRecruiterPhoneUnmaskedAdminNotification,
 } from "@/lib/email/brevo";
+import { validateWorkEmail } from "../validation";
 import type {
   RecruiterChallenge,
   RecruiterProfile,
@@ -86,6 +85,10 @@ export async function createOtpChallenge(
   params: CreateOtpChallengeParams
 ): Promise<CreateOtpChallengeResult> {
   const rawEmail = params.email.trim().toLowerCase();
+  const emailError = validateWorkEmail(rawEmail);
+  if (emailError) {
+    return { success: false, error: emailError };
+  }
   const rawName = params.name.trim();
   const rawCompany = params.company.trim();
   const rawPhone = params.phone ? params.phone.trim() : null;
@@ -124,26 +127,6 @@ export async function createOtpChallenge(
     return { success: false, error: "Failed to persist verification challenge." };
   }
 
-  // Local QA Test Support: In non-production, record generated OTP for local test runner
-  if (process.env.NODE_ENV !== "production") {
-    try {
-      const testOtpPath = path.join(process.cwd(), ".local-test-otp.json");
-      let testStore: Record<string, string> = {};
-      if (fs.existsSync(testOtpPath)) {
-        try {
-          testStore = JSON.parse(fs.readFileSync(testOtpPath, "utf-8"));
-        } catch {
-          testStore = {};
-        }
-      }
-      testStore[challengeId] = otpCode;
-      testStore[rawEmail] = otpCode;
-      testStore["latest"] = otpCode;
-      fs.writeFileSync(testOtpPath, JSON.stringify(testStore, null, 2), "utf-8");
-    } catch {
-      // ignore
-    }
-  }
 
   // 4. Dispatch Email via Brevo / Resend failover
   const emailRes = await dispatchRecruiterOtpEmail({
@@ -442,26 +425,6 @@ export async function resendOtpChallenge(params: ResendOtpParams): Promise<Resen
     expiresAt: now + OTP_TTL_MS,
   });
 
-  // Local QA Test Support: In non-production, record generated OTP for local test runner
-  if (process.env.NODE_ENV !== "production") {
-    try {
-      const testOtpPath = path.join(process.cwd(), ".local-test-otp.json");
-      let testStore: Record<string, string> = {};
-      if (fs.existsSync(testOtpPath)) {
-        try {
-          testStore = JSON.parse(fs.readFileSync(testOtpPath, "utf-8"));
-        } catch {
-          testStore = {};
-        }
-      }
-      testStore[challenge.id] = newOtpCode;
-      testStore[challenge.email.toLowerCase()] = newOtpCode;
-      testStore["latest"] = newOtpCode;
-      fs.writeFileSync(testOtpPath, JSON.stringify(testStore, null, 2), "utf-8");
-    } catch {
-      // ignore
-    }
-  }
 
   // Dispatch Email
   const emailRes = await dispatchRecruiterOtpEmail({
@@ -545,27 +508,6 @@ export async function createPhoneUnmaskOtpChallenge(
     return { success: false, error: "Failed to persist verification challenge." };
   }
 
-  // Local QA Test Support
-  if (process.env.NODE_ENV !== "production") {
-    try {
-      const testOtpPath = path.join(process.cwd(), ".local-test-otp.json");
-      let testStore: Record<string, string> = {};
-      if (fs.existsSync(testOtpPath)) {
-        try {
-          testStore = JSON.parse(fs.readFileSync(testOtpPath, "utf-8"));
-        } catch {
-          testStore = {};
-        }
-      }
-      testStore[challengeId] = otpCode;
-      testStore[rawEmail] = otpCode;
-      testStore["phone_unmask_latest"] = otpCode;
-      testStore["latest"] = otpCode;
-      fs.writeFileSync(testOtpPath, JSON.stringify(testStore, null, 2), "utf-8");
-    } catch {
-      // ignore
-    }
-  }
 
   // 4. Dispatch Email
   const emailRes = await dispatchPhoneUnmaskOtpEmail({
@@ -807,27 +749,6 @@ export async function resendPhoneUnmaskOtpChallenge(params: ResendOtpParams): Pr
     expiresAt: now + OTP_TTL_MS,
   });
 
-  // Local QA Test Support
-  if (process.env.NODE_ENV !== "production") {
-    try {
-      const testOtpPath = path.join(process.cwd(), ".local-test-otp.json");
-      let testStore: Record<string, string> = {};
-      if (fs.existsSync(testOtpPath)) {
-        try {
-          testStore = JSON.parse(fs.readFileSync(testOtpPath, "utf-8"));
-        } catch {
-          testStore = {};
-        }
-      }
-      testStore[challenge.id] = newOtpCode;
-      testStore[challenge.email.toLowerCase()] = newOtpCode;
-      testStore["phone_unmask_latest"] = newOtpCode;
-      testStore["latest"] = newOtpCode;
-      fs.writeFileSync(testOtpPath, JSON.stringify(testStore, null, 2), "utf-8");
-    } catch {
-      // ignore
-    }
-  }
 
   // Dispatch Email
   const emailRes = await dispatchPhoneUnmaskOtpEmail({

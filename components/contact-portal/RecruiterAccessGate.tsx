@@ -14,6 +14,7 @@ import {
   FaSearch,
   FaChevronDown,
 } from "react-icons/fa";
+import { validateWorkEmail } from "@/lib/recruiter/validation";
 
 interface CountryOption {
   code: string;
@@ -75,21 +76,7 @@ const validateCompany = (val: string): string | null => {
 };
 
 const validateEmail = (val: string): string | null => {
-  const trimmed = val.trim().toLowerCase();
-  if (!trimmed) return "Please enter your email.";
-  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
-  if (!emailRegex.test(trimmed)) {
-    return "Please enter a valid email address.";
-  }
-  const parts = trimmed.split("@");
-  if (parts.length === 2) {
-    const domain = parts[1];
-    const dotIndex = domain.lastIndexOf(".");
-    if (dotIndex === -1 || domain.substring(dotIndex + 1).length < 2) {
-      return "Please enter an email with a valid domain (e.g. .com, .org).";
-    }
-  }
-  return null;
+  return validateWorkEmail(val);
 };
 
 const validatePhone = (val: string): string | null => {
@@ -494,7 +481,7 @@ export function RecruiterAccessGate({ onSuccess }: RecruiterAccessGateProps) {
 
             <div className="pt-8 text-xs text-gray-500 flex items-center gap-2">
               <FaShieldAlt className="text-emerald-600 text-xs" />
-              <span>Quick 1-step email verification • No signup or password needed</span>
+              <span>Quick 1-step work email verification • No signup or password needed</span>
             </div>
           </div>
 
@@ -581,25 +568,30 @@ export function RecruiterAccessGate({ onSuccess }: RecruiterAccessGateProps) {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] sm:text-xs font-semibold text-gray-700 uppercase font-admin-mono tracking-wider mb-1">
-                    Email or Work Email *
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[11px] sm:text-xs font-semibold text-gray-700 uppercase font-admin-mono tracking-wider">
+                      Work Email *
+                    </label>
+                    <span className="text-[10px] text-gray-400 font-admin-mono uppercase tracking-wider">
+                      Company Domain Required
+                    </span>
+                  </div>
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     onBlur={() => handleBlur("email")}
-                    placeholder="john.doe@company.com or personal email"
+                    placeholder="e.g. name@company.com"
                     className={`w-full h-10 sm:h-10.5 px-3 rounded-lg bg-[#FFFFFF] border text-black placeholder:text-gray-400 text-sm focus:outline-none transition shadow-2xs ${
-                      touched.email && fieldErrors.email
+                      (touched.email || (email.trim().length > 3 && (email.includes("@") || email.includes(".")))) && fieldErrors.email
                         ? "border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-red-50/10"
                         : "border-[#CBD5E1] focus:border-black focus:ring-1 focus:ring-black"
                     }`}
                   />
-                  {touched.email && fieldErrors.email && (
-                    <p className="text-[10px] text-red-600 mt-0.5 flex items-center gap-1 animate-in fade-in duration-150">
-                      <FaExclamationTriangle className="text-[9px] shrink-0" />
+                  {(touched.email || (email.trim().length > 3 && (email.includes("@") || email.includes(".")))) && fieldErrors.email && (
+                    <p className="text-[10px] text-red-600 mt-1 flex items-start gap-1 animate-in fade-in duration-150 leading-tight">
+                      <FaExclamationTriangle className="text-[9px] shrink-0 mt-0.5" />
                       <span>{fieldErrors.email}</span>
                     </p>
                   )}

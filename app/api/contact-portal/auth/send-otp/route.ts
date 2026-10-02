@@ -9,6 +9,7 @@ import { getRequestContext } from "@/lib/api/context";
 import { verifyTurnstileToken } from "@/lib/security/turnstile";
 import { checkSendOtpRateLimit } from "@/lib/recruiter/services/recruiter-rate-limiter";
 import { createOtpChallenge } from "@/lib/recruiter/services/recruiter-otp.service";
+import { validateWorkEmail } from "@/lib/recruiter/validation";
 
 const sendOtpSchema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters").max(100, "Name too long"),
@@ -30,6 +31,12 @@ export async function POST(req: NextRequest) {
     }
 
     const { name, company, email, phone, turnstileToken } = parseResult.data;
+
+    // Strict Corporate Work Email Validation
+    const emailValidationError = validateWorkEmail(email);
+    if (emailValidationError) {
+      return NextResponse.json({ ok: false, error: emailValidationError }, { status: 400 });
+    }
 
     // 1. Turnstile bot challenge verification
     const recruiterTurnstileSecret =
