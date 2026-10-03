@@ -905,8 +905,6 @@ export const TalkCommandHub: React.FC = () => {
     };
   }, [flushSync, syncStatus]);
 
-  const filteredFiles = files;
-
   const getTagBadge = (tag: TalkMessageTag) => {
     switch (tag) {
       case "urgent":
