@@ -26,6 +26,9 @@ import {
   IoSunnyOutline,
   IoMoonOutline,
   IoSparkles,
+  IoChevronBack,
+  IoChevronForward,
+  IoClose,
 } from "react-icons/io5";
 import { CgSpinner } from "react-icons/cg";
 import type {
@@ -33,6 +36,7 @@ import type {
   TalkMessage,
   TalkMessageTag,
   TalkNotepad,
+  TalkPagination,
 } from "@/types/talk";
 
 function formatBytes(bytes: number): string {
@@ -86,6 +90,90 @@ function getFileIcon(mime: string, name: string) {
   return <IoDocumentTextOutline className="w-4 h-4 text-[#7C3AED]" />;
 }
 
+// Symmetrical, Tactile Pagination Bar matching Workspace UI/UX Tokens
+interface PaginationBarProps {
+  pagination: TalkPagination;
+  currentPage: number;
+  isLoading: boolean;
+  onPageChange: (page: number) => void;
+  itemName?: string;
+}
+
+const PaginationBar: React.FC<PaginationBarProps> = ({
+  pagination,
+  currentPage,
+  isLoading,
+  onPageChange,
+  itemName = "items",
+}) => {
+  const { total, totalPages, pageSize, hasMore } = pagination;
+  if (total === 0) return null;
+
+  const startItem = (currentPage - 1) * pageSize + 1;
+  const endItem = Math.min(currentPage * pageSize, total);
+
+  return (
+    <div className="h-9 px-3 border-t border-[#E2E8F0] dark:border-[#1E293B] bg-slate-50/50 dark:bg-white/5 flex items-center justify-between gap-2 text-xs shrink-0 select-none">
+      <div className="flex items-center gap-1.5 min-w-0">
+        <span className="text-[10px] sm:text-[11px] font-mono text-slate-500 dark:text-slate-400 truncate">
+          Showing <span className="font-semibold text-slate-700 dark:text-slate-200">{startItem}–{endItem}</span> of{" "}
+          <span className="font-semibold text-slate-700 dark:text-slate-200">{total}</span> {itemName}
+        </span>
+      </div>
+
+      <div className="flex items-center gap-1 shrink-0">
+        <button
+          type="button"
+          disabled={currentPage <= 1 || isLoading}
+          onClick={() => onPageChange(currentPage - 1)}
+          aria-label="Previous page"
+          title="Previous page"
+          className="h-6 px-1.5 sm:px-2 rounded-md border border-[#CBD5E1] dark:border-[#334155] bg-white dark:bg-[#111625] hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-mono disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
+        >
+          <IoChevronBack className="w-3 h-3" />
+          <span className="hidden sm:inline">Prev</span>
+        </button>
+
+        {totalPages > 1 && totalPages <= 4 ? (
+          <div className="flex items-center gap-0.5">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <button
+                key={p}
+                type="button"
+                disabled={isLoading}
+                onClick={() => onPageChange(p)}
+                className={`w-5 h-5 sm:w-6 sm:h-6 rounded text-[10px] font-mono font-medium transition-all cursor-pointer flex items-center justify-center ${
+                  currentPage === p
+                    ? "bg-slate-900 text-white dark:bg-[#7C3AED] shadow-2xs font-bold"
+                    : "border border-[#CBD5E1] dark:border-[#334155] bg-white dark:bg-[#111625] text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <span className="px-1.5 text-[10px] font-mono text-slate-500 dark:text-slate-400">
+            {currentPage}/{totalPages}
+          </span>
+        )}
+
+        <button
+          type="button"
+          disabled={currentPage >= totalPages || !hasMore || isLoading}
+          onClick={() => onPageChange(currentPage + 1)}
+          aria-label="Next page"
+          title="Next page"
+          className="h-6 px-1.5 sm:px-2 rounded-md border border-[#CBD5E1] dark:border-[#334155] bg-white dark:bg-[#111625] hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-mono disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
+        >
+          <span className="hidden sm:inline">Next</span>
+          <IoChevronForward className="w-3 h-3" />
+        </button>
+      </div>
+    </div>
+  );
+};
+
 export const TalkCommandHub: React.FC = () => {
   const router = useRouter();
   const { setTheme } = useTheme();
@@ -94,6 +182,9 @@ export const TalkCommandHub: React.FC = () => {
 
   useEffect(() => {
     setMounted(true);
+    if (typeof document !== "undefined" && document.body) {
+      document.body.style.removeProperty("background-color");
+    }
     try {
       const saved = localStorage.getItem("talk_theme");
       if (saved === "dark") {
@@ -101,13 +192,11 @@ export const TalkCommandHub: React.FC = () => {
         setTheme("dark");
         document.documentElement.classList.add("dark");
         document.documentElement.classList.remove("light");
-        if (document.body) document.body.style.backgroundColor = "#07090E";
       } else {
         setThemeMode("light");
         setTheme("light");
         document.documentElement.classList.remove("dark");
         document.documentElement.classList.add("light");
-        if (document.body) document.body.style.backgroundColor = "#FAFAFA";
       }
     } catch {
       setThemeMode("light");
@@ -128,11 +217,9 @@ export const TalkCommandHub: React.FC = () => {
       if (nextTheme === "dark") {
         document.documentElement.classList.add("dark");
         document.documentElement.classList.remove("light");
-        if (document.body) document.body.style.backgroundColor = "#07090E";
       } else {
         document.documentElement.classList.remove("dark");
         document.documentElement.classList.add("light");
-        if (document.body) document.body.style.backgroundColor = "#FAFAFA";
       }
     }
   };
@@ -194,15 +281,33 @@ export const TalkCommandHub: React.FC = () => {
 
   // Files State (Firebase Storage)
   const [files, setFiles] = useState<TalkVaultFile[]>([]);
+  const [filePagination, setFilePagination] = useState<TalkPagination>({
+    page: 1,
+    pageSize: 6,
+    total: 0,
+    totalPages: 1,
+    hasMore: false,
+  });
+  const [filePage, setFilePage] = useState<number>(1);
   const [isLoadingFiles, setIsLoadingFiles] = useState(true);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [uploadCount, setUploadCount] = useState<number>(0);
   const [fileSearch, setFileSearch] = useState("");
+  const fileSearchDebounceRef = useRef<NodeJS.Timeout | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Messages State
   const [messages, setMessages] = useState<TalkMessage[]>([]);
+  const [messagePagination, setMessagePagination] = useState<TalkPagination>({
+    page: 1,
+    pageSize: 6,
+    total: 0,
+    totalPages: 1,
+    hasMore: false,
+  });
+  const [messagePage, setMessagePage] = useState<number>(1);
+  const [activeFilterTag, setActiveFilterTag] = useState<TalkMessageTag | "all">("all");
   const [isLoadingMessages, setIsLoadingMessages] = useState(true);
   const [newMessageText, setNewMessageText] = useState("");
   const [selectedTag, setSelectedTag] = useState<TalkMessageTag>("general");
@@ -210,6 +315,10 @@ export const TalkCommandHub: React.FC = () => {
 
   // Feedback Toast
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Sign out modal & session state
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -481,14 +590,27 @@ export const TalkCommandHub: React.FC = () => {
   // ==========================================
   // 2. FILE VAULT LOGIC
   // ==========================================
-  const fetchFiles = useCallback(async () => {
+  const fetchFiles = useCallback(async (targetPage?: number, targetSearch?: string) => {
     setIsLoadingFiles(true);
+    const p = typeof targetPage === "number" ? targetPage : filePage;
+    const s = typeof targetSearch === "string" ? targetSearch : fileSearch;
     try {
-      const res = await fetch("/api/talk/files");
+      const params = new URLSearchParams({
+        page: String(p),
+        pageSize: "6",
+      });
+      if (s.trim()) {
+        params.set("search", s.trim());
+      }
+      const res = await fetch(`/api/talk/files?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         if (data.success && Array.isArray(data.files)) {
           setFiles(data.files);
+          if (data.pagination) {
+            setFilePagination(data.pagination);
+            setFilePage(data.pagination.page);
+          }
         }
       }
     } catch (err) {
@@ -496,7 +618,22 @@ export const TalkCommandHub: React.FC = () => {
     } finally {
       setIsLoadingFiles(false);
     }
-  }, []);
+  }, [filePage, fileSearch]);
+
+  const handleFileSearchChange = (val: string) => {
+    setFileSearch(val);
+    if (fileSearchDebounceRef.current) {
+      clearTimeout(fileSearchDebounceRef.current);
+    }
+    fileSearchDebounceRef.current = setTimeout(() => {
+      fetchFiles(1, val);
+    }, 300);
+  };
+
+  const handleFilePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > filePagination.totalPages || newPage === filePage) return;
+    fetchFiles(newPage, fileSearch);
+  };
 
   const handleFileUpload = async (fileList: FileList | null) => {
     if (!fileList || fileList.length === 0) return;
@@ -516,14 +653,7 @@ export const TalkCommandHub: React.FC = () => {
       });
 
       if (res.ok) {
-        const data = await res.json();
-        if (data.success && Array.isArray(data.files)) {
-          setFiles((prev) => {
-            const existingIds = new Set(prev.map((f) => f.id));
-            const newFiles = (data.files as TalkVaultFile[]).filter((f) => !existingIds.has(f.id));
-            return [...newFiles, ...prev];
-          });
-        }
+        await fetchFiles(1, fileSearch);
       }
     } catch (err) {
       console.error("Error uploading files:", err);
@@ -543,7 +673,8 @@ export const TalkCommandHub: React.FC = () => {
         method: "DELETE",
       });
       if (res.ok) {
-        setFiles((prev) => prev.filter((f) => f.id !== fileId));
+        const targetPage = files.length === 1 && filePage > 1 ? filePage - 1 : filePage;
+        await fetchFiles(targetPage, fileSearch);
       } else {
         alert("Failed to delete file from backend storage.");
       }
@@ -575,14 +706,27 @@ export const TalkCommandHub: React.FC = () => {
   // ==========================================
   // 3. MESSAGES FEED LOGIC
   // ==========================================
-  const fetchMessages = useCallback(async () => {
+  const fetchMessages = useCallback(async (targetPage?: number, targetTag?: TalkMessageTag | "all") => {
     setIsLoadingMessages(true);
+    const p = typeof targetPage === "number" ? targetPage : messagePage;
+    const t = typeof targetTag === "string" ? targetTag : activeFilterTag;
     try {
-      const res = await fetch("/api/talk/messages");
+      const params = new URLSearchParams({
+        page: String(p),
+        pageSize: "6",
+      });
+      if (t && t !== "all") {
+        params.set("tag", t);
+      }
+      const res = await fetch(`/api/talk/messages?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         if (data.success && Array.isArray(data.messages)) {
           setMessages(data.messages);
+          if (data.pagination) {
+            setMessagePagination(data.pagination);
+            setMessagePage(data.pagination.page);
+          }
         }
       }
     } catch (err) {
@@ -590,7 +734,20 @@ export const TalkCommandHub: React.FC = () => {
     } finally {
       setIsLoadingMessages(false);
     }
-  }, []);
+  }, [messagePage, activeFilterTag]);
+
+  const handleFilterTagChange = (tag: TalkMessageTag | "all") => {
+    setActiveFilterTag(tag);
+    if (tag !== "all") {
+      setSelectedTag(tag);
+    }
+    fetchMessages(1, tag);
+  };
+
+  const handleMessagePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > messagePagination.totalPages || newPage === messagePage) return;
+    fetchMessages(newPage, activeFilterTag);
+  };
 
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -610,8 +767,13 @@ export const TalkCommandHub: React.FC = () => {
       if (res.ok) {
         const data = await res.json();
         if (data.success && data.message) {
-          setMessages((prev) => [data.message, ...prev]);
           setNewMessageText("");
+          if (activeFilterTag === "all" || activeFilterTag === selectedTag) {
+            await fetchMessages(1, activeFilterTag);
+          } else {
+            setActiveFilterTag(selectedTag);
+            await fetchMessages(1, selectedTag);
+          }
         }
       }
     } catch (err) {
@@ -627,7 +789,8 @@ export const TalkCommandHub: React.FC = () => {
         method: "DELETE",
       });
       if (res.ok) {
-        setMessages((prev) => prev.filter((m) => m.id !== msgId));
+        const targetPage = messages.length === 1 && messagePage > 1 ? messagePage - 1 : messagePage;
+        await fetchMessages(targetPage, activeFilterTag);
       }
     } catch (err) {
       console.error("Failed to delete message:", err);
@@ -642,28 +805,65 @@ export const TalkCommandHub: React.FC = () => {
       });
       if (res.ok) {
         setMessages([]);
+        setMessagePagination({
+          page: 1,
+          pageSize: 6,
+          total: 0,
+          totalPages: 1,
+          hasMore: false,
+        });
+        setMessagePage(1);
       }
     } catch (err) {
       console.error("Failed to clear messages:", err);
     }
   };
 
-  const handleLogout = async () => {
+  const handleOpenLogout = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleCloseLogout = () => {
+    if (isLoggingOut) return;
+    setShowLogoutModal(false);
+  };
+
+  const confirmLogout = async () => {
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
     try {
+      if (isDirtyRef.current) {
+        await flushSync();
+      }
       const res = await fetch("/api/talk/auth/logout", { method: "POST" });
-      const data = await res.json();
-      router.push(data.redirect || "/talk/login");
+      const data = await res.json().catch(() => null);
+      router.push(data?.redirect || "/login");
       router.refresh();
     } catch {
-      router.push("/talk/login");
+      router.push("/login");
+    } finally {
+      setIsLoggingOut(false);
+      setShowLogoutModal(false);
     }
   };
 
+  // Keyboard shortcut: Escape closes sign out confirmation modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && showLogoutModal && !isLoggingOut) {
+        setShowLogoutModal(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showLogoutModal, isLoggingOut]);
+
   useEffect(() => {
     fetchNotepad();
-    fetchFiles();
-    fetchMessages();
-  }, [fetchNotepad, fetchFiles, fetchMessages]);
+    fetchFiles(1, "");
+    fetchMessages(1, "all");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Window & Lifecycle Listeners for Bulletproof Smart Sync
   useEffect(() => {
@@ -705,11 +905,7 @@ export const TalkCommandHub: React.FC = () => {
     };
   }, [flushSync, syncStatus]);
 
-  const filteredFiles = files.filter(
-    (f) =>
-      f.originalName.toLowerCase().includes(fileSearch.toLowerCase()) ||
-      f.fileName.toLowerCase().includes(fileSearch.toLowerCase())
-  );
+  const filteredFiles = files;
 
   const getTagBadge = (tag: TalkMessageTag) => {
     switch (tag) {
@@ -802,14 +998,20 @@ export const TalkCommandHub: React.FC = () => {
             {isDark ? <IoSunnyOutline className="w-4 h-4" /> : <IoMoonOutline className="w-4 h-4" />}
           </button>
 
-          {/* Logout Button */}
+          {/* User Profile & Sign Out Button */}
           <button
-            onClick={handleLogout}
-            title="Sign out"
-            className="h-8 px-3 rounded-lg border border-[#CBD5E1] dark:border-[#334155] bg-white hover:bg-red-50 dark:bg-[#0E0D17] dark:hover:bg-red-950/30 text-slate-700 hover:text-red-600 dark:text-slate-300 dark:hover:text-red-400 text-xs font-mono font-medium transition flex items-center gap-1.5 cursor-pointer"
+            type="button"
+            onClick={handleOpenLogout}
+            title="Sign out of Gaurav's Talk"
+            className="group relative h-8 pl-1.5 pr-2.5 rounded-lg border border-[#CBD5E1] dark:border-[#2A2B3D] bg-white dark:bg-[#12111F] hover:border-rose-300 dark:hover:border-rose-500/50 hover:bg-rose-50/60 dark:hover:bg-rose-950/20 text-slate-700 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-mono font-medium transition-all duration-150 flex items-center gap-2 cursor-pointer shadow-2xs hover:shadow-xs active:scale-[0.98]"
           >
-            <IoLogOutOutline className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Logout</span>
+            <span className="w-5 h-5 rounded-md bg-gradient-to-tr from-violet-600 to-indigo-500 text-white flex items-center justify-center text-[10px] font-bold shadow-2xs font-sans tracking-tight shrink-0">
+              G
+            </span>
+            <span className="hidden sm:inline font-sans text-xs text-slate-700 dark:text-slate-300 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
+              Sign out
+            </span>
+            <IoLogOutOutline className="w-3.5 h-3.5 text-slate-400 group-hover:text-rose-500 group-hover:translate-x-0.5 transition-all" />
           </button>
         </div>
 
@@ -849,7 +1051,7 @@ export const TalkCommandHub: React.FC = () => {
         >
           <IoFolderOpenOutline className="w-3.5 h-3.5 shrink-0" />
           <span className="truncate">Files</span>
-          <span className="text-[10px] font-mono opacity-85 shrink-0">({files.length})</span>
+          <span className="text-[10px] font-mono opacity-85 shrink-0">({filePagination.total})</span>
         </button>
 
         <button
@@ -863,7 +1065,7 @@ export const TalkCommandHub: React.FC = () => {
         >
           <IoPaperPlane className="w-3.5 h-3.5 shrink-0" />
           <span className="truncate">Messages</span>
-          <span className="text-[10px] font-mono opacity-85 shrink-0">({messages.length})</span>
+          <span className="text-[10px] font-mono opacity-85 shrink-0">({messagePagination.total})</span>
         </button>
       </div>
 
@@ -1032,13 +1234,13 @@ export const TalkCommandHub: React.FC = () => {
                     Files
                   </h2>
                   <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-semibold bg-purple-50 dark:bg-[#7C3AED]/10 text-[#7C3AED] dark:text-[#A78BFA] border border-purple-200 dark:border-[#7C3AED]/30">
-                    {files.length}
+                    {filePagination.total}
                   </span>
                 </div>
 
                 <button
                   type="button"
-                  onClick={fetchFiles}
+                  onClick={() => fetchFiles(filePage, fileSearch)}
                   title="Refresh files"
                   className="p-1 rounded-md border border-[#E2E8F0] dark:border-[#334155] bg-white dark:bg-[#111625] text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer shadow-2xs"
                 >
@@ -1088,15 +1290,15 @@ export const TalkCommandHub: React.FC = () => {
                 </div>
               </div>
 
-              {/* Search filter if many files */}
-              {files.length > 2 && (
+              {/* Search filter if files exist or search is active */}
+              {(filePagination.total > 2 || fileSearch.length > 0) && (
                 <div className="px-2.5 sm:px-3 pb-2 shrink-0">
                   <div className="relative">
                     <IoSearchOutline className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                     <input
                       type="text"
                       value={fileSearch}
-                      onChange={(e) => setFileSearch(e.target.value)}
+                      onChange={(e) => handleFileSearchChange(e.target.value)}
                       placeholder="Search files..."
                       className="w-full h-7 pl-7 pr-3 rounded-md bg-slate-50 dark:bg-[#0B0F19] border border-[#CBD5E1] dark:border-[#334155] text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-black dark:focus:border-white font-mono shadow-2xs"
                     />
@@ -1109,14 +1311,14 @@ export const TalkCommandHub: React.FC = () => {
                 {isLoadingFiles ? (
                   <div className="h-full min-h-[60px] flex items-center justify-center gap-2 text-xs text-slate-500 font-mono">
                     <CgSpinner className="w-4 h-4 animate-spin text-[#7C3AED]" />
-                    <span>Loading...</span>
+                    <span>Loading files...</span>
                   </div>
-                ) : filteredFiles.length === 0 ? (
+                ) : files.length === 0 ? (
                   <div className="h-full min-h-[60px] flex items-center justify-center text-xs text-slate-400 font-mono">
-                    {files.length === 0 ? "No files." : "No matching files."}
+                    {fileSearch ? "No matching files." : "No files."}
                   </div>
                 ) : (
-                  filteredFiles.map((file) => (
+                  files.map((file) => (
                     <div
                       key={file.id}
                       className="p-2 rounded-lg bg-slate-50/80 dark:bg-[#111625] border border-[#E2E8F0] dark:border-[#1E293B] hover:border-slate-300 dark:hover:border-slate-700 flex items-center justify-between gap-2.5 transition-colors group"
@@ -1175,6 +1377,15 @@ export const TalkCommandHub: React.FC = () => {
                   ))
                 )}
               </div>
+
+              {/* Dynamic Files Pagination Bar */}
+              <PaginationBar
+                pagination={filePagination}
+                currentPage={filePage}
+                isLoading={isLoadingFiles}
+                onPageChange={handleFilePageChange}
+                itemName="files"
+              />
             </div>
 
             {/* ========================================== */}
@@ -1192,31 +1403,41 @@ export const TalkCommandHub: React.FC = () => {
                     Messages
                   </h2>
                   <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-semibold bg-purple-50 dark:bg-[#7C3AED]/10 text-[#7C3AED] dark:text-[#A78BFA] border border-purple-200 dark:border-[#7C3AED]/30">
-                    {messages.length}
+                    {messagePagination.total}
                   </span>
                 </div>
 
-                {messages.length > 0 && (
+                <div className="flex items-center gap-2">
+                  {messagePagination.total > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleClearAllMessages}
+                      className="text-[11px] font-mono text-slate-400 hover:text-red-500 transition-colors cursor-pointer"
+                    >
+                      Clear All
+                    </button>
+                  )}
                   <button
                     type="button"
-                    onClick={handleClearAllMessages}
-                    className="text-[11px] font-mono text-slate-400 hover:text-red-500 transition-colors cursor-pointer"
+                    onClick={() => fetchMessages(messagePage, activeFilterTag)}
+                    title="Refresh messages"
+                    className="p-1 rounded-md border border-[#E2E8F0] dark:border-[#334155] bg-white dark:bg-[#111625] text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer shadow-2xs"
                   >
-                    Clear All
+                    <IoRefreshOutline className={`w-3.5 h-3.5 ${isLoadingMessages ? "animate-spin" : ""}`} />
                   </button>
-                )}
+                </div>
               </div>
 
               {/* Message Composer - Compact */}
               <form onSubmit={handleSendMessage} className="p-2.5 sm:p-3 pb-2 space-y-1.5 shrink-0">
                 <div className="flex items-center gap-1 overflow-x-auto pb-0.5 scrollbar-none">
-                  {(["general", "urgent", "link", "idea", "secret"] as TalkMessageTag[]).map((tag) => (
+                  {(["all", "general", "urgent", "link", "idea", "secret"] as const).map((tag) => (
                     <button
                       key={tag}
                       type="button"
-                      onClick={() => setSelectedTag(tag)}
+                      onClick={() => handleFilterTagChange(tag)}
                       className={`px-2 py-0.5 rounded-md text-[10px] font-mono capitalize transition-all cursor-pointer shrink-0 ${
-                        selectedTag === tag
+                        activeFilterTag === tag
                           ? "bg-slate-900 text-white dark:bg-[#7C3AED] shadow-2xs font-semibold"
                           : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200"
                       }`}
@@ -1253,11 +1474,11 @@ export const TalkCommandHub: React.FC = () => {
                 {isLoadingMessages ? (
                   <div className="h-full min-h-[60px] flex items-center justify-center gap-2 text-xs text-slate-500 font-mono">
                     <CgSpinner className="w-4 h-4 animate-spin text-[#7C3AED]" />
-                    <span>Loading...</span>
+                    <span>Loading messages...</span>
                   </div>
                 ) : messages.length === 0 ? (
                   <div className="h-full min-h-[60px] flex items-center justify-center text-xs text-slate-400 font-mono">
-                    No messages.
+                    {messagePagination.total === 0 ? "No messages." : `No ${activeFilterTag} messages.`}
                   </div>
                 ) : (
                   messages.map((msg) => (
@@ -1305,10 +1526,128 @@ export const TalkCommandHub: React.FC = () => {
                   ))
                 )}
               </div>
+
+              {/* Dynamic Messages Pagination Bar */}
+              <PaginationBar
+                pagination={messagePagination}
+                currentPage={messagePage}
+                isLoading={isLoadingMessages}
+                onPageChange={handleMessagePageChange}
+                itemName="messages"
+              />
             </div>
           </div>
         </div>
       </main>
+
+      {/* ============================================================== */}
+      {/* 5. SIGN OUT CONFIRMATION MODAL (SAAS APPS UX) */}
+      {/* ============================================================== */}
+      {showLogoutModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="logout-dialog-title"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-150"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isLoggingOut) {
+              handleCloseLogout();
+            }
+          }}
+        >
+          <div className="relative w-full max-w-sm rounded-2xl bg-white dark:bg-[#0E0D17] border border-slate-200/90 dark:border-[#1E293B] shadow-2xl p-5 sm:p-6 text-left transition-all">
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={handleCloseLogout}
+              disabled={isLoggingOut}
+              aria-label="Close dialog"
+              className="absolute top-4 right-4 w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1E293B] transition-colors disabled:opacity-40 cursor-pointer"
+            >
+              <IoClose className="w-4 h-4" />
+            </button>
+
+            {/* Header Icon + Titles */}
+            <div className="flex items-start gap-3.5 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/60 flex items-center justify-center shrink-0 text-rose-600 dark:text-rose-400">
+                <IoLogOutOutline className="w-5 h-5" />
+              </div>
+              <div>
+                <h3
+                  id="logout-dialog-title"
+                  className="text-base font-semibold text-slate-900 dark:text-slate-100 tracking-tight"
+                >
+                  Sign out of Talk?
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                  Are you sure you want to end your active session on this device?
+                </p>
+              </div>
+            </div>
+
+            {/* User Profile Card */}
+            <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-[#141322] border border-slate-200/80 dark:border-[#222135] flex items-center gap-3 mb-4">
+              <div className="relative">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 text-white flex items-center justify-center text-xs font-bold shadow-xs">
+                  GP
+                </div>
+                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-[#141322]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
+                    Gaurav Patil
+                  </span>
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-mono font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400">
+                    Active
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono truncate">
+                  gauravpatil5737@gmail.com
+                </p>
+              </div>
+            </div>
+
+            {/* Auto-Sync Reassurance Banner */}
+            <div className="flex items-start gap-2 p-2.5 rounded-lg bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/30 text-[11px] text-indigo-900 dark:text-indigo-300 mb-5 leading-relaxed">
+              <IoCloudDoneOutline className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+              <span>
+                Scratchpad notes and pending messages will be cleanly synchronized to cloud storage before session termination.
+              </span>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={handleCloseLogout}
+                disabled={isLoggingOut}
+                className="px-3.5 py-2 rounded-xl text-xs font-medium border border-slate-200 dark:border-[#2A2B3D] text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1E293B] transition-colors cursor-pointer disabled:opacity-40"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmLogout}
+                disabled={isLoggingOut}
+                className="px-4 py-2 rounded-xl text-xs font-medium bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white shadow-md shadow-rose-900/20 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {isLoggingOut ? (
+                  <>
+                    <CgSpinner className="w-3.5 h-3.5 animate-spin" />
+                    <span>Signing out...</span>
+                  </>
+                ) : (
+                  <>
+                    <IoLogOutOutline className="w-3.5 h-3.5" />
+                    <span>Sign out</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

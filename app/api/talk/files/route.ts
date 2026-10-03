@@ -17,8 +17,17 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const files = await listVaultFiles();
-    return NextResponse.json({ success: true, files });
+    const url = new URL(req.url);
+    const page = parseInt(url.searchParams.get("page") || "1", 10) || 1;
+    const pageSize = parseInt(url.searchParams.get("pageSize") || url.searchParams.get("limit") || "6", 10) || 6;
+    const search = url.searchParams.get("search") || undefined;
+
+    const { files, pagination } = await listVaultFiles({
+      page,
+      pageSize,
+      search,
+    });
+    return NextResponse.json({ success: true, files, pagination });
   } catch (err) {
     console.error("[TalkFilesAPI] GET error:", err);
     return NextResponse.json({ success: false, error: "Failed to list files" }, { status: 500 });

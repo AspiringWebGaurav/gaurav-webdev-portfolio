@@ -97,6 +97,10 @@ const nextConfig: NextConfig = {
   // @ts-ignore - Next.js 15 allowedDevOrigins option
   allowedDevOrigins: [
     "localhost:3000",
+    "talk.localhost:3000",
+    "resume.localhost:3000",
+    "contact.localhost:3000",
+    "self.localhost:3000",
     "127.0.0.1:3000",
     "192.168.0.154:3000",
     "192.168.0.154",

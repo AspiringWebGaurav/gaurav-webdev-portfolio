@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     const isProd = process.env.NODE_ENV === "production";
     const response = NextResponse.json({
       success: true,
-      redirect: "/talk",
+      redirect: "/",
     });
 
     response.cookies.set({

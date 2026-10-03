@@ -48,16 +48,13 @@ export default function TalkLayout({
               if (saved === 'dark') {
                 document.documentElement.classList.add('dark');
                 document.documentElement.classList.remove('light');
-                if (document.body) document.body.style.backgroundColor = '#07090E';
               } else {
                 document.documentElement.classList.remove('dark');
                 document.documentElement.classList.add('light');
-                if (document.body) document.body.style.backgroundColor = '#FAFAFA';
               }
             } catch(e) {
               document.documentElement.classList.remove('dark');
               document.documentElement.classList.add('light');
-              if (document.body) document.body.style.backgroundColor = '#FAFAFA';
             }
           })();`,
         }}

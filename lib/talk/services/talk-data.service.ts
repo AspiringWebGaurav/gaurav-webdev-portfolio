@@ -6,6 +6,7 @@ import type {
   TalkVaultFile,
   TalkMessage,
   TalkMessageTag,
+  TalkPagination,
 } from "@/types/talk";
 
 // In-memory fallbacks if Firestore is in offline mode or during cold setup
@@ -146,29 +147,84 @@ export async function uploadVaultFile(
   return fileRecord;
 }
 
-export async function listVaultFiles(): Promise<TalkVaultFile[]> {
+export async function listVaultFiles(options?: {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+}): Promise<{ files: TalkVaultFile[]; pagination: TalkPagination }> {
+  const page = Math.max(1, Number(options?.page) || 1);
+  const pageSize = Math.max(1, Math.min(100, Number(options?.pageSize) || 6));
+  const search = options?.search?.toLowerCase().trim();
+
   const db = getAdminFirestore();
   if (!db) {
-    return inMemoryFiles;
+    let filtered = inMemoryFiles;
+    if (search) {
+      filtered = filtered.filter((f) =>
+        f.originalName.toLowerCase().includes(search)
+      );
+    }
+    const total = filtered.length;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const startIdx = (page - 1) * pageSize;
+    const paginated = filtered.slice(startIdx, startIdx + pageSize);
+    return {
+      files: paginated,
+      pagination: {
+        page,
+        pageSize,
+        total,
+        totalPages,
+        hasMore: page < totalPages,
+      },
+    };
   }
 
   try {
     const snap = await db
       .collection(TALK_COLLECTIONS.FILES)
       .orderBy("uploadedAt", "desc")
-      .limit(100)
       .get();
 
+    let allFiles: TalkVaultFile[] = [];
     if (!snap.empty) {
-      const files = snap.docs.map((doc) => doc.data() as TalkVaultFile);
-      inMemoryFiles = files;
-      return files;
+      allFiles = snap.docs.map((doc) => doc.data() as TalkVaultFile);
     }
-    inMemoryFiles = [];
-    return [];
+
+    if (search) {
+      allFiles = allFiles.filter((f) =>
+        f.originalName.toLowerCase().includes(search)
+      );
+    }
+
+    const total = allFiles.length;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const startIdx = (page - 1) * pageSize;
+    const paginated = allFiles.slice(startIdx, startIdx + pageSize);
+
+    inMemoryFiles = allFiles;
+    return {
+      files: paginated,
+      pagination: {
+        page,
+        pageSize,
+        total,
+        totalPages,
+        hasMore: page < totalPages,
+      },
+    };
   } catch (err) {
     console.error("[TalkData] listVaultFiles error:", err);
-    return inMemoryFiles;
+    return {
+      files: [],
+      pagination: {
+        page: 1,
+        pageSize,
+        total: 0,
+        totalPages: 1,
+        hasMore: false,
+      },
+    };
   }
 }
 
@@ -225,29 +281,85 @@ export async function deleteVaultFile(fileId: string): Promise<boolean> {
 // 3. "TALK TO ME" MESSAGES FEED
 // ==========================================
 
-export async function listTalkMessages(): Promise<TalkMessage[]> {
+export async function listTalkMessages(options?: {
+  page?: number;
+  pageSize?: number;
+  tag?: string;
+  search?: string;
+}): Promise<{ messages: TalkMessage[]; pagination: TalkPagination }> {
+  const page = Math.max(1, Number(options?.page) || 1);
+  const pageSize = Math.max(1, Math.min(100, Number(options?.pageSize) || 6));
+  const tag = options?.tag && options.tag !== "all" ? options.tag : undefined;
+  const search = options?.search?.toLowerCase().trim();
+
   const db = getAdminFirestore();
   if (!db) {
-    return inMemoryMessages;
+    let filtered = inMemoryMessages;
+    if (tag) filtered = filtered.filter((m) => m.tag === tag);
+    if (search) filtered = filtered.filter((m) => m.text.toLowerCase().includes(search));
+    const total = filtered.length;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const startIdx = (page - 1) * pageSize;
+    const paginated = filtered.slice(startIdx, startIdx + pageSize);
+    return {
+      messages: paginated,
+      pagination: {
+        page,
+        pageSize,
+        total,
+        totalPages,
+        hasMore: page < totalPages,
+      },
+    };
   }
 
   try {
     const snap = await db
       .collection(TALK_COLLECTIONS.MESSAGES)
       .orderBy("createdAt", "desc")
-      .limit(100)
       .get();
 
+    let allMsgs: TalkMessage[] = [];
     if (!snap.empty) {
-      const msgs = snap.docs.map((doc) => doc.data() as TalkMessage);
-      inMemoryMessages = msgs;
-      return msgs;
+      allMsgs = snap.docs.map((doc) => doc.data() as TalkMessage);
     }
-    inMemoryMessages = [];
-    return [];
+
+    if (tag) {
+      allMsgs = allMsgs.filter((m) => m.tag === tag);
+    }
+
+    if (search) {
+      allMsgs = allMsgs.filter((m) => m.text.toLowerCase().includes(search));
+    }
+
+    const total = allMsgs.length;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const startIdx = (page - 1) * pageSize;
+    const paginated = allMsgs.slice(startIdx, startIdx + pageSize);
+
+    inMemoryMessages = allMsgs;
+    return {
+      messages: paginated,
+      pagination: {
+        page,
+        pageSize,
+        total,
+        totalPages,
+        hasMore: page < totalPages,
+      },
+    };
   } catch (err) {
     console.error("[TalkData] listTalkMessages error:", err);
-    return inMemoryMessages;
+    return {
+      messages: [],
+      pagination: {
+        page: 1,
+        pageSize,
+        total: 0,
+        totalPages: 1,
+        hasMore: false,
+      },
+    };
   }
 }
 

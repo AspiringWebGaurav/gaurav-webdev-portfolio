@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
   const host = req.headers.get("host") || "";
   const isDedicatedTalk =
     host.startsWith("talk.") || req.headers.get("x-is-talk-portal") === "true";
-  const redirectUrl = isDedicatedTalk ? "/login" : "/talk/login";
+  const redirectUrl = "/login";
 
   const response = NextResponse.json({
     success: true,

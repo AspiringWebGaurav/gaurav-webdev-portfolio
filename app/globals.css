@@ -235,4 +235,14 @@
   animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
+/* Talk Portal dynamic body background management without imperative DOM styles */
+body:has([data-portal="talk"]) {
+  background-color: #FAFAFA !important;
+}
+
+html.dark body:has([data-portal="talk"]) {
+  background-color: #07090E !important;
+}
+
+
 

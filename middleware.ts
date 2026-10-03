@@ -56,6 +56,16 @@ export async function middleware(request: NextRequest) {
 
   // Handle Dedicated Subdomain rewriting (e.g. contact.gauravpatil.site or contact.localhost:3000)
   if (isDedicatedSubdomain) {
+    // 1. If user accesses /contact-portal or /contact on the subdomain, redirect cleanly to root /
+    if (
+      pathname === "/contact-portal" ||
+      pathname === "/contact-portal/" ||
+      pathname === "/contact" ||
+      pathname === "/contact/"
+    ) {
+      return NextResponse.redirect(new URL(`/${search}`, request.url), 301);
+    }
+
     requestHeaders.set("x-is-contact-portal", "true");
     const targetPath = pathname.startsWith("/contact-portal")
       ? pathname
@@ -70,14 +80,11 @@ export async function middleware(request: NextRequest) {
     });
   }
 
-  // On local development, also allow direct http://localhost:3000/contact-portal for browsers without wildcard localhost DNS
-  if (pathname.startsWith("/contact-portal")) {
-    requestHeaders.set("x-is-contact-portal", "true");
-    return NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    });
+  // On local development, redirect http://localhost:3000/contact-portal to http://contact.localhost:3000/
+  if ((isLocalHost || process.env.NODE_ENV === "development") && pathname.startsWith("/contact-portal")) {
+    const port = host.includes(":") ? `:${host.split(":")[1]}` : ":3000";
+    const cleanPath = pathname.replace(/^\/contact-portal/, "") || "/";
+    return NextResponse.redirect(new URL(`http://contact.localhost${port}${cleanPath}${search}`, request.url), 307);
   }
 
   // 3. Resume Portal Edge Router (resume.gauravpatil.site & resume.localhost:3000)
@@ -162,25 +169,40 @@ export async function middleware(request: NextRequest) {
 
   // Case A: Request is on the Dedicated Talk Subdomain (talk.gauravpatil.site or talk.localhost:3000)
   if (isDedicatedTalkSubdomain) {
+    // 1. If user accesses /talk or /talk/ on the subdomain, redirect cleanly to root /
+    if (pathname === "/talk" || pathname === "/talk/") {
+      return NextResponse.redirect(new URL(`/${search}`, request.url), 301);
+    }
+
+    // 2. If user accesses /talk/login or /talk/login/ on the subdomain, redirect cleanly to /login
+    if (pathname === "/talk/login" || pathname === "/talk/login/") {
+      return NextResponse.redirect(new URL(`/login${search}`, request.url), 301);
+    }
+
     requestHeaders.set("x-is-talk-portal", "true");
 
     const talkToken = request.cookies.get(TALK_COOKIE_NAME)?.value;
     const isTalkAuth = talkToken ? await verifyTalkSession(talkToken) : null;
-    const isLogin = pathname === "/login" || pathname === "/talk/login";
+    const isLogin = pathname === "/login";
 
-    if (!isTalkAuth && !isLogin && !pathname.startsWith("/api")) {
+    // 3. Unauthenticated access outside /login and /api routes -> redirect to /login
+    if (!isTalkAuth && !isLogin && !pathname.startsWith("/api") && !pathname.startsWith("/_next")) {
       const loginUrl = new URL(`/login${search}`, request.url);
       return NextResponse.redirect(loginUrl);
     }
 
+    // 4. Authenticated access on /login -> redirect to root /
     if (isTalkAuth && isLogin) {
       const homeUrl = new URL(`/${search}`, request.url);
       return NextResponse.redirect(homeUrl);
     }
 
+    // 5. Rewrite root / to internal /talk, and /login to internal /talk/login
     const targetPath =
       pathname === "/"
         ? "/talk"
+        : pathname === "/login"
+        ? "/talk/login"
         : pathname.startsWith("/talk")
         ? pathname
         : `/talk${pathname}`;
@@ -196,34 +218,23 @@ export async function middleware(request: NextRequest) {
   // Case B: Request is on the Main Domain
   // In production, strictly enforce talk.gauravpatil.site
   if (!isLocalHost && !isVercelPreview && process.env.NODE_ENV !== "development") {
+    if (pathname === "/talk/login" || pathname === "/talk/login/") {
+      return NextResponse.redirect(new URL(`https://${TALK_PORTAL_HOST}/login${search}`), 301);
+    }
     if (pathname.startsWith("/talk")) {
       const cleanPath = pathname.replace(/^\/talk/, "") || "/";
       return NextResponse.redirect(new URL(`https://${TALK_PORTAL_HOST}${cleanPath}${search}`), 301);
     }
   }
 
-  // On local development, also allow direct http://localhost:3000/talk
-  if (pathname.startsWith("/talk")) {
-    requestHeaders.set("x-is-talk-portal", "true");
-    const talkToken = request.cookies.get(TALK_COOKIE_NAME)?.value;
-    const isTalkAuth = talkToken ? await verifyTalkSession(talkToken) : null;
-    const isLogin = pathname === "/talk/login";
-
-    if (!isTalkAuth && !isLogin && !pathname.startsWith("/api")) {
-      const loginUrl = new URL(`/talk/login${search}`, request.url);
-      return NextResponse.redirect(loginUrl);
+  // On local development, redirect http://localhost:3000/talk to http://talk.localhost:3000/
+  if ((isLocalHost || process.env.NODE_ENV === "development") && pathname.startsWith("/talk")) {
+    const port = host.includes(":") ? `:${host.split(":")[1]}` : ":3000";
+    if (pathname === "/talk/login" || pathname === "/talk/login/") {
+      return NextResponse.redirect(new URL(`http://talk.localhost${port}/login${search}`, request.url), 307);
     }
-
-    if (isTalkAuth && isLogin) {
-      const homeUrl = new URL(`/talk${search}`, request.url);
-      return NextResponse.redirect(homeUrl);
-    }
-
-    return NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    });
+    const cleanPath = pathname.replace(/^\/talk/, "") || "/";
+    return NextResponse.redirect(new URL(`http://talk.localhost${port}${cleanPath}${search}`, request.url), 307);
   }
 
   // 5. Self Launchpad Edge Router (self.gauravpatil.site & self.localhost:3000)
@@ -239,6 +250,11 @@ export async function middleware(request: NextRequest) {
 
   // Case A: Request on the Dedicated Self Subdomain
   if (isDedicatedSelfSubdomain) {
+    // 1. If user accesses /self or /self/ on the subdomain, redirect cleanly to root /
+    if (pathname === "/self" || pathname === "/self/") {
+      return NextResponse.redirect(new URL(`/${search}`, request.url), 301);
+    }
+
     requestHeaders.set("x-is-self-portal", "true");
     const targetPath =
       pathname === "/"
@@ -262,14 +278,11 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // On local development, direct access to /self is also supported
-  if (pathname.startsWith("/self")) {
-    requestHeaders.set("x-is-self-portal", "true");
-    return NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    });
+  // On local development, redirect http://localhost:3000/self to http://self.localhost:3000/
+  if ((isLocalHost || process.env.NODE_ENV === "development") && pathname.startsWith("/self")) {
+    const port = host.includes(":") ? `:${host.split(":")[1]}` : ":3000";
+    const cleanPath = pathname.replace(/^\/self/, "") || "/";
+    return NextResponse.redirect(new URL(`http://self.localhost${port}${cleanPath}${search}`, request.url), 307);
   }
 
   // 6. Dynamic Admin Gatekeeper Routing (/admin/*)

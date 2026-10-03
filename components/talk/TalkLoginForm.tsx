@@ -7,8 +7,10 @@ import {
   IoArrowForward,
   IoSunnyOutline,
   IoMoonOutline,
+  IoMailOutline,
 } from "react-icons/io5";
 import { CgSpinner } from "react-icons/cg";
+import { cn } from "@/lib/utils";
 
 export const TalkLoginForm: React.FC = () => {
   const router = useRouter();
@@ -18,6 +20,9 @@ export const TalkLoginForm: React.FC = () => {
 
   useEffect(() => {
     setMounted(true);
+    if (typeof document !== "undefined" && document.body) {
+      document.body.style.removeProperty("background-color");
+    }
     try {
       const saved = localStorage.getItem("talk_theme");
       if (saved === "dark") {
@@ -25,13 +30,11 @@ export const TalkLoginForm: React.FC = () => {
         setTheme("dark");
         document.documentElement.classList.add("dark");
         document.documentElement.classList.remove("light");
-        if (document.body) document.body.style.backgroundColor = "#07090E";
       } else {
         setThemeMode("light");
         setTheme("light");
         document.documentElement.classList.remove("dark");
         document.documentElement.classList.add("light");
-        if (document.body) document.body.style.backgroundColor = "#FAFAFA";
       }
     } catch {
       setThemeMode("light");
@@ -52,11 +55,9 @@ export const TalkLoginForm: React.FC = () => {
       if (nextTheme === "dark") {
         document.documentElement.classList.add("dark");
         document.documentElement.classList.remove("light");
-        if (document.body) document.body.style.backgroundColor = "#07090E";
       } else {
         document.documentElement.classList.remove("dark");
         document.documentElement.classList.add("light");
-        if (document.body) document.body.style.backgroundColor = "#FAFAFA";
       }
     }
   };
@@ -73,6 +74,14 @@ export const TalkLoginForm: React.FC = () => {
   const [isExhausted, setIsExhausted] = useState(false);
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const emailInputRef = useRef<HTMLInputElement>(null);
+
+  // Focus email input safely after hydration
+  useEffect(() => {
+    if (step === "EMAIL") {
+      emailInputRef.current?.focus();
+    }
+  }, [step]);
 
   // Cooldown countdown
   useEffect(() => {
@@ -216,7 +225,7 @@ export const TalkLoginForm: React.FC = () => {
         throw new Error(errorMsg);
       }
 
-      router.push(data.redirect || "/talk");
+      router.push(data.redirect || "/");
       router.refresh();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Verification failed.";
@@ -236,70 +245,96 @@ export const TalkLoginForm: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-[380px] mx-auto animate-in fade-in duration-150">
-      <div
-        className={`relative w-full rounded-2xl bg-white dark:bg-[#0E0D17] border border-[#E2E8F0] dark:border-[rgba(255,255,255,0.08)] p-6 sm:p-7 shadow-xs transition-all ${
-          isShaking ? "animate-shake" : ""
-        }`}
-      >
-        {/* Minimal Theme Switcher */}
-        <button
-          type="button"
-          onClick={toggleTheme}
-          aria-label="Toggle theme"
-          className="absolute top-5 right-5 w-7 h-7 rounded-md border border-[#E2E8F0] dark:border-[#1E293B] bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 flex items-center justify-center transition-all hover:text-slate-900 dark:hover:text-white cursor-pointer"
-        >
-          {isDark ? <IoSunnyOutline className="w-3.5 h-3.5" /> : <IoMoonOutline className="w-3.5 h-3.5" />}
-        </button>
+    <div className="relative w-full max-w-[480px] sm:max-w-[500px] mx-auto animate-in fade-in zoom-in-95 duration-200">
+      {/* Ambient Backlight Aura */}
+      <div className="absolute -inset-1.5 rounded-3xl bg-gradient-to-b from-violet-600/15 via-purple-600/5 to-transparent blur-xl pointer-events-none opacity-80 dark:opacity-40" />
 
-        {/* Clean Header */}
-        <div className="mb-5">
-          <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-            talk<span className="text-[#7C3AED]">.</span>
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            {step === "EMAIL" ? "Sign in to continue." : `Code sent to ${email}`}
-          </p>
+      <div
+        className={cn(
+          "relative w-full rounded-2xl sm:rounded-3xl bg-white/95 dark:bg-[#0E0D17]/95 backdrop-blur-2xl border border-slate-200/90 dark:border-white/10 p-6 sm:p-7 shadow-[0_20px_60px_-15px_rgba(15,23,42,0.08),0_1px_3px_rgba(15,23,42,0.03)] dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85),0_0_35px_rgba(124,58,237,0.12)] transition-all overflow-hidden",
+          isShaking && "animate-shake"
+        )}
+        suppressHydrationWarning
+      >
+        {/* Top Specular Gradient Highlight */}
+        <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-violet-500/40 to-transparent pointer-events-none" />
+
+        {/* Header Row: Title & Theme Switcher */}
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-0.5">
+              talk<span className="text-[#7C3AED]">.</span>
+            </h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              {step === "EMAIL" ? "Sign in to continue." : `Code sent to ${email}`}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+            className="w-8 h-8 rounded-full border border-slate-200/80 dark:border-white/10 bg-slate-100/70 dark:bg-white/5 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-white/10 transition-all flex items-center justify-center cursor-pointer shadow-2xs hover:scale-105 active:scale-95 shrink-0"
+          >
+            {isDark ? <IoSunnyOutline className="w-4 h-4 text-amber-400" /> : <IoMoonOutline className="w-4 h-4 text-slate-600" />}
+          </button>
         </div>
 
         {/* Error Alert */}
         {error && (
-          <div className="mb-4 p-2.5 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-xs">
-            {error}
+          <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs flex items-center gap-2 animate-in fade-in slide-in-from-top-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+            <span className="flex-1 font-medium">{error}</span>
           </div>
         )}
 
         {step === "EMAIL" ? (
           <form onSubmit={handleSendOtp} noValidate className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+              <label htmlFor="talk-email" className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
                 Email
               </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoFocus
-                placeholder="name@example.com"
-                className="w-full h-10 px-3 rounded-lg bg-white dark:bg-[#0B0F19] border border-[#CBD5E1] dark:border-[#334155] text-slate-900 dark:text-white placeholder:text-slate-400 text-sm focus:outline-none focus:border-black dark:focus:border-white focus:ring-1 focus:ring-black dark:focus:ring-white transition shadow-2xs font-mono"
-              />
+
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500 group-focus-within:text-[#7C3AED] transition-colors duration-200">
+                  <IoMailOutline className="w-4 h-4" />
+                </div>
+                <input
+                  id="talk-email"
+                  ref={emailInputRef}
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  placeholder="name@example.com"
+                  suppressHydrationWarning
+                  className="w-full h-11 pl-10 pr-4 rounded-xl bg-slate-50/70 hover:bg-slate-50/90 focus:bg-white dark:bg-[#07090E]/60 dark:hover:bg-[#07090E]/80 dark:focus:bg-[#07090E] border border-slate-200/90 hover:border-slate-300 dark:border-slate-800 dark:hover:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 text-sm font-normal tracking-normal focus:outline-none focus:border-[#7C3AED] dark:focus:border-[#7C3AED] focus:ring-4 focus:ring-[#7C3AED]/10 dark:focus:ring-[#7C3AED]/20 transition-all duration-200 shadow-2xs"
+                />
+              </div>
             </div>
 
             <button
               type="submit"
               disabled={isLoading || !email.trim()}
-              className="w-full h-10 px-4 rounded-lg bg-[#0F172A] hover:bg-black dark:bg-[#7C3AED] dark:hover:bg-[#6D28D9] text-white font-medium text-sm transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              className={cn(
+                "w-full h-11 px-5 rounded-xl font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 group cursor-pointer",
+                email.trim() && !isLoading
+                  ? "bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 hover:from-violet-500 hover:via-purple-500 hover:to-indigo-500 text-white shadow-md shadow-violet-500/25 hover:shadow-lg hover:shadow-violet-500/35 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99]"
+                  : "bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-slate-600 border border-slate-200/80 dark:border-white/5 cursor-not-allowed shadow-none"
+              )}
             >
               {isLoading ? (
                 <>
-                  <CgSpinner className="w-4 h-4 animate-spin" />
+                  <CgSpinner className="w-4 h-4 animate-spin text-white" />
                   <span>Sending code...</span>
                 </>
               ) : (
                 <>
                   <span>Continue</span>
-                  <IoArrowForward className="w-3.5 h-3.5" />
+                  <IoArrowForward className={cn(
+                    "w-3.5 h-3.5 transition-transform duration-200",
+                    email.trim() && "group-hover:translate-x-1"
+                  )} />
                 </>
               )}
             </button>
@@ -325,7 +360,7 @@ export const TalkLoginForm: React.FC = () => {
               </div>
 
               {/* 6-box OTP Input Grid with Auto-Focus */}
-              <div className="grid grid-cols-6 gap-1.5">
+              <div className="grid grid-cols-6 gap-2 sm:gap-2.5">
                 {otp.map((digit, idx) => (
                   <input
                     key={idx}
@@ -340,7 +375,14 @@ export const TalkLoginForm: React.FC = () => {
                     onFocus={(e) => e.target.select()}
                     onChange={(e) => handleOtpChange(idx, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(idx, e)}
-                    className="w-full h-11 text-center text-lg font-bold font-mono rounded-lg bg-white dark:bg-[#0B0F19] border border-[#CBD5E1] dark:border-[#334155] text-slate-900 dark:text-white focus:outline-none focus:border-black dark:focus:border-white focus:ring-1 focus:ring-black dark:focus:ring-white transition shadow-2xs disabled:opacity-50"
+                    suppressHydrationWarning
+                    className={cn(
+                      "w-full h-12 text-center text-lg sm:text-xl font-bold font-mono rounded-xl transition-all duration-150 focus:outline-none",
+                      digit
+                        ? "border-[#7C3AED] dark:border-[#7C3AED] bg-violet-50/40 dark:bg-violet-950/20 text-slate-900 dark:text-white shadow-2xs"
+                        : "border-slate-200/90 dark:border-slate-800 bg-slate-50/60 dark:bg-[#07090E]/60 text-slate-900 dark:text-white",
+                      "focus:border-[#7C3AED] dark:focus:border-[#7C3AED] focus:ring-4 focus:ring-[#7C3AED]/15 dark:focus:ring-[#7C3AED]/25 focus:bg-white dark:focus:bg-[#07090E] disabled:opacity-50"
+                    )}
                   />
                 ))}
               </div>
@@ -352,7 +394,7 @@ export const TalkLoginForm: React.FC = () => {
                   type="button"
                   onClick={() => handleSendOtp()}
                   disabled={isLoading}
-                  className="w-full h-10 px-4 rounded-lg bg-[#0F172A] hover:bg-black dark:bg-[#7C3AED] dark:hover:bg-[#6D28D9] text-white font-medium text-sm transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="w-full h-11 px-5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-medium text-sm transition-all shadow-md shadow-violet-500/25 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
                 >
                   {isLoading ? (
                     <>
@@ -368,7 +410,12 @@ export const TalkLoginForm: React.FC = () => {
                   type="button"
                   onClick={() => handleVerifyOtp()}
                   disabled={isLoading || otp.some((d) => d === "")}
-                  className="w-full h-10 px-4 rounded-lg bg-[#0F172A] hover:bg-black dark:bg-[#7C3AED] dark:hover:bg-[#6D28D9] text-white font-medium text-sm transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  className={cn(
+                    "w-full h-11 px-5 rounded-xl font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer",
+                    !otp.some((d) => d === "") && !isLoading
+                      ? "bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 hover:from-violet-500 hover:via-purple-500 hover:to-indigo-500 text-white shadow-md shadow-violet-500/25 hover:shadow-lg hover:shadow-violet-500/35 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99]"
+                      : "bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-slate-600 border border-slate-200/80 dark:border-white/5 cursor-not-allowed shadow-none"
+                  )}
                 >
                   {isLoading ? (
                     <>

@@ -47,3 +47,12 @@ export interface TalkMessage {
   tag: TalkMessageTag;
   createdAt: number;
 }
+
+export interface TalkPagination {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+  hasMore: boolean;
+}
+

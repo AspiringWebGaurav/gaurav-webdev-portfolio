@@ -19,8 +19,19 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const messages = await listTalkMessages();
-    return NextResponse.json({ success: true, messages });
+    const url = new URL(req.url);
+    const page = parseInt(url.searchParams.get("page") || "1", 10) || 1;
+    const pageSize = parseInt(url.searchParams.get("pageSize") || url.searchParams.get("limit") || "6", 10) || 6;
+    const tag = url.searchParams.get("tag") || undefined;
+    const search = url.searchParams.get("search") || undefined;
+
+    const { messages, pagination } = await listTalkMessages({
+      page,
+      pageSize,
+      tag,
+      search,
+    });
+    return NextResponse.json({ success: true, messages, pagination });
   } catch (err) {
     console.error("[TalkMessagesAPI] GET error:", err);
     return NextResponse.json({ success: false, error: "Failed to list messages" }, { status: 500 });

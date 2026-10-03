@@ -220,7 +220,10 @@ export default function RootLayout({
         <link rel="preconnect" href="https://challenges.cloudflare.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://challenges.cloudflare.com" />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} bg-[#000319] text-white`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} bg-[#000319] text-white`}
+        suppressHydrationWarning
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
