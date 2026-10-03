@@ -167,8 +167,7 @@ export function RecruiterAccessGate({ onSuccess }: RecruiterAccessGateProps) {
   // Setup Turnstile Script
   const turnstileSiteKey =
     process.env.NEXT_PUBLIC_RECRUITER_TURNSTILE_SITE_KEY ||
-    process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY ||
-    "1x00000000000000000000AA";
+    "0x4AAAAAAFK5EIqLbibzxLzf";
 
   const renderTurnstile = useCallback(() => {
     if (typeof window === "undefined" || !turnstileContainerRef.current) return;
@@ -178,12 +177,14 @@ export function RecruiterAccessGate({ onSuccess }: RecruiterAccessGateProps) {
           el: HTMLElement,
           opts: {
             sitekey: string;
+            action?: string;
             callback: (token: string) => void;
             "error-callback"?: () => void;
             "expired-callback"?: () => void;
             theme?: "dark" | "light" | "auto";
           }
         ) => string;
+        reset: (id: string) => void;
         remove: (id: string) => void;
       };
     };
@@ -202,12 +203,20 @@ export function RecruiterAccessGate({ onSuccess }: RecruiterAccessGateProps) {
     try {
       const id = win.turnstile.render(turnstileContainerRef.current, {
         sitekey: turnstileSiteKey,
+        action: "contact_portal",
         theme: "light",
         callback: (token: string) => {
           setTurnstileToken(token);
         },
         "expired-callback": () => {
           setTurnstileToken(null);
+          if (turnstileWidgetIdRef.current && win.turnstile) {
+            try {
+              win.turnstile.reset(turnstileWidgetIdRef.current);
+            } catch {
+              // ignore
+            }
+          }
         },
         "error-callback": () => {
           setTurnstileToken(null);
@@ -303,12 +312,25 @@ export function RecruiterAccessGate({ onSuccess }: RecruiterAccessGateProps) {
           company: company.trim(),
           email: finalEmail,
           phone: fullPhone,
-          turnstileToken: turnstileToken || "client_direct_token",
+          turnstileToken,
         }),
       });
 
       const data = await res.json();
       if (!res.ok || !data.ok) {
+        if (
+          turnstileWidgetIdRef.current &&
+          (window as unknown as { turnstile?: { reset: (id: string) => void } }).turnstile
+        ) {
+          try {
+            (window as unknown as { turnstile: { reset: (id: string) => void } }).turnstile.reset(
+              turnstileWidgetIdRef.current
+            );
+          } catch {
+            // ignore
+          }
+        }
+        setTurnstileToken(null);
         setErrorMessage(data.error || "Failed to send verification code. Please try again.");
         setIsLoading(false);
         return;

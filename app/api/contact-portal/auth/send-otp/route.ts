@@ -43,7 +43,10 @@ export async function POST(req: NextRequest) {
     const recruiterTurnstileSecret =
       process.env.RECRUITER_TURNSTILE_SECRET_KEY ||
       process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY;
-    const turnstileResult = await verifyTurnstileToken(turnstileToken, clientIp, recruiterTurnstileSecret);
+    const turnstileResult = await verifyTurnstileToken(turnstileToken, clientIp, {
+      secretKeyOverride: recruiterTurnstileSecret,
+      expectedAction: ["contact_portal", "recruiter", "contact"],
+    });
     if (!turnstileResult.success) {
       return NextResponse.json(
         { ok: false, error: "Bot verification failed. Please refresh and try again." },

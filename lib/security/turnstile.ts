@@ -77,12 +77,31 @@ export async function verifyTurnstileToken(
   const isOptionsObject =
     typeof optionsOrSecret === "object" && optionsOrSecret !== null;
 
-  const activeSecretKey =
-    (isOptionsObject
-      ? optionsOrSecret.secretKeyOverride
-      : typeof optionsOrSecret === "string"
-      ? optionsOrSecret
-      : undefined) || TURNSTILE_SECRET_KEY;
+  const explicitSecret = isOptionsObject
+    ? optionsOrSecret.secretKeyOverride
+    : typeof optionsOrSecret === "string"
+    ? optionsOrSecret
+    : undefined;
+
+  let activeSecretKey = explicitSecret;
+
+  if (!activeSecretKey && isOptionsObject && optionsOrSecret.expectedAction) {
+    const actions = Array.isArray(optionsOrSecret.expectedAction)
+      ? optionsOrSecret.expectedAction
+      : [optionsOrSecret.expectedAction];
+
+    if (actions.some((a) => a.includes("resume"))) {
+      activeSecretKey =
+        process.env.RESUME_TURNSTILE_SECRET_KEY ||
+        process.env.RESUME_GAURAVPATIL_SECRET_KEY;
+    } else if (actions.some((a) => a.includes("contact_portal") || a.includes("contact_phone") || a.includes("recruiter"))) {
+      activeSecretKey = process.env.RECRUITER_TURNSTILE_SECRET_KEY;
+    }
+  }
+
+  if (!activeSecretKey) {
+    activeSecretKey = TURNSTILE_SECRET_KEY;
+  }
 
   if (!activeSecretKey) {
     console.error("CLOUDFLARE_TURNSTILE_SECRET_KEY / TURNSTILE_SECRET is not configured on the server.");

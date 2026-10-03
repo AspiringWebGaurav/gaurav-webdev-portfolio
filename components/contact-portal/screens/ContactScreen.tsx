@@ -76,8 +76,7 @@ export function ContactScreen({ recruiter, onTrackAction }: ContactScreenProps) 
 
   const turnstileSiteKey =
     process.env.NEXT_PUBLIC_RECRUITER_TURNSTILE_SITE_KEY ||
-    process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY ||
-    "1x00000000000000000000AA";
+    "0x4AAAAAAFK5EIqLbibzxLzf";
 
   // Check if session already verified Turnstile
   useEffect(() => {
@@ -97,12 +96,14 @@ export function ContactScreen({ recruiter, onTrackAction }: ContactScreenProps) 
           el: HTMLElement,
           opts: {
             sitekey: string;
+            action?: string;
             callback: (token: string) => void;
             "error-callback"?: () => void;
             "expired-callback"?: () => void;
             theme?: "dark" | "light" | "auto";
           }
         ) => string;
+        reset: (id: string) => void;
         remove: (id: string) => void;
       };
     };
@@ -121,6 +122,7 @@ export function ContactScreen({ recruiter, onTrackAction }: ContactScreenProps) 
     try {
       const id = win.turnstile.render(turnstileContainerRef.current, {
         sitekey: turnstileSiteKey,
+        action: "contact_portal",
         theme: "light",
         callback: (token: string) => {
           setTurnstileToken(token);
@@ -135,9 +137,28 @@ export function ContactScreen({ recruiter, onTrackAction }: ContactScreenProps) 
         },
         "expired-callback": () => {
           setTurnstileToken(null);
+          setIsTurnstileVerified(false);
+          try {
+            sessionStorage.removeItem("contact_turnstile_verified");
+          } catch {
+            // ignore
+          }
+          if (turnstileWidgetIdRef.current && win.turnstile) {
+            try {
+              win.turnstile.reset(turnstileWidgetIdRef.current);
+            } catch {
+              // ignore
+            }
+          }
         },
         "error-callback": () => {
           setTurnstileToken(null);
+          setIsTurnstileVerified(false);
+          try {
+            sessionStorage.removeItem("contact_turnstile_verified");
+          } catch {
+            // ignore
+          }
         },
       });
       turnstileWidgetIdRef.current = id;
