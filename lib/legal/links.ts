@@ -20,6 +20,11 @@ export const LEGAL_ROUTES = {
 
 export const TERMS_ANCHORS = {
   acceptance: "acceptance",
+  subdomainsGovernance: "subdomains-governance",
+  selfLaunchpad: "self-launchpad-terms",
+  contactPortal: "contact-portal-terms",
+  resumeTerms: "resume-terms",
+  talkTerms: "talk-terms",
   anonymity: "anonymity",
   ip: "ip",
   abuseMitigation: "abuse-mitigation",
@@ -27,6 +32,7 @@ export const TERMS_ANCHORS = {
   assistantTerms: "assistant-terms",
   whatsappTerms: "whatsapp-terms",
   adminGovernance: "admin-governance",
+  liability: "liability",
   legalContact: "legal-contact",
 } as const;
 

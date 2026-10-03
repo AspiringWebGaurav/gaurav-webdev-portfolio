@@ -226,7 +226,53 @@ export async function middleware(request: NextRequest) {
     });
   }
 
-  // 5. Dynamic Admin Gatekeeper Routing (/admin/*)
+  // 5. Self Launchpad Edge Router (self.gauravpatil.site & self.localhost:3000)
+  const SELF_PORTAL_HOST = "self.gauravpatil.site";
+  const isDedicatedSelfSubdomain =
+    host === SELF_PORTAL_HOST ||
+    ((isLocalHost || process.env.NODE_ENV === "development") && (
+      host === "self.localhost:3000" ||
+      host === "self.localhost" ||
+      host.startsWith("self.localhost") ||
+      request.headers.get("x-dev-subdomain") === "self"
+    ));
+
+  // Case A: Request on the Dedicated Self Subdomain
+  if (isDedicatedSelfSubdomain) {
+    requestHeaders.set("x-is-self-portal", "true");
+    const targetPath =
+      pathname === "/"
+        ? "/self"
+        : pathname.startsWith("/self")
+        ? pathname
+        : `/self${pathname}`;
+    const rewriteUrl = new URL(`${targetPath}${search}`, request.url);
+    return NextResponse.rewrite(rewriteUrl, {
+      request: {
+        headers: requestHeaders,
+      },
+    });
+  }
+
+  // Case B: In production, redirect gauravpatil.site/self to https://self.gauravpatil.site/
+  if (!isLocalHost && !isVercelPreview && process.env.NODE_ENV !== "development") {
+    if (pathname.startsWith("/self")) {
+      const cleanPath = pathname.replace(/^\/self/, "") || "/";
+      return NextResponse.redirect(new URL(`https://${SELF_PORTAL_HOST}${cleanPath}${search}`), 301);
+    }
+  }
+
+  // On local development, direct access to /self is also supported
+  if (pathname.startsWith("/self")) {
+    requestHeaders.set("x-is-self-portal", "true");
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
+  }
+
+  // 6. Dynamic Admin Gatekeeper Routing (/admin/*)
   if (pathname.startsWith("/admin")) {
     const sessionCookie = request.cookies.get(ADMIN_COOKIE_NAME)?.value;
     const verifiedSession = sessionCookie ? await verifyAdminSession(sessionCookie) : null;

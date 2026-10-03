@@ -12,8 +12,8 @@ export default async function AdminProjectsPage() {
   return (
     <AdminPageContainer
       breadcrumb="CONTENT / PROJECTS"
-      title="Project Showcase Portfolio"
-      subtitle="DOMAIN 03 • 3D PIN CARDS & SHOWCASE"
+      title="Project Showcase & Self Launchpad"
+      subtitle="DOMAIN 03 • 3D PIN CARDS & SELF.GAURAVPATIL.SITE (LIVE SYNC)"
     >
       <ProjectsManager initialProjects={projects} />
     </AdminPageContainer>

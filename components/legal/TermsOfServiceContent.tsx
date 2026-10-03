@@ -14,6 +14,9 @@ import {
   FaBullseye,
   FaWhatsapp,
   FaFileLines,
+  FaGlobe,
+  FaRocket,
+  FaEnvelopeOpenText,
 } from "react-icons/fa6";
 import { IoChatbubbleEllipses } from "react-icons/io5";
 import type { LegalDocument } from "@/types/legal";
@@ -26,6 +29,14 @@ export interface TermsOfServiceContentProps {
 
 function getTermsSectionIcon(id: string) {
   switch (id) {
+    case "subdomains-governance":
+      return <FaGlobe className="w-4 h-4 text-purple" />;
+    case "self-launchpad-terms":
+      return <FaRocket className="w-4 h-4 text-purple" />;
+    case "contact-portal-terms":
+      return <FaEnvelopeOpenText className="w-4 h-4 text-purple" />;
+    case "talk-terms":
+      return <IoChatbubbleEllipses className="w-5 h-5 text-purple" />;
     case "anonymity":
       return <FaUserSecret className="w-4 h-4 text-purple" />;
     case "ip":
@@ -59,8 +70,10 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
     }
   }, [initialFocus]);
 
-  const [filterMode, setFilterMode] = useState<"all" | "contact" | "assistant" | "whatsapp">(
-    focusParam === "whatsapp"
+  const [filterMode, setFilterMode] = useState<"all" | "subdomains" | "contact" | "assistant" | "whatsapp">(
+    focusParam === "subdomains"
+      ? "subdomains"
+      : focusParam === "whatsapp"
       ? "whatsapp"
       : focusParam === "assistant"
       ? "assistant"
@@ -69,7 +82,9 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
       : "all"
   );
   const [highlightedSection, setHighlightedSection] = useState<string | null>(
-    focusParam === "whatsapp"
+    focusParam === "subdomains"
+      ? "subdomains-governance"
+      : focusParam === "whatsapp"
       ? "whatsapp-terms"
       : focusParam === "assistant"
       ? "assistant-terms"
@@ -84,7 +99,9 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
     const hash = window.location.hash.replace("#", "");
     const targetId =
       hash ||
-      (focusParam === "whatsapp"
+      (focusParam === "subdomains"
+        ? "subdomains-governance"
+        : focusParam === "whatsapp"
         ? "whatsapp-terms"
         : focusParam === "assistant"
         ? "assistant-terms"
@@ -115,7 +132,7 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
     }
   }, [focusParam]);
 
-  const handleTabSelect = (mode: "all" | "contact" | "assistant" | "whatsapp", targetId?: string) => {
+  const handleTabSelect = (mode: "all" | "subdomains" | "contact" | "assistant" | "whatsapp", targetId?: string) => {
     setFilterMode(mode);
     if (targetId) {
       setHighlightedSection(targetId);
@@ -145,7 +162,7 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
           </Link>
 
           {/* Dynamic View Mode Tabs */}
-          <div className="inline-flex items-center bg-white/[0.04] border border-white/[0.1] rounded-xl p-1 text-xs gap-1">
+          <div className="inline-flex items-center bg-white/[0.04] border border-white/[0.1] rounded-xl p-1 text-xs gap-1 flex-wrap">
             <button
               type="button"
               onClick={() => handleTabSelect("all")}
@@ -157,6 +174,18 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
             >
               <FaEye className="w-3 h-3" />
               <span>Full Terms</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTabSelect("subdomains", "subdomains-governance")}
+              className={`px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
+                filterMode === "subdomains"
+                  ? "bg-[#7C3AED] text-white font-semibold shadow-sm shadow-[#7C3AED]/40"
+                  : "text-neutral-400 hover:text-white"
+              }`}
+            >
+              <FaGlobe className="w-3 h-3 text-[#CBACF9]" />
+              <span>All Subdomains</span>
             </button>
             <button
               type="button"
@@ -206,14 +235,32 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
             Terms of Service
           </h1>
           <div className="flex flex-wrap items-center gap-3 text-xs text-neutral-400 font-mono">
-            <span>Version: {initialData?.publishedVersion || "0.0.1"}</span>
+            <span>Version: {initialData?.publishedVersion || "1.1.0"}</span>
             <span>•</span>
             <span>Original Effective: {initialData?.effectiveDate || "January 1, 2026"}</span>
             <span>•</span>
-            <span className="text-purple font-semibold">Last Updated: {initialData?.lastUpdatedDate || "August 29, 2026"}</span>
+            <span className="text-purple font-semibold">Last Updated: {initialData?.lastUpdatedDate || "October 3, 2026"}</span>
             <span>•</span>
             <span className="text-emerald-400 font-semibold">Jurisdiction: {initialData?.jurisdiction || "Standard Global"}</span>
           </div>
+
+          {filterMode === "subdomains" && (
+            <div className="mt-4 p-3 rounded-xl bg-[#7C3AED]/15 border border-[#7C3AED]/30 text-xs text-neutral-200 flex items-center justify-between gap-3 animate-in fade-in">
+              <div className="flex items-center gap-2">
+                <FaGlobe className="w-4 h-4 text-[#CBACF9] shrink-0" />
+                <span>
+                  Filtering active: Spotlighting unified architecture &amp; operating governance across all subdomains (gauravpatil.site, self, contact, resume, talk, and admin).
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setFilterMode("all")}
+                className="text-purple hover:text-white underline text-xs font-semibold whitespace-nowrap cursor-pointer"
+              >
+                View full terms
+              </button>
+            </div>
+          )}
 
           {filterMode === "contact" && (
             <div className="mt-4 p-3 rounded-xl bg-[#7C3AED]/15 border border-[#7C3AED]/30 text-xs text-neutral-200 flex items-center justify-between gap-3 animate-in fade-in">
@@ -276,17 +323,41 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
             initialData.sections.map((section) => {
               const isVisible =
                 filterMode === "all" ||
-                (filterMode === "contact" && (section.filterMode === "contact" || section.id === "anonymity" || section.id === "abuse-mitigation" || section.id === "email-standards")) ||
-                (filterMode === "assistant" && (section.filterMode === "assistant" || section.id === "assistant-terms")) ||
-                (filterMode === "whatsapp" && (section.filterMode === "whatsapp" || section.id === "whatsapp-terms"));
+                (filterMode === "subdomains" &&
+                  (section.id === "subdomains-governance" ||
+                    section.id === "self-launchpad-terms" ||
+                    section.id === "contact-portal-terms" ||
+                    section.id === "resume-terms" ||
+                    section.id === "talk-terms" ||
+                    section.id === "admin-governance")) ||
+                (filterMode === "contact" &&
+                  (section.filterMode === "contact" ||
+                    section.id === "anonymity" ||
+                    section.id === "abuse-mitigation" ||
+                    section.id === "email-standards" ||
+                    section.id === "contact-portal-terms")) ||
+                (filterMode === "assistant" &&
+                  (section.filterMode === "assistant" || section.id === "assistant-terms")) ||
+                (filterMode === "whatsapp" &&
+                  (section.filterMode === "whatsapp" || section.id === "whatsapp-terms"));
 
               if (!isVisible) return null;
 
               const isHighlighted =
                 highlightedSection === section.id ||
-                (filterMode === "contact" && (section.filterMode === "contact" || section.id === "anonymity")) ||
-                (filterMode === "assistant" && (section.filterMode === "assistant" || section.id === "assistant-terms")) ||
-                (filterMode === "whatsapp" && (section.filterMode === "whatsapp" || section.id === "whatsapp-terms"));
+                (filterMode === "subdomains" &&
+                  (section.id === "subdomains-governance" ||
+                    section.id === "self-launchpad-terms" ||
+                    section.id === "contact-portal-terms" ||
+                    section.id === "resume-terms" ||
+                    section.id === "talk-terms" ||
+                    section.id === "admin-governance")) ||
+                (filterMode === "contact" &&
+                  (section.filterMode === "contact" || section.id === "anonymity" || section.id === "contact-portal-terms")) ||
+                (filterMode === "assistant" &&
+                  (section.filterMode === "assistant" || section.id === "assistant-terms")) ||
+                (filterMode === "whatsapp" &&
+                  (section.filterMode === "whatsapp" || section.id === "whatsapp-terms"));
 
               const isWhatsappTheme = section.filterMode === "whatsapp" || section.id === "whatsapp-terms";
 
@@ -314,10 +385,20 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
                         className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
                           isWhatsappTheme
                             ? "bg-[#25D366]/20 text-[#25D366] border border-[#25D366]/40"
+                            : filterMode === "subdomains" || section.id.includes("subdomain") || section.id.includes("launchpad")
+                            ? "bg-[#7C3AED]/30 text-[#CBACF9] border border-[#7C3AED]/50"
                             : "bg-[#7C3AED]/30 text-[#CBACF9] border border-[#7C3AED]/50"
                         }`}
                       >
-                        {isWhatsappTheme ? "WhatsApp Term" : section.filterMode === "contact" ? "Contact Term" : "Assistant Deep-Dive"}
+                        {isWhatsappTheme
+                          ? "WhatsApp Term"
+                          : section.id === "subdomains-governance" || section.id === "self-launchpad-terms" || section.id === "talk-terms"
+                          ? "Subdomain Term"
+                          : section.id === "resume-terms"
+                          ? "Resume Portal Term"
+                          : section.filterMode === "contact" || section.id === "contact-portal-terms"
+                          ? "Contact Term"
+                          : "Assistant Deep-Dive"}
                       </span>
                     )}
                   </div>
@@ -332,19 +413,186 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
             <section id="acceptance" className="space-y-3 scroll-mt-24 sm:scroll-mt-32">
               <h2 className="text-xl font-semibold text-white flex items-center gap-2.5">
                 <FaScaleBalanced className="w-4 h-4 text-purple" />
-                <span>1. Acceptance of Terms &amp; Accessibility Commitment</span>
+                <span>1. Acceptance of Terms &amp; Universal Architecture Commitment</span>
               </h2>
               <p>
-                By accessing, browsing, submitting inquiries, using authenticated services, or otherwise interacting with <span className="text-purple font-semibold">Gaurav Portfolio</span>,
-                you acknowledge and agree to be bound by these Terms of Service and all applicable policies. This platform commits to a strict 
+                By accessing, browsing, submitting inquiries, authenticating, or otherwise interacting with <span className="text-purple font-semibold">Gaurav Portfolio</span> and its verified ecosystem of subdomains—including <code className="text-purple font-mono">gauravpatil.site</code>, <code className="text-purple font-mono">self.gauravpatil.site</code>, <code className="text-purple font-mono">contact.gauravpatil.site</code>, <code className="text-purple font-mono">resume.gauravpatil.site</code>, <code className="text-purple font-mono">talk.gauravpatil.site</code>, and <code className="text-purple font-mono">admin.gauravpatil.site</code>—you acknowledge and agree to be bound by these Terms of Service and all related policies. This platform commits to a strict 
                 <strong className="text-white"> Mobile-First 10/10 Production Standard</strong>, ensuring zero horizontal overflow, 
-                fluid typography, touch-ergonomic 44px hit targets, accessible reduced-motion fallbacks, and single-view contact workflows 
+                fluid responsive typography, touch-ergonomic 44px hit targets, accessible reduced-motion fallbacks, and single-view contact and showcase workflows 
                 across all modern smartphones, tablets, and desktop workstations. If you do not agree with any provision, you may discontinue viewing or utilizing this platform.
               </p>
             </section>
           )}
 
-          {/* Section 2: Anonymity & Confidentiality (Spotlighted) */}
+          {/* Section 2: Universal Subdomain Governance */}
+          {(filterMode === "all" || filterMode === "subdomains") && (
+            <section
+              id="subdomains-governance"
+              className={`space-y-4 p-4 sm:p-6 rounded-xl transition-all duration-300 scroll-mt-24 sm:scroll-mt-32 ${
+                highlightedSection === "subdomains-governance" || filterMode === "subdomains"
+                  ? "bg-[#7C3AED]/10 border border-[#7C3AED]/50 shadow-[0_0_30px_rgba(124,58,237,0.15)] ring-1 ring-[#7C3AED]/50"
+                  : "border border-white/[0.06] bg-white/[0.02]"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-white flex items-center gap-2.5">
+                  <FaGlobe className="w-4 h-4 text-purple" />
+                  <span>2. Universal Subdomain Architecture &amp; Operating Governance</span>
+                </h2>
+                {(highlightedSection === "subdomains-governance" || filterMode === "subdomains") && (
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#7C3AED]/30 text-[#CBACF9] border border-[#7C3AED]/50">
+                    Subdomain Term
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-neutral-300 leading-relaxed">
+                To deliver optimal security, high performance, and purpose-driven user experiences, the Gaurav Portfolio digital infrastructure is partitioned into dedicated, edge-routed subdomains under <code className="text-purple font-mono">gauravpatil.site</code>. Each subdomain operates with explicit security boundaries, tailored routing rules, and isolated session models:
+              </p>
+              <ul className="list-disc list-inside space-y-2 pl-2 text-sm text-neutral-300">
+                <li><strong className="text-white">gauravpatil.site (Flagship Ecosystem Hub):</strong> Primary web presence showcasing production case studies, interactive Three.js 3D Globe models, engineering articles, client testimonials, and central inquiry gateways.</li>
+                <li><strong className="text-white">self.gauravpatil.site (Interactive Projects Launchpad):</strong> Ultra-fast, single-view zero-scroll launchpad aggregating all 14 production web applications, SaaS tools, and client platforms with instant outbound redirection.</li>
+                <li><strong className="text-white">contact.gauravpatil.site (Recruiter &amp; Executive Contact Gateway):</strong> Focused, zero-distraction communications portal engineered specifically for executive recruiters, talent acquisition partners, and enterprise clients.</li>
+                <li><strong className="text-white">resume.gauravpatil.site (Verified Candidate Credentials Portal):</strong> Isolated candidate verification portal featuring interactive credentials, verified PDF resumes, and 30-minute cryptographic session lifecycles.</li>
+                <li><strong className="text-white">talk.gauravpatil.site (Talk Command Hub):</strong> Real-time command center and interactive communication interface with authenticated session controls and rate-limited API access.</li>
+                <li><strong className="text-white">admin.gauravpatil.site (Superadmin CMS &amp; Governance Cockpit):</strong> Strictly isolated administrative zone restricted to authorized Superadmins via Google OAuth 2.0 PKCE, salted HMAC-SHA256 2FA OTP, and zero-lockout IP security controls.</li>
+              </ul>
+            </section>
+          )}
+
+          {/* Section 3: Interactive Projects Launchpad (self.gauravpatil.site) */}
+          {(filterMode === "all" || filterMode === "subdomains") && (
+            <section
+              id="self-launchpad-terms"
+              className={`space-y-4 p-4 sm:p-6 rounded-xl transition-all duration-300 scroll-mt-24 sm:scroll-mt-32 ${
+                highlightedSection === "self-launchpad-terms" || filterMode === "subdomains"
+                  ? "bg-[#7C3AED]/10 border border-[#7C3AED]/50 shadow-[0_0_30px_rgba(124,58,237,0.15)] ring-1 ring-[#7C3AED]/50"
+                  : "border border-white/[0.06] bg-white/[0.02]"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-white flex items-center gap-2.5">
+                  <FaRocket className="w-4 h-4 text-purple" />
+                  <span>3. Interactive Projects Launchpad (self.gauravpatil.site) &amp; Outbound Ecosystem</span>
+                </h2>
+                {(highlightedSection === "self-launchpad-terms" || filterMode === "subdomains") && (
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#7C3AED]/30 text-[#CBACF9] border border-[#7C3AED]/50">
+                    Launchpad Term
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-neutral-300 leading-relaxed">
+                The official interactive showcase and projects directory is hosted on <code className="text-purple font-mono">self.gauravpatil.site</code>. Use of the launchpad is subject to the following terms and operating conditions:
+              </p>
+              <ul className="list-disc list-inside space-y-2 pl-2 text-sm text-neutral-300">
+                <li><strong className="text-white">Single-View Zero-Scroll Constraint:</strong> <code className="text-purple font-mono">self.gauravpatil.site</code> is engineered under an uncompromising zero-vertical-scroll constraint (<code className="text-purple font-mono">h-[100dvh] overflow-hidden</code>) across all viewports (320px mobile to 4K desktop). Visitors agree not to tamper with or inject styles that disrupt this architectural layout.</li>
+                <li><strong className="text-white">Outbound Redirection to Live Deployments:</strong> The launchpad serves as an authoritative directory redirecting visitors to external live applications (<code className="text-purple font-mono">send2me.eu.cc</code>, <code className="text-purple font-mono">deggy.com</code>, <code className="text-purple font-mono">shopit.eu.cc</code>, <code className="text-purple font-mono">promptora.eu.cc</code>, <code className="text-purple font-mono">nexuschat.eu.cc</code>, <code className="text-purple font-mono">cloudbox.eu.cc</code>, <code className="text-purple font-mono">zenithbank.eu.cc</code>, <code className="text-purple font-mono">devpulse.eu.cc</code>, <code className="text-purple font-mono">streamflow.eu.cc</code>, <code className="text-purple font-mono">crypto-tracker.eu.cc</code>, <code className="text-purple font-mono">taskflow.eu.cc</code>, <code className="text-purple font-mono">codecraft.eu.cc</code>, <code className="text-purple font-mono">eventhub.eu.cc</code>, <code className="text-purple font-mono">fitpulse.eu.cc</code>, and related platforms).</li>
+                <li><strong className="text-white">Third-Party Hosting &amp; Sandbox Disclaimers:</strong> External application links route directly to independent production environments, third-party cloud infrastructure (e.g. Vercel, independent cloud VPS), and external database sandboxes. Gaurav Patil does not warrant third-party hosting availability, uptime, latency, or data entered into external sandbox databases beyond <code className="text-purple font-mono">*.gauravpatil.site</code>.</li>
+                <li><strong className="text-white">Telemetry &amp; Zero-Tracking Guarantee:</strong> <code className="text-purple font-mono">self.gauravpatil.site</code> does not deploy invasive tracking scripts, commercial ad pixels, or cross-site tracking cookies. Dynamic state changes reflect purely within client-side memory.</li>
+              </ul>
+            </section>
+          )}
+
+          {/* Section 4: Recruiter Contact Portal */}
+          {(filterMode === "all" || filterMode === "subdomains" || filterMode === "contact") && (
+            <section
+              id="contact-portal-terms"
+              className={`space-y-4 p-4 sm:p-6 rounded-xl transition-all duration-300 scroll-mt-24 sm:scroll-mt-32 ${
+                highlightedSection === "contact-portal-terms" || filterMode === "contact" || filterMode === "subdomains"
+                  ? "bg-[#7C3AED]/10 border border-[#7C3AED]/50 shadow-[0_0_30px_rgba(124,58,237,0.15)] ring-1 ring-[#7C3AED]/50"
+                  : "border border-white/[0.06] bg-white/[0.02]"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-white flex items-center gap-2.5">
+                  <FaEnvelopeOpenText className="w-4 h-4 text-purple" />
+                  <span>4. Recruiter &amp; Executive Contact Gateway (contact.gauravpatil.site)</span>
+                </h2>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#7C3AED]/30 text-[#CBACF9] border border-[#7C3AED]/50">
+                  {filterMode === "contact" ? "Contact Form Term" : "Subdomain Term"}
+                </span>
+              </div>
+              <p className="text-sm text-neutral-300 leading-relaxed">
+                The dedicated executive contact portal at <code className="text-purple font-mono">contact.gauravpatil.site</code> is engineered to provide recruiters and prospective enterprise partners with a streamlined, confidential communication pathway:
+              </p>
+              <ul className="list-disc list-inside space-y-2 pl-2 text-sm text-neutral-300">
+                <li><strong className="text-white">Authorized Scope of Use:</strong> Reserved for bona fide recruitment inquiries, executive talent discussions, technical consulting proposals, and verified business collaboration.</li>
+                <li><strong className="text-white">Cloudflare Turnstile Verification:</strong> Public inquiry endpoints are guarded by Cloudflare Turnstile cryptographic challenges to prevent automated form submission, payload injection, and spam.</li>
+                <li><strong className="text-white">Transactional Brevo API Pipeline:</strong> Messages are delivered through authenticated Brevo API transactions with strict SPF, DKIM, and DMARC alignment originating from <code className="text-purple font-mono">gauravpatil.site</code>.</li>
+                <li><strong className="text-white">Zero Commercial Spam Guarantee:</strong> Submitted contact details are never enrolled in commercial marketing sequences or sold to third-party data brokers.</li>
+              </ul>
+            </section>
+          )}
+
+          {/* Section 5: Verified Interactive Resume Portal */}
+          {(filterMode === "all" || filterMode === "subdomains") && (
+            <section
+              id="resume-terms"
+              className={`space-y-4 p-4 sm:p-6 rounded-xl transition-all duration-300 scroll-mt-24 sm:scroll-mt-32 ${
+                highlightedSection === "resume-terms" || filterMode === "subdomains"
+                  ? "bg-[#7C3AED]/10 border border-[#7C3AED]/50 shadow-[0_0_30px_rgba(124,58,237,0.15)] ring-1 ring-[#7C3AED]/50"
+                  : "border border-white/[0.06] bg-white/[0.02]"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-white flex items-center gap-2.5">
+                  <FaFileLines className="w-4 h-4 text-purple" />
+                  <span>5. Verified Interactive Resume Portal (resume.gauravpatil.site) Terms &amp; Security</span>
+                </h2>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#7C3AED]/30 text-[#CBACF9] border border-[#7C3AED]/50">
+                  Resume Portal Term
+                </span>
+              </div>
+              <ul className="list-disc list-inside space-y-2 pl-2 text-sm text-neutral-300">
+                <li><strong className="text-white">Dedicated Domain Isolation:</strong> <code className="text-purple font-mono">resume.gauravpatil.site</code> is an isolated candidate presentation gateway engineered specifically for recruiters, engineering leaders, and hiring managers. Direct access from the main domain <code className="text-purple font-mono">/resume</code> is automatically redirected to <code className="text-purple font-mono">https://resume.gauravpatil.site</code>.</li>
+                <li><strong className="text-white">Cryptographic 30-Minute Inactivity Expiry:</strong> For security and privacy, unlocked resume sessions are bound to an encrypted HMAC session token with an enforced 30-minute inactivity time-to-live (TTL). Once expired or explicitly revoked via the <strong>Log out</strong> trigger, memory caches and session access are atomically purged.</li>
+                <li><strong className="text-white">Anti-Abuse &amp; Cloudflare Turnstile Verification:</strong> Public mutation endpoints and access gates are protected by Cloudflare Turnstile to prevent automated scraping, bot attacks, and denial of service.</li>
+                <li><strong className="text-white">Dynamic Administrative Governance:</strong> Resume availability is dynamically controlled by Gaurav Patil via administrative lifecycle triggers (<code className="text-purple font-mono">active</code>, <code className="text-purple font-mono">hired</code>, <code className="text-purple font-mono">suspended</code>). When marked hired or suspended, the portal presents an authoritative executive status badge in lieu of full candidate credentials.</li>
+                <li><strong className="text-white">Authorized Candidate Evaluation:</strong> Information and case studies presented on <code className="text-purple font-mono">resume.gauravpatil.site</code> are provided solely for professional recruitment evaluation, hiring, and technical verification. Redistribution, commercial scraping, or unauthorized disclosure of candidate contact details is strictly prohibited.</li>
+              </ul>
+            </section>
+          )}
+
+          {/* Section 6: Talk Command Hub */}
+          {(filterMode === "all" || filterMode === "subdomains") && (
+            <section
+              id="talk-terms"
+              className={`space-y-4 p-4 sm:p-6 rounded-xl transition-all duration-300 scroll-mt-24 sm:scroll-mt-32 ${
+                highlightedSection === "talk-terms" || filterMode === "subdomains"
+                  ? "bg-[#7C3AED]/10 border border-[#7C3AED]/50 shadow-[0_0_30px_rgba(124,58,237,0.15)] ring-1 ring-[#7C3AED]/50"
+                  : "border border-white/[0.06] bg-white/[0.02]"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-white flex items-center gap-2.5">
+                  <IoChatbubbleEllipses className="w-5 h-5 text-purple" />
+                  <span>6. Talk Command Hub (talk.gauravpatil.site) Real-Time Gateway</span>
+                </h2>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#7C3AED]/30 text-[#CBACF9] border border-[#7C3AED]/50">
+                  Subdomain Term
+                </span>
+              </div>
+              <ul className="list-disc list-inside space-y-2 pl-2 text-sm text-neutral-300">
+                <li><strong className="text-white">Authenticated Session Access:</strong> Access requires valid session verification via secure cookies and time-limited tokens. Unauthorized attempts to bypass authentication or probe internal endpoints are strictly prohibited.</li>
+                <li><strong className="text-white">Real-Time Stream Isolation:</strong> Messages and command executions are isolated per session with strict rate-limiting to preserve server stability and prevent resource exhaustion.</li>
+                <li><strong className="text-white">Professional Code of Conduct:</strong> All communications conducted through <code className="text-purple font-mono">talk.gauravpatil.site</code> must adhere to professional communication standards. Abusive, disruptive, or automated exploitation scripts will result in immediate session termination and IP blocking.</li>
+              </ul>
+            </section>
+          )}
+
+          {/* Section 7: Administrative Subsystem Governance */}
+          {(filterMode === "all" || filterMode === "subdomains") && (
+            <section id="admin-governance" className="space-y-3 scroll-mt-24 sm:scroll-mt-32">
+              <h2 className="text-xl font-semibold text-white flex items-center gap-2.5">
+                <FaShieldHalved className="w-4 h-4 text-purple" />
+                <span>7. Administrative Subsystem Isolation &amp; 2FA Governance</span>
+              </h2>
+              <p>
+                The administrative panel (<code className="text-purple font-mono">/admin/*</code> and <code className="text-purple font-mono">admin.gauravpatil.site</code>) is an isolated workspace strictly restricted to authorized Superadmins. Administrative access requires Google OAuth 2.0 PKCE, salted HMAC-SHA256 Two-Factor Authentication (OTP), and zero-lockout IP security verification. Administrative access and data operations are governed separately under the <Link href="/admin/terms" prefetch={false} className="text-purple hover:underline font-semibold">Administrator Terms of Service</Link>.
+              </p>
+            </section>
+          )}
+
+          {/* Section 8: Anonymity & Confidentiality (Spotlighted) */}
           <section
             id="anonymity"
             className={`space-y-3 p-4 sm:p-6 rounded-xl transition-all duration-300 scroll-mt-24 sm:scroll-mt-32 ${
@@ -356,7 +604,7 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-white flex items-center gap-2.5">
                 <FaUserSecret className="w-4 h-4 text-purple" />
-                <span>2. Right to Confidential &amp; Anonymous Communication</span>
+                <span>8. Right to Confidential &amp; Anonymous Communication</span>
               </h2>
               {(highlightedSection === "anonymity" || filterMode === "contact") && (
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#7C3AED]/30 text-[#CBACF9] border border-[#7C3AED]/50">
@@ -377,12 +625,12 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
             </ul>
           </section>
 
-          {/* Section 3: Intellectual Property */}
+          {/* Section 9: Intellectual Property */}
           {filterMode === "all" && (
             <section id="ip" className="space-y-3 scroll-mt-24 sm:scroll-mt-32">
               <h2 className="text-xl font-semibold text-white flex items-center gap-2.5">
                 <FaCode className="w-4 h-4 text-purple" />
-                <span>3. Intellectual Property &amp; Engineering Architecture</span>
+                <span>9. Intellectual Property &amp; Engineering Architecture</span>
               </h2>
               <p>
                 All original visual design systems, dark luxury glassmorphic layouts, Three.js 3D Globe implementations, and full-stack software architectures showcased on this platform are the intellectual property of <strong className="text-white">Gaurav Patil</strong>. Client deliverables and bespoke software engineering codebases are transferred strictly per individual written engagement agreements upon milestone completion.
@@ -390,7 +638,7 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
             </section>
           )}
 
-          {/* Section 4: Automated Abuse Mitigation */}
+          {/* Section 10: Automated Abuse Mitigation */}
           <section
             id="abuse-mitigation"
             className={`space-y-3 p-4 sm:p-6 rounded-xl transition-all duration-300 scroll-mt-24 sm:scroll-mt-32 ${
@@ -402,7 +650,7 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-white flex items-center gap-2.5">
                 <FaRobot className="w-4 h-4 text-purple" />
-                <span>4. Automated Abuse Mitigation &amp; Cloudflare Verification</span>
+                <span>10. Automated Abuse Mitigation &amp; Cloudflare Verification</span>
               </h2>
               {filterMode === "contact" && (
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-white/[0.08] text-neutral-300 border border-white/[0.15]">
@@ -415,7 +663,7 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
             </p>
           </section>
 
-          {/* Section 5: Transactional Emails */}
+          {/* Section 11: Transactional Emails */}
           <section
             id="email-standards"
             className={`space-y-3 p-4 sm:p-6 rounded-xl transition-all duration-300 scroll-mt-24 sm:scroll-mt-32 ${
@@ -427,7 +675,7 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-white flex items-center gap-2.5">
                 <FaEnvelope className="w-4 h-4 text-purple" />
-                <span>5. Transactional Communication Standards &amp; Mandatory Legal Update Announcements</span>
+                <span>11. Transactional Communication Standards &amp; Mandatory Legal Update Announcements</span>
               </h2>
               {filterMode === "contact" && (
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-white/[0.08] text-neutral-300 border border-white/[0.15]">
@@ -457,7 +705,7 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
             </div>
           </section>
 
-          {/* Section: Personal Assistant Terms (Spotlighted for Assistant / Learn More) */}
+          {/* Section 12: Personal Assistant Terms */}
           <section
             id="assistant-terms"
             className={`space-y-6 p-4 sm:p-7 rounded-2xl transition-all duration-300 scroll-mt-24 sm:scroll-mt-32 ${
@@ -469,7 +717,7 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.08] pb-4">
               <h2 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2.5">
                 <IoChatbubbleEllipses className="w-5 h-5 text-purple" />
-                <span>6. Personal Assistant (Beta) Operational Terms &amp; AI Disclaimer</span>
+                <span>12. Personal Assistant (Beta) Operational Terms &amp; AI Disclaimer</span>
               </h2>
               {(highlightedSection === "assistant-terms" || filterMode === "assistant") && (
                 <span className="px-3 py-1 rounded-full text-[10.5px] font-mono font-bold bg-[#7C3AED]/30 text-[#CBACF9] border border-[#7C3AED]/50">
@@ -563,7 +811,7 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
             </div>
           </section>
 
-          {/* Section 7: WhatsApp Recruiter & Visitor Communication Channel */}
+          {/* Section 13: WhatsApp Recruiter & Visitor Communication Channel */}
           {(filterMode === "all" || filterMode === "whatsapp") && (
             <section
               id="whatsapp-terms"
@@ -576,7 +824,7 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-white flex items-center gap-2.5">
                   <FaWhatsapp className="w-5 h-5 text-[#25D366]" />
-                  <span>7. WhatsApp Recruiter &amp; Visitor Communication Channel</span>
+                  <span>13. WhatsApp Recruiter &amp; Visitor Communication Channel</span>
                 </h2>
                 {(highlightedSection === "whatsapp-terms" || filterMode === "whatsapp") && (
                   <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#25D366]/20 text-[#25D366] border border-[#25D366]/40">
@@ -645,37 +893,24 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
             </section>
           )}
 
-          {/* Section 8: Administrative Subsystem Governance */}
-          {filterMode === "all" && (
-            <section id="admin-governance" className="space-y-3 scroll-mt-24 sm:scroll-mt-32">
-              <h2 className="text-xl font-semibold text-white flex items-center gap-2.5">
-                <FaShieldHalved className="w-4 h-4 text-purple" />
-                <span>8. Administrative Subsystem Isolation &amp; 2FA Governance</span>
-              </h2>
-              <p>
-                The administrative panel (<code className="text-purple font-mono">/admin/*</code>) is an isolated workspace strictly restricted to authorized Superadmins. Administrative access requires Google OAuth 2.0 PKCE, salted HMAC-SHA256 Two-Factor Authentication (OTP), and zero-lockout IP security verification. Administrative access and data operations are governed separately under the <Link href="/admin/terms" prefetch={false} className="text-purple hover:underline font-semibold">Administrator Terms of Service</Link>.
-              </p>
-            </section>
-          )}
-
-          {/* Section 9: Limitation of Liability */}
+          {/* Section 14: Limitation of Liability */}
           <section id="liability" className="space-y-3 scroll-mt-24 sm:scroll-mt-32">
             <h2 className="text-xl font-semibold text-white flex items-center gap-2.5">
               <FaScaleBalanced className="w-4 h-4 text-purple" />
-              <span>9. Limitation of Liability &amp; Disclaimers</span>
+              <span>14. Limitation of Liability &amp; Disclaimers</span>
             </h2>
             <p>
-              This website and its demonstrative artifacts are provided on an &ldquo;as is&rdquo; and &ldquo;as available&rdquo; basis. In no event shall Gaurav Patil be liable for indirect, incidental, or consequential damages resulting from the use of this website.
+              This website, its subdomains (<code className="text-purple font-mono">gauravpatil.site</code>, <code className="text-purple font-mono">self.gauravpatil.site</code>, <code className="text-purple font-mono">contact.gauravpatil.site</code>, <code className="text-purple font-mono">resume.gauravpatil.site</code>, <code className="text-purple font-mono">talk.gauravpatil.site</code>, <code className="text-purple font-mono">admin.gauravpatil.site</code>), and its demonstrative artifacts are provided on an &ldquo;as is&rdquo; and &ldquo;as available&rdquo; basis. In no event shall Gaurav Patil be liable for indirect, incidental, or consequential damages resulting from the use of this website.
             </p>
           </section>
 
-          {/* Section 10: Legal Contact */}
+          {/* Section 15: Legal Contact */}
           <section id="legal-contact" className="space-y-4 scroll-mt-24 sm:scroll-mt-32">
             <h2 className="text-xl font-semibold text-white">
-              10. Inquiries &amp; Legal Notices
+              15. Inquiries &amp; Legal Notices
             </h2>
             <p>
-              For contract proposals, bespoke engineering consulting, or professional engagement agreements:
+              For contract proposals, bespoke engineering consulting, or professional engagement agreements across any subdomain:
             </p>
             <div className="space-y-2 text-sm">
               <p className="text-white-100">
