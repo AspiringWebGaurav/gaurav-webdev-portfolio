@@ -130,59 +130,48 @@ export function ThemeToggle({
             aria-live="polite"
           >
             <motion.div
-              initial={{ scale: 0.92, opacity: 0, y: 10 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: -8 }}
+              initial={{ scale: 0.85, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.85, opacity: 0 }}
               transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-              className={cn(
-                "flex flex-col items-center gap-4 px-7 py-6 rounded-2xl shadow-2xl border select-none max-w-xs sm:max-w-sm text-center mx-4",
-                targetTheme === "dark"
-                  ? "bg-[#0A0D24]/95 border-white/15 text-white shadow-[0_25px_60px_rgba(0,0,0,0.85)]"
-                  : "bg-white/95 border-slate-200 text-slate-900 shadow-[0_25px_60px_rgba(124,58,237,0.18)]"
-              )}
+              className="relative flex items-center justify-center select-none"
             >
-              {/* Dynamic Animated Spinner / Icon Ring */}
-              <div className="relative w-14 h-14 flex items-center justify-center">
-                {/* Ambient Glow */}
+              {/* Ambient Radial Glow */}
+              <div
+                className={cn(
+                  "absolute w-28 h-28 rounded-full blur-2xl opacity-60 animate-pulse pointer-events-none",
+                  targetTheme === "dark" ? "bg-amber-400/35" : "bg-violet-600/35"
+                )}
+              />
+
+              {/* Minimal Glass Ring */}
+              <div
+                className={cn(
+                  "relative w-20 h-20 rounded-full flex items-center justify-center backdrop-blur-xl border shadow-2xl transition-colors duration-300",
+                  targetTheme === "dark"
+                    ? "bg-white/[0.06] border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)]"
+                    : "bg-white/60 border-slate-200/80 shadow-[0_8px_32px_0_rgba(124,58,237,0.18)]"
+                )}
+              >
+                {/* Subtle Orbiting Accent Arc */}
                 <div
                   className={cn(
-                    "absolute inset-0 rounded-full blur-md opacity-60 animate-pulse",
-                    targetTheme === "dark" ? "bg-amber-500/30" : "bg-violet-500/30"
-                  )}
-                />
-                {/* Spinning luxury gradient ring */}
-                <div
-                  className={cn(
-                    "w-12 h-12 rounded-full border-2 border-transparent animate-spin",
+                    "absolute inset-0 rounded-full border-2 border-transparent animate-spin",
                     targetTheme === "dark"
-                      ? "border-t-amber-400 border-r-amber-400/50"
-                      : "border-t-violet-600 border-r-violet-600/50"
+                      ? "border-t-amber-400/90 border-r-amber-400/40"
+                      : "border-t-violet-600/90 border-r-violet-600/40"
                   )}
-                  style={{ animationDuration: "0.85s" }}
+                  style={{ animationDuration: "0.95s" }}
                 />
-                {/* Center Theme Icon */}
-                <div className="absolute inset-0 flex items-center justify-center">
+
+                {/* Centered Glowing Icon */}
+                <div className="relative flex items-center justify-center">
                   {targetTheme === "dark" ? (
-                    <IoMoonOutline className="w-5 h-5 text-amber-400 animate-pulse" />
+                    <IoMoonOutline className="w-9 h-9 text-amber-300 drop-shadow-[0_0_12px_rgba(251,191,36,0.6)] animate-pulse" />
                   ) : (
-                    <IoSunnyOutline className="w-6 h-6 text-violet-600 animate-pulse" />
+                    <IoSunnyOutline className="w-9 h-9 text-violet-600 drop-shadow-[0_0_12px_rgba(124,58,237,0.5)] animate-pulse" />
                   )}
                 </div>
-              </div>
-
-              {/* Mode Labels */}
-              <div className="flex flex-col gap-1">
-                <p className="text-sm font-semibold tracking-wide">
-                  {targetTheme === "dark" ? "Switching to Dark Mode" : "Switching to Light Mode"}
-                </p>
-                <p
-                  className={cn(
-                    "text-xs font-normal tracking-normal",
-                    targetTheme === "dark" ? "text-slate-400" : "text-slate-500"
-                  )}
-                >
-                  Applying visual aesthetics...
-                </p>
               </div>
             </motion.div>
           </motion.div>
