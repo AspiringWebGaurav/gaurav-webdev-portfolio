@@ -15,6 +15,7 @@ import {
   FaChevronDown,
 } from "react-icons/fa";
 import { validateEmailWithTypo, getAutocorrectedEmail } from "@/lib/recruiter/validation";
+import { useTheme } from "next-themes";
 
 interface CountryOption {
   code: string;
@@ -161,6 +162,13 @@ export function RecruiterAccessGate({ onSuccess }: RecruiterAccessGateProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
 
+  const { resolvedTheme } = useTheme();
+  const [themeMounted, setThemeMounted] = useState(false);
+  useEffect(() => {
+    setThemeMounted(true);
+  }, []);
+  const isDark = themeMounted ? resolvedTheme === "dark" : false;
+
   const turnstileContainerRef = useRef<HTMLDivElement | null>(null);
   const turnstileWidgetIdRef = useRef<string | null>(null);
 
@@ -204,7 +212,7 @@ export function RecruiterAccessGate({ onSuccess }: RecruiterAccessGateProps) {
       const id = win.turnstile.render(turnstileContainerRef.current, {
         sitekey: turnstileSiteKey,
         action: "contact_portal",
-        theme: "light",
+        theme: isDark ? "dark" : "light",
         callback: (token: string) => {
           setTurnstileToken(token);
         },
@@ -226,7 +234,16 @@ export function RecruiterAccessGate({ onSuccess }: RecruiterAccessGateProps) {
     } catch (err) {
       console.warn("Turnstile render error:", err);
     }
-  }, [turnstileSiteKey]);
+  }, [turnstileSiteKey, isDark]);
+
+  // Re-render Turnstile dynamically when theme toggles
+  useEffect(() => {
+    if (step !== "FORM" || !themeMounted) return;
+    const win = window as unknown as { turnstile?: unknown };
+    if (win.turnstile && turnstileContainerRef.current) {
+      renderTurnstile();
+    }
+  }, [isDark, step, themeMounted, renderTurnstile]);
 
   useEffect(() => {
     if (step !== "FORM") return;

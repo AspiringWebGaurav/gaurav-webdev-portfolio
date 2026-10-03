@@ -4,6 +4,7 @@ import { VercelInsights } from "@/components/analytics/VercelInsights";
 import "./globals.css";
 import { ThemeProvider } from "./provider";
 import { RouteProgressBar } from "@/components/ui/RouteProgressBar";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { seoRepository } from "@/lib/dal/repositories/cms/seo.repository";
 import { SEED_SEO } from "@/lib/dal/repositories/seed-data";
 
@@ -26,7 +27,10 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
-  themeColor: "#000319",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FAFAFA" },
+    { media: "(prefers-color-scheme: dark)", color: "#000319" },
+  ],
 };
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -214,23 +218,22 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className="dark"
     >
       <head>
         <link rel="preconnect" href="https://challenges.cloudflare.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://challenges.cloudflare.com" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} bg-[#000319] text-white`}
+        className={`${geistSans.variable} ${geistMono.variable}`}
         suppressHydrationWarning
       >
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
           enableSystem={false}
-          disableTransitionOnChange
         >
           <RouteProgressBar />
+          <ThemeToggle />
           {children}
           <VercelInsights />
         </ThemeProvider>

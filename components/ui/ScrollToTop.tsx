@@ -65,16 +65,16 @@ export const ScrollToTop = () => {
           whileHover={{ scale: 1.1, y: -2 }}
           whileTap={{ scale: 0.92 }}
           onClick={scrollToTop}
-          className="fixed z-[4900] group flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-full border border-white/20 bg-[#000319]/80 backdrop-blur-xl text-purple shadow-[0_0_25px_rgba(203,172,249,0.3)] hover:shadow-[0_0_35px_rgba(203,172,249,0.65)] hover:border-purple/60 transition-all duration-300 cursor-pointer overflow-hidden touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7C3AED] focus-visible:ring-offset-2 focus-visible:ring-offset-[#000319] bottom-[calc(1.375rem+env(safe-area-inset-bottom,0px))] sm:bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] right-[calc(4.875rem+env(safe-area-inset-right,0px))] sm:right-[calc(5.5rem+env(safe-area-inset-right,0px))]"
+          className="fixed z-[4900] group flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-full border border-slate-200/90 dark:border-white/20 bg-white/90 dark:bg-[#000319]/80 backdrop-blur-xl text-[#7C3AED] dark:text-purple shadow-[0_4px_20px_rgba(0,0,0,0.08),0_0_15px_rgba(124,58,237,0.15)] dark:shadow-[0_0_25px_rgba(203,172,249,0.3)] hover:shadow-[0_6px_25px_rgba(124,58,237,0.25)] dark:hover:shadow-[0_0_35px_rgba(203,172,249,0.65)] hover:border-[#7C3AED]/50 dark:hover:border-purple/60 transition-all duration-300 cursor-pointer overflow-hidden touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7C3AED] focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-[#000319] bottom-[calc(1.375rem+env(safe-area-inset-bottom,0px))] sm:bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] right-[calc(4.875rem+env(safe-area-inset-right,0px))] sm:right-[calc(5.5rem+env(safe-area-inset-right,0px))]"
           aria-label="Back to top"
         >
-          <span className="absolute inset-0 rounded-full bg-gradient-to-t from-purple/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+          <span className="absolute inset-0 rounded-full bg-gradient-to-t from-purple/10 dark:from-purple/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
           <motion.div
             className="relative z-10 flex items-center justify-center"
             whileHover={{ y: -2 }}
             transition={{ type: "spring", stiffness: 400, damping: 10 }}
           >
-            <FaArrowUp className="w-4 h-4 text-purple group-hover:text-white transition-colors duration-300" />
+            <FaArrowUp className="w-4 h-4 text-[#7C3AED] dark:text-purple group-hover:text-purple-700 dark:group-hover:text-white transition-colors duration-300" />
           </motion.div>
         </motion.button>
       )}

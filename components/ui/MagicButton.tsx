@@ -24,7 +24,7 @@ const MagicButton: React.FC<MagicButtonProps> = ({
 
   return (
     <button
-      className={`relative inline-flex h-12 w-full md:w-60 overflow-hidden rounded-xl p-[1.5px] border border-white/[0.18] hover:border-purple/60 transition-all duration-300 focus:outline-hidden group select-none shadow-[0_0_20px_rgba(203,172,249,0.15)] ${containerStyle}`}
+      className={`relative inline-flex h-12 w-full md:w-60 overflow-hidden rounded-xl p-[1.5px] border border-slate-300 dark:border-white/[0.18] hover:border-purple/60 transition-all duration-300 focus:outline-hidden group select-none shadow-[0_4px_16px_rgba(0,0,0,0.06)] dark:shadow-[0_0_20px_rgba(203,172,249,0.15)] hover:shadow-[0_4px_24px_rgba(124,58,237,0.18)] cursor-pointer ${containerStyle}`}
       onClick={handleClick}
       type="button"
     >
@@ -33,7 +33,7 @@ const MagicButton: React.FC<MagicButtonProps> = ({
 
       {/* Solid Inner Body with Math-Correct Radius (10px inside 12px) */}
       <span
-        className={`inline-flex h-full w-full cursor-pointer items-center justify-center rounded-[10px] bg-[#04071D] group-hover:bg-[#070B28] px-7 text-sm font-medium text-white backdrop-blur-3xl gap-2 transition-colors duration-200 ${otherClasses}`}
+        className={`inline-flex h-full w-full cursor-pointer items-center justify-center rounded-[10px] bg-white dark:bg-[#04071D] group-hover:bg-slate-50 dark:group-hover:bg-[#070B28] px-7 text-sm font-semibold text-slate-900 dark:text-white backdrop-blur-3xl gap-2 transition-colors duration-200 ${otherClasses}`}
       >
         {position === "left" && icon}
         <span>{title}</span>

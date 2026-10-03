@@ -110,33 +110,148 @@ export const BentoGridItem = ({
   return (
     <div
       className={cn(
-        "row-span-1 relative overflow-hidden rounded-3xl border border-white/[0.1] group/bento hover:shadow-xl transition duration-200 shadow-input dark:shadow-none justify-between flex flex-col space-y-4",
+        "row-span-1 relative overflow-hidden rounded-3xl border border-slate-200/90 dark:border-white/[0.1] bg-white dark:bg-[#04071D] text-slate-900 dark:text-white group/bento hover:shadow-xl transition-all duration-200 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_6px_24px_rgba(0,0,0,0.03)] dark:shadow-none justify-between flex flex-col space-y-4",
         className
       )}
-      style={{
-        background: "rgb(4,7,29)",
-        backgroundColor:
-          "linear-gradient(90deg, rgba(4,7,29,1) 0%, rgba(12,14,35,1) 100%)",
-      }}
     >
       <div className={`${isType("contact_cta", 6) && "flex justify-center"} h-full`}>
         <div className="w-full h-full absolute">
           {img && (
-            <img
-              src={img}
-              alt={img}
-              loading="lazy"
-              decoding="async"
-              className={cn(imgClassName, "object-cover object-center ")}
-            />
+            <>
+              {isType("collaboration", 1) ? (
+                <>
+                  {/* Separate image optimized for white/light theme */}
+                  <img
+                    src="/b1-light.webp"
+                    alt={typeof title === "string" ? title : "Collaboration preview"}
+                    loading="lazy"
+                    decoding="async"
+                    className={cn(
+                      imgClassName,
+                      "object-cover object-center w-full h-full block dark:hidden"
+                    )}
+                  />
+                  {/* Original image for dark theme */}
+                  <img
+                    src={img}
+                    alt={typeof title === "string" ? title : "Collaboration preview"}
+                    loading="lazy"
+                    decoding="async"
+                    className={cn(
+                      imgClassName,
+                      "object-cover object-center w-full h-full hidden dark:block"
+                    )}
+                  />
+                </>
+              ) : isType("current_project", 5) ? (
+                <>
+                  {/* Light Theme: Crisp, Pixel-Perfect Studio Code Window */}
+                  <div className="block dark:hidden absolute right-0 bottom-0 md:w-[25rem] w-64 translate-x-2 translate-y-2 pointer-events-none select-none z-0">
+                    <div className="rounded-2xl border border-slate-200/90 bg-white/95 shadow-[0_12px_36px_rgba(15,23,42,0.08),0_1px_3px_rgba(15,23,42,0.04)] backdrop-blur-xl p-4 sm:p-5 overflow-hidden font-mono text-[11px] sm:text-xs">
+                      {/* Window Header */}
+                      <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-2.5 h-2.5 rounded-full bg-rose-400" />
+                          <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                        </div>
+                        <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-sans font-medium">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#7C3AED] animate-pulse" />
+                          <span>workflow.ts</span>
+                        </div>
+                      </div>
+                      {/* Code Lines with Syntax Highlighting */}
+                      <div className="space-y-1.5 text-slate-800">
+                        <div className="flex gap-3">
+                          <span className="text-slate-300 select-none w-3 text-right">1</span>
+                          <span className="text-slate-400 italic">{"// Building scalable systems & automation"}</span>
+                        </div>
+                        <div className="flex gap-3">
+                          <span className="text-slate-300 select-none w-3 text-right">2</span>
+                          <span>
+                            <span className="text-[#7C3AED] font-semibold">import</span>{" "}
+                            <span className="text-indigo-600 font-medium">PlatformEngine</span>{" "}
+                            <span className="text-[#7C3AED] font-semibold">from</span>{" "}
+                            <span className="text-emerald-600">&apos;@/core/engine&apos;</span>;
+                          </span>
+                        </div>
+                        <div className="flex gap-3">
+                          <span className="text-slate-300 select-none w-3 text-right">3</span>
+                          <span className="text-slate-400 select-none">&nbsp;</span>
+                        </div>
+                        <div className="flex gap-3">
+                          <span className="text-slate-300 select-none w-3 text-right">4</span>
+                          <span className="text-slate-400 italic">{"// Scheduled mail & queue pipelines"}</span>
+                        </div>
+                        <div className="flex gap-3">
+                          <span className="text-slate-300 select-none w-3 text-right">5</span>
+                          <span>
+                            <span className="text-[#7C3AED] font-semibold">import</span>{" "}
+                            <span className="text-slate-800">{`{ `}</span>
+                            <span className="text-amber-600 font-medium">Queue</span>
+                            <span className="text-slate-800">{`, `}</span>
+                            <span className="text-amber-600 font-medium">MailDispatcher</span>
+                            <span className="text-slate-800">{` }`}</span>{" "}
+                            <span className="text-[#7C3AED] font-semibold">from</span>{" "}
+                            <span className="text-emerald-600">&apos;@/lib/workers&apos;</span>;
+                          </span>
+                        </div>
+                        <div className="flex gap-3">
+                          <span className="text-slate-300 select-none w-3 text-right">6</span>
+                          <span className="text-slate-400 select-none">&nbsp;</span>
+                        </div>
+                        <div className="flex gap-3">
+                          <span className="text-slate-300 select-none w-3 text-right">7</span>
+                          <span>
+                            <span className="text-[#7C3AED] font-semibold">const</span>{" "}
+                            <span className="text-indigo-600 font-medium">service</span>{" "}
+                            <span className="text-slate-500">=</span>{" "}
+                            <span className="text-[#7C3AED] font-semibold">new</span>{" "}
+                            <span className="text-indigo-600 font-medium">PlatformEngine</span>
+                            <span className="text-slate-800">({`{ status: `}</span>
+                            <span className="text-emerald-600">&apos;active&apos;</span>
+                            <span className="text-slate-800">{` }`})</span>;
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Original image for dark theme (100% untouched) */}
+                  <img
+                    src={img}
+                    alt={img}
+                    loading="lazy"
+                    decoding="async"
+                    className={cn(
+                      imgClassName,
+                      "object-cover object-center hidden dark:block"
+                    )}
+                  />
+                </>
+              ) : (
+                <img
+                  src={img}
+                  alt={img}
+                  loading="lazy"
+                  decoding="async"
+                  className={cn(
+                    imgClassName,
+                    "object-cover object-center"
+                  )}
+                />
+              )}
+            </>
+          )}
+          {isType("collaboration", 1) && (
+            <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/20 to-transparent dark:hidden z-[1] pointer-events-none" />
           )}
         </div>
-        <div
-          className={`absolute right-0 -bottom-5 ${
-            isType("current_project", 5) && "w-full opacity-80"
-          } `}
-        >
-          {spareImg && (
+        {spareImg && (
+          <div
+            className={`absolute right-0 -bottom-5 hidden dark:block ${
+              isType("current_project", 5) ? "w-full opacity-80" : ""
+            } `}
+          >
             <img
               src={spareImg}
               alt={spareImg}
@@ -144,10 +259,12 @@ export const BentoGridItem = ({
               decoding="async"
               className="object-cover object-center w-full h-full"
             />
-          )}
-        </div>
+          </div>
+        )}
         {isType("contact_cta", 6) && (
-          <BackgroundGradientAnimation />
+          <div className="hidden dark:block">
+            <BackgroundGradientAnimation />
+          </div>
         )}
 
         <div
@@ -158,7 +275,7 @@ export const BentoGridItem = ({
         >
           <div
             className={cn(
-              "font-sans font-normal text-xs md:text-sm text-[#C1C2D3] z-10 tracking-wide mb-1",
+              "font-sans font-normal text-xs md:text-sm text-slate-500 dark:text-[#C1C2D3] z-10 tracking-wide mb-1",
               isType("tech_stack", 3) && "max-w-[140px] sm:max-w-[170px] lg:max-w-[200px]"
             )}
           >
@@ -166,7 +283,7 @@ export const BentoGridItem = ({
           </div>
           <div
             className={cn(
-              "font-sans text-lg lg:text-3xl font-bold z-10 leading-tight",
+              "font-sans text-lg lg:text-3xl font-bold z-10 leading-tight text-slate-900 dark:text-white",
               isType("tech_stack", 3)
                 ? "max-w-[130px] sm:max-w-[160px] lg:max-w-[200px]"
                 : "max-w-96"
@@ -193,7 +310,7 @@ export const BentoGridItem = ({
                   {LEFT_STACK.map((item, i) => (
                     <span
                       key={i}
-                      className="py-1.5 px-3 lg:py-2 lg:px-3.5 text-xs lg:text-sm rounded-xl text-center bg-[#10132E] border border-white/[0.08] text-white font-medium shadow-sm whitespace-nowrap"
+                      className="py-1.5 px-3 lg:py-2 lg:px-3.5 text-xs lg:text-sm rounded-xl text-center bg-slate-100 dark:bg-[#10132E] border border-slate-200/90 dark:border-white/[0.08] text-slate-800 dark:text-white font-medium shadow-2xs whitespace-nowrap transition-colors"
                     >
                       {item}
                     </span>
@@ -203,7 +320,7 @@ export const BentoGridItem = ({
                   {RIGHT_STACK.map((item, i) => (
                     <span
                       key={i}
-                      className="py-1.5 px-3 lg:py-2 lg:px-3.5 text-xs lg:text-sm rounded-xl text-center bg-[#10132E] border border-white/[0.08] text-white font-medium shadow-sm whitespace-nowrap"
+                      className="py-1.5 px-3 lg:py-2 lg:px-3.5 text-xs lg:text-sm rounded-xl text-center bg-slate-100 dark:bg-[#10132E] border border-slate-200/90 dark:border-white/[0.08] text-slate-800 dark:text-white font-medium shadow-2xs whitespace-nowrap transition-colors"
                     >
                       {item}
                     </span>
@@ -230,7 +347,7 @@ export const BentoGridItem = ({
                 icon={<IoCopyOutline />}
                 position="left"
                 handleClick={handleCopy}
-                otherClasses="!bg-[#161A31]"
+                otherClasses="!bg-white dark:!bg-[#161A31] text-slate-900 dark:text-white font-semibold"
               />
             </div>
           )}

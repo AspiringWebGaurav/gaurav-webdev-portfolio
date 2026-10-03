@@ -52,10 +52,9 @@ export const ProjectImageSlider: React.FC<ProjectImageSliderProps> = ({
       onTouchStart={() => setIsHovered(true)}
       onTouchEnd={() => setIsHovered(false)}
     >
-      {/* Structural Dark Canvas Backdrop */}
+      {/* Structural Canvas Backdrop */}
       <div
-        className="absolute inset-0 w-full h-full overflow-hidden lg:rounded-3xl"
-        style={{ backgroundColor: "#13162D" }}
+        className="absolute inset-0 w-full h-full overflow-hidden lg:rounded-3xl bg-slate-100 dark:bg-[#13162D]"
       >
         <img
           src="/bg.png"
@@ -63,7 +62,7 @@ export const ProjectImageSlider: React.FC<ProjectImageSliderProps> = ({
           role="presentation"
           loading="lazy"
           decoding="async"
-          className="w-full h-full object-cover opacity-60 pointer-events-none"
+          className="w-full h-full object-cover opacity-30 dark:opacity-60 pointer-events-none"
         />
       </div>
 

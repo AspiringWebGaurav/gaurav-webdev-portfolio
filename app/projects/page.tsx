@@ -108,7 +108,7 @@ export default async function ProjectsHubPage() {
   };
 
   return (
-    <main className="relative bg-black-100 min-h-screen text-white flex justify-center items-center flex-col mx-auto px-5 sm:px-10 overflow-clip">
+    <main className="relative bg-[#FAFAFA] dark:bg-black-100 min-h-screen text-slate-900 dark:text-white flex justify-center items-center flex-col mx-auto px-5 sm:px-10 overflow-clip">
       {/* Schema.org injection */}
       <script
         type="application/ld+json"
@@ -121,41 +121,41 @@ export default async function ProjectsHubPage() {
 
       {/* Background Grid Pattern */}
       <div
-        className="h-screen w-full dark:bg-black-100 bg-white dark:bg-grid-white/[0.03] bg-grid-black-100/[0.2]
+        className="h-screen w-full bg-[#FAFAFA] dark:bg-black-100 bg-grid-black/[0.025] dark:bg-grid-white/[0.03]
        absolute top-0 left-0 flex items-center justify-center pointer-events-none"
       >
         <div
-          className="absolute pointer-events-none inset-0 flex items-center justify-center dark:bg-black-100
-         bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]"
+          className="absolute pointer-events-none inset-0 flex items-center justify-center bg-[#FAFAFA] dark:bg-black-100
+         [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]"
         />
       </div>
 
       <div className="max-w-7xl w-full pt-16 sm:pt-24 pb-20 relative z-10">
         {/* Navigation / Breadcrumb Header */}
-        <nav aria-label="Breadcrumb" className="mb-8 flex items-center gap-2 text-sm text-[#C1C2D3]">
+        <nav aria-label="Breadcrumb" className="mb-8 flex items-center gap-2 text-sm text-slate-500 dark:text-[#C1C2D3]">
           <Link
             href="/"
-            className="hover:text-purple transition-colors duration-200"
+            className="hover:text-[#7C3AED] dark:hover:text-purple transition-colors duration-200"
           >
             Home
           </Link>
-          <span className="text-white/40">/</span>
-          <span className="text-purple font-medium" aria-current="page">
+          <span className="text-slate-300 dark:text-white/40">/</span>
+          <span className="text-[#7C3AED] dark:text-purple font-medium" aria-current="page">
             Projects
           </span>
         </nav>
 
         {/* Hero Header */}
         <header className="mb-14 max-w-3xl">
-          <p className="uppercase tracking-widest text-xs text-blue-100 font-mono mb-2">
+          <p className="uppercase tracking-widest text-xs text-[#7C3AED] dark:text-blue-100 font-mono mb-2">
             Engineering Portfolio & Case Studies
           </p>
-          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-white mb-4">
+          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-slate-900 dark:text-white mb-4">
             Full Stack & Software Engineering Projects
           </h1>
-          <p className="text-base sm:text-lg text-white-200 leading-relaxed">
+          <p className="text-base sm:text-lg text-slate-600 dark:text-white-200 leading-relaxed">
             A comprehensive catalog of scalable web applications, 3D WebGL simulations, and SaaS platforms engineered by{" "}
-            <span className="text-purple font-semibold">Gaurav Patil</span>. Each project reflects robust architecture, type safety, and polished user experience.
+            <span className="text-[#7C3AED] dark:text-purple font-semibold">Gaurav Patil</span>. Each project reflects robust architecture, type safety, and polished user experience.
           </p>
         </header>
 
@@ -170,7 +170,7 @@ export default async function ProjectsHubPage() {
             return (
               <article
                 key={project.id}
-                className="bg-[#04071D]/90 border border-white/[0.1] rounded-3xl overflow-hidden p-6 sm:p-8 flex flex-col justify-between hover:border-purple/50 transition-all duration-300 group"
+                className="bg-white dark:bg-[#04071D]/90 border border-slate-200/90 dark:border-white/[0.1] rounded-3xl overflow-hidden p-6 sm:p-8 flex flex-col justify-between hover:border-[#7C3AED]/40 dark:hover:border-purple/50 shadow-sm dark:shadow-none transition-all duration-300 group"
               >
                 <div>
                   {/* Project Auto-Sliding Image Banner (CLS = 0) */}
@@ -186,21 +186,21 @@ export default async function ProjectsHubPage() {
                   {/* License & Contract Governance Badge */}
                   <div className="mb-2.5 flex items-center h-6">
                     {project.licenseStatus && (
-                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium bg-purple/10 text-purple border border-purple/30">
+                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium bg-purple-50 dark:bg-purple/10 text-[#7C3AED] dark:text-purple border border-purple-200 dark:border-purple/30">
                         {project.licenseStatus}
                       </span>
                     )}
                   </div>
 
                   {/* Project Title & Description with Flexible Two-Line Bounds */}
-                  <h2 className="text-xl sm:text-2xl font-bold text-white mb-2 leading-snug min-h-[3.25rem] sm:min-h-[3.75rem] flex items-center group-hover:text-purple transition-colors">
+                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mb-2 leading-snug min-h-[3.25rem] sm:min-h-[3.75rem] flex items-center group-hover:text-[#7C3AED] dark:group-hover:text-purple transition-colors">
                     {caseStudyUrl ? (
                       <Link href={caseStudyUrl} className="line-clamp-2">{project.title}</Link>
                     ) : (
                       <span className="line-clamp-2">{project.title}</span>
                     )}
                   </h2>
-                  <p className="text-white-200 text-sm sm:text-base leading-relaxed mb-6 line-clamp-2 min-h-[2.75rem] sm:min-h-[3rem]">
+                  <p className="text-slate-600 dark:text-white-200 text-sm sm:text-base leading-relaxed mb-6 line-clamp-2 min-h-[2.75rem] sm:min-h-[3rem]">
                     {project.description}
                   </p>
                 </div>
@@ -211,7 +211,7 @@ export default async function ProjectsHubPage() {
                     {(project.iconLists || []).map((icon, idx) => (
                       <div
                         key={idx}
-                        className="border border-white/[0.15] rounded-full bg-[#04071D] w-8 h-8 flex justify-center items-center p-1.5 shadow-sm hover:scale-110 hover:border-purple transition-all duration-200 cursor-help"
+                        className="border border-slate-200 dark:border-white/[0.15] rounded-full bg-slate-50 dark:bg-[#04071D] w-8 h-8 flex justify-center items-center p-1.5 shadow-sm hover:scale-110 hover:border-[#7C3AED] dark:hover:border-purple transition-all duration-200 cursor-help"
                         title={getTechName(icon)}
                       >
                         <img
@@ -226,11 +226,11 @@ export default async function ProjectsHubPage() {
                   </div>
 
                   {/* Action Links */}
-                  <div className="flex items-center justify-between pt-4 border-t border-white/[0.08] flex-wrap gap-3">
+                  <div className="flex items-center justify-between pt-4 border-t border-slate-200/80 dark:border-white/[0.08] flex-wrap gap-3">
                     {caseStudyUrl && (
                       <Link
                         href={caseStudyUrl}
-                        className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-purple hover:text-white transition-colors"
+                        className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[#7C3AED] dark:text-purple hover:text-slate-950 dark:hover:text-white transition-colors"
                       >
                         Deep Technical Case Study
                         <FaArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
@@ -243,7 +243,7 @@ export default async function ProjectsHubPage() {
                           href={project.githubUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs sm:text-sm text-neutral-400 hover:text-white flex items-center gap-1.5 transition-colors py-1.5 px-2.5 rounded-md bg-white/[0.04] hover:bg-white/[0.1] border border-white/[0.08]"
+                          className="text-xs sm:text-sm text-slate-600 dark:text-neutral-400 hover:text-slate-950 dark:hover:text-white flex items-center gap-1.5 transition-colors py-1.5 px-2.5 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.1] border border-slate-200 dark:border-white/[0.08]"
                           aria-label={`View ${project.title} source code on GitHub`}
                         >
                           <FaGithub className="w-3.5 h-3.5" />
@@ -255,10 +255,10 @@ export default async function ProjectsHubPage() {
                           href={project.desktopGithubUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs sm:text-sm text-neutral-300 hover:text-purple flex items-center gap-1.5 transition-colors py-1.5 px-2.5 rounded-md bg-white/[0.04] hover:bg-purple/10 border border-white/[0.08] hover:border-purple/40"
+                          className="text-xs sm:text-sm text-slate-700 dark:text-neutral-300 hover:text-[#7C3AED] dark:hover:text-purple flex items-center gap-1.5 transition-colors py-1.5 px-2.5 rounded-md bg-slate-100 hover:bg-purple-50 dark:bg-white/[0.04] dark:hover:bg-purple/10 border border-slate-200 hover:border-purple-300 dark:border-white/[0.08] dark:hover:border-purple/40"
                           aria-label={`View ${project.title} native desktop source code on GitHub`}
                         >
-                          <FaGithub className="w-3.5 h-3.5 text-purple" />
+                          <FaGithub className="w-3.5 h-3.5 text-[#7C3AED] dark:text-purple" />
                           <span>Rust</span>
                         </a>
                       )}
@@ -267,10 +267,10 @@ export default async function ProjectsHubPage() {
                           href={project.docsUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs sm:text-sm text-indigo-300 hover:text-white flex items-center gap-1.5 transition-colors py-1.5 px-2.5 rounded-md bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30"
+                          className="text-xs sm:text-sm text-indigo-600 dark:text-indigo-300 hover:text-indigo-900 dark:hover:text-white flex items-center gap-1.5 transition-colors py-1.5 px-2.5 rounded-md bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 border border-indigo-200 dark:border-indigo-500/30"
                           aria-label={`View ${project.title} documentation`}
                         >
-                          <FaBookOpen className="w-3.5 h-3.5 text-indigo-400" />
+                          <FaBookOpen className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                           <span>Docs</span>
                         </a>
                       )}
@@ -279,7 +279,7 @@ export default async function ProjectsHubPage() {
                           href={project.liveUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs sm:text-sm text-purple hover:text-white flex items-center gap-1.5 font-medium transition-colors py-1.5 px-2.5 rounded-md bg-purple/10 hover:bg-purple/20 border border-purple/30"
+                          className="text-xs sm:text-sm text-[#7C3AED] dark:text-purple hover:text-slate-950 dark:hover:text-white flex items-center gap-1.5 font-medium transition-colors py-1.5 px-2.5 rounded-md bg-purple-50 hover:bg-purple-100 dark:bg-purple/10 dark:hover:bg-purple/20 border border-purple-200 dark:border-purple/30"
                         >
                           Live Site
                           <FaLocationArrow className="w-2.5 h-2.5" />
@@ -297,7 +297,7 @@ export default async function ProjectsHubPage() {
         <div className="mt-16 text-center">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white/[0.05] border border-white/[0.1] text-sm text-white hover:bg-white/[0.1] transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white hover:bg-slate-100 dark:bg-white/[0.05] dark:hover:bg-white/[0.1] border border-slate-200 dark:border-white/[0.1] text-sm text-slate-800 dark:text-white shadow-sm transition-colors"
           >
             ← Back to Homepage
           </Link>

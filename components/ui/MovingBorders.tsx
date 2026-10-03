@@ -48,7 +48,7 @@ export function Button<T extends React.ElementType = "button">({
         <MovingBorder duration={duration} rx="30%" ry="30%">
           <div
             className={cn(
-              "h-20 w-20 opacity-[0.8] bg-[radial-gradient(#CBACF9_40%,transparent_60%)]",
+              "h-20 w-20 opacity-[0.8] bg-[radial-gradient(#7C3AED_40%,transparent_60%)] dark:bg-[radial-gradient(#CBACF9_40%,transparent_60%)]",
               borderClassName
             )}
           />
@@ -57,7 +57,7 @@ export function Button<T extends React.ElementType = "button">({
 
       <div
         className={cn(
-          "relative bg-slate-900/[0.] border border-slate-800 backdrop-blur-xl text-white flex items-center justify-center w-full h-full text-sm antialiased",
+          "relative bg-white/95 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 backdrop-blur-xl text-slate-900 dark:text-white flex items-center justify-center w-full h-full text-sm antialiased transition-colors duration-200",
           className
         )}
         style={{

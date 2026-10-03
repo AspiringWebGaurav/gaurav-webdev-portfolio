@@ -13,7 +13,7 @@ export const ExperienceSection = ({ experience = SEED_EXPERIENCE }: ExperienceSe
   return (
     <section className="py-20 w-full">
       <h2 id="experience-heading" className="heading">
-        My <span className="text-purple">work experience</span>
+        My <span className="text-[#7C3AED] dark:text-purple">work experience</span>
       </h2>
 
       <div className="w-full mt-8 sm:mt-12 grid lg:grid-cols-4 sm:grid-cols-2 grid-cols-1 gap-6 sm:gap-10">
@@ -22,13 +22,7 @@ export const ExperienceSection = ({ experience = SEED_EXPERIENCE }: ExperienceSe
             key={card.id}
             duration={10000 + (idx % 4) * 2500}
             borderRadius="1.75rem"
-            style={{
-              background: "rgb(4,7,29)",
-              backgroundColor:
-                "linear-gradient(90deg, rgba(4,7,29,1) 0%, rgba(12,14,35,1) 100%)",
-              borderRadius: `calc(1.75rem* 0.96)`,
-            }}
-            className="flex-1 text-black dark:text-white border-neutral-200 dark:border-slate-800"
+            className="flex-1 text-slate-900 dark:text-white border-slate-200/90 dark:border-slate-800 shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none"
           >
             <div className="flex lg:flex-row flex-col lg:items-center p-4 py-6 sm:p-5 lg:p-10 gap-3 sm:gap-2">
               <img
@@ -39,15 +33,15 @@ export const ExperienceSection = ({ experience = SEED_EXPERIENCE }: ExperienceSe
                 className="lg:w-32 md:w-20 w-16 object-contain"
               />
               <div className="lg:ms-5">
-                <h3 className="text-start text-xl md:text-2xl font-bold">
+                <h3 className="text-start text-xl md:text-2xl font-bold text-slate-900 dark:text-white">
                   {card.title}
                 </h3>
                 {card.company && (
-                  <p className="text-start text-purple text-xs font-mono mt-1">
+                  <p className="text-start text-[#7C3AED] dark:text-purple text-xs font-mono mt-1 font-semibold">
                     {card.company} {card.period ? `• ${card.period}` : ""}
                   </p>
                 )}
-                <p className="text-start text-white-100 mt-3 font-semibold text-sm">
+                <p className="text-start text-slate-600 dark:text-white-100 mt-3 font-medium text-sm leading-relaxed">
                   {card.description}
                 </p>
               </div>

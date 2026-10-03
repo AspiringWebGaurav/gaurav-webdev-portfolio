@@ -13,6 +13,7 @@ import {
   IoWarningOutline,
 } from "react-icons/io5";
 import { CgSpinner } from "react-icons/cg";
+import { useTheme } from "next-themes";
 
 interface DragCoordinates {
   x: number;
@@ -68,6 +69,13 @@ export const AssistantTurnstileGate: React.FC<AssistantTurnstileGateProps> = ({
   forcedSubView,
   forcedFailureCount,
 }) => {
+  const { resolvedTheme } = useTheme();
+  const [themeMounted, setThemeMounted] = useState(false);
+  useEffect(() => {
+    setThemeMounted(true);
+  }, []);
+  const isDark = themeMounted ? resolvedTheme === "dark" : true;
+
   const [status, setStatus] = useState<TurnstileGateStatus>(
     typeof window !== "undefined" && window.turnstile ? "READY" : "LOADING"
   );
@@ -124,7 +132,7 @@ export const AssistantTurnstileGate: React.FC<AssistantTurnstileGateProps> = ({
       const siteKeyToUse = getActiveSiteKey();
       const wId = window.turnstile.render(containerRef.current, {
         sitekey: siteKeyToUse,
-        theme: "dark",
+        theme: isDark ? "dark" : "light",
         size: "normal",
         callback: async (token: string) => {
           setStatus("VERIFYING");
@@ -203,7 +211,15 @@ export const AssistantTurnstileGate: React.FC<AssistantTurnstileGateProps> = ({
       setStatus("ERROR");
       setErrorMessage("Unable to connect to verification service.");
     }
-  }, [cleanupWidget]);
+  }, [isDark, cleanupWidget]);
+
+  // Re-render Turnstile dynamically when theme toggles
+  useEffect(() => {
+    if (!themeMounted || typeof window === "undefined" || !window.turnstile) return;
+    if (activeSubView !== "TURNSTILE") return;
+    cleanupWidget();
+    renderWidget();
+  }, [isDark, themeMounted, activeSubView, cleanupWidget, renderWidget]);
 
   // 3. Render Cloudflare Turnstile eagerly in background (so it opens instantly on click)
   useEffect(() => {
@@ -548,12 +564,12 @@ export const AssistantTurnstileGate: React.FC<AssistantTurnstileGateProps> = ({
       className={`z-[5000] select-none outline-none ring-0 border-0 focus:outline-none focus:ring-0 active:outline-none active:ring-0 ${
         activeSubView === "TURNSTILE"
           ? "w-[300px] max-w-full h-[65px] p-0 bg-transparent border-0 shadow-none overflow-visible"
-          : "w-[calc(100vw-1.5rem)] sm:w-[340px] max-w-[340px] rounded-2xl p-3 sm:p-3.5 bg-[#000319]/95 backdrop-blur-xl border border-white/[0.15] shadow-[0_16px_50px_rgba(0,0,0,0.7),0_0_24px_rgba(124,58,237,0.2)]"
+          : "w-[calc(100vw-1.5rem)] sm:w-[340px] max-w-[340px] rounded-2xl p-3 sm:p-3.5 bg-white/95 dark:bg-[#000319]/95 backdrop-blur-xl border border-slate-200 dark:border-white/[0.15] shadow-[0_16px_50px_rgba(0,0,0,0.1),0_0_24px_rgba(124,58,237,0.1)] dark:shadow-[0_16px_50px_rgba(0,0,0,0.7),0_0_24px_rgba(124,58,237,0.2)] text-slate-900 dark:text-white"
       }`}
     >
       {/* Top Header - Only for Fallback Email / OTP Views */}
       {activeSubView !== "TURNSTILE" && (
-        <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-white/[0.08]">
+        <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-slate-200 dark:border-white/[0.08]">
           <div className="flex items-center gap-2 min-w-0">
             <button
               type="button"
@@ -561,19 +577,19 @@ export const AssistantTurnstileGate: React.FC<AssistantTurnstileGateProps> = ({
                 setSubView("TURNSTILE");
                 setFallbackError(null);
               }}
-              className="w-7 h-7 sm:w-6 sm:h-6 rounded-md flex items-center justify-center text-neutral-400 hover:text-white hover:bg-white/[0.1] transition-colors cursor-pointer"
+              className="w-7 h-7 sm:w-6 sm:h-6 rounded-md flex items-center justify-center text-slate-500 hover:text-slate-900 dark:text-neutral-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.1] transition-colors cursor-pointer"
               aria-label="Back to verification"
             >
               <IoArrowBack className="w-3.5 h-3.5" />
             </button>
 
             <div className="flex items-center gap-1.5 min-w-0">
-              <span className="text-xs font-bold text-white tracking-tight">
+              <span className="text-xs font-bold text-slate-900 dark:text-white tracking-tight">
                 {activeSubView === "FALLBACK_EMAIL"
                   ? "Email Verification"
                   : "Enter 6-Digit Code"}
               </span>
-              <span className="text-[10px] text-neutral-400 font-mono tracking-wider uppercase">
+              <span className="text-[10px] text-slate-500 dark:text-neutral-400 font-mono tracking-wider uppercase">
                 • Email Code
               </span>
             </div>
@@ -582,7 +598,7 @@ export const AssistantTurnstileGate: React.FC<AssistantTurnstileGateProps> = ({
           <button
             type="button"
             onClick={handleCloseClick}
-            className="w-7 h-7 sm:w-6 sm:h-6 rounded-md flex items-center justify-center text-neutral-400 hover:text-white hover:bg-white/[0.1] transition-colors cursor-pointer"
+            className="w-7 h-7 sm:w-6 sm:h-6 rounded-md flex items-center justify-center text-slate-500 hover:text-slate-900 dark:text-neutral-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.1] transition-colors cursor-pointer"
             aria-label="Close"
           >
             <IoClose className="w-3.5 h-3.5" />
@@ -595,20 +611,20 @@ export const AssistantTurnstileGate: React.FC<AssistantTurnstileGateProps> = ({
         <div className="relative w-[300px] max-w-full h-[65px] overflow-visible outline-none ring-0">
           {/* Turnstile Native Widget Container with subtle, refined border masking Cloudflare's harsh native white line */}
           <div
-            className={`relative w-[300px] max-w-full h-[65px] rounded-lg overflow-hidden border border-white/[0.15] bg-[#222222] shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-opacity duration-150 ${
+            className={`relative w-[300px] max-w-full h-[65px] rounded-lg overflow-hidden border border-slate-200 dark:border-white/[0.15] bg-[#FAFAFA] dark:bg-[#222222] shadow-[0_8px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-opacity duration-150 ${
               activeStatus === "ERROR" || activeStatus === "TIMEOUT" ? "hidden" : "opacity-100"
             }`}
           >
             {/* Loading placeholder while Turnstile is initializing/fetching challenge */}
             {(!widgetIdRef.current || activeStatus === "LOADING") && (
-              <div className="absolute inset-0 z-0 flex items-center justify-between px-3.5 bg-[#222222] text-neutral-400 select-none">
+              <div className="absolute inset-0 z-0 flex items-center justify-between px-3.5 bg-[#FAFAFA] dark:bg-[#222222] text-slate-500 dark:text-neutral-400 select-none">
                 <div className="flex items-center gap-2">
                   <CgSpinner className="w-4 h-4 animate-spin text-[#f38020]" />
-                  <span className="text-xs font-medium text-neutral-300">
+                  <span className="text-xs font-medium text-slate-700 dark:text-neutral-300">
                     Connecting security check...
                   </span>
                 </div>
-                <span className="text-[10px] font-semibold tracking-wider uppercase text-neutral-500">
+                <span className="text-[10px] font-semibold tracking-wider uppercase text-slate-400 dark:text-neutral-500">
                   Cloudflare
                 </span>
               </div>
@@ -710,7 +726,7 @@ export const AssistantTurnstileGate: React.FC<AssistantTurnstileGateProps> = ({
           {/* VIEW 2: Fallback Email Intake View */}
           {activeSubView === "FALLBACK_EMAIL" && (
             <form onSubmit={handleSendFallbackOtp} className="space-y-3 pt-1 animate-in fade-in duration-150">
-              <p className="text-xs text-neutral-300 leading-relaxed">
+              <p className="text-xs text-slate-600 dark:text-neutral-300 leading-relaxed">
                 Enter your email to receive a 6-digit verification code:
               </p>
 
@@ -721,14 +737,14 @@ export const AssistantTurnstileGate: React.FC<AssistantTurnstileGateProps> = ({
                   onChange={(e) => setFallbackEmail(e.target.value)}
                   placeholder="name@example.com"
                   disabled={fallbackLoading}
-                  className="w-full py-2.5 px-3 pl-8 rounded-xl bg-white/[0.06] border border-white/[0.15] text-base sm:text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-[#7C3AED] focus:ring-1 focus:ring-[#7C3AED] min-h-[42px]"
+                  className="w-full py-2.5 px-3 pl-8 rounded-xl bg-slate-50 dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.15] text-base sm:text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-neutral-500 focus:outline-none focus:border-[#7C3AED] focus:ring-1 focus:ring-[#7C3AED] min-h-[42px]"
                   autoFocus
                 />
-                <IoMailOutline className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                <IoMailOutline className="w-3.5 h-3.5 text-slate-400 dark:text-neutral-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
               </div>
 
               {fallbackError && (
-                <div className="text-[11px] text-rose-400 flex items-center gap-1">
+                <div className="text-[11px] text-rose-500 dark:text-rose-400 flex items-center gap-1">
                   <IoAlertCircle className="w-3.5 h-3.5 shrink-0" />
                   <span>{fallbackError}</span>
                 </div>
@@ -737,7 +753,7 @@ export const AssistantTurnstileGate: React.FC<AssistantTurnstileGateProps> = ({
               <button
                 type="submit"
                 disabled={fallbackLoading || !fallbackEmail.trim()}
-                className="w-full py-2.5 px-3 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] disabled:bg-neutral-800 disabled:text-neutral-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer min-h-[42px]"
+                className="w-full py-2.5 px-3 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] disabled:bg-slate-200 disabled:text-slate-400 dark:disabled:bg-neutral-800 dark:disabled:text-neutral-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer min-h-[42px]"
               >
                 {fallbackLoading ? (
                   <>
@@ -757,7 +773,7 @@ export const AssistantTurnstileGate: React.FC<AssistantTurnstileGateProps> = ({
           {/* VIEW 3: Fallback 6-Digit OTP Verification View */}
           {activeSubView === "FALLBACK_OTP" && (
             <div className="space-y-3 pt-1 animate-in fade-in duration-150">
-              <p className="text-xs text-neutral-300 leading-relaxed">
+              <p className="text-xs text-slate-600 dark:text-neutral-300 leading-relaxed">
                 Code sent to <span className="font-mono text-purple font-semibold break-all">{fallbackEmail}</span>:
               </p>
 
@@ -777,7 +793,7 @@ export const AssistantTurnstileGate: React.FC<AssistantTurnstileGateProps> = ({
                     onKeyDown={(e) => handleOtpKeyDown(idx, e)}
                     onPaste={handleOtpPaste}
                     disabled={fallbackLoading}
-                    className="w-9 sm:w-10 h-11 sm:h-11 text-center font-mono font-bold text-base sm:text-sm bg-white/[0.06] border border-white/[0.15] focus:border-[#7C3AED] focus:ring-1 focus:ring-[#7C3AED] rounded-xl text-white focus:outline-none"
+                    className="w-9 sm:w-10 h-11 sm:h-11 text-center font-mono font-bold text-base sm:text-sm bg-slate-50 dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.15] focus:border-[#7C3AED] focus:ring-1 focus:ring-[#7C3AED] rounded-xl text-slate-900 dark:text-white focus:outline-none"
                     autoFocus={idx === 0}
                   />
                 ))}

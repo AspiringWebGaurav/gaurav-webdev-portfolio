@@ -46,7 +46,7 @@ export const TestimonialsSection = ({
   return (
     <section className="py-20">
       <h2 className="heading">
-        Kind words from <span className="text-purple">satisfied clients</span>
+        Kind words from <span className="text-[#7C3AED] dark:text-purple">satisfied clients</span>
       </h2>
 
       <div className="flex flex-col items-center max-lg:mt-10">
@@ -60,8 +60,8 @@ export const TestimonialsSection = ({
 
         {/* Partner Organizations & Verified Commercial Engagements */}
         <div className="w-full mt-14 md:mt-20 flex flex-col items-center">
-          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0E1328]/80 border border-white/10 text-[11px] font-mono uppercase tracking-[0.2em] text-[#C1C2D3]/70 mb-8 shadow-xs">
-            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 dark:bg-[#0E1328]/80 border border-slate-200/90 dark:border-white/10 text-[11px] font-mono uppercase tracking-[0.2em] text-slate-700 dark:text-[#C1C2D3]/70 mb-8 shadow-2xs">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400" />
             Partner Organizations &amp; Commercial Contracts
           </div>
 
@@ -91,7 +91,7 @@ export const TestimonialsSection = ({
                       className="h-4.5 xs:h-5 sm:h-6 md:h-7 max-w-[95px] xs:max-w-[115px] sm:max-w-[160px] w-auto object-contain opacity-90 group-hover:opacity-100 transition-opacity"
                     />
                   ) : (
-                    <span className="text-xs sm:text-sm font-semibold text-white/90 group-hover:text-white transition-colors truncate">
+                    <span className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-white/90 group-hover:text-black dark:group-hover:text-white transition-colors truncate">
                       {client.name}
                     </span>
                   )}
@@ -99,7 +99,7 @@ export const TestimonialsSection = ({
               );
 
               const cardClasses = cn(
-                "group flex items-center justify-center gap-1.5 xs:gap-2 sm:gap-3 px-2.5 xs:px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.07] hover:border-purple/40 transition-all duration-300 shadow-xs backdrop-blur-xs w-full sm:w-auto",
+                "group flex items-center justify-center gap-1.5 xs:gap-2 sm:gap-3 px-2.5 xs:px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-white hover:bg-slate-50 dark:bg-white/[0.02] dark:hover:bg-white/[0.05] border border-slate-200/80 dark:border-white/[0.07] hover:border-purple/40 transition-all duration-300 shadow-2xs dark:shadow-xs backdrop-blur-xs w-full sm:w-auto",
                 isLastOdd && "col-span-2 max-w-[180px] xs:max-w-[200px] sm:max-w-none mx-auto sm:mx-0"
               );
 

@@ -5,7 +5,7 @@ export const ApproachSectionSkeleton = () => {
     <section className="w-full py-20 animate-pulse">
       {/* Headline */}
       <div className="flex flex-col items-center justify-center mb-16">
-        <div className="w-56 sm:w-72 h-9 bg-white/25 rounded-md" />
+        <div className="w-56 sm:w-72 h-9 bg-slate-200 dark:bg-white/25 rounded-md" />
       </div>
 
       {/* 3 Approach Cards */}
@@ -13,14 +13,14 @@ export const ApproachSectionSkeleton = () => {
         {[1, 2, 3].map((phase) => (
           <div
             key={phase}
-            className="border border-white/20 max-w-sm w-full p-8 relative lg:h-[35rem] min-h-[18rem] rounded-3xl flex flex-col justify-center items-center text-center skeleton-shimmer bg-[#0B0F33]/90 shadow-2xl"
+            className="border border-slate-200/90 dark:border-white/20 max-w-sm w-full p-8 relative lg:h-[35rem] min-h-[18rem] rounded-3xl flex flex-col justify-center items-center text-center skeleton-shimmer bg-white dark:bg-[#0B0F33]/90 shadow-sm dark:shadow-2xl"
           >
-            <div className="w-28 h-12 rounded-full bg-purple/25 border border-purple/40 mb-6" />
-            <div className="w-48 h-6 bg-white/25 rounded-md mb-4" />
+            <div className="w-28 h-12 rounded-full bg-purple-50 dark:bg-purple/25 border border-purple-200 dark:border-purple/40 mb-6" />
+            <div className="w-48 h-6 bg-slate-200 dark:bg-white/25 rounded-md mb-4" />
             <div className="w-full space-y-2">
-              <div className="w-full h-3.5 bg-white/20 rounded-md" />
-              <div className="w-5/6 h-3.5 bg-white/15 rounded-md mx-auto" />
-              <div className="w-4/6 h-3.5 bg-purple/25 rounded-md mx-auto" />
+              <div className="w-full h-3.5 bg-slate-100 dark:bg-white/20 rounded-md" />
+              <div className="w-5/6 h-3.5 bg-slate-100/70 dark:bg-white/15 rounded-md mx-auto" />
+              <div className="w-4/6 h-3.5 bg-purple-100 dark:bg-purple/25 rounded-md mx-auto" />
             </div>
           </div>
         ))}

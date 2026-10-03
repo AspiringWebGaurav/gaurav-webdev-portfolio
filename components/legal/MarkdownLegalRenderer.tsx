@@ -148,13 +148,13 @@ export function MarkdownLegalRenderer({ content, className = "" }: MarkdownLegal
 
       if (raw.startsWith("**") && raw.endsWith("**")) {
         parts.push(
-          <strong key={match.index} className="text-white font-semibold">
+          <strong key={match.index} className="text-slate-900 dark:text-white font-semibold">
             {raw.slice(2, -2)}
           </strong>
         );
       } else if (raw.startsWith("`") && raw.endsWith("`")) {
         parts.push(
-          <code key={match.index} className="text-purple font-mono bg-white/[0.06] px-1.5 py-0.5 rounded text-xs sm:text-sm">
+          <code key={match.index} className="text-[#7C3AED] dark:text-purple font-mono bg-slate-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded text-xs sm:text-sm">
             {raw.slice(1, -1)}
           </code>
         );
@@ -166,7 +166,7 @@ export function MarkdownLegalRenderer({ content, className = "" }: MarkdownLegal
           <Link
             key={match.index}
             href={url}
-            className="text-purple hover:underline font-medium inline-flex items-center gap-0.5"
+            className="text-[#7C3AED] dark:text-purple hover:underline font-medium inline-flex items-center gap-0.5"
           >
             {label}
           </Link>
@@ -176,7 +176,7 @@ export function MarkdownLegalRenderer({ content, className = "" }: MarkdownLegal
           <a
             key={match.index}
             href={`mailto:${raw}`}
-            className="text-purple hover:underline font-medium"
+            className="text-[#7C3AED] dark:text-purple hover:underline font-medium"
           >
             {raw}
           </a>
@@ -198,12 +198,12 @@ export function MarkdownLegalRenderer({ content, className = "" }: MarkdownLegal
   const blocks = parseMarkdownBlocks(content);
 
   return (
-    <div className={`space-y-3.5 text-neutral-300 leading-relaxed text-sm sm:text-base ${className}`}>
+    <div className={`space-y-3.5 text-slate-600 dark:text-neutral-300 leading-relaxed text-sm sm:text-base ${className}`}>
       {blocks.map((block, idx) => {
         if (block.type === "h3") {
           return (
-            <h3 key={idx} className="text-base sm:text-lg font-semibold text-white pt-2.5 pb-0.5 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-purple shrink-0" />
+            <h3 key={idx} className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white pt-2.5 pb-0.5 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#7C3AED] dark:bg-purple shrink-0" />
               <span className="flex-1 min-w-0">{formatInline(block.content)}</span>
             </h3>
           );
@@ -211,7 +211,7 @@ export function MarkdownLegalRenderer({ content, className = "" }: MarkdownLegal
 
         if (block.type === "h2") {
           return (
-            <h2 key={idx} className="text-lg sm:text-xl font-bold text-white pt-4 pb-0.5 border-t border-white/[0.06]">
+            <h2 key={idx} className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white pt-4 pb-0.5 border-t border-slate-200 dark:border-white/[0.06]">
               <span>{formatInline(block.content)}</span>
             </h2>
           );
@@ -219,7 +219,7 @@ export function MarkdownLegalRenderer({ content, className = "" }: MarkdownLegal
 
         if (block.type === "h1") {
           return (
-            <h1 key={idx} className="text-xl sm:text-2xl font-bold text-white pt-4 pb-1">
+            <h1 key={idx} className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white pt-4 pb-1">
               <span>{formatInline(block.content)}</span>
             </h1>
           );
@@ -227,7 +227,7 @@ export function MarkdownLegalRenderer({ content, className = "" }: MarkdownLegal
 
         if (block.type === "ul") {
           return (
-            <ul key={idx} className="list-disc list-inside space-y-2 pl-2 text-sm sm:text-base text-neutral-300">
+            <ul key={idx} className="list-disc list-inside space-y-2 pl-2 text-sm sm:text-base text-slate-600 dark:text-neutral-300">
               {block.items.map((item, itemIdx) => (
                 <li key={itemIdx} className="leading-relaxed">
                   <span>{formatInline(item)}</span>
@@ -239,7 +239,7 @@ export function MarkdownLegalRenderer({ content, className = "" }: MarkdownLegal
 
         if (block.type === "ol") {
           return (
-            <ol key={idx} className="list-decimal list-inside space-y-2 pl-2 text-sm sm:text-base text-neutral-300">
+            <ol key={idx} className="list-decimal list-inside space-y-2 pl-2 text-sm sm:text-base text-slate-600 dark:text-neutral-300">
               {block.items.map((item, itemIdx) => (
                 <li key={itemIdx} className="leading-relaxed">
                   <span>{formatInline(item)}</span>
@@ -251,7 +251,7 @@ export function MarkdownLegalRenderer({ content, className = "" }: MarkdownLegal
 
         // Standard Paragraph
         return (
-          <p key={idx} className="text-neutral-300 leading-relaxed text-sm sm:text-base">
+          <p key={idx} className="text-slate-600 dark:text-neutral-300 leading-relaxed text-sm sm:text-base">
             {formatInline(block.content)}
           </p>
         );

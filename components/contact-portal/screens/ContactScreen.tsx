@@ -16,6 +16,7 @@ import {
   FaExternalLinkAlt,
 } from "react-icons/fa";
 import type { ProtectedContactPayload } from "@/types/recruiter";
+import { useTheme } from "next-themes";
 
 interface ContactScreenProps {
   recruiter: { name: string; company: string; email: string };
@@ -74,6 +75,13 @@ export function ContactScreen({ recruiter, onTrackAction }: ContactScreenProps) 
   const turnstileContainerRef = useRef<HTMLDivElement | null>(null);
   const turnstileWidgetIdRef = useRef<string | null>(null);
 
+  const { resolvedTheme } = useTheme();
+  const [themeMounted, setThemeMounted] = useState(false);
+  useEffect(() => {
+    setThemeMounted(true);
+  }, []);
+  const isDark = themeMounted ? resolvedTheme === "dark" : false;
+
   const turnstileSiteKey =
     process.env.NEXT_PUBLIC_RECRUITER_TURNSTILE_SITE_KEY ||
     "0x4AAAAAAFK5EIqLbibzxLzf";
@@ -123,7 +131,7 @@ export function ContactScreen({ recruiter, onTrackAction }: ContactScreenProps) 
       const id = win.turnstile.render(turnstileContainerRef.current, {
         sitekey: turnstileSiteKey,
         action: "contact_portal",
-        theme: "light",
+        theme: isDark ? "dark" : "light",
         callback: (token: string) => {
           setTurnstileToken(token);
           try {
@@ -165,7 +173,16 @@ export function ContactScreen({ recruiter, onTrackAction }: ContactScreenProps) 
     } catch (err) {
       console.warn("Turnstile render error in ContactScreen:", err);
     }
-  }, [turnstileSiteKey]);
+  }, [turnstileSiteKey, isDark]);
+
+  // Re-render Turnstile dynamically when theme toggles
+  useEffect(() => {
+    if (isTurnstileVerified || !themeMounted) return;
+    const win = window as unknown as { turnstile?: unknown };
+    if (win.turnstile && turnstileContainerRef.current) {
+      renderTurnstile();
+    }
+  }, [isDark, isTurnstileVerified, themeMounted, renderTurnstile]);
 
   useEffect(() => {
     if (isTurnstileVerified) return;

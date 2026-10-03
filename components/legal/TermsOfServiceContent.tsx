@@ -144,10 +144,10 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
   };
 
   return (
-    <main className="min-h-screen bg-black-100 text-white relative overflow-hidden py-10 sm:py-16 px-5 sm:px-10 lg:px-16 xl:px-24 w-full">
+    <main className="min-h-screen bg-[#FAFAFA] dark:bg-black-100 text-slate-900 dark:text-white relative overflow-hidden py-10 sm:py-16 px-5 sm:px-10 lg:px-16 xl:px-24 w-full">
       {/* Background Grid */}
-      <div className="h-full w-full dark:bg-black-100 bg-white dark:bg-grid-white/[0.03] bg-grid-black-100/[0.2] absolute top-0 left-0 flex items-center justify-center pointer-events-none -z-10">
-        <div className="absolute pointer-events-none inset-0 flex items-center justify-center dark:bg-black-100 bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]" />
+      <div className="h-full w-full bg-[#FAFAFA] dark:bg-black-100 bg-grid-black/[0.025] dark:bg-grid-white/[0.03] absolute top-0 left-0 flex items-center justify-center pointer-events-none -z-10">
+        <div className="absolute pointer-events-none inset-0 flex items-center justify-center bg-[#FAFAFA] dark:bg-black-100 [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]" />
       </div>
 
       <div className="w-full mx-auto max-w-4xl lg:max-w-none">
@@ -155,21 +155,21 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8 sm:mb-10">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-sm text-purple hover:text-white transition-colors duration-200 group"
+            className="inline-flex items-center gap-2 text-sm text-[#7C3AED] dark:text-purple hover:text-slate-950 dark:hover:text-white transition-colors duration-200 group"
           >
             <FaArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" />
             Back to Portfolio
           </Link>
 
           {/* Dynamic View Mode Tabs */}
-          <div className="inline-flex items-center bg-white/[0.04] border border-white/[0.1] rounded-xl p-1 text-xs gap-1 flex-wrap">
+          <div className="inline-flex items-center bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.1] rounded-xl p-1 text-xs gap-1 flex-wrap">
             <button
               type="button"
               onClick={() => handleTabSelect("all")}
               className={`px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
                 filterMode === "all"
-                  ? "bg-purple text-black font-semibold shadow-sm"
-                  : "text-neutral-400 hover:text-white"
+                  ? "bg-slate-950 hover:bg-black text-white dark:bg-purple dark:text-black font-semibold shadow-sm"
+                  : "text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               <FaEye className="w-3 h-3" />
@@ -181,10 +181,10 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
               className={`px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
                 filterMode === "subdomains"
                   ? "bg-[#7C3AED] text-white font-semibold shadow-sm shadow-[#7C3AED]/40"
-                  : "text-neutral-400 hover:text-white"
+                  : "text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
-              <FaGlobe className="w-3 h-3 text-[#CBACF9]" />
+              <FaGlobe className="w-3 h-3 text-purple-200 dark:text-[#CBACF9]" />
               <span>All Subdomains</span>
             </button>
             <button
@@ -193,10 +193,10 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
               className={`px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
                 filterMode === "contact"
                   ? "bg-[#7C3AED] text-white font-semibold shadow-sm shadow-[#7C3AED]/40"
-                  : "text-neutral-400 hover:text-white"
+                  : "text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
-              <FaBullseye className="w-3 h-3 text-[#CBACF9]" />
+              <FaBullseye className="w-3 h-3 text-purple-200 dark:text-[#CBACF9]" />
               <span>Contact Form Only</span>
             </button>
             <button
@@ -205,10 +205,10 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
               className={`px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
                 filterMode === "assistant"
                   ? "bg-[#7C3AED] text-white font-semibold shadow-sm shadow-[#7C3AED]/40"
-                  : "text-neutral-400 hover:text-white"
+                  : "text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
-              <IoChatbubbleEllipses className="w-3 h-3 text-[#CBACF9]" />
+              <IoChatbubbleEllipses className="w-3 h-3 text-purple-200 dark:text-[#CBACF9]" />
               <span>Personal Assistant (AI)</span>
             </button>
             <button
@@ -217,7 +217,7 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
               className={`px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
                 filterMode === "whatsapp"
                   ? "bg-[#25D366] text-black font-semibold shadow-sm shadow-[#25D366]/40"
-                  : "text-neutral-400 hover:text-white"
+                  : "text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               <FaWhatsapp className={`w-3.5 h-3.5 ${filterMode === "whatsapp" ? "text-black" : "text-[#25D366]"}`} />
@@ -228,26 +228,26 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
 
         {/* Header */}
         <header className="mb-10 sm:mb-12">
-          <p className="uppercase tracking-widest text-xs text-purple font-medium mb-3">
+          <p className="uppercase tracking-widest text-xs text-[#7C3AED] dark:text-purple font-medium mb-3">
             Legal &amp; Operating Standards
           </p>
-          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-white mb-4">
+          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-slate-900 dark:text-white mb-4">
             Terms of Service
           </h1>
-          <div className="flex flex-wrap items-center gap-3 text-xs text-neutral-400 font-mono">
+          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-neutral-400 font-mono">
             <span>Version: {initialData?.publishedVersion || "1.1.0"}</span>
             <span>•</span>
             <span>Original Effective: {initialData?.effectiveDate || "January 1, 2026"}</span>
             <span>•</span>
-            <span className="text-purple font-semibold">Last Updated: {initialData?.lastUpdatedDate || "October 3, 2026"}</span>
+            <span className="text-[#7C3AED] dark:text-purple font-semibold">Last Updated: {initialData?.lastUpdatedDate || "October 3, 2026"}</span>
             <span>•</span>
-            <span className="text-emerald-400 font-semibold">Jurisdiction: {initialData?.jurisdiction || "Standard Global"}</span>
+            <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Jurisdiction: {initialData?.jurisdiction || "Standard Global"}</span>
           </div>
 
           {filterMode === "subdomains" && (
-            <div className="mt-4 p-3 rounded-xl bg-[#7C3AED]/15 border border-[#7C3AED]/30 text-xs text-neutral-200 flex items-center justify-between gap-3 animate-in fade-in">
+            <div className="mt-4 p-3 rounded-xl bg-purple-50 dark:bg-[#7C3AED]/15 border border-purple-200 dark:border-[#7C3AED]/30 text-xs text-slate-700 dark:text-neutral-200 flex items-center justify-between gap-3 animate-in fade-in">
               <div className="flex items-center gap-2">
-                <FaGlobe className="w-4 h-4 text-[#CBACF9] shrink-0" />
+                <FaGlobe className="w-4 h-4 text-[#7C3AED] dark:text-[#CBACF9] shrink-0" />
                 <span>
                   Filtering active: Spotlighting unified architecture &amp; operating governance across all subdomains (gauravpatil.site, self, contact, resume, talk, and admin).
                 </span>
@@ -255,7 +255,7 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
               <button
                 type="button"
                 onClick={() => setFilterMode("all")}
-                className="text-purple hover:text-white underline text-xs font-semibold whitespace-nowrap cursor-pointer"
+                className="text-[#7C3AED] dark:text-purple hover:underline text-xs font-semibold whitespace-nowrap cursor-pointer"
               >
                 View full terms
               </button>
@@ -263,9 +263,9 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
           )}
 
           {filterMode === "contact" && (
-            <div className="mt-4 p-3 rounded-xl bg-[#7C3AED]/15 border border-[#7C3AED]/30 text-xs text-neutral-200 flex items-center justify-between gap-3 animate-in fade-in">
+            <div className="mt-4 p-3 rounded-xl bg-purple-50 dark:bg-[#7C3AED]/15 border border-purple-200 dark:border-[#7C3AED]/30 text-xs text-slate-700 dark:text-neutral-200 flex items-center justify-between gap-3 animate-in fade-in">
               <div className="flex items-center gap-2">
-                <FaBullseye className="w-4 h-4 text-[#CBACF9] shrink-0" />
+                <FaBullseye className="w-4 h-4 text-[#7C3AED] dark:text-[#CBACF9] shrink-0" />
                 <span>
                   Filtering active: Spotlighting terms governing Contact Form submissions, Confidentiality Rights, and Communication Standards.
                 </span>
@@ -273,7 +273,7 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
               <button
                 type="button"
                 onClick={() => setFilterMode("all")}
-                className="text-purple hover:text-white underline text-xs font-semibold whitespace-nowrap cursor-pointer"
+                className="text-[#7C3AED] dark:text-purple hover:underline text-xs font-semibold whitespace-nowrap cursor-pointer"
               >
                 View full terms
               </button>
@@ -281,9 +281,9 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
           )}
 
           {filterMode === "assistant" && (
-            <div className="mt-4 p-3 rounded-xl bg-[#7C3AED]/15 border border-[#7C3AED]/30 text-xs text-neutral-200 flex items-center justify-between gap-3 animate-in fade-in">
+            <div className="mt-4 p-3 rounded-xl bg-purple-50 dark:bg-[#7C3AED]/15 border border-purple-200 dark:border-[#7C3AED]/30 text-xs text-slate-700 dark:text-neutral-200 flex items-center justify-between gap-3 animate-in fade-in">
               <div className="flex items-center gap-2">
-                <IoChatbubbleEllipses className="w-4 h-4 text-[#CBACF9] shrink-0" />
+                <IoChatbubbleEllipses className="w-4 h-4 text-[#7C3AED] dark:text-[#CBACF9] shrink-0" />
                 <span>
                   Filtering active: Spotlighting terms of service, AI accuracy disclaimer, and acceptable use standards for Gaurav Personal Assistant (Beta).
                 </span>
@@ -291,7 +291,7 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
               <button
                 type="button"
                 onClick={() => setFilterMode("all")}
-                className="text-purple hover:text-white underline text-xs font-semibold whitespace-nowrap cursor-pointer"
+                className="text-[#7C3AED] dark:text-purple hover:underline text-xs font-semibold whitespace-nowrap cursor-pointer"
               >
                 View full terms
               </button>
@@ -299,7 +299,7 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
           )}
 
           {filterMode === "whatsapp" && (
-            <div className="mt-4 p-3 rounded-xl bg-[#25D366]/15 border border-[#25D366]/30 text-xs text-neutral-200 flex items-center justify-between gap-3 animate-in fade-in">
+            <div className="mt-4 p-3 rounded-xl bg-emerald-50 dark:bg-[#25D366]/15 border border-emerald-200 dark:border-[#25D366]/30 text-xs text-slate-700 dark:text-neutral-200 flex items-center justify-between gap-3 animate-in fade-in">
               <div className="flex items-center gap-2">
                 <FaWhatsapp className="w-4 h-4 text-[#25D366] shrink-0" />
                 <span>
@@ -309,7 +309,7 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
               <button
                 type="button"
                 onClick={() => setFilterMode("all")}
-                className="text-purple hover:text-white underline text-xs font-semibold whitespace-nowrap cursor-pointer"
+                className="text-[#25D366] hover:underline text-xs font-semibold whitespace-nowrap cursor-pointer"
               >
                 View full terms
               </button>
@@ -318,7 +318,7 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
         </header>
 
         {/* Content Box */}
-        <div className="w-full rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-xl p-6 sm:p-10 lg:p-12 space-y-8 text-neutral-300 leading-relaxed text-sm sm:text-base">
+        <div className="w-full rounded-2xl border border-slate-200/90 dark:border-white/10 bg-white dark:bg-white/[0.02] shadow-sm dark:shadow-none backdrop-blur-xl p-6 sm:p-10 lg:p-12 space-y-8 text-slate-600 dark:text-neutral-300 leading-relaxed text-sm sm:text-base">
           {initialData?.sections && initialData.sections.length > 0 ? (
             initialData.sections.map((section) => {
               const isVisible =

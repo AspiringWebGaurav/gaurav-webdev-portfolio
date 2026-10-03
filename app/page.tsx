@@ -77,7 +77,7 @@ export default async function Home() {
   }));
 
   return (
-    <main className="relative bg-black-100 flex justify-center items-center flex-col mx-auto sm:px-10 px-5 overflow-clip">
+    <main className="relative bg-[#FAFAFA] dark:bg-black-100 text-slate-900 dark:text-white flex justify-center items-center flex-col mx-auto sm:px-10 px-5 overflow-clip transition-colors duration-200">
       <PortfolioJsonLd />
       <LivePortfolioSync />
       <div className="max-w-7xl w-full">

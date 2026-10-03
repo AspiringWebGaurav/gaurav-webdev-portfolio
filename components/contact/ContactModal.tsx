@@ -10,14 +10,8 @@ import {
 } from "react-icons/io5";
 import { FaLocationArrow } from "react-icons/fa6";
 import { SiCloudflare } from "react-icons/si";
-import {
-  validateName,
-  validateEmail,
-  validateMessage,
-  countWords,
-  MESSAGE_MAX_WORDS,
-  MESSAGE_MAX_CHARS,
-} from "@/lib/contact/validation";
+import { validateName, validateEmail, validateMessage, countWords, MESSAGE_MAX_WORDS, MESSAGE_MAX_CHARS } from "@/lib/contact/validation";
+import { useTheme } from "next-themes";
 
 const TURNSTILE_SITE_KEY =
   process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY ||
@@ -89,6 +83,14 @@ export const ContactModal: React.FC<ContactModalProps> = ({
   isOpen,
   onClose,
 }) => {
+  // Theme Detection for Dynamic Cloudflare Turnstile
+  const { resolvedTheme } = useTheme();
+  const [themeMounted, setThemeMounted] = useState(false);
+  useEffect(() => {
+    setThemeMounted(true);
+  }, []);
+  const isDark = themeMounted ? resolvedTheme === "dark" : true;
+
   // Form State
   const [selectedRole, setSelectedRole] = useState<string>("Anonymous / Confidential");
   const [name, setName] = useState("");
@@ -600,7 +602,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
 
       const widgetId = window.turnstile.render(turnstileContainerRef.current, {
         sitekey: TURNSTILE_SITE_KEY,
-        theme: "dark",
+        theme: isDark ? "dark" : "light",
         size: "normal",
         action: "contact_inquiry",
         callback: (token: string) => {
@@ -648,7 +650,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
     } catch (err) {
       console.warn("Turnstile initialization note:", err);
     }
-  }, [submitWithToken]);
+  }, [isDark, submitWithToken]);
 
   // Mount Turnstile whenever modal is open and form is active
   useEffect(() => {
@@ -685,6 +687,14 @@ export const ContactModal: React.FC<ContactModalProps> = ({
       if (intervalId) clearInterval(intervalId);
     };
   }, [isOpen, isSuccess, renderTurnstileWidget]);
+
+  // Re-render Turnstile dynamically when theme toggles
+  useEffect(() => {
+    if (!isOpen || isSuccess || !themeMounted) return;
+    if (turnstileContainerRef.current && typeof window !== "undefined" && window.turnstile) {
+      renderTurnstileWidget();
+    }
+  }, [isDark, isOpen, isSuccess, themeMounted, renderTurnstileWidget]);
 
   // =========================================================================
   // 12. Submit Trigger
@@ -800,7 +810,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
 
   return (
     <div
-      className={`fixed inset-0 z-[6000] flex items-center justify-center p-3 sm:p-6 md:p-8 bg-black/65 backdrop-blur-xl sm:backdrop-blur-2xl transition-opacity duration-200 overscroll-contain ${
+      className={`fixed inset-0 z-[6000] flex items-center justify-center p-3 sm:p-6 md:p-8 bg-black/40 dark:bg-black/65 backdrop-blur-xl sm:backdrop-blur-2xl transition-opacity duration-200 overscroll-contain ${
         isClosing ? "opacity-0 pointer-events-none" : "opacity-100 animate-in fade-in"
       }`}
       onClick={(e) => {
@@ -817,7 +827,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
     >
       <div
         ref={modalRef}
-        className={`w-full max-w-[92vw] sm:max-w-md md:max-w-lg bg-[#0B0F19]/95 backdrop-blur-2xl border border-white/[0.15] rounded-2xl sm:rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8),0_0_40px_rgba(124,58,237,0.25)] relative text-white flex flex-col p-4 sm:p-6 overflow-hidden overscroll-contain transition-all duration-200 ease-out min-w-0 ${
+        className={`w-full max-w-[92vw] sm:max-w-md md:max-w-lg bg-white dark:bg-[#0B0F19]/95 backdrop-blur-2xl border border-slate-200/90 dark:border-white/[0.15] rounded-2xl sm:rounded-3xl shadow-2xl dark:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8),0_0_40px_rgba(124,58,237,0.25)] relative text-slate-900 dark:text-white flex flex-col p-4 sm:p-6 overflow-hidden overscroll-contain transition-all duration-200 ease-out min-w-0 ${
           isClosing
             ? "scale-95 opacity-0"
             : "scale-100 opacity-100 animate-in zoom-in-95"
@@ -827,31 +837,31 @@ export const ContactModal: React.FC<ContactModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Subtle Ambient Top Glow Line */}
-        <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-[#8B5CF6] to-transparent z-20 pointer-events-none" />
+        <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-[#7C3AED]/40 dark:via-[#8B5CF6] to-transparent z-20 pointer-events-none" />
 
         {/* Ambient Radial Highlights */}
-        <div className="absolute -top-12 -right-12 w-64 h-64 bg-[#7C3AED]/12 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-12 -left-12 w-64 h-64 bg-[#6366F1]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-12 -right-12 w-64 h-64 bg-[#7C3AED]/8 dark:bg-[#7C3AED]/12 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-12 -left-12 w-64 h-64 bg-[#6366F1]/8 dark:bg-[#6366F1]/10 rounded-full blur-3xl pointer-events-none" />
 
         {/* Header (Only shown when on form screen) */}
         {!isSuccess && (
-          <div className="flex items-start justify-between pb-2 sm:pb-3 border-b border-white/[0.08] relative z-10 shrink-0">
+          <div className="flex items-start justify-between pb-2 sm:pb-3 border-b border-slate-200/80 dark:border-white/[0.08] relative z-10 shrink-0">
             <div>
               <div className="flex items-center gap-2">
                 <h2
                   id="contact-modal-title"
-                  className="text-xl sm:text-2xl font-bold text-white tracking-tight"
+                  className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight"
                 >
                   Get in touch
                 </h2>
                 {!isOnline && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/15 border border-amber-500/30 text-amber-300">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-300">
                     <IoCloudOfflineOutline className="w-3.5 h-3.5" />
                     <span>Offline</span>
                   </span>
                 )}
               </div>
-              <p className="text-xs sm:text-sm text-neutral-300 mt-1 leading-snug">
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-neutral-300 mt-1 leading-snug">
                 Have a project, job opportunity, or inquiry? Send a direct message.
               </p>
             </div>
@@ -860,10 +870,10 @@ export const ContactModal: React.FC<ContactModalProps> = ({
               type="button"
               onClick={handleClose}
               aria-label="Close modal"
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/[0.08] hover:bg-white/[0.15] border border-white/[0.15] text-white flex items-center justify-center shadow-md active:scale-90 transition-all touch-manipulation cursor-pointer shrink-0 ml-2 focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.08] dark:hover:bg-white/[0.15] border border-slate-200 dark:border-white/[0.15] text-slate-700 dark:text-white flex items-center justify-center shadow-sm active:scale-90 transition-all touch-manipulation cursor-pointer shrink-0 ml-2 focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none"
               style={{ WebkitTapHighlightColor: "transparent" }}
             >
-              <IoClose className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              <IoClose className="w-4 h-4 sm:w-5 sm:h-5 text-slate-700 dark:text-white" />
             </button>
           </div>
         )}
@@ -883,21 +893,21 @@ export const ContactModal: React.FC<ContactModalProps> = ({
               </div>
 
               {/* Top Status Row with Badge & Close Button */}
-              <div className="flex items-center justify-between pb-2 border-b border-white/[0.08]">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200/80 dark:border-white/[0.08]">
                 <div className="flex items-center gap-2">
                   <span
                     className={`w-2.5 h-2.5 rounded-full shrink-0 ${
                       submittedData.variant === "PARTIAL_INTERNAL_NOTIFICATION_UNCONFIRMED"
-                        ? "bg-[#CBACF9]"
-                        : "bg-emerald-400"
+                        ? "bg-[#7C3AED] dark:bg-[#CBACF9]"
+                        : "bg-emerald-500 dark:bg-emerald-400"
                     }`}
                     aria-hidden="true"
                   />
                   <span
                     className={`text-sm sm:text-base font-semibold tracking-wide ${
                       submittedData.variant === "PARTIAL_INTERNAL_NOTIFICATION_UNCONFIRMED"
-                        ? "text-[#CBACF9]"
-                        : "text-emerald-400"
+                        ? "text-[#7C3AED] dark:text-[#CBACF9]"
+                        : "text-emerald-600 dark:text-emerald-400"
                     }`}
                   >
                     {submittedData.variant === "PARTIAL_INTERNAL_NOTIFICATION_UNCONFIRMED"
@@ -909,10 +919,10 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                   type="button"
                   onClick={handleClose}
                   aria-label="Close modal"
-                  className="w-8 h-8 rounded-full bg-white/[0.08] hover:bg-white/[0.15] border border-white/[0.15] text-white flex items-center justify-center shadow-md active:scale-90 transition-all touch-manipulation cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none"
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.08] dark:hover:bg-white/[0.15] border border-slate-200 dark:border-white/[0.15] text-slate-700 dark:text-white flex items-center justify-center shadow-sm active:scale-90 transition-all touch-manipulation cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none"
                   style={{ WebkitTapHighlightColor: "transparent" }}
                 >
-                  <IoClose className="w-4 h-4 text-white" />
+                  <IoClose className="w-4 h-4 text-slate-700 dark:text-white" />
                 </button>
               </div>
 
@@ -921,11 +931,11 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                 {/* Animated Pop Checkmark with Glow Burst */}
                 <div className="relative inline-flex items-center justify-center my-1">
                   <div
-                    className="absolute w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-emerald-500/30 animate-ping pointer-events-none"
+                    className="absolute w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-emerald-500/20 dark:bg-emerald-500/30 animate-ping pointer-events-none"
                     style={{ animationIterationCount: 1, animationDuration: "0.7s" }}
                     aria-hidden="true"
                   />
-                  <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-emerald-500/15 border-2 border-emerald-400/50 text-emerald-400 flex items-center justify-center shadow-[0_0_25px_rgba(16,185,129,0.3)] animate-in zoom-in-50 duration-300">
+                  <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-emerald-50 dark:bg-emerald-500/15 border-2 border-emerald-500/50 dark:border-emerald-400/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shadow-md dark:shadow-[0_0_25px_rgba(16,185,129,0.3)] animate-in zoom-in-50 duration-300">
                     <svg
                       className="w-6 h-6 sm:w-7 sm:h-7"
                       viewBox="0 0 24 24"
@@ -951,14 +961,14 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                 <div className="space-y-1.5">
                   <h3
                     id="contact-modal-title"
-                    className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight leading-snug"
+                    className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight leading-snug"
                   >
                     <span className="block">Thanks for reaching out,</span>
-                    <span className="block text-transparent bg-clip-text bg-gradient-to-r from-white via-neutral-100 to-[#CBACF9] mt-0.5">
+                    <span className="block text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-slate-800 to-[#7C3AED] dark:from-white dark:via-neutral-100 dark:to-[#CBACF9] mt-0.5">
                       {firstName}!
                     </span>
                   </h3>
-                  <p className="text-sm sm:text-base text-neutral-200 leading-relaxed max-w-lg mx-auto font-normal text-balance">
+                  <p className="text-sm sm:text-base text-slate-600 dark:text-neutral-200 leading-relaxed max-w-lg mx-auto font-normal text-balance">
                     {submittedData.variant === "PARTIAL_INTERNAL_NOTIFICATION_UNCONFIRMED"
                       ? "Your inquiry has been logged safely. I'll review your details and follow up soon."
                       : "Your message landed safely in my inbox — I'll reply soon!"}
@@ -966,30 +976,30 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                 </div>
 
                 {/* High-Legibility Confirmation Notice with Graceful Email Wrapping */}
-                <div className="pt-1 text-xs sm:text-sm text-neutral-300 leading-relaxed max-w-lg mx-auto">
+                <div className="pt-1 text-xs sm:text-sm text-slate-600 dark:text-neutral-300 leading-relaxed max-w-lg mx-auto">
                   {submittedData.variant === "FULL_SUCCESS" && (
                     <>
                       <p className="leading-relaxed">
                         An automated confirmation was sent to{" "}
-                        <span className="font-semibold text-white break-words select-all">
+                        <span className="font-semibold text-slate-900 dark:text-white break-words select-all">
                           {submittedData.email}
                         </span>{" "}
                         from{" "}
-                        <span className="font-mono text-[#CBACF9] font-medium whitespace-nowrap">
+                        <span className="font-mono text-[#7C3AED] dark:text-[#CBACF9] font-medium whitespace-nowrap">
                           hello@gauravpatil.site
                         </span>
                         .
                       </p>
-                      <p className="text-[11px] sm:text-xs text-neutral-400 mt-1">
+                      <p className="text-[11px] sm:text-xs text-slate-500 dark:text-neutral-400 mt-1">
                         Check your spam folder if it doesn&apos;t arrive shortly!
                       </p>
                     </>
                   )}
 
                   {submittedData.variant === "PARTIAL_AUTOREPLY_FAILED" && (
-                    <p className="text-amber-200/90 font-medium">
+                    <p className="text-amber-600 dark:text-amber-200/90 font-medium">
                       Your message reached me safely! The automated confirmation from{" "}
-                      <span className="font-mono text-[#CBACF9] font-semibold whitespace-nowrap">
+                      <span className="font-mono text-[#7C3AED] dark:text-[#CBACF9] font-semibold whitespace-nowrap">
                         hello@gauravpatil.site
                       </span>{" "}
                       had a slight hiccup, but no worries &mdash; no need to resubmit.
@@ -1000,16 +1010,16 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                     <>
                       <p className="leading-relaxed">
                         A confirmation copy was dispatched to{" "}
-                        <span className="font-semibold text-white break-words select-all">
+                        <span className="font-semibold text-slate-900 dark:text-white break-words select-all">
                           {submittedData.email}
                         </span>{" "}
                         from{" "}
-                        <span className="font-mono text-[#CBACF9] font-medium whitespace-nowrap">
+                        <span className="font-mono text-[#7C3AED] dark:text-[#CBACF9] font-medium whitespace-nowrap">
                           hello@gauravpatil.site
                         </span>
                         .
                       </p>
-                      <p className="text-[11px] sm:text-xs text-neutral-400 mt-1">
+                      <p className="text-[11px] sm:text-xs text-slate-500 dark:text-neutral-400 mt-1">
                         I&apos;ll review your note shortly!
                       </p>
                     </>
@@ -1022,7 +1032,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="flex-1 py-3 px-4 rounded-xl text-sm sm:text-base font-semibold bg-white/[0.07] hover:bg-white/[0.14] active:bg-white/[0.18] text-neutral-100 border border-white/[0.12] transition-all touch-manipulation active:scale-[0.96] cursor-pointer focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none min-h-[46px] select-none"
+                  className="flex-1 py-3 px-4 rounded-xl text-sm sm:text-base font-semibold bg-slate-100 hover:bg-slate-200 active:bg-slate-300 dark:bg-white/[0.07] dark:hover:bg-white/[0.14] dark:active:bg-white/[0.18] text-slate-800 dark:text-neutral-100 border border-slate-200 dark:border-white/[0.12] transition-all touch-manipulation active:scale-[0.96] cursor-pointer focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none min-h-[46px] select-none"
                   style={{ WebkitTapHighlightColor: "transparent" }}
                 >
                   Send another
@@ -1030,7 +1040,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="flex-1 py-3 px-4 rounded-xl text-sm sm:text-base font-bold bg-[#7C3AED] hover:bg-[#6D28D9] active:bg-[#5B21B6] text-white shadow-lg shadow-[#7C3AED]/35 active:shadow-none transition-all touch-manipulation active:scale-[0.96] cursor-pointer focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none min-h-[46px] select-none"
+                  className="flex-1 py-3 px-4 rounded-xl text-sm sm:text-base font-bold bg-slate-950 hover:bg-black active:bg-slate-900 dark:bg-[#7C3AED] dark:hover:bg-[#6D28D9] dark:active:bg-[#5B21B6] text-white shadow-md dark:shadow-lg dark:shadow-[#7C3AED]/35 active:shadow-none transition-all touch-manipulation active:scale-[0.96] cursor-pointer focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none min-h-[46px] select-none"
                   style={{ WebkitTapHighlightColor: "transparent" }}
                 >
                   Done
@@ -1067,7 +1077,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
               {/* 1. Who is reaching out? (Mobile Horizontal Snap Row / Desktop Flex Wrap) */}
               <div className="space-y-1 shrink-0">
                 <div className="flex items-center justify-between">
-                  <label className="block text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                  <label className="block text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-neutral-400">
                     I am a
                   </label>
                   <div className="flex sm:hidden items-center gap-1">
@@ -1075,7 +1085,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                       type="button"
                       onClick={() => scrollRoles("left")}
                       aria-label="Scroll roles left"
-                      className="w-5 h-5 rounded-md bg-white/[0.05] hover:bg-white/[0.12] border border-white/[0.08] text-neutral-400 hover:text-white flex items-center justify-center text-xs transition-all active:scale-90 cursor-pointer focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none"
+                      className="w-5 h-5 rounded-md bg-slate-100 dark:bg-white/[0.05] hover:bg-slate-200 dark:hover:bg-white/[0.12] border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-xs transition-all active:scale-90 cursor-pointer focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none"
                       style={{ WebkitTapHighlightColor: "transparent" }}
                     >
                       ‹
@@ -1084,7 +1094,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                       type="button"
                       onClick={() => scrollRoles("right")}
                       aria-label="Scroll roles right"
-                      className="w-5 h-5 rounded-md bg-white/[0.05] hover:bg-white/[0.12] border border-white/[0.08] text-neutral-400 hover:text-white flex items-center justify-center text-xs transition-all active:scale-90 cursor-pointer focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none"
+                      className="w-5 h-5 rounded-md bg-slate-100 dark:bg-white/[0.05] hover:bg-slate-200 dark:hover:bg-white/[0.12] border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-xs transition-all active:scale-90 cursor-pointer focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none"
                       style={{ WebkitTapHighlightColor: "transparent" }}
                     >
                       ›
@@ -1108,8 +1118,8 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                           }}
                           className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:py-2 rounded-xl text-xs sm:text-xs whitespace-nowrap transition-all touch-manipulation active:scale-95 cursor-pointer shrink-0 sm:shrink snap-start focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none ${
                             isSelected
-                              ? "bg-[#7C3AED]/30 border border-[#7C3AED] text-white font-semibold shadow-sm shadow-[#7C3AED]/35"
-                              : "bg-white/[0.04] border border-white/[0.09] text-neutral-300 hover:text-white hover:bg-white/[0.08]"
+                              ? "bg-[#7C3AED]/15 dark:bg-[#7C3AED]/30 border border-[#7C3AED] text-[#7C3AED] dark:text-white font-semibold shadow-sm shadow-[#7C3AED]/20 dark:shadow-[#7C3AED]/35"
+                              : "bg-slate-100 hover:bg-slate-200/80 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border border-slate-200 dark:border-white/[0.09] text-slate-700 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white"
                           }`}
                           style={{ WebkitTapHighlightColor: "transparent" }}
                         >
@@ -1122,16 +1132,16 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                   <div
                     onClick={() => scrollRoles("right")}
                     aria-label="Scroll more roles"
-                    className="absolute right-0 top-0 bottom-1 w-8 bg-gradient-to-l from-[#0B0F19] via-[#0B0F19]/80 to-transparent flex items-center justify-end pr-0.5 cursor-pointer sm:hidden"
+                    className="absolute right-0 top-0 bottom-1 w-8 bg-gradient-to-l from-white via-white/80 to-transparent dark:from-[#0B0F19] dark:via-[#0B0F19]/80 dark:to-transparent flex items-center justify-end pr-0.5 cursor-pointer sm:hidden"
                   >
-                    <span className="text-xs text-neutral-400 font-bold">›</span>
+                    <span className="text-xs text-slate-400 dark:text-neutral-400 font-bold">›</span>
                   </div>
                 </div>
 
                 {selectedRole === "Recruiter / Talent" && (
-                  <div className="p-2 sm:p-2.5 rounded-xl bg-[#7C3AED]/15 border border-[#7C3AED]/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 animate-in fade-in duration-200">
-                    <div className="text-[11px] text-neutral-300">
-                      <span className="font-semibold text-white">Recruiter &amp; Resume Portal:</span> Looking for direct phone, WhatsApp line, &amp; verified live resume?
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-purple-50 dark:bg-[#7C3AED]/15 border border-purple-200 dark:border-[#7C3AED]/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 animate-in fade-in duration-200">
+                    <div className="text-[11px] text-slate-700 dark:text-neutral-300">
+                      <span className="font-semibold text-slate-900 dark:text-white">Recruiter &amp; Resume Portal:</span> Looking for direct phone, WhatsApp line, &amp; verified live resume?
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
                       <a
@@ -1155,23 +1165,23 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                     </div>
                   </div>
                 )}
-                <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-neutral-400 pt-0.5">
+                <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-slate-500 dark:text-neutral-400 pt-0.5">
                   <span>You have the right to stay anonymous &amp; confidential.</span>
                   <div className="flex items-center gap-1.5">
                     <a
                       href="/privacy?focus=contact#anonymity"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[#CBACF9] hover:underline hover:text-white font-medium transition-colors focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none rounded"
+                      className="text-[#7C3AED] dark:text-[#CBACF9] hover:underline hover:text-[#6D28D9] dark:hover:text-white font-medium transition-colors focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none rounded"
                     >
                       Privacy Policy
                     </a>
-                    <span className="text-neutral-600">•</span>
+                    <span className="text-slate-300 dark:text-neutral-600">•</span>
                     <a
                       href="/terms?focus=contact#anonymity"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[#CBACF9] hover:underline hover:text-white font-medium transition-colors focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none rounded"
+                      className="text-[#7C3AED] dark:text-[#CBACF9] hover:underline hover:text-[#6D28D9] dark:hover:text-white font-medium transition-colors focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none rounded"
                     >
                       Terms
                     </a>
@@ -1185,12 +1195,12 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                 <div className="space-y-0.5 sm:space-y-1">
                   <label
                     htmlFor="touch-name"
-                    className="block text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-neutral-400"
+                    className="block text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-neutral-400"
                   >
                     Name <span className="text-purple">*</span>
                   </label>
                   <div className="relative">
-                    <IoPersonOutline className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+                    <IoPersonOutline className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-neutral-400" />
                     <input
                       ref={nameInputRef}
                       id="touch-name"
@@ -1205,7 +1215,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                       onBlur={() => setIsInputFocused(false)}
                       placeholder="Your full name"
                       disabled={isSubmitting}
-                      className="w-full pl-9 pr-3 py-1.5 sm:py-2 bg-white/[0.04] border border-white/[0.1] focus:border-purple focus:bg-white/[0.07] rounded-xl text-base sm:text-sm text-white placeholder:text-neutral-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8B5CF6] transition-all touch-manipulation h-[42px]"
+                      className="w-full pl-9 pr-3 py-1.5 sm:py-2 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.1] focus:border-[#7C3AED] dark:focus:border-purple focus:bg-white dark:focus:bg-white/[0.07] rounded-xl text-base sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8B5CF6] transition-all touch-manipulation h-[42px]"
                     />
                   </div>
                 </div>
@@ -1215,7 +1225,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                   <div className="flex items-center justify-between">
                     <label
                       htmlFor="touch-email"
-                      className="block text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-neutral-400"
+                      className="block text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-neutral-400"
                     >
                       Email <span className="text-purple">*</span>
                     </label>
@@ -1227,14 +1237,14 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                           setEmail(emailValidation.suggestion!);
                           if (submissionError) setSubmissionError(null);
                         }}
-                        className="text-[10px] sm:text-xs text-[#CBACF9] hover:underline cursor-pointer focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none rounded"
+                        className="text-[10px] sm:text-xs text-[#7C3AED] dark:text-[#CBACF9] hover:underline cursor-pointer focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none rounded"
                       >
                         Use {emailValidation.suggestion}?
                       </button>
                     )}
                   </div>
                   <div className="relative">
-                    <IoMailOutline className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+                    <IoMailOutline className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-neutral-400" />
                     <input
                       id="touch-email"
                       type="email"
@@ -1248,11 +1258,11 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                       onBlur={() => setIsInputFocused(false)}
                       placeholder="your.email@company.com"
                       disabled={isSubmitting}
-                      className={`w-full pl-9 pr-3 py-1.5 sm:py-2 bg-white/[0.04] border ${
+                      className={`w-full pl-9 pr-3 py-1.5 sm:py-2 bg-slate-50 dark:bg-white/[0.04] border ${
                         email.trim().length > 4 && !emailValidation.isValid
-                          ? "border-amber-400/50 focus:border-amber-400"
-                          : "border-white/[0.1] focus:border-purple"
-                      } focus:bg-white/[0.07] rounded-xl text-base sm:text-sm text-white placeholder:text-neutral-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8B5CF6] transition-all touch-manipulation h-[42px]`}
+                          ? "border-amber-500/50 focus:border-amber-500"
+                          : "border-slate-200 dark:border-white/[0.1] focus:border-[#7C3AED] dark:focus:border-purple"
+                      } focus:bg-white dark:focus:bg-white/[0.07] rounded-xl text-base sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8B5CF6] transition-all touch-manipulation h-[42px]`}
                     />
                   </div>
                 </div>
@@ -1263,17 +1273,17 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                 <div className="flex items-center justify-between">
                   <label
                     htmlFor="touch-message"
-                    className="block text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-neutral-400"
+                    className="block text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-neutral-400"
                   >
                     Message <span className="text-purple">*</span>
                   </label>
                   <span
                     className={`text-[10px] sm:text-xs font-mono transition-colors ${
                       countWords(message) > MESSAGE_MAX_WORDS
-                        ? "text-red-400 font-bold"
+                        ? "text-red-500 font-bold"
                         : countWords(message) >= MESSAGE_MAX_WORDS - 10 && countWords(message) > 0
-                        ? "text-amber-400 font-medium"
-                        : "text-neutral-400"
+                        ? "text-amber-500 font-medium"
+                        : "text-slate-500 dark:text-neutral-400"
                     }`}
                   >
                     {countWords(message)} / {MESSAGE_MAX_WORDS} words
@@ -1293,18 +1303,18 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                   onBlur={() => setIsInputFocused(false)}
                   placeholder="Tell me about your project, goals, or inquiries..."
                   disabled={isSubmitting}
-                  className={`w-full p-2.5 sm:p-3 bg-white/[0.04] border ${
+                  className={`w-full p-2.5 sm:p-3 bg-slate-50 dark:bg-white/[0.04] border ${
                     message.trim().length >= 8 && !messageValidation.isValid
-                      ? "border-amber-400/50 focus:border-amber-400"
-                      : "border-white/[0.1] focus:border-purple"
-                  } focus:bg-white/[0.07] rounded-xl text-base sm:text-sm text-white placeholder:text-neutral-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8B5CF6] transition-all resize-none leading-snug touch-manipulation flex-1 ${
+                      ? "border-amber-500/50 focus:border-amber-500"
+                      : "border-slate-200 dark:border-white/[0.1] focus:border-[#7C3AED] dark:focus:border-purple"
+                  } focus:bg-white dark:focus:bg-white/[0.07] rounded-xl text-base sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8B5CF6] transition-all resize-none leading-snug touch-manipulation flex-1 ${
                     isSubmitting
                       ? "min-h-[42px] max-h-[50px]"
                       : "min-h-[55px] sm:min-h-[85px] max-h-[75px] sm:max-h-[120px]"
                   }`}
                 />
                 {message.trim().length >= 8 && !messageValidation.isValid && messageValidation.error && (
-                  <p className="text-[10px] sm:text-xs text-amber-300/90 leading-tight">
+                  <p className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-300/90 leading-tight">
                     {messageValidation.error}
                   </p>
                 )}
@@ -1325,9 +1335,9 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                     value={turnstileToken || ""}
                   />
                   {!isTurnstileReady && (
-                    <div className="flex items-center justify-center gap-1.5 text-xs text-neutral-400 py-1">
+                    <div className="flex items-center justify-center gap-1.5 text-xs text-slate-500 dark:text-neutral-400 py-1">
                       <SiCloudflare className="w-4 h-4 text-[#F38020]" />
-                      <span className="font-medium text-neutral-300">
+                      <span className="font-medium text-slate-700 dark:text-neutral-300">
                         Cloudflare Protected
                       </span>
                     </div>
@@ -1340,7 +1350,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                     <button
                       type="button"
                       onClick={handleClearDraft}
-                      className="py-2.5 sm:py-3 px-3.5 rounded-xl text-xs sm:text-sm font-medium text-neutral-400 hover:text-red-300 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] transition-all touch-manipulation active:scale-95 shrink-0 cursor-pointer focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none"
+                      className="py-2.5 sm:py-3 px-3.5 rounded-xl text-xs sm:text-sm font-medium text-slate-600 hover:text-red-600 dark:text-neutral-400 dark:hover:text-red-300 bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border border-slate-200 dark:border-white/[0.08] transition-all touch-manipulation active:scale-95 shrink-0 cursor-pointer focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none"
                       style={{ WebkitTapHighlightColor: "transparent" }}
                     >
                       Clear
@@ -1352,8 +1362,8 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                     disabled={isButtonDisabled}
                     className={`flex-1 py-2.5 sm:py-3 px-6 rounded-xl text-sm sm:text-base font-bold transition-all flex items-center justify-center gap-2 touch-manipulation min-h-[42px] sm:min-h-[46px] shrink-0 focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none ${
                       isButtonDisabled
-                        ? "bg-white/[0.04] text-neutral-500 border border-white/[0.06] opacity-50 pointer-events-none select-none cursor-not-allowed"
-                        : "bg-[#7C3AED] hover:bg-[#6D28D9] text-white shadow-lg shadow-[#7C3AED]/25 cursor-pointer active:scale-[0.98]"
+                        ? "bg-slate-100 dark:bg-white/[0.04] text-slate-400 dark:text-neutral-500 border border-slate-200 dark:border-white/[0.06] opacity-60 pointer-events-none select-none cursor-not-allowed"
+                        : "bg-slate-950 hover:bg-black active:bg-slate-900 dark:bg-[#7C3AED] dark:hover:bg-[#6D28D9] text-white shadow-md dark:shadow-lg dark:shadow-[#7C3AED]/25 cursor-pointer active:scale-[0.98]"
                     }`}
                     style={{ WebkitTapHighlightColor: "transparent" }}
                   >
@@ -1371,7 +1381,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                         <span>Send message</span>
                         <FaLocationArrow
                           className={`w-3.5 h-3.5 ${
-                            isButtonDisabled ? "text-neutral-600" : "text-[#CBACF9]"
+                            isButtonDisabled ? "text-slate-400 dark:text-neutral-600" : "text-white dark:text-[#CBACF9]"
                           }`}
                         />
                       </>

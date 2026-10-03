@@ -37,12 +37,8 @@ export const ResumeGateModal: React.FC<ResumeGateModalProps> = ({
     setMounted(true);
   }, []);
 
-  // Robust dark mode check: verifies next-themes and html class directly
-  const isDark = mounted
-    ? resolvedTheme === "dark" ||
-      (typeof document !== "undefined" &&
-        document.documentElement.classList.contains("dark"))
-    : false;
+  // Robust dark mode check: tracks resolvedTheme dynamically
+  const isDark = mounted ? resolvedTheme === "dark" : true;
 
   const toggleTheme = () => {
     const nextTheme = isDark ? "light" : "dark";

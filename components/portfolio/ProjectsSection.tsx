@@ -41,7 +41,7 @@ export const ProjectsSection = ({ projects = SEED_PROJECTS, limit = 6 }: Project
   return (
     <section className="py-20" id="projects">
       <h2 id="featured-projects-heading" className="heading">
-        A small selection of <span className="text-purple">recent projects</span>
+        A small selection of <span className="text-[#7C3AED] dark:text-purple">recent projects</span>
       </h2>
       <div className="flex flex-wrap items-center justify-center px-4 pt-4 pb-0 gap-x-24 gap-y-6 mt-8">
         {displayedProjects.map(
@@ -83,18 +83,18 @@ export const ProjectsSection = ({ projects = SEED_PROJECTS, limit = 6 }: Project
                     {/* License & Contract Governance Badge */}
                     <div className="mb-1.5 flex items-center h-6">
                       {licenseStatus && (
-                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium bg-purple/10 text-purple border border-purple/30 tracking-tight">
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium bg-purple-50 dark:bg-purple/10 text-[#7C3AED] dark:text-purple border border-purple-200 dark:border-purple/30 tracking-tight">
                           {licenseStatus}
                         </span>
                       )}
                     </div>
 
                     {/* Project Title with Flexible 2-Line Bounds & Zero Collision */}
-                    <h3 className="font-bold lg:text-2xl md:text-xl text-base leading-snug min-h-[3rem] sm:min-h-[3.5rem] flex items-center">
+                    <h3 className="font-bold lg:text-2xl md:text-xl text-base leading-snug min-h-[3rem] sm:min-h-[3.5rem] flex items-center text-slate-900 dark:text-white">
                       {caseStudyUrl ? (
                         <Link
                           href={caseStudyUrl}
-                          className="hover:text-purple transition-colors line-clamp-2"
+                          className="hover:text-[#7C3AED] dark:hover:text-purple transition-colors line-clamp-2"
                           onClick={(e) => e.stopPropagation()}
                         >
                           {title}
@@ -105,19 +105,19 @@ export const ProjectsSection = ({ projects = SEED_PROJECTS, limit = 6 }: Project
                     </h3>
 
                     {/* Punchy, Easy-to-Read Subtitle with Stable Baseline */}
-                    <p className="text-white-200 text-xs sm:text-sm font-normal line-clamp-2 my-1 leading-relaxed min-h-[2.5rem] sm:min-h-[2.75rem]">
+                    <p className="text-slate-600 dark:text-white-200 text-xs sm:text-sm font-normal line-clamp-2 my-1 leading-relaxed min-h-[2.5rem] sm:min-h-[2.75rem]">
                       {description}
                     </p>
                   </div>
 
                 {/* Bottom Action & Tech Row (Zero Height Shake, No Wrap) */}
-                <div className="flex items-center justify-between mt-auto pt-3 border-t border-white/[0.08] gap-1 sm:gap-2">
+                <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-200/90 dark:border-white/[0.08] gap-1 sm:gap-2">
                   {/* Tech Stack Icons with Recruiter Tooltips */}
                   <div className="flex items-center shrink-0">
                     {(iconLists || []).map((icon, index) => (
                       <div
                         key={index}
-                        className="border border-white/[.15] rounded-full bg-[#04071D] w-6 h-6 sm:w-8 sm:h-8 flex justify-center items-center shadow-sm cursor-help hover:scale-110 hover:border-purple transition-all duration-200"
+                        className="border border-slate-200/90 dark:border-white/[.15] rounded-full bg-slate-100 dark:bg-[#04071D] w-6 h-6 sm:w-8 sm:h-8 flex justify-center items-center shadow-2xs cursor-help hover:scale-110 hover:border-purple transition-all duration-200"
                         style={{
                           transform: `translateX(-${index * 5}px)`,
                         }}
@@ -141,7 +141,7 @@ export const ProjectsSection = ({ projects = SEED_PROJECTS, limit = 6 }: Project
                         href={githubUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-[10px] sm:text-xs text-neutral-400 hover:text-white transition-colors duration-200 font-medium py-1 px-1.5 sm:py-1.5 sm:px-2 rounded-lg bg-white/[0.04] hover:bg-white/[0.1] border border-white/[0.08]"
+                        className="flex items-center gap-1 text-[10px] sm:text-xs text-slate-700 hover:text-slate-900 dark:text-neutral-400 dark:hover:text-white transition-colors duration-200 font-medium py-1 px-1.5 sm:py-1.5 sm:px-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.1] border border-slate-200/80 dark:border-white/[0.08]"
                         title="Repository Source Code"
                         onClick={(e) => e.stopPropagation()}
                       >
@@ -155,11 +155,11 @@ export const ProjectsSection = ({ projects = SEED_PROJECTS, limit = 6 }: Project
                         href={desktopGithubUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-[10px] sm:text-xs text-neutral-300 hover:text-purple transition-colors duration-200 font-medium py-1 px-1.5 sm:py-1.5 sm:px-2 rounded-lg bg-white/[0.04] hover:bg-purple/10 border border-white/[0.08] hover:border-purple/40"
+                        className="flex items-center gap-1 text-[10px] sm:text-xs text-slate-700 hover:text-[#7C3AED] dark:text-neutral-300 dark:hover:text-purple transition-colors duration-200 font-medium py-1 px-1.5 sm:py-1.5 sm:px-2 rounded-lg bg-purple-50/80 hover:bg-purple-100/80 dark:bg-white/[0.04] dark:hover:bg-purple/10 border border-purple-200/70 dark:border-white/[0.08] hover:border-purple/40"
                         title="Rust & Tauri Native Desktop App Source Code"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <FaGithub className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple" />
+                        <FaGithub className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#7C3AED] dark:text-purple" />
                         <span>Rust</span>
                       </a>
                     )}
@@ -169,11 +169,11 @@ export const ProjectsSection = ({ projects = SEED_PROJECTS, limit = 6 }: Project
                         href={docsUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-[10px] sm:text-xs text-indigo-300 hover:text-white transition-colors duration-200 font-medium py-1 px-1.5 sm:py-1.5 sm:px-2 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30"
+                        className="flex items-center gap-1 text-[10px] sm:text-xs text-indigo-700 hover:text-indigo-900 dark:text-indigo-300 dark:hover:text-white transition-colors duration-200 font-medium py-1 px-1.5 sm:py-1.5 sm:px-2 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 border border-indigo-200 dark:border-indigo-500/30"
                         title="Developer Documentation"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <FaBookOpen className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-indigo-400" />
+                        <FaBookOpen className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-indigo-600 dark:text-indigo-400" />
                         <span>Docs</span>
                       </a>
                     )}
@@ -182,11 +182,11 @@ export const ProjectsSection = ({ projects = SEED_PROJECTS, limit = 6 }: Project
                       href={liveUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-[10px] sm:text-xs text-purple hover:text-white transition-colors duration-200 font-medium group/link py-1 px-2 sm:py-1.5 sm:px-2.5 rounded-lg bg-purple/10 hover:bg-purple/20 border border-purple/30 touch-manipulation"
+                      className="flex items-center gap-1 text-[10px] sm:text-xs text-[#7C3AED] dark:text-purple hover:opacity-80 transition-opacity duration-200 font-medium group/link py-1 px-2 sm:py-1.5 sm:px-2.5 rounded-lg bg-purple-50 dark:bg-purple/10 border border-purple-200 dark:border-purple/30 touch-manipulation"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <span>Live Site</span>
-                      <FaLocationArrow className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-purple group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform duration-200" />
+                      <FaLocationArrow className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-[#7C3AED] dark:text-purple group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform duration-200" />
                     </a>
                   </div>
                 </div>
@@ -200,19 +200,19 @@ export const ProjectsSection = ({ projects = SEED_PROJECTS, limit = 6 }: Project
       <div className="mt-8 sm:mt-10 flex flex-col items-center justify-center gap-2.5 px-4">
         <Link
           href="/projects"
-          className="relative inline-flex items-center justify-center overflow-hidden rounded-xl p-[1.5px] border border-white/[0.18] hover:border-purple/60 transition-all duration-300 group shadow-[0_0_20px_rgba(203,172,249,0.15)] hover:shadow-[0_0_25px_rgba(203,172,249,0.3)] max-w-full"
+          className="relative inline-flex items-center justify-center overflow-hidden rounded-xl p-[1.5px] border border-slate-300 dark:border-white/[0.18] hover:border-purple/60 transition-all duration-300 group shadow-[0_4px_16px_rgba(0,0,0,0.06)] dark:shadow-[0_0_20px_rgba(203,172,249,0.15)] hover:shadow-[0_4px_24px_rgba(124,58,237,0.15)] max-w-full"
         >
           {/* 360-Degree Continuous Luminous Conic Beam */}
           <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2CBFF_0%,#7C3AED_25%,#393BB2_50%,#7C3AED_75%,#E2CBFF_100%)] opacity-80 group-hover:opacity-100 transition-opacity" />
 
           {/* Solid Inner Body with Exact Matching Radius */}
-          <span className="relative z-10 inline-flex items-center justify-center rounded-[10px] bg-[#04071D] group-hover:bg-[#070B28] px-5 sm:px-8 py-3 text-xs sm:text-sm font-medium text-white backdrop-blur-3xl gap-2 sm:gap-3 transition-colors duration-200 text-center">
+          <span className="relative z-10 inline-flex items-center justify-center rounded-[10px] bg-white dark:bg-[#04071D] group-hover:bg-slate-50 dark:group-hover:bg-[#070B28] px-5 sm:px-8 py-3 text-xs sm:text-sm font-semibold text-slate-900 dark:text-white backdrop-blur-3xl gap-2 sm:gap-3 transition-colors duration-200 text-center">
             <span className="hidden sm:inline">Explore All {sortedProjects.length} Projects & Architectural Case Studies</span>
             <span className="sm:hidden">Explore All {sortedProjects.length} Projects & Case Studies</span>
-            <FaArrowRight className="w-3.5 h-3.5 text-purple group-hover:translate-x-1 transition-transform duration-200 shrink-0" />
+            <FaArrowRight className="w-3.5 h-3.5 text-[#7C3AED] dark:text-purple group-hover:translate-x-1 transition-transform duration-200 shrink-0" />
           </span>
         </Link>
-        <p className="text-[11px] sm:text-xs text-[#C1C2D3] font-mono tracking-wide text-center px-2">
+        <p className="text-[11px] sm:text-xs text-slate-500 dark:text-[#C1C2D3] font-mono tracking-wide text-center px-2">
           Full catalog with interactive galleries, deep architectural teardowns & GitHub repositories
         </p>
       </div>

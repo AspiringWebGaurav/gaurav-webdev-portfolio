@@ -11,6 +11,8 @@ export const CanvasRevealEffect = ({
   containerClassName,
   dotSize,
   showGradient = true,
+  gradientClassName,
+  isDark = true,
 }: {
   /**
    * 0.1 - slower
@@ -22,6 +24,8 @@ export const CanvasRevealEffect = ({
   containerClassName?: string;
   dotSize?: number;
   showGradient?: boolean;
+  gradientClassName?: string;
+  isDark?: boolean;
 }) => {
   return (
     <div className={cn("h-full relative bg-white w-full", containerClassName)}>
@@ -39,10 +43,16 @@ export const CanvasRevealEffect = ({
               opacity *= clamp((1.0 - step(intro_offset + 0.1, u_time * animation_speed_factor)) * 1.25, 1.0, 1.25);
             `}
           center={["x", "y"]}
+          isDark={isDark}
         />
       </div>
       {showGradient && (
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-950 to-[84%]" />
+        <div
+          className={cn(
+            "absolute inset-0 bg-gradient-to-t from-white/95 via-white/35 to-transparent dark:from-gray-950 dark:via-gray-950/80 to-[84%]",
+            gradientClassName
+          )}
+        />
       )}
     </div>
   );
@@ -55,6 +65,7 @@ interface DotMatrixProps {
   dotSize?: number;
   shader?: string;
   center?: ("x" | "y")[];
+  isDark?: boolean;
 }
 
 const DotMatrix: React.FC<DotMatrixProps> = ({
@@ -64,6 +75,7 @@ const DotMatrix: React.FC<DotMatrixProps> = ({
   dotSize = 2,
   shader = "",
   center = ["x", "y"],
+  isDark = true,
 }) => {
   const uniforms = React.useMemo(() => {
     let colorsArray = [
@@ -171,6 +183,7 @@ const DotMatrix: React.FC<DotMatrixProps> = ({
         }`}
       uniforms={uniforms}
       maxFps={60}
+      isDark={isDark}
     />
   );
 };
@@ -185,11 +198,13 @@ const ShaderMaterial = ({
   source,
   uniforms,
   maxFps = 60,
+  isDark = true,
 }: {
   source: string;
   hovered?: boolean;
   maxFps?: number;
   uniforms: Uniforms;
+  isDark?: boolean;
 }) => {
   const { size } = useThree();
   const ref = useRef<THREE.Mesh>(null);
@@ -275,13 +290,13 @@ const ShaderMaterial = ({
       uniforms: getUniforms(),
       glslVersion: THREE.GLSL3,
       blending: THREE.CustomBlending,
-      blendSrc: THREE.SrcAlphaFactor,
-      blendDst: THREE.OneFactor,
+      blendSrc: isDark ? THREE.SrcAlphaFactor : THREE.OneFactor,
+      blendDst: isDark ? THREE.OneFactor : THREE.OneMinusSrcAlphaFactor,
     });
 
     return materialObject;
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [size.width, size.height, source]);
+  }, [size.width, size.height, source, isDark]);
 
   // Dynamically sync uniforms without rebuilding shader material
   useEffect(() => {
@@ -365,7 +380,7 @@ class CanvasErrorBoundary extends React.Component<
   }
 }
 
-const Shader: React.FC<ShaderProps> = ({ source, uniforms, maxFps = 60 }) => {
+const Shader: React.FC<ShaderProps> = ({ source, uniforms, maxFps = 60, isDark = true }) => {
   return (
     <CanvasErrorBoundary>
       <Canvas
@@ -374,7 +389,7 @@ const Shader: React.FC<ShaderProps> = ({ source, uniforms, maxFps = 60 }) => {
         className="absolute inset-0 h-full w-full pointer-events-none"
         events={disablePointerEvents}
       >
-        <ShaderMaterial source={source} uniforms={uniforms} maxFps={maxFps} />
+        <ShaderMaterial source={source} uniforms={uniforms} maxFps={maxFps} isDark={isDark} />
       </Canvas>
     </CanvasErrorBoundary>
   );
@@ -388,5 +403,6 @@ interface ShaderProps {
     };
   };
   maxFps?: number;
+  isDark?: boolean;
 }
 

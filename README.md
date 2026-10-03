@@ -44,11 +44,14 @@ An enterprise-grade, high-performance web engineering portfolio designed and bui
 
 Gaurav Portfolio serves as an active, production-grade showcase of modern full-stack web engineering, resilient system architecture, and interactive design:
 
-* **Interactive 3D WebGL Canvas**: Three.js Globe rendering smooth coordinate trajectories, loaded asynchronously with zero layout reflow.
+* **Dual-Engine Dynamic Theme System**: Effortless 1-click toggling between signature Deep Luxury Dark mode and crisp Shiro/Kuro-inspired Enterprise Light mode, powered by `next-themes` with smooth 550ms glassmorphic transitions.
+* **Dynamic Bot Mitigation & Adaptive Cloudflare Turnstile**: Adaptive Turnstile security challenges across all entrypoints and subdomains, automatically rendering in matching light or dark visual themes.
+* **Interactive 3D WebGL Canvas**: Three.js Globe rendering smooth coordinate trajectories with theme-aware landmass styling, loaded asynchronously with zero layout reflow.
 * **Interactive Projects Launchpad (`self.gauravpatil.site`)**: Ultra-fast single-view zero-scroll hub with mobile tactile haptic pulses and instant outbound redirection.
 * **Shareable Contact Route (`/contact`)**: Dynamic interactive contact modal with bidirectional URL synchronization, native browser Back/Forward navigation, and direct shareable link resolution.
 * **Intelligent Personal Assistant & Live Chat**: Contextual portfolio navigator providing real-time technical project breakdowns, verified 1-to-1 communication, and automated inbox notification routing.
 * **Meta WhatsApp Cloud Integration**: Production WhatsApp channel for recruiters with two-bubble delivery sequence, 1-click email response triggers, and self-service GDPR Article 20 data exports.
+* **Vercel Hobby Plan & Quota Optimization**: 24-hour baseline ISR (`revalidate = 86400`), 1-year immutable caching for static media, selective edge routing, and WebP compression minimizing CPU execution and data transfer.
 * **Zero Layout Shift Standard (`CLS = 0`)**: Fixed skeleton bounds and GPU-accelerated opacity/transform transitions eliminating visual jitter across all devices.
 * **Privacy-First Data Architecture**: Anonymous inquiry support, ephemeral bot verification, and zero third-party behavioral tracking cookies.
 
@@ -136,10 +139,12 @@ The platform follows clean separation of concerns, ensuring high maintainability
 
 The application incorporates a tailored design language optimized for clarity, engagement, and accessibility:
 
-* **Aesthetic System**: Dark luxury glassmorphism.
-* **Color Palette**: Deep Space Black (`#000319`), Royal Purple (`#CBACF9`), Cool Metallic Slate (`#C1C2D3`), and Emerald Accent (`#10B981`).
-* **Visual Primitives**: Ambient 3D spotlights, bento grid layout variants, infinite marquee scrolls, and touch-optimized action cards.
-* **Accessibility (WCAG 2.1 AA)**: Keyboard-navigable interactive controls, 44px minimum touch targets, accessible ARIA dialog roles, and full `prefers-reduced-motion` fallbacks.
+* **Aesthetic System**: Dual-theme luxury glassmorphism with dynamic light/dark capability.
+* **Dark Mode Palette**: Deep Space Black (`#000319`), Deep Navy Slate (`#04071D`), Royal Purple (`#CBACF9`), Cool Metallic Slate (`#C1C2D3`), and Emerald Accent (`#10B981`).
+* **Light Mode Palette**: Crisp Paper Slate (`#FAFAFA` / `#FFFFFF`), Violet Accents (`#7C3AED` / `#6D28D9`), Obsidian Text (`#0F172A`), and Slate Borders (`#E2E8F0`).
+* **Visual Primitives**: Ambient 3D spotlights, bento grid layout variants, infinite marquee scrolls, theme-reactive Three.js globe, and touch-optimized action cards.
+* **Dynamic Theme Toggle**: Glassmorphic floating button with 550ms spring icon morphing, zero harsh borders, and synchronized CSS color-scheme transitions.
+* **Accessibility (WCAG 2.1 AA)**: Keyboard-navigable interactive controls, 44px minimum touch targets, accessible ARIA dialog roles, high contrast in both themes, and full `prefers-reduced-motion` fallbacks.
 * **Scroll Synchronization**: Dominant-viewport tracking that reflects active sections in the URL hash smoothly without layout jumps.
 
 ---
@@ -147,6 +152,11 @@ The application incorporates a tailored design language optimized for clarity, e
 ## 5. Performance & Reliability Standards
 
 * **Turbopack Build Pipeline**: Optimized Next.js 15 compilations with zero warnings and strict TypeScript checks (`npx tsc --noEmit`).
+* **Vercel Free Hobby Quota Protection**:
+  * **24-Hour Baseline ISR (`revalidate = 86400`)**: Static Edge delivery prevents repeated serverless invocations and eliminates unnecessary database reads on visitor loads.
+  * **Selective Edge Middleware**: Static assets, Next.js images, fonts, and API routes bypass middleware evaluation, preserving Fluid Active CPU quota.
+  * **Immutable Asset Caching**: 1-year immutable cache headers (`public, max-age=31536000, immutable`) for static images, WebP assets, and JS bundles to conserve Fast Data Transfer.
+  * **High-Efficiency Media**: WebP image formats with 80-90% weight reduction compared to raw assets.
 * **Layout Shift Elimination**: Calibrated skeleton boundaries for all dynamic and below-the-fold modules guaranteeing `CLS = 0`.
 * **Micro-Animation Engineering**: Hardware-accelerated transitions operating at consistent 60fps across modern viewports.
 * **Graceful Degradation**: Client-side error boundaries ensure platform stability even if external services encounter temporary interruptions.

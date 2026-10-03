@@ -37,8 +37,8 @@ export const HeroSection = ({ data = SEED_HERO }: HeroSectionProps) => {
 
   return (
     <div className="min-h-screen min-h-[100dvh] w-full flex flex-col justify-center items-center relative pt-20 sm:pt-24 pb-10 sm:pb-14">
-      {/* Spotlights */}
-      <div className="pointer-events-none select-none">
+      {/* Spotlights (Dark Mode Only - prevents SVG blur box/seam glitch on light theme) */}
+      <div className="pointer-events-none select-none hidden dark:block">
         <Spotlight
           className="-top-40 -left-10 md:-left-32 md:-top-20 h-screen"
           fill="white"
@@ -52,19 +52,19 @@ export const HeroSection = ({ data = SEED_HERO }: HeroSectionProps) => {
 
       {/* Grid Pattern Background */}
       <div
-        className="h-full w-full dark:bg-black-100 bg-white dark:bg-grid-white/[0.03] bg-grid-black-100/[0.2]
-       absolute inset-0 flex items-center justify-center pointer-events-none"
+        className="h-full w-full dark:bg-black-100 bg-[#FAFAFA] dark:bg-grid-white/[0.03] bg-[radial-gradient(#CBD5E1_1px,transparent_1px)] [background-size:24px_24px]
+       absolute inset-0 flex items-center justify-center pointer-events-none transition-colors duration-200"
       >
         <div
           className="absolute pointer-events-none inset-0 flex items-center justify-center dark:bg-black-100
-         bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]"
+         bg-[#FAFAFA] [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)] transition-colors duration-200"
         />
       </div>
 
       <div className="flex justify-center relative z-10 w-full my-auto py-4 sm:py-6">
         <div className="max-w-[89vw] md:max-w-5xl lg:max-w-[920px] flex flex-col items-center justify-center">
           {/* Eyebrow Badge Pill (Clean, centered, subtle mono hierarchy) */}
-          <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-[11px] font-mono uppercase tracking-[0.22em] text-[#C1C2D3] mb-4 sm:mb-5 shadow-xs backdrop-blur-md">
+          <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-purple-50/80 dark:bg-white/[0.04] border border-purple-200/60 dark:border-white/10 text-[11px] font-mono uppercase tracking-[0.22em] text-[#7C3AED] dark:text-[#C1C2D3] mb-4 sm:mb-5 shadow-xs backdrop-blur-md transition-colors duration-200">
             <span className="text-center">{data.eyebrow || SEED_HERO.eyebrow}</span>
           </div>
 
@@ -74,10 +74,10 @@ export const HeroSection = ({ data = SEED_HERO }: HeroSectionProps) => {
             className="text-center text-[34px] sm:text-[42px] md:text-5xl lg:text-6xl tracking-tight"
           />
 
-          <p className="text-center mt-2 sm:mt-3 mb-7 sm:mb-8 text-sm sm:text-base md:text-lg lg:text-[19px] text-[#C1C2D3] max-w-4xl lg:max-w-[920px] leading-relaxed tracking-normal">
+          <p className="text-center mt-2 sm:mt-3 mb-7 sm:mb-8 text-sm sm:text-base md:text-lg lg:text-[19px] text-slate-600 dark:text-[#C1C2D3] max-w-4xl lg:max-w-[920px] leading-relaxed tracking-normal transition-colors duration-200">
             I&apos;m{" "}
-            <span className="text-white font-medium">Gaurav Patil</span> &mdash; a{" "}
-            <span className="text-purple/90 font-medium">Full Stack Software Engineer &amp; Systems Developer</span>, building high&#8209;throughput web architectures,<br className="hidden md:inline" />{" "}
+            <span className="text-slate-900 dark:text-white font-semibold">Gaurav Patil</span> &mdash; a{" "}
+            <span className="text-[#7C3AED] dark:text-purple/90 font-medium">Full Stack Software Engineer &amp; Systems Developer</span>, building high&#8209;throughput web architectures,<br className="hidden md:inline" />{" "}
             native Rust &amp; Tauri desktop applications, and scalable cloud backends<br className="hidden md:inline" />{" "}
             with Next.js, Firebase/Firestore, and Redis.
           </p>
@@ -110,10 +110,10 @@ export const HeroSection = ({ data = SEED_HERO }: HeroSectionProps) => {
                 e.preventDefault();
                 handleScrollTo("contact", "/#contact");
               }}
-              className="relative inline-flex h-12 overflow-hidden rounded-xl p-[1.5px] border border-white/[0.18] hover:border-purple/60 transition-all duration-300 focus:outline-hidden group select-none shadow-[0_0_20px_rgba(203,172,249,0.08)] hover:shadow-[0_0_20px_rgba(203,172,249,0.2)] cursor-pointer"
+              className="relative inline-flex h-12 overflow-hidden rounded-xl p-[1.5px] border border-slate-300 dark:border-white/[0.18] hover:border-purple/60 transition-all duration-300 focus:outline-hidden group select-none shadow-[0_4px_16px_rgba(0,0,0,0.04)] dark:shadow-[0_0_20px_rgba(203,172,249,0.08)] hover:shadow-[0_4px_20px_rgba(124,58,237,0.12)] cursor-pointer"
             >
-              <span className="inline-flex h-full w-full items-center justify-center rounded-[10px] bg-[#04071D] group-hover:bg-[#070B28] px-7 text-sm font-medium text-white backdrop-blur-3xl gap-2 transition-colors duration-200">
-                <FaEnvelope className="w-3.5 h-3.5 text-purple" />
+              <span className="inline-flex h-full w-full items-center justify-center rounded-[10px] bg-white dark:bg-[#04071D] group-hover:bg-slate-50 dark:group-hover:bg-[#070B28] px-7 text-sm font-medium text-slate-800 dark:text-white backdrop-blur-3xl gap-2 transition-colors duration-200">
+                <FaEnvelope className="w-3.5 h-3.5 text-[#7C3AED] dark:text-purple" />
                 <span>Get in Touch</span>
               </span>
             </a>
@@ -129,10 +129,10 @@ export const HeroSection = ({ data = SEED_HERO }: HeroSectionProps) => {
             className="mt-8 sm:mt-10 md:mt-12 flex flex-col items-center gap-2 cursor-pointer select-none group"
             onClick={handleScrollToAbout}
           >
-            <span className="text-[10px] md:text-xs font-mono uppercase tracking-[0.25em] text-[#BEC1DD]/60 group-hover:text-purple transition-colors duration-300">
+            <span className="text-[10px] md:text-xs font-mono uppercase tracking-[0.25em] text-slate-500 dark:text-[#BEC1DD]/60 group-hover:text-purple transition-colors duration-300">
               {data.scrollText || SEED_HERO.scrollText}
             </span>
-            <div className="w-5 h-8 md:w-6 md:h-9 rounded-full border border-white/20 group-hover:border-purple/50 flex justify-center items-start p-1 transition-colors duration-300">
+            <div className="w-5 h-8 md:w-6 md:h-9 rounded-full border border-slate-300 dark:border-white/20 group-hover:border-purple/50 flex justify-center items-start p-1 transition-colors duration-300">
               <motion.div
                 animate={{
                   y: [0, 8, 0],
@@ -156,7 +156,7 @@ export const HeroSection = ({ data = SEED_HERO }: HeroSectionProps) => {
                 ease: "easeInOut",
               }}
             >
-              <FaChevronDown className="w-3 h-3 text-[#BEC1DD]/40 group-hover:text-purple transition-colors duration-300" />
+              <FaChevronDown className="w-3 h-3 text-slate-400 dark:text-[#BEC1DD]/40 group-hover:text-purple transition-colors duration-300" />
             </motion.div>
           </motion.div>
         </div>

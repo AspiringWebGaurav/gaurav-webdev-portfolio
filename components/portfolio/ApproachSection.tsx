@@ -3,6 +3,8 @@
 import React from "react";
 import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "motion/react";
+import { useTheme } from "next-themes";
+import { cn } from "@/lib/utils";
 import type { PhaseDocument } from "@/types/portfolio";
 import { SEED_PHASES } from "@/lib/dal/repositories/seed-data";
 
@@ -15,46 +17,149 @@ interface ApproachSectionProps {
   phases?: PhaseDocument[];
 }
 
-const THEME_CONFIGS: Record<
-  string,
-  { containerClassName: string; colors?: number[][]; dotSize?: number }
-> = {
+interface ThemeModeConfig {
+  containerClassName: string;
+  colors?: number[][];
+  dotSize?: number;
+}
+
+interface PhaseThemeConfig {
+  dark: ThemeModeConfig;
+  light: ThemeModeConfig;
+  titleColor: string;
+  descColor: string;
+  iconColor: string;
+  hoverBorder: string;
+  hoverShadow: string;
+}
+
+const THEME_CONFIGS: Record<string, PhaseThemeConfig> = {
   emerald: {
-    containerClassName: "bg-emerald-900 rounded-3xl overflow-hidden",
+    dark: {
+      containerClassName: "bg-emerald-900 rounded-3xl overflow-hidden",
+      colors: [[0, 255, 255]],
+    },
+    light: {
+      containerClassName: "bg-gradient-to-b from-emerald-50 via-teal-50/50 to-white dark:bg-emerald-900 rounded-3xl overflow-hidden",
+      colors: [
+        [16, 185, 129],
+        [5, 150, 105],
+        [13, 148, 136],
+      ],
+      dotSize: 3,
+    },
+    titleColor: "text-emerald-950 dark:text-white",
+    descColor: "text-emerald-900/80 dark:text-white/95",
+    iconColor: "text-emerald-500 opacity-90 dark:opacity-40 dark:text-white",
+    hoverBorder: "hover:border-emerald-500/60 dark:hover:border-purple/50",
+    hoverShadow: "hover:shadow-[0_16px_40px_rgba(16,185,129,0.18)] dark:hover:shadow-xl",
   },
   pink: {
-    containerClassName: "bg-pink-900 rounded-3xl overflow-hidden",
-    colors: [
-      [255, 166, 158],
-      [221, 255, 247],
-    ],
-    dotSize: 2,
+    dark: {
+      containerClassName: "bg-pink-900 rounded-3xl overflow-hidden",
+      colors: [
+        [255, 166, 158],
+        [221, 255, 247],
+      ],
+      dotSize: 2,
+    },
+    light: {
+      containerClassName: "bg-gradient-to-b from-rose-50 via-pink-50/50 to-white dark:bg-pink-900 rounded-3xl overflow-hidden",
+      colors: [
+        [244, 63, 94],
+        [225, 29, 72],
+        [168, 85, 247],
+      ],
+      dotSize: 2.5,
+    },
+    titleColor: "text-rose-950 dark:text-white",
+    descColor: "text-rose-900/80 dark:text-white/95",
+    iconColor: "text-rose-500 opacity-90 dark:opacity-40 dark:text-white",
+    hoverBorder: "hover:border-rose-500/60 dark:hover:border-purple/50",
+    hoverShadow: "hover:shadow-[0_16px_40px_rgba(244,63,94,0.18)] dark:hover:shadow-xl",
   },
   sky: {
-    containerClassName: "bg-sky-600 rounded-3xl overflow-hidden",
-    colors: [[125, 211, 252]],
+    dark: {
+      containerClassName: "bg-sky-600 rounded-3xl overflow-hidden",
+      colors: [[125, 211, 252]],
+    },
+    light: {
+      containerClassName: "bg-gradient-to-b from-sky-50 via-cyan-50/50 to-white dark:bg-sky-600 rounded-3xl overflow-hidden",
+      colors: [
+        [14, 165, 233],
+        [2, 132, 199],
+        [59, 130, 246],
+      ],
+      dotSize: 3,
+    },
+    titleColor: "text-sky-950 dark:text-white",
+    descColor: "text-sky-900/80 dark:text-white/95",
+    iconColor: "text-sky-500 opacity-90 dark:opacity-40 dark:text-white",
+    hoverBorder: "hover:border-sky-500/60 dark:hover:border-purple/50",
+    hoverShadow: "hover:shadow-[0_16px_40px_rgba(14,165,233,0.18)] dark:hover:shadow-xl",
   },
   violet: {
-    containerClassName: "bg-violet-900 rounded-3xl overflow-hidden",
-    colors: [[196, 181, 253]],
+    dark: {
+      containerClassName: "bg-violet-900 rounded-3xl overflow-hidden",
+      colors: [[196, 181, 253]],
+    },
+    light: {
+      containerClassName: "bg-gradient-to-b from-purple-50 via-violet-50/50 to-white dark:bg-violet-900 rounded-3xl overflow-hidden",
+      colors: [
+        [147, 51, 234],
+        [124, 58, 237],
+        [79, 70, 229],
+      ],
+      dotSize: 3,
+    },
+    titleColor: "text-purple-950 dark:text-white",
+    descColor: "text-purple-900/80 dark:text-white/95",
+    iconColor: "text-purple-500 opacity-90 dark:opacity-40 dark:text-white",
+    hoverBorder: "hover:border-purple-500/60 dark:hover:border-purple/50",
+    hoverShadow: "hover:shadow-[0_16px_40px_rgba(147,51,234,0.18)] dark:hover:shadow-xl",
   },
   amber: {
-    containerClassName: "bg-amber-900 rounded-3xl overflow-hidden",
-    colors: [[252, 211, 77]],
+    dark: {
+      containerClassName: "bg-amber-900 rounded-3xl overflow-hidden",
+      colors: [[252, 211, 77]],
+    },
+    light: {
+      containerClassName: "bg-gradient-to-b from-amber-50 via-yellow-50/50 to-white dark:bg-amber-900 rounded-3xl overflow-hidden",
+      colors: [
+        [217, 119, 6],
+        [245, 158, 11],
+        [234, 88, 12],
+      ],
+      dotSize: 3,
+    },
+    titleColor: "text-amber-950 dark:text-white",
+    descColor: "text-amber-900/80 dark:text-white/95",
+    iconColor: "text-amber-500 opacity-90 dark:opacity-40 dark:text-white",
+    hoverBorder: "hover:border-amber-500/60 dark:hover:border-purple/50",
+    hoverShadow: "hover:shadow-[0_16px_40px_rgba(217,119,6,0.18)] dark:hover:shadow-xl",
   },
 };
 
 export const ApproachSection = ({ phases = SEED_PHASES }: ApproachSectionProps) => {
   const sortedPhases = [...phases].sort((a, b) => (a.order || 0) - (b.order || 0));
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = !mounted || resolvedTheme !== "light";
 
   return (
     <section className="w-full py-20">
       <h2 className="heading">
-        My <span className="text-purple">approach</span>
+        My <span className="text-[#7C3AED] dark:text-purple">approach</span>
       </h2>
-      <div className="my-20 flex flex-col lg:flex-row items-center justify-center w-full gap-4">
+      <div className="my-20 flex flex-col lg:flex-row items-center justify-center w-full gap-6 lg:gap-8">
         {sortedPhases.map((phase) => {
           const theme = THEME_CONFIGS[phase.themeColor] || THEME_CONFIGS.emerald;
+          const config = isDark ? theme.dark : theme.light;
           const speed = Math.max(0.1, Math.min(10.0, phase.animationSpeed || 3.0));
 
           return (
@@ -63,12 +168,15 @@ export const ApproachSection = ({ phases = SEED_PHASES }: ApproachSectionProps) 
               title={phase.title}
               icon={<AceternityIcon order={phase.phaseBadge || `Phase ${phase.order}`} />}
               des={phase.description}
+              themeConfig={theme}
               renderCanvas={() => (
                 <CanvasRevealEffect
+                  key={isDark ? "dark-canvas" : "light-canvas"}
                   animationSpeed={speed}
-                  containerClassName={theme.containerClassName}
-                  colors={theme.colors}
-                  dotSize={theme.dotSize}
+                  containerClassName={config.containerClassName}
+                  colors={config.colors}
+                  dotSize={config.dotSize}
+                  isDark={isDark}
                 />
               )}
             />
@@ -85,12 +193,14 @@ const Card = ({
   children,
   renderCanvas,
   des,
+  themeConfig,
 }: {
   title: string;
   icon: React.ReactNode;
   children?: React.ReactNode;
   renderCanvas?: () => React.ReactNode;
   des: string;
+  themeConfig?: PhaseThemeConfig;
 }) => {
   const [hovered, setHovered] = React.useState(false);
   const [mobileActive, setMobileActive] = React.useState(false);
@@ -111,17 +221,16 @@ const Card = ({
         }
       }}
       aria-expanded={isRevealed}
-      className="border border-black/[0.2] group/canvas-card flex items-center justify-center dark:border-white/[0.2] max-w-sm w-full mx-auto p-4 relative lg:h-[35rem] min-h-[18rem] rounded-3xl cursor-pointer select-none touch-manipulation transition-all duration-300 active:scale-[0.99]"
-      style={{
-        background: "rgb(4,7,29)",
-        backgroundColor:
-          "linear-gradient(90deg, rgba(4,7,29,1) 0%, rgba(12,14,35,1) 100%)",
-      }}
+      className={cn(
+        "border border-slate-200 dark:border-white/[0.2] bg-white dark:bg-[#04071D] group/canvas-card flex items-center justify-center max-w-sm w-full mx-auto p-4 relative lg:h-[35rem] min-h-[18rem] rounded-3xl cursor-pointer select-none touch-manipulation transition-all duration-300 shadow-[0_4px_24px_rgba(15,23,42,0.07),0_1px_3px_rgba(15,23,42,0.04)] dark:shadow-none hover:shadow-[0_16px_40px_rgba(15,23,42,0.12)] dark:hover:shadow-xl hover:border-[#7C3AED]/50 dark:hover:border-purple/50 active:scale-[0.99]",
+        isRevealed && themeConfig?.hoverBorder,
+        isRevealed && themeConfig?.hoverShadow
+      )}
     >
-      <Icon className="absolute h-10 w-10 -top-3 -left-3 dark:text-white text-black opacity-30 pointer-events-none" />
-      <Icon className="absolute h-10 w-10 -bottom-3 -left-3 dark:text-white text-black opacity-30 pointer-events-none" />
-      <Icon className="absolute h-10 w-10 -top-3 -right-3 dark:text-white text-black opacity-30 pointer-events-none" />
-      <Icon className="absolute h-10 w-10 -bottom-3 -right-3 dark:text-white text-black opacity-30 pointer-events-none" />
+      <Icon className={cn("absolute h-8 w-8 -top-2.5 -left-2.5 text-slate-300 dark:text-white opacity-40 dark:opacity-40 pointer-events-none transition-colors duration-300", isRevealed && themeConfig?.iconColor)} />
+      <Icon className={cn("absolute h-8 w-8 -bottom-2.5 -left-2.5 text-slate-300 dark:text-white opacity-40 dark:opacity-40 pointer-events-none transition-colors duration-300", isRevealed && themeConfig?.iconColor)} />
+      <Icon className={cn("absolute h-8 w-8 -top-2.5 -right-2.5 text-slate-300 dark:text-white opacity-40 dark:opacity-40 pointer-events-none transition-colors duration-300", isRevealed && themeConfig?.iconColor)} />
+      <Icon className={cn("absolute h-8 w-8 -bottom-2.5 -right-2.5 text-slate-300 dark:text-white opacity-40 dark:opacity-40 pointer-events-none transition-colors duration-300", isRevealed && themeConfig?.iconColor)} />
 
       <AnimatePresence>
         {isRevealed && (
@@ -146,17 +255,20 @@ const Card = ({
           {icon}
         </div>
         <h3
-          className={`dark:text-white text-center text-2xl sm:text-3xl relative z-10 font-bold transition-all duration-300 ${
-            isRevealed ? "opacity-100 -translate-y-2 text-white" : "opacity-0 translate-y-2"
-          }`}
+          className={cn(
+            "text-center text-2xl sm:text-3xl relative z-10 font-bold transition-all duration-300",
+            isRevealed ? "opacity-100 -translate-y-2" : "opacity-0 translate-y-2",
+            isRevealed && (themeConfig?.titleColor || "text-slate-900 dark:text-white")
+          )}
         >
           {title}
         </h3>
         <p
-          className={`text-xs sm:text-sm relative z-10 mt-4 text-center transition-all duration-300 leading-relaxed ${
-            isRevealed ? "opacity-100 -translate-y-2 text-[#E4ECFF]" : "opacity-0 translate-y-2"
-          }`}
-          style={{ color: "#E4ECFF" }}
+          className={cn(
+            "text-xs sm:text-sm relative z-10 mt-4 text-center transition-all duration-300 leading-relaxed font-medium",
+            isRevealed ? "opacity-100 -translate-y-2" : "opacity-0 translate-y-2",
+            isRevealed && (themeConfig?.descColor || "text-slate-700 dark:text-white/95")
+          )}
         >
           {des}
         </p>
@@ -168,9 +280,9 @@ const Card = ({
 const AceternityIcon = ({ order }: { order: string }) => {
   return (
     <div>
-      <div className="relative inline-flex overflow-hidden rounded-full p-[1.5px] border border-white/20 shadow-md">
+      <div className="relative inline-flex overflow-hidden rounded-full p-[1.5px] border border-slate-200/90 dark:border-white/20 shadow-sm dark:shadow-md">
         <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2CBFF_0%,#7C3AED_50%,#E2CBFF_100%)] opacity-80" />
-        <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-slate-950 px-5 py-2.5 text-purple backdrop-blur-3xl font-bold text-xl sm:text-2xl">
+        <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-white dark:bg-slate-950 px-5 py-2.5 text-[#7C3AED] dark:text-purple backdrop-blur-3xl font-bold text-xl sm:text-2xl transition-colors">
           {order}
         </span>
       </div>

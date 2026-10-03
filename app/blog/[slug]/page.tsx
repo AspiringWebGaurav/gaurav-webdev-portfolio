@@ -125,18 +125,23 @@ export default async function BlogPostPage({ params }: PageProps) {
 
   if (!resolved) {
     return (
-      <main className="min-h-screen bg-black-100 text-white flex flex-col items-center justify-center px-5 py-24 text-center relative overflow-hidden">
+      <main className="min-h-screen bg-[#FAFAFA] dark:bg-black-100 text-slate-900 dark:text-white flex flex-col items-center justify-center px-5 py-24 text-center relative overflow-hidden">
+        {/* Background Grid */}
+        <div className="h-full w-full bg-[#FAFAFA] dark:bg-black-100 bg-grid-black/[0.025] dark:bg-grid-white/[0.03] absolute top-0 left-0 flex items-center justify-center pointer-events-none -z-10">
+          <div className="absolute pointer-events-none inset-0 flex items-center justify-center bg-[#FAFAFA] dark:bg-black-100 [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]" />
+        </div>
+
         <div className="max-w-md z-10 flex flex-col items-center">
-          <div className="w-16 h-16 rounded-full bg-purple/10 border border-purple/30 flex items-center justify-center mb-6">
-            <FaBookOpen className="w-7 h-7 text-purple" />
+          <div className="w-16 h-16 rounded-full bg-purple-50 dark:bg-purple/10 border border-purple-200 dark:border-purple/30 flex items-center justify-center mb-6">
+            <FaBookOpen className="w-7 h-7 text-purple-600 dark:text-purple" />
           </div>
-          <h1 className="text-3xl font-extrabold text-white mb-3">Article Not Found</h1>
-          <p className="text-white-200 text-sm mb-8 leading-relaxed">
+          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white mb-3">Article Not Found</h1>
+          <p className="text-slate-600 dark:text-white-200 text-sm mb-8 leading-relaxed">
             The requested engineering article could not be located.
           </p>
           <Link
             href="/blog"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-purple text-black font-semibold text-sm hover:bg-purple/90 transition-all"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-slate-950 hover:bg-black text-white dark:bg-purple dark:text-black dark:hover:bg-purple/90 font-semibold text-sm transition-all shadow-md active:scale-95"
           >
             <FaArrowLeft className="w-3.5 h-3.5" />
             <span>Return to Engineering Blog</span>
@@ -207,7 +212,7 @@ export default async function BlogPostPage({ params }: PageProps) {
   };
 
   return (
-    <main className="relative bg-black-100 min-h-screen text-white flex justify-center items-center flex-col mx-auto px-5 sm:px-10 overflow-clip">
+    <main className="relative bg-[#FAFAFA] dark:bg-black-100 min-h-screen text-slate-900 dark:text-white flex justify-center items-center flex-col mx-auto px-5 sm:px-10 overflow-clip">
       {/* Schema.org Injection */}
       <script
         type="application/ld+json"
@@ -223,27 +228,27 @@ export default async function BlogPostPage({ params }: PageProps) {
 
       {/* Ambient Grid Pattern */}
       <div
-        className="h-screen w-full dark:bg-black-100 bg-white dark:bg-grid-white/[0.03] bg-grid-black-100/[0.2]
+        className="h-screen w-full bg-[#FAFAFA] dark:bg-black-100 bg-grid-black/[0.025] dark:bg-grid-white/[0.03]
        absolute top-0 left-0 flex items-center justify-center pointer-events-none"
       >
         <div
-          className="absolute pointer-events-none inset-0 flex items-center justify-center dark:bg-black-100
-         bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]"
+          className="absolute pointer-events-none inset-0 flex items-center justify-center bg-[#FAFAFA] dark:bg-black-100
+         [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]"
         />
       </div>
 
       <div className="max-w-4xl w-full pt-20 sm:pt-28 pb-20 relative z-10">
         {/* Breadcrumb Navigation */}
-        <nav aria-label="Breadcrumb" className="mb-8 flex items-center gap-2 text-sm text-[#C1C2D3] flex-wrap">
-          <Link href="/" className="hover:text-purple transition-colors duration-200">
+        <nav aria-label="Breadcrumb" className="mb-8 flex items-center gap-2 text-sm text-slate-500 dark:text-[#C1C2D3] flex-wrap">
+          <Link href="/" className="hover:text-[#7C3AED] dark:hover:text-purple transition-colors duration-200">
             Home
           </Link>
-          <span className="text-white/40">/</span>
-          <Link href="/blog" className="hover:text-purple transition-colors duration-200">
+          <span className="text-slate-300 dark:text-white/40">/</span>
+          <Link href="/blog" className="hover:text-[#7C3AED] dark:hover:text-purple transition-colors duration-200">
             Blog
           </Link>
-          <span className="text-white/40">/</span>
-          <span className="text-purple font-medium truncate max-w-xs sm:max-w-md" aria-current="page">
+          <span className="text-slate-300 dark:text-white/40">/</span>
+          <span className="text-[#7C3AED] dark:text-purple font-medium truncate max-w-xs sm:max-w-md" aria-current="page">
             {article.title}
           </span>
         </nav>
@@ -251,33 +256,33 @@ export default async function BlogPostPage({ params }: PageProps) {
         {/* Article Header */}
         <header className="mb-10">
           <div className="flex items-center gap-2.5 mb-4 flex-wrap">
-            <span className="px-3 py-1 rounded-full text-xs font-mono font-medium bg-purple/10 text-purple border border-purple/30">
+            <span className="px-3 py-1 rounded-full text-xs font-mono font-medium bg-purple-50 dark:bg-purple/10 text-[#7C3AED] dark:text-purple border border-purple-200 dark:border-purple/30">
               {article.category}
             </span>
             {article.publishedDate && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono text-purple bg-purple/10 border border-purple/30 font-medium">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono text-[#7C3AED] dark:text-purple bg-purple-50 dark:bg-purple/10 border border-purple-200 dark:border-purple/30 font-medium">
                 <FaCalendarDays className="w-3 h-3" />
                 <span>Published: {article.publishedDate}</span>
               </span>
             )}
             {article.readingTime && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono text-neutral-300 bg-white/[0.05] border border-white/[0.1]">
-                <FaClock className="w-3 h-3 text-neutral-400" />
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono text-slate-700 dark:text-neutral-300 bg-slate-100 dark:bg-white/[0.05] border border-slate-200 dark:border-white/[0.1]">
+                <FaClock className="w-3 h-3 text-slate-500 dark:text-neutral-400" />
                 <span>{article.readingTime}</span>
               </span>
             )}
             {article.licenseStatus && (
-              <span className="px-3 py-1 rounded-full text-xs font-mono font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+              <span className="px-3 py-1 rounded-full text-xs font-mono font-medium bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30">
                 {article.licenseStatus}
               </span>
             )}
           </div>
 
-          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-white mb-4 leading-tight">
+          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-slate-900 dark:text-white mb-4 leading-tight">
             {article.title}
           </h1>
 
-          <p className="text-base sm:text-xl text-white-200 leading-relaxed">
+          <p className="text-base sm:text-xl text-slate-600 dark:text-white-200 leading-relaxed">
             {article.subtitle}
           </p>
         </header>
@@ -293,12 +298,12 @@ export default async function BlogPostPage({ params }: PageProps) {
         </div>
 
         {/* Action Links Bar */}
-        <div className="flex items-center gap-4 mb-12 p-4 rounded-2xl bg-[#04071D] border border-white/[0.1] flex-wrap justify-between">
+        <div className="flex items-center gap-4 mb-12 p-4 rounded-2xl bg-white dark:bg-[#04071D] border border-slate-200/90 dark:border-white/[0.1] shadow-sm flex-wrap justify-between">
           <div className="flex items-center gap-2 flex-wrap">
             {article.technologies.slice(0, 6).map((tech) => (
               <span
                 key={tech}
-                className="px-2.5 py-1 text-xs font-mono rounded-lg bg-white/[0.06] text-white/90 border border-white/[0.08]"
+                className="px-2.5 py-1 text-xs font-mono rounded-lg bg-slate-100 dark:bg-white/[0.06] text-slate-800 dark:text-white/90 border border-slate-200 dark:border-white/[0.08]"
               >
                 {tech}
               </span>
@@ -311,7 +316,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                 href={article.githubUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-neutral-300 hover:text-white px-3.5 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] transition-colors border border-white/[0.08]"
+                className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-slate-700 hover:text-slate-900 dark:text-neutral-300 dark:hover:text-white px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.05] dark:hover:bg-white/[0.1] transition-colors border border-slate-200 dark:border-white/[0.08]"
               >
                 <FaGithub className="w-4 h-4" />
                 <span>Source Code</span>
@@ -322,9 +327,9 @@ export default async function BlogPostPage({ params }: PageProps) {
                 href={article.docsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-indigo-300 hover:text-white px-3.5 py-2 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 transition-colors border border-indigo-500/30"
+                className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-indigo-700 hover:text-indigo-900 dark:text-indigo-300 dark:hover:text-white px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 transition-colors border border-indigo-200 dark:border-indigo-500/30"
               >
-                <FaBookOpen className="w-4 h-4 text-indigo-400" />
+                <FaBookOpen className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                 <span>Docs</span>
               </a>
             )}
@@ -333,7 +338,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                 href={article.liveUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-black bg-purple hover:bg-purple/90 px-4 py-2 rounded-xl transition-colors shadow-md shadow-purple/20"
+                className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-white bg-slate-950 hover:bg-black dark:text-black dark:bg-purple dark:hover:bg-purple/90 px-4 py-2 rounded-xl transition-colors shadow-md dark:shadow-purple/20"
               >
                 <span>Live Site</span>
                 <FaLocationArrow className="w-3 h-3" />
@@ -344,27 +349,27 @@ export default async function BlogPostPage({ params }: PageProps) {
 
         {/* Section 1: Plain Language Overview */}
         <section aria-labelledby="overview-heading" className="mb-12">
-          <h2 id="overview-heading" className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-            <FaLayerGroup className="w-5 h-5 text-purple" />
+          <h2 id="overview-heading" className="text-2xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+            <FaLayerGroup className="w-5 h-5 text-[#7C3AED] dark:text-purple" />
             <span>How It Works &amp; Why It Matters</span>
           </h2>
-          <p className="text-base sm:text-lg text-white-200 leading-relaxed">
+          <p className="text-base sm:text-lg text-slate-600 dark:text-white-200 leading-relaxed">
             {article.overview}
           </p>
         </section>
 
         {/* Section 2: Architecture & System Design */}
-        <section aria-labelledby="architecture-heading" className="mb-12 p-6 sm:p-8 rounded-3xl bg-[#04071D] border border-white/[0.1]">
-          <h2 id="architecture-heading" className="text-2xl font-bold text-white mb-3">
+        <section aria-labelledby="architecture-heading" className="mb-12 p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#04071D] border border-slate-200/90 dark:border-white/[0.1] shadow-sm">
+          <h2 id="architecture-heading" className="text-2xl font-bold text-slate-900 dark:text-white mb-3">
             {article.architecture.title}
           </h2>
-          <p className="text-white-200 text-sm sm:text-base leading-relaxed mb-6">
+          <p className="text-slate-600 dark:text-white-200 text-sm sm:text-base leading-relaxed mb-6">
             {article.architecture.description}
           </p>
           <ul className="space-y-3">
             {article.architecture.points.map((point, idx) => (
-              <li key={idx} className="flex items-start gap-3 text-sm sm:text-base text-neutral-300">
-                <FaCheck className="w-4 h-4 text-purple mt-1 flex-shrink-0" />
+              <li key={idx} className="flex items-start gap-3 text-sm sm:text-base text-slate-700 dark:text-neutral-300">
+                <FaCheck className="w-4 h-4 text-[#7C3AED] dark:text-purple mt-1 flex-shrink-0" />
                 <span>{point}</span>
               </li>
             ))}
@@ -373,20 +378,20 @@ export default async function BlogPostPage({ params }: PageProps) {
 
         {/* Section 3: Engineering Challenges */}
         <section aria-labelledby="challenges-heading" className="mb-12">
-          <h2 id="challenges-heading" className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-            <FaLightbulb className="w-5 h-5 text-purple" />
+          <h2 id="challenges-heading" className="text-2xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+            <FaLightbulb className="w-5 h-5 text-[#7C3AED] dark:text-purple" />
             <span>Technical Challenges &amp; Practical Solutions</span>
           </h2>
           <div className="space-y-6">
             {article.challenges.map((c, idx) => (
               <div
                 key={idx}
-                className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.08]"
+                className="p-6 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200/90 dark:border-white/[0.08] shadow-sm"
               >
-                <h3 className="text-lg font-semibold text-white mb-2">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
                   {c.title}
                 </h3>
-                <p className="text-sm sm:text-base text-neutral-300 leading-relaxed">
+                <p className="text-sm sm:text-base text-slate-600 dark:text-neutral-300 leading-relaxed">
                   {c.solution}
                 </p>
               </div>
@@ -396,28 +401,28 @@ export default async function BlogPostPage({ params }: PageProps) {
 
         {/* Section 4: Features & Outcomes */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-          <section aria-labelledby="features-heading" className="p-6 rounded-3xl bg-[#04071D] border border-white/[0.1]">
-            <h2 id="features-heading" className="text-xl font-bold text-white mb-4">
+          <section aria-labelledby="features-heading" className="p-6 rounded-3xl bg-white dark:bg-[#04071D] border border-slate-200/90 dark:border-white/[0.1] shadow-sm">
+            <h2 id="features-heading" className="text-xl font-bold text-slate-900 dark:text-white mb-4">
               Core Capabilities
             </h2>
             <ul className="space-y-3">
               {article.features.map((feature, idx) => (
-                <li key={idx} className="flex items-start gap-2.5 text-sm text-neutral-300">
-                  <span className="w-1.5 h-1.5 rounded-full bg-purple mt-2 flex-shrink-0" />
+                <li key={idx} className="flex items-start gap-2.5 text-sm text-slate-700 dark:text-neutral-300">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#7C3AED] dark:bg-purple mt-2 flex-shrink-0" />
                   <span>{feature}</span>
                 </li>
               ))}
             </ul>
           </section>
 
-          <section aria-labelledby="results-heading" className="p-6 rounded-3xl bg-[#04071D] border border-white/[0.1]">
-            <h2 id="results-heading" className="text-xl font-bold text-white mb-4">
+          <section aria-labelledby="results-heading" className="p-6 rounded-3xl bg-white dark:bg-[#04071D] border border-slate-200/90 dark:border-white/[0.1] shadow-sm">
+            <h2 id="results-heading" className="text-xl font-bold text-slate-900 dark:text-white mb-4">
               Validated Outcomes
             </h2>
             <ul className="space-y-3">
               {article.results.map((result, idx) => (
-                <li key={idx} className="flex items-start gap-2.5 text-sm text-neutral-300">
-                  <FaCheck className="w-3.5 h-3.5 text-purple mt-1 flex-shrink-0" />
+                <li key={idx} className="flex items-start gap-2.5 text-sm text-slate-700 dark:text-neutral-300">
+                  <FaCheck className="w-3.5 h-3.5 text-[#7C3AED] dark:text-purple mt-1 flex-shrink-0" />
                   <span>{result}</span>
                 </li>
               ))}
@@ -426,48 +431,48 @@ export default async function BlogPostPage({ params }: PageProps) {
         </div>
 
         {/* Section 5: Governance & Licensing */}
-        <section aria-labelledby="governance-heading" className="mb-14 p-6 sm:p-8 rounded-3xl bg-[#04071D] border border-white/[0.1]">
+        <section aria-labelledby="governance-heading" className="mb-14 p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#04071D] border border-slate-200/90 dark:border-white/[0.1] shadow-sm">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-purple/10 border border-purple/30 flex items-center justify-center text-purple">
+            <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple/10 border border-purple-200 dark:border-purple/30 flex items-center justify-center text-[#7C3AED] dark:text-purple">
               <FaShieldHalved className="w-5 h-5" />
             </div>
             <div>
-              <h2 id="governance-heading" className="text-xl sm:text-2xl font-bold text-white">
+              <h2 id="governance-heading" className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
                 Licensing &amp; Open Governance
               </h2>
-              <p className="text-xs sm:text-sm text-neutral-400">
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-neutral-400">
                 Transparent information about source code terms and service architecture
               </p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-6">
-            <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08]">
-              <p className="text-xs font-mono uppercase text-neutral-400 mb-1">Software License</p>
-              <p className="text-sm sm:text-base font-semibold text-emerald-400 flex items-center gap-2">
-                <FaScaleBalanced className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08]">
+              <p className="text-xs font-mono uppercase text-slate-500 dark:text-neutral-400 mb-1">Software License</p>
+              <p className="text-sm sm:text-base font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
+                <FaScaleBalanced className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
                 <span>{article.licenseStatus}</span>
               </p>
             </div>
-            <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08]">
-              <p className="text-xs font-mono uppercase text-neutral-400 mb-1">Deployment Model</p>
-              <p className="text-sm sm:text-base font-semibold text-purple flex items-center gap-2">
-                <FaCheck className="w-4 h-4 text-purple flex-shrink-0" />
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08]">
+              <p className="text-xs font-mono uppercase text-slate-500 dark:text-neutral-400 mb-1">Deployment Model</p>
+              <p className="text-sm sm:text-base font-semibold text-[#7C3AED] dark:text-purple flex items-center gap-2">
+                <FaCheck className="w-4 h-4 text-[#7C3AED] dark:text-purple flex-shrink-0" />
                 <span>{article.contractStatus}</span>
               </p>
             </div>
           </div>
 
-          <p className="text-sm sm:text-base text-neutral-300 leading-relaxed bg-white/[0.02] p-4 rounded-xl border border-white/[0.06]">
+          <p className="text-sm sm:text-base text-slate-700 dark:text-neutral-300 leading-relaxed bg-slate-50 dark:bg-white/[0.02] p-4 rounded-xl border border-slate-200 dark:border-white/[0.06]">
             {article.licenseDetails}
           </p>
         </section>
 
         {/* Navigation Footer */}
-        <div className="flex items-center justify-between pt-8 border-t border-white/[0.08] flex-wrap gap-4">
+        <div className="flex items-center justify-between pt-8 border-t border-slate-200/80 dark:border-white/[0.08] flex-wrap gap-4">
           <Link
             href="/blog"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white font-medium hover:bg-white/[0.08] transition-all text-sm"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white hover:bg-slate-100 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white font-medium shadow-sm transition-all text-sm"
           >
             <FaArrowLeft className="w-3.5 h-3.5" />
             <span>Back to All Articles</span>
@@ -475,7 +480,7 @@ export default async function BlogPostPage({ params }: PageProps) {
 
           <Link
             href={`/projects/${article.slug}`}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple text-black font-semibold hover:bg-purple/90 transition-all text-sm shadow-md"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-950 hover:bg-black text-white dark:bg-purple dark:text-black dark:hover:bg-purple/90 font-semibold transition-all text-sm shadow-md"
           >
             <span>View in Project Hub</span>
             <FaLocationArrow className="w-3.5 h-3.5" />

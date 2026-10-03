@@ -358,15 +358,13 @@ export const FloatingNav = ({
           duration: 0.2,
         }}
         className={cn(
-          "flex max-w-[96vw] sm:max-w-fit fixed z-[5000] top-4 sm:top-10 inset-x-0 mx-auto px-3 sm:px-6 md:px-10 py-2 sm:py-3 md:py-4 rounded-xl sm:rounded-2xl border border-white/[0.15] shadow-lg items-center justify-center space-x-1 sm:space-x-3 md:space-x-4 select-none",
-          "hover:shadow-[0_8px_32px_0_rgba(31,38,135,0.37)] transition-shadow duration-300",
+          "flex max-w-[96vw] sm:max-w-fit fixed z-[5000] top-4 sm:top-10 inset-x-0 mx-auto px-3 sm:px-6 md:px-10 py-2 sm:py-3 md:py-4 rounded-xl sm:rounded-2xl border border-slate-200/90 dark:border-white/[0.15] bg-white/85 dark:bg-[rgba(255,255,255,0.025)] shadow-[0_8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.2)] items-center justify-center space-x-1 sm:space-x-3 md:space-x-4 select-none backdrop-blur-xl",
+          "hover:shadow-[0_8px_32px_0_rgba(124,58,237,0.12)] dark:hover:shadow-[0_8px_32px_0_rgba(31,38,135,0.37)] transition-all duration-300",
           className
         )}
         style={{
           backdropFilter: "blur(30px) saturate(150%)",
           WebkitBackdropFilter: "blur(30px) saturate(150%)",
-          backgroundColor: "rgba(255, 255, 255, 0.025)",
-          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
           top: "calc(1rem + env(safe-area-inset-top, 0px))",
         }}
       >
@@ -381,7 +379,7 @@ export const FloatingNav = ({
               rel={isExternal ? "noopener noreferrer" : undefined}
               onClick={(e) => handleNavClick(e, navItem.link)}
               className={cn(
-                "relative dark:text-neutral-50 items-center flex space-x-1 text-neutral-400 dark:hover:text-neutral-200 hover:text-neutral-500 touch-manipulation py-2 px-1.5 sm:px-2.5 min-h-[44px] transition-colors"
+                "relative items-center flex space-x-1 text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white touch-manipulation py-2 px-1.5 sm:px-2.5 min-h-[44px] transition-colors"
               )}
             >
               {navItem.icon && <span className="block sm:hidden">{navItem.icon}</span>}
