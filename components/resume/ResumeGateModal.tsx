@@ -58,6 +58,13 @@ export const ResumeGateModal: React.FC<ResumeGateModalProps> = ({
 
   // Step state: "details" -> "otp"
   const [step, setStep] = useState<"details" | "otp">("details");
+  const [isSuccessDismissing, setIsSuccessDismissing] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsSuccessDismissing(false);
+    }
+  }, [isOpen]);
 
   // Single email input state
   const [email, setEmail] = useState("");
@@ -415,6 +422,18 @@ export const ResumeGateModal: React.FC<ResumeGateModalProps> = ({
         throw new Error(data.error || "Invalid code. Please try again.");
       }
 
+      // Secure Tab-Isolated Lifecycle: Store session token in sessionStorage for this tab only
+      if (typeof window !== "undefined" && data.data?.sessionToken) {
+        try {
+          sessionStorage.setItem("resume_tab_token", data.data.sessionToken);
+          sessionStorage.setItem("resume_tab_lifecycle_state", "active");
+        } catch {
+          // Fallback if sessionStorage is disabled/restricted
+        }
+      }
+
+      // Immediately dismiss modal to eliminate any visual flash or lingering inputs
+      setIsSuccessDismissing(true);
       onVerified();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Verification failed.";
@@ -446,7 +465,7 @@ export const ResumeGateModal: React.FC<ResumeGateModalProps> = ({
     return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || isSuccessDismissing) return null;
 
   const hasToken = !!getEffectiveTurnstileToken();
   const isAbusive = email.trim() ? checkEmailAbuse(email).isAbusive : false;

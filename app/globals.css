@@ -244,5 +244,22 @@ html.dark body:has([data-portal="talk"]) {
   background-color: #07090E !important;
 }
 
+/* Resume unlock 1.5s progress transition animation */
+@keyframes resume-progress {
+  0% {
+    width: 0%;
+  }
+  50% {
+    width: 65%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+.animate-resume-progress {
+  animation: resume-progress 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
 
 

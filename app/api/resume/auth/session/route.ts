@@ -6,7 +6,11 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
-    const token = req.cookies.get(RESUME_SESSION_COOKIE)?.value;
+    const tabToken =
+      req.headers.get("x-resume-tab-token") ||
+      req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
+    const cookieToken = req.cookies.get(RESUME_SESSION_COOKIE)?.value;
+    const token = tabToken || cookieToken;
     const session = verifyResumeSessionToken(token);
 
     if (!session) {

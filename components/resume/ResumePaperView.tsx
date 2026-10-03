@@ -27,8 +27,8 @@ export const ResumePaperView: React.FC<ResumePaperViewProps> = ({
       <div className="w-full flex justify-center">
         <article
           id="resume-document-page"
-          className={`relative w-full max-w-[850px] bg-[#FFFFFF] dark:bg-[#0E0E12] text-[#0F172A] dark:text-zinc-100 font-sans px-4 xs:px-6 sm:px-8 md:px-11 lg:px-12 pt-6 xs:pt-7 sm:pt-9 md:pt-10 pb-6 sm:pb-8 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.04)] dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.06)] rounded-sm print:m-0 print:p-8 print:shadow-none print:max-w-none print:min-h-0 print:rounded-none transition-all duration-300 ${
-            !isUnlocked ? "filter blur-sm pointer-events-none select-none" : "filter-none"
+          className={`relative w-full max-w-[850px] bg-[#FFFFFF] dark:bg-[#0E0E12] text-[#0F172A] dark:text-zinc-100 font-sans px-4 xs:px-6 sm:px-8 md:px-11 lg:px-12 pt-6 xs:pt-7 sm:pt-9 md:pt-10 pb-6 sm:pb-8 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.04)] dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.06)] rounded-sm print:m-0 print:p-8 print:shadow-none print:max-w-none print:min-h-0 print:rounded-none transition-all duration-700 ease-out ${
+            !isUnlocked ? "filter blur-sm pointer-events-none select-none" : "filter-none animate-in fade-in duration-500"
           }`}
           style={{
             fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getRequestContext } from "@/lib/api/context";
 import { verifyResumeOtpChallenge } from "@/lib/resume/services/resume-auth.service";
-import { RESUME_SESSION_COOKIE, RESUME_SESSION_TTL_SECONDS } from "@/lib/resume/constants";
+import { RESUME_SESSION_COOKIE } from "@/lib/resume/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -48,15 +48,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Set signed HttpOnly session cookie
+    // Set signed HttpOnly session cookie (session lifetime: destroyed when browser session ends)
     const isProd = process.env.NODE_ENV === "production";
-    const maxAge = RESUME_SESSION_TTL_SECONDS; // 30 minutes (1800 seconds)
 
     const response = NextResponse.json({
       ok: true,
       data: {
         verified: true,
         session: result.session,
+        sessionToken: result.sessionToken,
       },
     });
 
@@ -66,7 +66,6 @@ export async function POST(req: NextRequest) {
       httpOnly: true,
       secure: isProd,
       sameSite: "lax",
-      maxAge,
       path: "/",
     });
 
