@@ -32,26 +32,7 @@ export class ProjectsRepository extends BaseRepository {
       );
 
       const merged = missingSeeds.length > 0 ? [...docs, ...missingSeeds] : docs;
-      const normalized = merged.map((p) => {
-        const updated = { ...p };
-        if (
-          updated.id === "proj_11" ||
-          updated.slug === "gauravwork-developer-workspace" ||
-          updated.id === "proj_10" ||
-          updated.slug === "bgmiid-gaming-identity" ||
-          (updated.liveUrl && updated.liveUrl.includes("bgmiid.eu.cc"))
-        ) {
-          updated.isPublished = false;
-        }
-        if (updated.liveUrl && updated.liveUrl.includes("send2me.site")) {
-          updated.liveUrl = "https://send2me.eu.cc/";
-        }
-        if (updated.liveUrl && updated.liveUrl.includes("gauravbuilds.eu.cc")) {
-          updated.liveUrl = "https://gauravbuilds.vercel.app/";
-        }
-        return updated;
-      });
-      return normalized.sort((a, b) => (a.order || 0) - (b.order || 0));
+      return merged.sort((a, b) => (a.order || 0) - (b.order || 0));
     });
   }
 

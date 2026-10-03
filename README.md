@@ -13,12 +13,14 @@
 An enterprise-grade, high-performance web engineering portfolio designed and built by **Gaurav Patil**. Engineered with **Next.js 15 (App Router)**, **React 19**, **Three.js WebGL**, and modern cloud infrastructure. Architected with isolated presentation layers, touch ergonomics, privacy-first communication channels, and zero cumulative layout shift (`CLS = 0`).
 
 * **Production URL**: [`https://gauravpatil.site`](https://gauravpatil.site)
+* **Interactive Projects Launchpad**: [`https://self.gauravpatil.site`](https://self.gauravpatil.site)
 * **Verified Interactive Resume Portal**: [`https://resume.gauravpatil.site`](https://resume.gauravpatil.site)
 * **Verified Recruiter Contact Portal**: [`https://contact.gauravpatil.site`](https://contact.gauravpatil.site)
+* **Talk Command Hub**: [`https://talk.gauravpatil.site`](https://talk.gauravpatil.site)
 * **Pre-Production Staging Preview**: [`https://devlabs.eu.cc`](https://devlabs.eu.cc)
 * **Verified Email Gateway**: `gauravpatil.site`
 
-> 📬 **Direct Inquiries & Collaboration**: To discuss project proposals, consulting engagements, or hiring/recruiter access, reach out directly via the verified Recruiter Portal at [`https://contact.gauravpatil.site`](https://contact.gauravpatil.site), view the verified interactive resume at [`https://resume.gauravpatil.site`](https://resume.gauravpatil.site), launch the interactive contact modal at [gauravpatil.site/contact](https://gauravpatil.site/contact), or email [`gaurav@gauravpatil.site`](mailto:gaurav@gauravpatil.site) (professional direct line) / [`hello@gauravpatil.site`](mailto:hello@gauravpatil.site) (general inquiries).
+> 📬 **Direct Inquiries & Collaboration**: To discuss project proposals, consulting engagements, or hiring/recruiter access, reach out directly via the verified Recruiter Portal at [`https://contact.gauravpatil.site`](https://contact.gauravpatil.site), browse live software releases at [`https://self.gauravpatil.site`](https://self.gauravpatil.site), view the verified interactive resume at [`https://resume.gauravpatil.site`](https://resume.gauravpatil.site), launch the interactive contact modal at [gauravpatil.site/contact](https://gauravpatil.site/contact), or email [`gaurav@gauravpatil.site`](mailto:gaurav@gauravpatil.site) (professional direct line) / [`hello@gauravpatil.site`](mailto:hello@gauravpatil.site) (general inquiries).
 
 ---
 
@@ -26,7 +28,7 @@ An enterprise-grade, high-performance web engineering portfolio designed and bui
 
 - [1. Platform Overview & Highlights](#1-platform-overview--highlights)
 - [2. Architectural Highlights](#2-architectural-highlights)
-- [3. Interactive Communication Channels](#3-interactive-communication-channels)
+- [3. Interactive Communication Channels & Subdomains](#3-interactive-communication-channels--subdomains)
 - [4. Visual Design & User Experience](#4-visual-design--user-experience)
 - [5. Performance & Reliability Standards](#5-performance--reliability-standards)
 - [6. Legal Governance & Transparency (v0.0.1)](#6-legal-governance--transparency-v001)
@@ -43,6 +45,7 @@ An enterprise-grade, high-performance web engineering portfolio designed and bui
 Gaurav Portfolio serves as an active, production-grade showcase of modern full-stack web engineering, resilient system architecture, and interactive design:
 
 * **Interactive 3D WebGL Canvas**: Three.js Globe rendering smooth coordinate trajectories, loaded asynchronously with zero layout reflow.
+* **Interactive Projects Launchpad (`self.gauravpatil.site`)**: Ultra-fast single-view zero-scroll hub with mobile tactile haptic pulses and instant outbound redirection.
 * **Shareable Contact Route (`/contact`)**: Dynamic interactive contact modal with bidirectional URL synchronization, native browser Back/Forward navigation, and direct shareable link resolution.
 * **Intelligent Personal Assistant & Live Chat**: Contextual portfolio navigator providing real-time technical project breakdowns, verified 1-to-1 communication, and automated inbox notification routing.
 * **Meta WhatsApp Cloud Integration**: Production WhatsApp channel for recruiters with two-bubble delivery sequence, 1-click email response triggers, and self-service GDPR Article 20 data exports.
@@ -83,19 +86,29 @@ The platform follows clean separation of concerns, ensuring high maintainability
 
 ---
 
-## 3. Interactive Communication Channels
+## 3. Interactive Communication Channels & Subdomains
 
-### 3.0 Verified Recruiter & Hiring Portal (`contact.gauravpatil.site`)
+### 3.0.0 Interactive Projects Launchpad (`self.gauravpatil.site`)
+* **Single-View Zero-Scroll Architecture**: Engineered under a strict `100dvh` zero-vertical-scroll constraint across all viewports (from 320px mobile up to 4K displays).
+* **Mobile-Only Silent Haptic Feedback**: Tactile `15ms` physical vibration pulse on touch devices when opening any card or link (0 audio, strictly silent physical motor haptics).
+* **Vercel Hobby Plan & Quota Optimization**: 24-hour baseline ISR (`revalidate = 86400`) served 100% statically from Edge CDN cache (0 Function Invocations on visitor page loads, 0 Fluid Active CPU burn, and 0 unnecessary database reads).
+* **Dynamic Admin Freedom**: Synchronized with `/admin/projects` for real-time CRUD, reordering, and publishing controls with on-demand Edge cache purging.
+* **Responsive Single-Line Footer**: Clean horizontal footer layout avoiding awkward wraps on compact mobile screens.
+
+### 3.0.1 Verified Recruiter & Hiring Portal (`contact.gauravpatil.site`)
 * **Dedicated High-Touch Gateway**: Hosted at [`https://contact.gauravpatil.site`](https://contact.gauravpatil.site) (locally rewrites from `http://contact.localhost:3000` or `/contact-portal`).
 * **Instant Recruiter Verification**: Single-step email verification with automated domain typo autocorrection (`gmal` ➔ `gmail.com`) and zero passwords or friction.
 * **Direct Access Unlocked**: Candidate resume download, verified direct phone/WhatsApp lines, candidate dossier, and real-time live chat session.
 
-### 3.0.1 Verified Interactive Resume Portal (`resume.gauravpatil.site`)
+### 3.0.2 Verified Interactive Resume Portal (`resume.gauravpatil.site`)
 * **Dedicated Candidate Credentials Gateway**: Hosted at [`https://resume.gauravpatil.site`](https://resume.gauravpatil.site) (isolated Edge routing from `http://resume.localhost:3000` or `/resume`).
 * **Session Security & Anti-Tamper**: Cryptographic HMAC session tokens with enforced 30-minute inactivity auto-logout, in-memory client purge, and dedicated `/api/resume/auth/logout`.
 * **Bot Mitigation & Cloudflare Turnstile**: Automated abuse defense protecting credential disclosure and PDF download streams.
 * **Dynamic Lifecycle & Admin Governance**: Real-time admin control over resume status (`active`, `hired`, `suspended`) with executive suspended view states.
 * **Fluid Responsive Paper View**: Mobile-first touch-ergonomic design rendering crisply across mobile (down to 320px), tablet, and desktop screens with zero cumulative layout shift.
+
+### 3.0.3 Talk Command Hub (`talk.gauravpatil.site`)
+* **Real-Time Communication Interface**: Hosted at [`https://talk.gauravpatil.site`](https://talk.gauravpatil.site) with dedicated session gates, rate-limited messaging, and real-time synchronization.
 
 ### 3.1 Shareable Dynamic Contact Form (`/contact`)
 * **Dynamic Route Launch**: Direct navigation to `/contact` loads the portfolio and automatically launches the interactive contact modal with centered focus.
@@ -146,8 +159,10 @@ The platform includes comprehensive transparency documentation accessible direct
 
 | Route | Document Title | Active Version | Scope & Responsibility |
 | :--- | :--- | :--- | :--- |
+| [`self.gauravpatil.site`](https://self.gauravpatil.site) | **Interactive Projects Launchpad** | `v1.0.0` | Ultra-fast single-view zero-scroll directory aggregating all 14 production SaaS and client platforms. |
 | [`resume.gauravpatil.site`](https://resume.gauravpatil.site) | **Verified Resume Portal** | `v1.0.0` | Dedicated verified interactive candidate resume, credentials verification, and PDF download hub. |
 | [`contact.gauravpatil.site`](https://contact.gauravpatil.site) | **Recruiter Contact Portal** | `v1.0.0` | Dedicated portal for recruiters, talent teams, candidate resume, and verified live communication. |
+| [`talk.gauravpatil.site`](https://talk.gauravpatil.site) | **Talk Command Hub** | `v1.0.0` | Real-time command center, interactive messaging gateway, and authenticated executive communication. |
 | [`/terms`](https://gauravpatil.site/terms) | **Terms of Service** | `v0.0.1` | Operating terms, intellectual property, acceptable use, and communication standards. |
 | [`/privacy`](https://gauravpatil.site/privacy) | **Privacy Policy** | `v0.0.1` | Data minimization principles, anonymity rights, encryption standards, and GDPR compliance. |
 | [`/security`](https://gauravpatil.site/security) | **Security Policy** | `v0.0.1` | Infrastructure defenses, authentication standards, and vulnerability disclosure policies. |

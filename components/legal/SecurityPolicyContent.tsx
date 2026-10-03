@@ -78,7 +78,7 @@ export const SecurityPolicyContent: React.FC = () => {
                   Security Architecture Philosophy
                 </h2>
                 <p className="text-sm sm:text-base text-neutral-300 leading-relaxed">
-                  The security posture of Gaurav Portfolio and its verified subdomains (<code className="text-xs text-purple font-mono">gauravpatil.site</code>, <code className="text-xs text-purple font-mono">contact.gauravpatil.site</code>, <code className="text-xs text-purple font-mono">resume.gauravpatil.site</code>) is rooted in the principle of defense-in-depth and minimal attack surface. Rather than relying on monolithic perimeter controls, every subsystem—from visitor contact routing and verified candidate resume presentation to administrative consoles—is compartmentalized with explicit boundary validation.
+                  The security posture of Gaurav Portfolio and its verified subdomains (<code className="text-xs text-purple font-mono">gauravpatil.site</code>, <code className="text-xs text-purple font-mono">self.gauravpatil.site</code>, <code className="text-xs text-purple font-mono">contact.gauravpatil.site</code>, <code className="text-xs text-purple font-mono">resume.gauravpatil.site</code>, <code className="text-xs text-purple font-mono">talk.gauravpatil.site</code>, <code className="text-xs text-purple font-mono">admin.gauravpatil.site</code>) is rooted in the principle of defense-in-depth and minimal attack surface. Rather than relying on monolithic perimeter controls, every subsystem—from visitor contact routing and verified candidate resume presentation to administrative consoles—is compartmentalized with explicit boundary validation.
                 </p>
               </div>
             </div>
@@ -239,7 +239,7 @@ export const SecurityPolicyContent: React.FC = () => {
                   </h2>
                 </div>
                 <p className="text-sm sm:text-base text-neutral-300 leading-relaxed">
-                  If you discover a security vulnerability, configuration flaw, or potential exploit in this portfolio or associated subdomains (<code className="text-xs text-purple font-mono">gauravpatil.site</code>, <code className="text-xs text-purple font-mono">contact.gauravpatil.site</code>, <code className="text-xs text-purple font-mono">resume.gauravpatil.site</code>), you are encouraged to report it responsibly.
+                  If you discover a security vulnerability, configuration flaw, or potential exploit in this portfolio or associated subdomains (<code className="text-xs text-purple font-mono">gauravpatil.site</code>, <code className="text-xs text-purple font-mono">self.gauravpatil.site</code>, <code className="text-xs text-purple font-mono">contact.gauravpatil.site</code>, <code className="text-xs text-purple font-mono">resume.gauravpatil.site</code>, <code className="text-xs text-purple font-mono">talk.gauravpatil.site</code>, <code className="text-xs text-purple font-mono">admin.gauravpatil.site</code>), you are encouraged to report it responsibly.
                 </p>
                 <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.08] space-y-2">
                   <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed">
