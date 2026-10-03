@@ -85,9 +85,13 @@ const nextConfig: NextConfig = {
       "node_modules/playwright-core/**",
       "node_modules/@esbuild/**",
       "node_modules/typescript/**",
+      "node_modules/@swc/**",
+      "node_modules/terser/**",
       "tests/**",
       "test-results/**",
       "playwright-report/**",
+      "scratch/**",
+      ".git/**",
     ],
   },
   turbopack: {
@@ -140,7 +144,7 @@ const nextConfig: NextConfig = {
       },
       {
         // 1-Year Immutable Caching for Static Media, Images, Fonts, 3D Assets & Manifests
-        source: "/:path*.(ico|png|svg|jpg|jpeg|gif|webp|avif|woff|woff2|ttf|otf|eot|pdf|json|webmanifest|glb|gltf|mp4|webm)",
+        source: "/:all*(ico|png|svg|jpg|jpeg|gif|webp|avif|woff|woff2|ttf|otf|eot|pdf|json|webmanifest|glb|gltf|mp4|webm)",
         headers: [
           {
             key: "Cache-Control",

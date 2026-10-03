@@ -7,7 +7,7 @@ import { projectsRepository } from "@/lib/dal/repositories/cms/projects.reposito
 import { SEED_PROJECTS } from "@/lib/dal/repositories/seed-data";
 import { PROJECT_CASE_STUDIES } from "@/lib/data/case-studies";
 
-export const revalidate = 3600;
+export const revalidate = 86400; // 24-hour baseline ISR (revalidated on-demand via CMS actions)
 
 export const metadata: Metadata = {
   title: "Full Stack & Software Engineering Projects",

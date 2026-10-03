@@ -46,7 +46,7 @@ const AssistantBubble = dynamic(
   { loading: () => <AssistantBubbleSkeleton /> }
 );
 
-export const revalidate = 3600;
+export const revalidate = 86400; // 24-hour baseline ISR (revalidated on-demand via CMS actions)
 
 export default async function Home() {
   const data = await getPortfolioData();

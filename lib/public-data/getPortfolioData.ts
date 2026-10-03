@@ -34,6 +34,6 @@ export const getPortfolioData = unstable_cache(
       "portfolio-nav",
       "portfolio-assistant",
     ],
-    revalidate: 3600, // Background revalidation fallback (1 hour)
+    revalidate: 86400, // Background revalidation fallback (24 hours; deterministic on-demand invalidation via tags)
   }
 );

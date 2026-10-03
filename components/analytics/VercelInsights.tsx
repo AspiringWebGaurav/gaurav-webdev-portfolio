@@ -26,7 +26,7 @@ export function VercelInsights() {
         }}
       />
       <SpeedInsights
-        sampleRate={0.5}
+        sampleRate={0.15}
         beforeSend={(event) => {
           if (typeof window !== "undefined") {
             const h = window.location.hostname;

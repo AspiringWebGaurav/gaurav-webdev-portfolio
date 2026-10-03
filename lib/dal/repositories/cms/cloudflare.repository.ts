@@ -7,24 +7,44 @@ import { SEED_CLOUDFLARE } from "../seed-data";
 export class CloudflareRepository extends BaseRepository {
   private collectionName = "portfolio_cloudflare";
   private docId = "cloudflare_main";
+  private cachedSettings: { data: CloudflareSettingsDocument; expiresAt: number } | null = null;
+  private readonly CACHE_TTL_MS = 5 * 60 * 1000; // 5-minute in-process memory cache
 
   constructor() {
     super("CloudflareRepository");
   }
 
   public async getCloudflareSettings(): Promise<RepositoryResult<CloudflareSettingsDocument>> {
-    return this.executeQuery("getCloudflareSettings", async () => {
+    if (this.cachedSettings && Date.now() < this.cachedSettings.expiresAt) {
+      return {
+        success: true,
+        data: this.cachedSettings.data,
+        timestamp: new Date().toISOString(),
+      };
+    }
+
+    const result = await this.executeQuery("getCloudflareSettings", async () => {
       const doc = await firestoreDataSource.getDocument<CloudflareSettingsDocument>(this.collectionName, this.docId);
       if (!doc) {
         return SEED_CLOUDFLARE;
       }
       return doc;
     });
+
+    if (result.success && result.data) {
+      this.cachedSettings = {
+        data: result.data,
+        expiresAt: Date.now() + this.CACHE_TTL_MS,
+      };
+    }
+
+    return result;
   }
 
   public async updateCloudflareSettings(
     data: Partial<Omit<CloudflareSettingsDocument, "id">> & { expectedVersion?: number }
   ): Promise<RepositoryResult<CloudflareSettingsDocument>> {
+    this.cachedSettings = null; // Invalidate cache immediately on update
     return this.executeMutation("updateCloudflareSettings", async () => {
       const current = (await this.getCloudflareSettings()).data || SEED_CLOUDFLARE;
       if (

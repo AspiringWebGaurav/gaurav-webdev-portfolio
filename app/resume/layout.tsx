@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import React from "react";
 import { getResumeData } from "@/lib/resume/services/resume-data.service";
 
-export const revalidate = 3600;
+export const revalidate = 86400; // 24-hour baseline ISR (revalidated on-demand via CMS actions)
 
 /**
  * Dynamic Metadata Generator for resume.gauravpatil.site
