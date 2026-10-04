@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FaLocationArrow, FaArrowRight, FaGithub, FaBookOpen } from "react-icons/fa6";
 import { PinContainer } from "@/components/ui/3d-pin";
 import { ProjectImageSlider } from "@/components/portfolio/ProjectImageSlider";
+import { cn } from "@/lib/utils";
 import type { ProjectDocument } from "@/types/portfolio";
 import { SEED_PROJECTS } from "@/lib/dal/repositories/seed-data";
 
@@ -34,6 +35,16 @@ const getTechName = (iconUrl: string) => {
   return map[file] || `${file || "Technology"} Icon`;
 };
 
+const isMonochromeWhiteIcon = (iconUrl: string) => {
+  const file = iconUrl.split("/").pop()?.toLowerCase() || "";
+  return (
+    file === "next.svg" ||
+    file === "cloud.svg" ||
+    file === "three.svg" ||
+    file === "link.svg"
+  );
+};
+
 export const ProjectsSection = ({ projects = SEED_PROJECTS, limit = 6 }: ProjectsSectionProps) => {
   const sortedProjects = [...projects].sort((a, b) => (a.order || 0) - (b.order || 0));
   const displayedProjects = limit ? sortedProjects.slice(0, limit) : sortedProjects;
@@ -51,7 +62,9 @@ export const ProjectsSection = ({ projects = SEED_PROJECTS, limit = 6 }: Project
             slug,
             description,
             coverImage,
+            coverImageLight,
             images,
+            imagesLight,
             iconLists,
             liveUrl,
             githubUrl,
@@ -76,6 +89,13 @@ export const ProjectsSection = ({ projects = SEED_PROJECTS, limit = 6 }: Project
                     {/* Auto-Sliding Multi-Screenshot Showcase (CLS = 0) */}
                     <ProjectImageSlider
                       images={images && images.length > 0 ? images : [coverImage]}
+                      lightImages={
+                        imagesLight && imagesLight.length > 0
+                          ? imagesLight
+                          : coverImageLight
+                          ? [coverImageLight]
+                          : undefined
+                      }
                       title={title}
                       aspectClass="h-44 sm:h-56"
                     />
@@ -114,24 +134,30 @@ export const ProjectsSection = ({ projects = SEED_PROJECTS, limit = 6 }: Project
                 <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-200/90 dark:border-white/[0.08] gap-1 sm:gap-2">
                   {/* Tech Stack Icons with Recruiter Tooltips */}
                   <div className="flex items-center shrink-0">
-                    {(iconLists || []).map((icon, index) => (
-                      <div
-                        key={index}
-                        className="border border-slate-200/90 dark:border-white/[.15] rounded-full bg-slate-100 dark:bg-[#04071D] w-6 h-6 sm:w-8 sm:h-8 flex justify-center items-center shadow-2xs cursor-help hover:scale-110 hover:border-purple transition-all duration-200"
-                        style={{
-                          transform: `translateX(-${index * 5}px)`,
-                        }}
-                        title={getTechName(icon)}
-                      >
-                        <img
-                          src={icon}
-                          alt={getTechName(icon)}
-                          loading="lazy"
-                          decoding="async"
-                          className="p-0.5 sm:p-1 w-full h-full object-contain"
-                        />
-                      </div>
-                    ))}
+                    {(iconLists || []).map((icon, index) => {
+                      const isWhite = isMonochromeWhiteIcon(icon);
+                      return (
+                        <div
+                          key={index}
+                          className="border border-slate-200/90 dark:border-white/[.15] rounded-full bg-white dark:bg-[#04071D] w-6 h-6 sm:w-8 sm:h-8 flex justify-center items-center shadow-xs dark:shadow-2xs cursor-help hover:scale-110 hover:border-[#7C3AED] dark:hover:border-purple transition-all duration-200"
+                          style={{
+                            transform: `translateX(-${index * 5}px)`,
+                          }}
+                          title={getTechName(icon)}
+                        >
+                          <img
+                            src={icon}
+                            alt={getTechName(icon)}
+                            loading="lazy"
+                            decoding="async"
+                            className={cn(
+                              "p-0.5 sm:p-1 w-full h-full object-contain transition-all duration-200",
+                              isWhite && "invert dark:invert-0 opacity-90 hover:opacity-100"
+                            )}
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
 
                   {/* Smart Dual-Repository, Docs & Live Site Links */}

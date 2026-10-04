@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { FaLocationArrow, FaGithub, FaArrowRight, FaBookOpen } from "react-icons/fa6";
 import { ProjectImageSlider } from "@/components/portfolio/ProjectImageSlider";
+import { cn } from "@/lib/utils";
 import { projectsRepository } from "@/lib/dal/repositories/cms/projects.repository";
 import { SEED_PROJECTS } from "@/lib/dal/repositories/seed-data";
 import { PROJECT_CASE_STUDIES } from "@/lib/data/case-studies";
@@ -62,6 +63,16 @@ const getTechName = (iconUrl: string) => {
     gsap: "GSAP",
   };
   return map[file] || `${file || "Technology"} Icon`;
+};
+
+const isMonochromeWhiteIcon = (iconUrl: string) => {
+  const file = iconUrl.split("/").pop()?.toLowerCase() || "";
+  return (
+    file === "next.svg" ||
+    file === "cloud.svg" ||
+    file === "three.svg" ||
+    file === "link.svg"
+  );
 };
 
 export default async function ProjectsHubPage() {
@@ -177,6 +188,13 @@ export default async function ProjectsHubPage() {
                   <div className="mb-6">
                     <ProjectImageSlider
                       images={project.images && project.images.length > 0 ? project.images : [project.coverImage]}
+                      lightImages={
+                        project.imagesLight && project.imagesLight.length > 0
+                          ? project.imagesLight
+                          : project.coverImageLight
+                          ? [project.coverImageLight]
+                          : undefined
+                      }
                       title={project.title}
                       aspectClass="h-56 sm:h-64"
                       className="w-full max-w-full mb-0 rounded-2xl"
@@ -208,21 +226,27 @@ export default async function ProjectsHubPage() {
                 <div>
                   {/* Tech stack icons with Recruiter Tooltips */}
                   <div className="flex items-center gap-2 mb-6 flex-wrap">
-                    {(project.iconLists || []).map((icon, idx) => (
-                      <div
-                        key={idx}
-                        className="border border-slate-200 dark:border-white/[0.15] rounded-full bg-slate-50 dark:bg-[#04071D] w-8 h-8 flex justify-center items-center p-1.5 shadow-sm hover:scale-110 hover:border-[#7C3AED] dark:hover:border-purple transition-all duration-200 cursor-help"
-                        title={getTechName(icon)}
-                      >
-                        <img
-                          src={icon}
-                          alt={getTechName(icon)}
-                          className="w-full h-full object-contain"
-                          loading="lazy"
-                          decoding="async"
-                        />
-                      </div>
-                    ))}
+                    {(project.iconLists || []).map((icon, idx) => {
+                      const isWhite = isMonochromeWhiteIcon(icon);
+                      return (
+                        <div
+                          key={idx}
+                          className="border border-slate-200/90 dark:border-white/[0.15] rounded-full bg-white dark:bg-[#04071D] w-8 h-8 flex justify-center items-center p-1.5 shadow-xs dark:shadow-2xs hover:scale-110 hover:border-[#7C3AED] dark:hover:border-purple transition-all duration-200 cursor-help"
+                          title={getTechName(icon)}
+                        >
+                          <img
+                            src={icon}
+                            alt={getTechName(icon)}
+                            className={cn(
+                              "w-full h-full object-contain transition-all duration-200",
+                              isWhite && "invert dark:invert-0 opacity-90 hover:opacity-100"
+                            )}
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
 
                   {/* Action Links */}

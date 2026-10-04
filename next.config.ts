@@ -75,6 +75,7 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["firebase-admin", "otplib", "qrcode"],
   transpilePackages: ["three", "three-globe"],
   experimental: {
+    optimizePackageImports: ["react-icons"],
     serverActions: {
       bodySizeLimit: "15mb",
     },
@@ -137,6 +138,10 @@ const nextConfig: NextConfig = {
   },
 
   async headers() {
+    if (process.env.NODE_ENV !== "production") {
+      return [];
+    }
+
     return [
       {
         source: "/:path*",

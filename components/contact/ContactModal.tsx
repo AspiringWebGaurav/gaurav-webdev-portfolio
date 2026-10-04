@@ -9,7 +9,7 @@ import {
   IoCloudOfflineOutline,
 } from "react-icons/io5";
 import { FaLocationArrow } from "react-icons/fa6";
-import { SiCloudflare } from "react-icons/si";
+import { SiCloudflare } from "@/components/ui/CloudflareIcon";
 import { validateName, validateEmail, validateMessage, countWords, MESSAGE_MAX_WORDS, MESSAGE_MAX_CHARS } from "@/lib/contact/validation";
 import { useTheme } from "next-themes";
 

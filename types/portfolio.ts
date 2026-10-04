@@ -120,7 +120,9 @@ export interface ProjectDocument {
   description: string;
   coverImageStoragePath: string; // Canonical storage reference
   coverImage: string;            // Resolved public URL
+  coverImageLight?: string;       // Optional resolved light-theme URL
   images?: string[];             // Optional array of screenshot paths for auto-sliding gallery
+  imagesLight?: string[];        // Optional array of light-theme screenshot paths
   iconLists: string[];
   liveUrl: string;               // Strictly HTTPS URL
   githubUrl?: string;            // Strictly https://github.com/...

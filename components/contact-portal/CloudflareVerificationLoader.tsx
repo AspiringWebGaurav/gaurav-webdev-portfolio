@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { SiCloudflare } from "react-icons/si";
+import { SiCloudflare } from "@/components/ui/CloudflareIcon";
 
 interface CloudflareVerificationLoaderProps {
   title?: string;

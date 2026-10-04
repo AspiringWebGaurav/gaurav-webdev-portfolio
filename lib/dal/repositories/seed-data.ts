@@ -125,11 +125,18 @@ export const SEED_PROJECTS: ProjectDocument[] = [
     description: "Direct peer-to-peer file transfers up to 10GB with zero cloud storage, complete privacy, and native desktop apps.",
     coverImageStoragePath: "/projects/send2me/cover.webp",
     coverImage: "/projects/send2me/cover.webp",
+    coverImageLight: "/projects/send2me/cover-light.webp",
     images: [
       "/projects/send2me/cover.webp",
       "/projects/send2me/dashboard.webp",
       "/projects/send2me/features.webp",
       "/projects/send2me/mobile.webp",
+    ],
+    imagesLight: [
+      "/projects/send2me/cover-light.webp",
+      "/projects/send2me/dashboard-light.webp",
+      "/projects/send2me/features-light.webp",
+      "/projects/send2me/mobile-light.webp",
     ],
     iconLists: [
       "/re.svg",
@@ -291,11 +298,18 @@ export const SEED_PROJECTS: ProjectDocument[] = [
     description: "Enterprise-grade email scheduling system with multi-provider routing, intelligent failover, transactional locking, and real-time delivery tracking.",
     coverImageStoragePath: "/projects/gpmas/cover.webp",
     coverImage: "/projects/gpmas/cover.webp",
+    coverImageLight: "/projects/gpmas/cover-light.webp",
     images: [
       "/projects/gpmas/cover.webp",
       "/projects/gpmas/dashboard.webp",
       "/projects/gpmas/features.webp",
       "/projects/gpmas/mobile.webp",
+    ],
+    imagesLight: [
+      "/projects/gpmas/cover-light.webp",
+      "/projects/gpmas/dashboard-light.webp",
+      "/projects/gpmas/features-light.webp",
+      "/projects/gpmas/mobile-light.webp",
     ],
     iconLists: [
       "/next.svg",
