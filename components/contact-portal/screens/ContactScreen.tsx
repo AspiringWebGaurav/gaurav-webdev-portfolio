@@ -16,7 +16,7 @@ import {
   FaExternalLinkAlt,
 } from "react-icons/fa";
 import type { ProtectedContactPayload } from "@/types/recruiter";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/lib/theme";
 
 interface ContactScreenProps {
   recruiter: { name: string; company: string; email: string };

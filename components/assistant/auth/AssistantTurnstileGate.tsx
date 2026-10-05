@@ -13,7 +13,7 @@ import {
   IoWarningOutline,
 } from "react-icons/io5";
 import { CgSpinner } from "react-icons/cg";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/lib/theme";
 
 interface DragCoordinates {
   x: number;

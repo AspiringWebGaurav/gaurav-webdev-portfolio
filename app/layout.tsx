@@ -220,6 +220,12 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        {/* Synchronous pre-paint theme resolver: reads server-set cookie before DOM paint (0ms FOUC) */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var m=document.cookie.match(/(?:^|;\\s*)theme=(light|dark)(?:;|$)/);var t=m?m[1]:'dark';var d=document.documentElement;d.classList.remove('light','dark');d.classList.add(t);d.style.colorScheme=t;}catch(e){}})();`,
+          }}
+        />
         <link rel="preconnect" href="https://challenges.cloudflare.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://challenges.cloudflare.com" />
       </head>
@@ -227,11 +233,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable}`}
         suppressHydrationWarning
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem={false}
-        >
+        <ThemeProvider defaultTheme="dark">
           <RouteProgressBar />
           <ThemeToggle />
           {children}

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/lib/theme";
 import { IoSunnyOutline, IoMoonOutline } from "react-icons/io5";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
@@ -45,6 +45,15 @@ export function ThemeToggle({
     const next = isDark ? "light" : "dark";
     setTargetTheme(next);
     setIsTransitioning(true);
+
+    // Fire exactly ONE background request to persist preference on the server
+    fetch("/api/theme", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ theme: next }),
+    }).catch(() => {
+      // Graceful offline fallback: active session continues smoothly
+    });
 
     if (typeof document !== "undefined") {
       document.documentElement.classList.add("theme-transitioning");

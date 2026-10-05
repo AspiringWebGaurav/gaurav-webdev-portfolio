@@ -3,7 +3,7 @@
 import React from "react";
 import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "motion/react";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import type { PhaseDocument } from "@/types/portfolio";
 import { SEED_PHASES } from "@/lib/dal/repositories/seed-data";

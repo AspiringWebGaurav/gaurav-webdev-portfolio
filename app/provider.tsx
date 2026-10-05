@@ -1,11 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { ThemeProvider as NextThemesProvider } from "next-themes";
+import { ThemeProvider as NativeThemeProvider, type Theme } from "@/lib/theme";
 
 // 1. Robust window.matchMedia polyfill & null-guard
 // Prevents `Cannot read properties of null (reading 'addEventListener') at Provider`
-// when next-themes calls window.matchMedia('(prefers-color-scheme: dark)')
+// when client scripts call window.matchMedia('(prefers-color-scheme: dark)')
 if (typeof window !== "undefined") {
   const safeMediaQueryList = (query: string): MediaQueryList => ({
     matches: query.includes("dark"),
@@ -71,7 +71,7 @@ if (typeof window !== "undefined") {
   };
 }
 
-// 2. Resilient Error Boundary to isolate any third-party theme provider failures
+// 2. Resilient Error Boundary to isolate any theme provider failures
 interface ThemeErrorBoundaryProps {
   children: React.ReactNode;
 }
@@ -105,14 +105,18 @@ class ThemeErrorBoundary extends React.Component<
   }
 }
 
-// 3. Resilient ThemeProvider with error boundary wrapper (Guarantees persistent DOM tree without unmount/remount glitches)
+// 3. Resilient ThemeProvider with error boundary wrapper
 export function ThemeProvider({
   children,
-  ...props
-}: React.ComponentProps<typeof NextThemesProvider>) {
+  defaultTheme = "dark",
+}: {
+  children: React.ReactNode;
+  defaultTheme?: Theme;
+  [key: string]: unknown;
+}) {
   return (
     <ThemeErrorBoundary>
-      <NextThemesProvider {...props}>{children}</NextThemesProvider>
+      <NativeThemeProvider defaultTheme={defaultTheme}>{children}</NativeThemeProvider>
     </ThemeErrorBoundary>
   );
 }

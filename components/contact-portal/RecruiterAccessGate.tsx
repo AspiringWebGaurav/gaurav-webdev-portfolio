@@ -15,7 +15,7 @@ import {
   FaChevronDown,
 } from "react-icons/fa";
 import { validateEmailWithTypo, getAutocorrectedEmail } from "@/lib/recruiter/validation";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/lib/theme";
 
 interface CountryOption {
   code: string;
