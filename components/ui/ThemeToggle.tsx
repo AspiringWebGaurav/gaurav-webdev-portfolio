@@ -131,15 +131,11 @@ export function ThemeToggle({
       <div
         className={cn(
           variant === "floating"
-            ? "fixed top-4 right-4 sm:top-6 sm:right-8 z-[9999]"
+            ? "fixed z-[4950] bottom-[calc(1.25rem+env(safe-area-inset-bottom,0px))] left-[calc(1rem+env(safe-area-inset-left,0px))] sm:bottom-auto sm:left-auto sm:top-[calc(1.5rem+env(safe-area-inset-top,0px))] sm:right-[calc(2rem+env(safe-area-inset-right,0px))]"
             : "relative",
           "w-10 h-10 sm:w-11 sm:h-11 rounded-full opacity-0 pointer-events-none",
           className
         )}
-        style={{
-          top: variant === "floating" ? "calc(1rem + env(safe-area-inset-top, 0px))" : undefined,
-          right: variant === "floating" ? "calc(1rem + env(safe-area-inset-right, 0px))" : undefined,
-        }}
         aria-hidden="true"
       />
     );
@@ -236,19 +232,15 @@ export function ThemeToggle({
         className={cn(
           "group relative flex items-center justify-center rounded-full select-none touch-manipulation focus:outline-none transition-all duration-300",
           variant === "floating"
-            ? "fixed top-4 right-4 sm:top-6 sm:right-8 z-[9999] w-10 h-10 sm:w-11 sm:h-11 backdrop-blur-2xl"
+            ? "fixed z-[4950] w-10 h-10 sm:w-11 sm:h-11 backdrop-blur-2xl bottom-[calc(1.25rem+env(safe-area-inset-bottom,0px))] left-[calc(1rem+env(safe-area-inset-left,0px))] sm:bottom-auto sm:left-auto sm:top-[calc(1.5rem+env(safe-area-inset-top,0px))] sm:right-[calc(2rem+env(safe-area-inset-right,0px))]"
             : "w-9 h-9 sm:w-10 sm:h-10 backdrop-blur-2xl",
           isDark
             ? "bg-[#0A0D24]/90 hover:bg-[#12163A] border border-white/20 text-amber-400 shadow-[0_4px_20px_rgba(0,0,0,0.5),0_0_12px_rgba(251,191,36,0.15)] ring-1 ring-white/10"
             : "bg-white/95 hover:bg-white border border-slate-300/90 text-violet-600 shadow-[0_4px_20px_rgba(124,58,237,0.16),0_1px_3px_rgba(0,0,0,0.08)] ring-1 ring-violet-500/10",
           isTransitioning ? "cursor-wait opacity-90" : "cursor-pointer",
-          isHidden && "opacity-0 pointer-events-none scale-75 -translate-y-2 invisible",
+          isHidden && "opacity-0 pointer-events-none scale-75 translate-y-2 sm:-translate-y-2 invisible",
           className
         )}
-        style={{
-          top: variant === "floating" ? "calc(1rem + env(safe-area-inset-top, 0px))" : undefined,
-          right: variant === "floating" ? "calc(1rem + env(safe-area-inset-right, 0px))" : undefined,
-        }}
       >
         <div className="relative w-5 h-5 flex items-center justify-center pointer-events-none">
           {/* Sun icon: active in dark mode (click to turn on light) */}
