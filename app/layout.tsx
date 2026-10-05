@@ -5,6 +5,7 @@ import "./globals.css";
 import { ThemeProvider } from "./provider";
 import { RouteProgressBar } from "@/components/ui/RouteProgressBar";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { PortfolioPreloader } from "@/components/ui/PortfolioPreloader";
 import { seoRepository } from "@/lib/dal/repositories/cms/seo.repository";
 import { SEED_SEO } from "@/lib/dal/repositories/seed-data";
 
@@ -234,6 +235,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <ThemeProvider defaultTheme="dark">
+          <PortfolioPreloader />
           <RouteProgressBar />
           <ThemeToggle />
           {children}

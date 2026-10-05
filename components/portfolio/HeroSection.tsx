@@ -37,17 +37,20 @@ export const HeroSection = ({ data = SEED_HERO }: HeroSectionProps) => {
 
   return (
     <div className="min-h-screen min-h-[100dvh] w-full flex flex-col justify-center items-center relative pt-20 sm:pt-24 pb-10 sm:pb-14">
-      {/* Spotlights (Dark Mode Only - prevents SVG blur box/seam glitch on light theme) */}
+      {/* Spotlights (Dark Mode: Lightweight radial ambient on mobile, high-fidelity SVGs on sm+) */}
       <div className="pointer-events-none select-none hidden dark:block">
-        <Spotlight
-          className="-top-40 -left-10 md:-left-32 md:-top-20 h-screen"
-          fill="white"
-        />
-        <Spotlight
-          className="h-[80vh] w-[50vw] top-10 left-full"
-          fill="purple"
-        />
-        <Spotlight className="left-80 top-28 h-[80vh] w-[50vw]" fill="blue" />
+        <div className="block sm:hidden absolute top-0 inset-x-0 h-[60vh] bg-[radial-gradient(circle_at_top,_rgba(124,58,237,0.18),transparent_70%)] pointer-events-none" />
+        <div className="hidden sm:block">
+          <Spotlight
+            className="-top-40 -left-10 md:-left-32 md:-top-20 h-screen"
+            fill="white"
+          />
+          <Spotlight
+            className="h-[80vh] w-[50vw] top-10 left-full"
+            fill="purple"
+          />
+          <Spotlight className="left-80 top-28 h-[80vh] w-[50vw]" fill="blue" />
+        </div>
       </div>
 
       {/* Grid Pattern Background */}

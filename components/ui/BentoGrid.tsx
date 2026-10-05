@@ -4,11 +4,18 @@ import dynamic from "next/dynamic";
 import { IoCopyOutline } from "react-icons/io5";
 
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
+const GridGlobe = dynamic(() => import("./GridGlobe"), {
+  ssr: false,
+  loading: () => (
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+      <div className="w-8 h-8 rounded-full border-2 border-purple/30 border-t-purple animate-spin" />
+    </div>
+  ),
+});
 
 import { cn } from "@/lib/utils";
 
 import { BackgroundGradientAnimation } from "./GradientBg";
-import GridGlobe from "./GridGlobe";
 import animationData from "@/data/confetti.json";
 import MagicButton from "./MagicButton";
 import type { BentoCardType, BentoGridSpanVariant, BentoVisualLayout } from "@/types/portfolio";
