@@ -59,9 +59,14 @@ export const AssistantWindow: React.FC<AssistantWindowProps> = ({
     setCurrentView("home");
   };
 
-  // 1. Dispatch assistant-modal-state event on open/close for coordination with FloatingNav & ScrollToTop
+  // 1. Dispatch assistant-modal-state event on open/close for coordination with FloatingNav, ScrollToTop & ThemeToggle
   useEffect(() => {
     if (typeof window !== "undefined") {
+      if (isOpen) {
+        document.documentElement.setAttribute("data-assistant-open", "true");
+      } else {
+        document.documentElement.removeAttribute("data-assistant-open");
+      }
       window.dispatchEvent(
         new CustomEvent("assistant-modal-state", { detail: { isOpen } })
       );
@@ -69,6 +74,7 @@ export const AssistantWindow: React.FC<AssistantWindowProps> = ({
 
     return () => {
       if (typeof window !== "undefined") {
+        document.documentElement.removeAttribute("data-assistant-open");
         window.dispatchEvent(
           new CustomEvent("assistant-modal-state", { detail: { isOpen: false } })
         );

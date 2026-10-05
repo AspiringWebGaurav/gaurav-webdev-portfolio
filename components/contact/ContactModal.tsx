@@ -271,6 +271,11 @@ export const ContactModal: React.FC<ContactModalProps> = ({
   // =========================================================================
   useEffect(() => {
     if (typeof window !== "undefined") {
+      if (isOpen) {
+        document.documentElement.setAttribute("data-contact-modal-open", "true");
+      } else {
+        document.documentElement.removeAttribute("data-contact-modal-open");
+      }
       window.dispatchEvent(
         new CustomEvent("contact-modal-state", { detail: { isOpen } })
       );
@@ -299,6 +304,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
 
     return () => {
       if (typeof window !== "undefined") {
+        document.documentElement.removeAttribute("data-contact-modal-open");
         window.dispatchEvent(
           new CustomEvent("contact-modal-state", { detail: { isOpen: false } })
         );

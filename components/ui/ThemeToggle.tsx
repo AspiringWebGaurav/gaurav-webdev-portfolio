@@ -20,6 +20,7 @@ export function ThemeToggle({
   const [mounted, setMounted] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [targetTheme, setTargetTheme] = useState<"light" | "dark" | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const phase1TimerRef = useRef<NodeJS.Timeout | null>(null);
   const phase2TimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -27,10 +28,39 @@ export function ThemeToggle({
 
   useEffect(() => {
     setMounted(true);
+
+    const handleModalState = (e?: Event) => {
+      const customEvent = e as CustomEvent<{ isOpen?: boolean }> | undefined;
+      if (customEvent?.detail?.isOpen !== undefined) {
+        if (customEvent.detail.isOpen) {
+          setIsModalOpen(true);
+          return;
+        }
+      }
+
+      if (typeof document !== "undefined") {
+        setIsModalOpen(
+          document.documentElement.hasAttribute("data-assistant-open") ||
+          document.documentElement.hasAttribute("data-contact-modal-open")
+        );
+      }
+    };
+
+    handleModalState();
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("assistant-modal-state", handleModalState);
+      window.addEventListener("contact-modal-state", handleModalState);
+    }
+
     return () => {
       if (phase1TimerRef.current) clearTimeout(phase1TimerRef.current);
       if (phase2TimerRef.current) clearTimeout(phase2TimerRef.current);
       if (doneTimerRef.current) clearTimeout(doneTimerRef.current);
+      if (typeof window !== "undefined") {
+        window.removeEventListener("assistant-modal-state", handleModalState);
+        window.removeEventListener("contact-modal-state", handleModalState);
+      }
       if (typeof document !== "undefined") {
         document.documentElement.classList.remove("theme-transitioning");
       }
@@ -190,16 +220,19 @@ export function ThemeToggle({
     );
   };
 
+  const isHidden = variant === "floating" && isModalOpen;
+
   return (
     <>
       <motion.button
         type="button"
         onClick={toggleTheme}
-        disabled={isTransitioning}
-        whileHover={!isTransitioning ? { scale: 1.08 } : undefined}
-        whileTap={!isTransitioning ? { scale: 0.92 } : undefined}
+        disabled={isTransitioning || isHidden}
+        whileHover={!isTransitioning && !isHidden ? { scale: 1.08 } : undefined}
+        whileTap={!isTransitioning && !isHidden ? { scale: 0.92 } : undefined}
         aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
         title={isDark ? "Switch to light theme" : "Switch to dark theme"}
+        aria-hidden={isHidden}
         className={cn(
           "group relative flex items-center justify-center rounded-full select-none touch-manipulation focus:outline-none transition-all duration-300",
           variant === "floating"
@@ -209,6 +242,7 @@ export function ThemeToggle({
             ? "bg-[#0A0D24]/90 hover:bg-[#12163A] border border-white/20 text-amber-400 shadow-[0_4px_20px_rgba(0,0,0,0.5),0_0_12px_rgba(251,191,36,0.15)] ring-1 ring-white/10"
             : "bg-white/95 hover:bg-white border border-slate-300/90 text-violet-600 shadow-[0_4px_20px_rgba(124,58,237,0.16),0_1px_3px_rgba(0,0,0,0.08)] ring-1 ring-violet-500/10",
           isTransitioning ? "cursor-wait opacity-90" : "cursor-pointer",
+          isHidden && "opacity-0 pointer-events-none scale-75 -translate-y-2 invisible",
           className
         )}
         style={{
