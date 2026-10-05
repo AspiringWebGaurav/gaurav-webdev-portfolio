@@ -156,20 +156,28 @@ export const FooterSection = ({
                 href="https://resume.gauravpatil.site"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[#7C3AED] dark:text-purple hover:underline font-semibold inline-flex items-center gap-1 transition-colors"
+                title="https://resume.gauravpatil.site"
+                className="group text-[#7C3AED] dark:text-purple hover:text-purple-600 dark:hover:text-[#CBACF9] font-semibold inline-flex items-center transition-colors touch-manipulation"
               >
-                <span>Verified Resume (resume.gauravpatil.site)</span>
-                <span>→</span>
+                <span>Verified Resume Portal</span>
+                <span className="inline-block max-w-0 opacity-0 group-hover:max-w-[220px] group-hover:opacity-100 group-focus-visible:max-w-[220px] group-focus-visible:opacity-100 overflow-hidden whitespace-nowrap transition-all duration-300 ease-out text-[11px] font-normal text-slate-500 dark:text-neutral-400 group-hover:ml-1 group-focus-visible:ml-1">
+                  (resume.gauravpatil.site)
+                </span>
+                <span className="ml-1 inline-block transition-transform duration-200 group-hover:translate-x-0.5">→</span>
               </a>
               <span className="text-slate-300 dark:text-neutral-600 hidden sm:inline">·</span>
               <a
                 href="https://contact.gauravpatil.site"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[#7C3AED] dark:text-purple hover:underline font-semibold inline-flex items-center gap-1 transition-colors"
+                title="https://contact.gauravpatil.site"
+                className="group text-[#7C3AED] dark:text-purple hover:text-purple-600 dark:hover:text-[#CBACF9] font-semibold inline-flex items-center transition-colors touch-manipulation"
               >
-                <span>Recruiter Portal (contact.gauravpatil.site)</span>
-                <span>→</span>
+                <span>Recruiter Portal</span>
+                <span className="inline-block max-w-0 opacity-0 group-hover:max-w-[220px] group-hover:opacity-100 group-focus-visible:max-w-[220px] group-focus-visible:opacity-100 overflow-hidden whitespace-nowrap transition-all duration-300 ease-out text-[11px] font-normal text-slate-500 dark:text-neutral-400 group-hover:ml-1 group-focus-visible:ml-1">
+                  (contact.gauravpatil.site)
+                </span>
+                <span className="ml-1 inline-block transition-transform duration-200 group-hover:translate-x-0.5">→</span>
               </a>
             </div>
           </div>
@@ -204,6 +212,8 @@ export const FooterSection = ({
           <span className="text-slate-300 dark:text-neutral-600">·</span>
           <Link
             href={footer.termsUrl || "/terms"}
+            target="_blank"
+            rel="noopener noreferrer"
             className="hover:text-[#7C3AED] dark:hover:text-purple transition-colors duration-200"
           >
             Terms
@@ -211,6 +221,8 @@ export const FooterSection = ({
           <span className="text-slate-300 dark:text-neutral-600">·</span>
           <Link
             href={footer.privacyUrl || "/privacy"}
+            target="_blank"
+            rel="noopener noreferrer"
             className="hover:text-[#7C3AED] dark:hover:text-purple transition-colors duration-200"
           >
             Privacy
@@ -218,6 +230,8 @@ export const FooterSection = ({
           <span className="text-slate-300 dark:text-neutral-600">·</span>
           <Link
             href="/chat"
+            target="_blank"
+            rel="noopener noreferrer"
             className="hover:text-[#7C3AED] dark:hover:text-purple transition-colors duration-200"
           >
             Chat Guide
@@ -225,6 +239,8 @@ export const FooterSection = ({
           <span className="text-slate-300 dark:text-neutral-600">·</span>
           <Link
             href="/security"
+            target="_blank"
+            rel="noopener noreferrer"
             className="hover:text-[#7C3AED] dark:hover:text-purple transition-colors duration-200"
           >
             Security
@@ -232,6 +248,8 @@ export const FooterSection = ({
           <span className="text-slate-300 dark:text-neutral-600">·</span>
           <Link
             href="/accessibility"
+            target="_blank"
+            rel="noopener noreferrer"
             className="hover:text-[#7C3AED] dark:hover:text-purple transition-colors duration-200"
           >
             Accessibility

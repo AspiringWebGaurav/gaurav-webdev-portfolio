@@ -117,7 +117,7 @@ export const BentoGridItem = ({
   return (
     <div
       className={cn(
-        "row-span-1 relative overflow-hidden rounded-3xl border border-slate-200/90 dark:border-white/[0.1] bg-white dark:bg-[#04071D] text-slate-900 dark:text-white group/bento hover:shadow-xl transition-all duration-200 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_6px_24px_rgba(0,0,0,0.03)] dark:shadow-none justify-between flex flex-col space-y-4",
+        "row-span-1 relative overflow-hidden rounded-3xl border border-slate-200/90 dark:border-white/[0.1] bg-white dark:bg-[#04071D] text-slate-900 dark:text-white group/bento hover:shadow-[0_12px_40px_rgba(124,58,237,0.14),0_4px_16px_rgba(0,0,0,0.04)] dark:hover:shadow-xl hover:border-[#7C3AED]/40 dark:hover:border-white/[0.2] transition-all duration-300 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_6px_24px_rgba(0,0,0,0.03)] dark:shadow-none justify-between flex flex-col space-y-4",
         className
       )}
     >
@@ -127,7 +127,7 @@ export const BentoGridItem = ({
             <>
               {isType("collaboration", 1) ? (
                 <>
-                  {/* Separate image optimized for white/light theme */}
+                  {/* Separate image optimized for white/light theme with smooth hover zoom */}
                   <img
                     src="/b1-light.webp"
                     alt={typeof title === "string" ? title : "Collaboration preview"}
@@ -135,7 +135,7 @@ export const BentoGridItem = ({
                     decoding="async"
                     className={cn(
                       imgClassName,
-                      "object-cover object-center w-full h-full block dark:hidden"
+                      "object-cover object-center w-full h-full block dark:hidden transition-transform duration-500 ease-out group-hover/bento:scale-[1.03]"
                     )}
                   />
                   {/* Original image for dark theme */}
@@ -146,7 +146,7 @@ export const BentoGridItem = ({
                     decoding="async"
                     className={cn(
                       imgClassName,
-                      "object-cover object-center w-full h-full hidden dark:block"
+                      "object-cover object-center w-full h-full hidden dark:block transition-transform duration-500 ease-out group-hover/bento:scale-[1.03]"
                     )}
                   />
                 </>
@@ -250,7 +250,12 @@ export const BentoGridItem = ({
             </>
           )}
           {isType("collaboration", 1) && (
-            <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/20 to-transparent dark:hidden z-[1] pointer-events-none" />
+            <>
+              {/* Light theme scrim: Ensures high contrast behind title text */}
+              <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-white/60 to-transparent dark:hidden z-[1] pointer-events-none transition-all duration-300 group-hover/bento:from-white group-hover/bento:via-white/75" />
+              {/* Light theme subtle ambient hover glow */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/0 via-purple-500/0 to-[#7C3AED]/[0.06] dark:hidden opacity-0 group-hover/bento:opacity-100 transition-opacity duration-500 pointer-events-none z-[2]" />
+            </>
           )}
         </div>
         {spareImg && (
@@ -277,7 +282,7 @@ export const BentoGridItem = ({
         <div
           className={cn(
             titleClassName,
-            "group-hover/bento:translate-x-2 transition duration-200 relative md:h-full min-h-40 flex flex-col px-5 p-5 lg:p-10"
+            "group-hover/bento:translate-x-2 transition duration-200 relative md:h-full min-h-40 flex flex-col px-5 p-5 lg:p-10 z-10"
           )}
         >
           <div
@@ -290,7 +295,9 @@ export const BentoGridItem = ({
           </div>
           <div
             className={cn(
-              "font-sans text-lg lg:text-3xl font-bold z-10 leading-tight text-slate-900 dark:text-white",
+              "font-sans text-lg lg:text-3xl font-bold z-10 leading-tight text-slate-900 dark:text-white transition-colors duration-300",
+              isType("collaboration", 1) &&
+                "text-slate-950 dark:text-white group-hover/bento:text-[#7C3AED] dark:group-hover/bento:text-white drop-shadow-[0_1px_2px_rgba(255,255,255,0.95)] dark:drop-shadow-none",
               isType("tech_stack", 3)
                 ? "max-w-[130px] sm:max-w-[160px] lg:max-w-[200px]"
                 : "max-w-96"
