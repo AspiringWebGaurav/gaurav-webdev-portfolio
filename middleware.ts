@@ -7,6 +7,12 @@ import { verifyTalkSession } from "@/lib/talk/session";
 
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
+
+  // 0. Bypass Vercel Edge internals, Web Analytics and Speed Insights beacon endpoints
+  if (pathname.startsWith("/_vercel")) {
+    return NextResponse.next();
+  }
+
   const host = request.headers.get("host") || "";
   const forwardedProto = request.headers.get("x-forwarded-proto");
   const isLocalHost =
@@ -371,10 +377,11 @@ export const config = {
      * - api (API routes, kept fast and unredirected for webhook/M2M performance)
      * - _next/static (static files)
      * - _next/image (image optimization files)
+     * - _vercel (Vercel Edge system, Web Analytics, and Speed Insights beacon routes)
      * - Well-known static metadata files (favicon.ico, icon.png, icon.svg, apple-icon.png, apple-touch-icon.png, og-image.png, manifest.webmanifest, robots.txt, sitemap.xml)
      * - Static asset extensions (.png, .webp, .avif, .svg, .jpg, .jpeg, .pdf, .woff, .woff2, .ttf, .otf, .eot, .glb, .gltf, .mp4, .webm, .mp3, .wav, .ogg, .json, .txt, .xml, .map)
      */
-    "/((?!api|_next/static|_next/image|favicon\\.ico|icon\\.png|icon\\.svg|apple-icon\\.png|apple-touch-icon\\.png|og-image\\.png|manifest\\.webmanifest|robots\\.txt|sitemap\\.xml|.*\\.(?:jpg|jpeg|gif|png|webp|avif|svg|ico|pdf|mp4|webm|json|woff|woff2|ttf|otf|eot|glb|gltf|mp3|wav|ogg|xml|txt|map)$).*)",
+    "/((?!api|_next/static|_next/image|_vercel|favicon\\.ico|icon\\.png|icon\\.svg|apple-icon\\.png|apple-touch-icon\\.png|og-image\\.png|manifest\\.webmanifest|robots\\.txt|sitemap\\.xml|.*\\.(?:jpg|jpeg|gif|png|webp|avif|svg|ico|pdf|mp4|webm|json|woff|woff2|ttf|otf|eot|glb|gltf|mp3|wav|ogg|xml|txt|map)$).*)",
   ],
 };
 

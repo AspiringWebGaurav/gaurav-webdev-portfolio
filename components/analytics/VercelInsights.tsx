@@ -1,13 +1,14 @@
 "use client";
 
-import { Analytics } from "@vercel/analytics/react";
+import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 /**
  * Client-side analytics and speed insights wrapper.
  * Configured to optimize Vercel Hobby quota usage:
+ * - Uses Next.js App Router-native Analytics wrapper (@vercel/analytics/next)
  * - Filters out internal /admin paths to prevent admin operations from consuming quotas
- * - Samples public speed insights at 50% to preserve the 10K events monthly limit
+ * - Samples public speed insights at 15% to preserve the 10K events monthly limit
  */
 export function VercelInsights() {
   return (
