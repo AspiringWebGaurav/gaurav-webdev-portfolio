@@ -1,104 +1,71 @@
-MIT License
+Source-Available Educational Study & Intellectual Property License
 
 Copyright (c) 2026 Gaurav Patil. All rights reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
 ===============================================================================
-SECTION 1: CONDITIONS OF USAGE AND ATTRIBUTION
+SECTION 1: PERMITTED USES (PUBLIC INSPECTION & EDUCATIONAL STUDY)
 ===============================================================================
 
-1.1. Mandatory Copyright Notice:
-     The above copyright notice, this permission notice, and all relevant
-     attribution headers must be retained in all copies or substantial portions
-     of the Software, whether distributed in source code form or compiled binary
-     distribution.
+1.1. Inspection and Learning:
+     Permission is hereby granted, free of charge, to any person obtaining or
+     viewing a copy of this software, documentation, and associated assets
+     (the "Software"), to access, browse, download, and study the Software solely
+     for personal educational purposes, architectural learning, code review, and
+     technical evaluation.
 
-1.2. Attribution Integrity:
-     Any public deployment, redistribution, or downstream fork incorporating
-     substantial modules of this Software must acknowledge the original author
-     (Gaurav Patil) and include a visible hyperlink back to the canonical source
-     repository (https://github.com/AspiringWebGaurav/devlabs).
-
-1.3. Dual-Subsystem Intellectual Property:
-     The visual assets, tailored design system tokens, 3D WebGL shaders, custom
-     interactive components, administrative workflows, and brand typography
-     constitute proprietary artistic and architectural implementations. Usage of
-     these components for educational, personal, or non-commercial portfolio
-     demonstrations is permitted provided canonical authorship is preserved.
+1.2. Non-Commercial Reference:
+     You may reference high-level patterns or concepts observed in this Software
+     for your own independent learning, provided that any resulting work is your
+     own original creation and does not copy, adapt, or extract code or assets
+     from this Software.
 
 ===============================================================================
-SECTION 2: TRADEMARKS AND BRAND IDENTITY
+SECTION 2: PROHIBITED USES & INTELLECTUAL PROPERTY RESERVATION
 ===============================================================================
 
-2.1. Name Reservation:
-     This license does not grant permission to use the trade names, trademarks,
-     service marks, personal likeness, or logos of the copyright holder (Gaurav
-     Patil) in promotional material, product branding, or commercial marketing
-     without prior written authorization.
+2.1. Strict Prohibition on Code Reuse and Duplication:
+     You may NOT copy, replicate, extract, reuse, or incorporate any portion of
+     this source code, stylesheets, 3D WebGL implementations, shaders, animations,
+     or UI components into any other website, portfolio, product, template, or
+     service without prior explicit written permission from Gaurav Patil.
 
-2.2. Endorsement Restriction:
-     Neither the name of the copyright holder nor the names of any contributors
-     may be used to endorse, promote, or validate products or services derived
-     from this Software without explicit, prior written permission.
+2.2. Prohibition on Portfolio Cloning and Re-Skinning:
+     You may NOT fork, clone, re-skin, re-brand, or publicly host this Software
+     or any derived work as your personal portfolio, commercial platform, or
+     client showcase. This Software and its presentation layers represent the
+     unique identity and intellectual property of Gaurav Patil.
 
-===============================================================================
-SECTION 3: ARCHITECTURAL AND DATA INTEGRITY SAFEGUARDS
-===============================================================================
+2.3. No Commercial Exploitation or Redistribution:
+     You may NOT sell, license, sublicense, rent, bundle, distribute, or otherwise
+     commercialize the Software or any portion thereof, in source or compiled form.
 
-3.1. Infrastructure Governance:
-     The Software contains integration logic for external Cloud Service
-     Providers (including Google Cloud, Firebase, Cloudflare, and Vercel).
-     Users and deployers assume sole and absolute responsibility for configuring
-     their own independent API keys, project identifiers, rate limiters, security
-     rules, and cloud billing thresholds.
-
-3.2. Administrative Security Protocols:
-     The administrative authorization mechanisms, OAuth 2.0 PKCE handshakes,
-     session token verifiers, and multi-tier cryptographic gates provided in
-     this Software are intended for single-tenant or authorized enterprise
-     deployments. The author assumes no responsibility for unauthorized access
-     resulting from misconfigured environment credentials or compromised OAuth
-     client secrets.
+2.4. Reservation of Rights:
+     All rights not expressly granted in Section 1 are strictly reserved by the
+     copyright holder (Gaurav Patil).
 
 ===============================================================================
-SECTION 4: DISCLAIMER OF WARRANTY
+SECTION 3: TRADEMARKS, BRAND IDENTITY & PERSONAL LIKENESS
+===============================================================================
+
+3.1. Name and Identity Reservation:
+     This license does not grant any permission to use the name "Gaurav Patil",
+     the domain "gauravpatil.site" (including all subdomains), logos, headshots,
+     personal likeness, case studies, project descriptions, or testimonials in
+     any medium without prior written authorization.
+
+3.2. No Endorsement:
+     Neither the name of the author nor the names of any associated projects
+     may be used to endorse, sponsor, or promote any product or service.
+
+===============================================================================
+SECTION 4: DISCLAIMER OF WARRANTY & LIMITATION OF LIABILITY
 ===============================================================================
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE, TITLE, ACCURACY, SYSTEM INTEGRATION,
-NON-INFRINGEMENT, AND FREEDOM FROM DEFECTS, BUGS, CYBERSECURITY VULNERABILITIES,
-OR UNINTERRUPTED AVAILABILITY.
+FITNESS FOR A PARTICULAR PURPOSE, TITLE, ACCURACY, AND NON-INFRINGEMENT.
 
-IN NO EVENT SHALL THE AUTHORS, COPYRIGHT HOLDERS, CONTRIBUTORS, OR MAINTAINERS
-BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF
-CONTRACT, TORT (INCLUDING NEGLIGENCE), STRICT LIABILITY, OR OTHERWISE, ARISING
-FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE, INABILITY TO USE,
-OR OTHER DEALINGS IN THE SOFTWARE, INCLUDING BUT NOT LIMITED TO:
-
-  (A) LOSS OF DATA, REPUTATION, BUSINESS REVENUE, OR OPERATING PROFITS;
-  (B) UNFORESEEN CLOUD COMPUTING OR SERVERLESS INVOCATION CHARGES;
-  (C) SERVICE INTERRUPTIONS, TELEMETRY DRIFT, OR NETWORK CORRUPTION;
-  (D) THIRD-PARTY API OUTAGES, DEPRECATIONS, OR BREAKING PROTOCOL MUTATIONS.
-
-===============================================================================
-SECTION 5: INDEMNIFICATION AND GOVERNING LAW
-===============================================================================
-
-5.1. Indemnification:
-     You agree to defend, indemnify, and hold harmless Gaurav Patil and any
-     associated maintainers from and against any claims, liabilities, damages,
-     losses, and expenses, including reasonable legal fees, arising out of or in
-     any way connected with your distribution, modification, or deployment of the
-     Software.
-
-5.2. Severability:
-     If any provision of this license is held to be invalid or unenforceable,
-     such provision shall be enforced to the maximum extent permissible, and the
-     remaining provisions shall remain in full force and effect.
+IN NO EVENT SHALL THE AUTHOR OR COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM,
+DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR
+OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE,
+INABILITY TO USE, OR OTHER DEALINGS IN THE SOFTWARE.

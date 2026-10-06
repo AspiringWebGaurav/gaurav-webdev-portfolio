@@ -7,223 +7,126 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178c6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38bdf8?style=flat-square&logo=tailwindcss)](https://tailwindcss.com/)
 [![Three.js](https://img.shields.io/badge/Three.js-WebGL-black?style=flat-square&logo=three.js)](https://threejs.org/)
-[![Cloudflare](https://img.shields.io/badge/Cloudflare-Turnstile-f38020?style=flat-square&logo=cloudflare)](https://www.cloudflare.com/products/turnstile/)
-[![License](https://img.shields.io/badge/License-MIT-emerald?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/badge/License-Source--Available%20%7C%20Study%20Only-red?style=flat-square)](LICENSE)
 
-An enterprise-grade, high-performance web engineering portfolio designed and built by **Gaurav Patil**. Engineered with **Next.js 15 (App Router)**, **React 19**, **Three.js WebGL**, and modern cloud infrastructure. Architected with isolated presentation layers, touch ergonomics, privacy-first communication channels, and zero cumulative layout shift (`CLS = 0`).
+An enterprise-grade, high-performance web engineering portfolio designed and built by **Gaurav Patil**. Engineered with **Next.js 15 (App Router)**, **React 19**, **Three.js WebGL**, and modern cloud infrastructure. Developed with precision touch ergonomics, privacy-first communication channels, and zero cumulative layout shift (`CLS = 0`).
 
 * **Production URL**: [`https://gauravpatil.site`](https://gauravpatil.site)
 * **Interactive Projects Launchpad**: [`https://self.gauravpatil.site`](https://self.gauravpatil.site)
-* **Verified Interactive Resume Portal**: [`https://resume.gauravpatil.site`](https://resume.gauravpatil.site)
-* **Verified Recruiter Contact Portal**: [`https://contact.gauravpatil.site`](https://contact.gauravpatil.site)
+* **Verified Candidate Credentials Portal**: [`https://resume.gauravpatil.site`](https://resume.gauravpatil.site)
+* **Verified Recruiter Contact Gateway**: [`https://contact.gauravpatil.site`](https://contact.gauravpatil.site)
 * **Talk Command Hub**: [`https://talk.gauravpatil.site`](https://talk.gauravpatil.site)
 * **Pre-Production Staging Preview**: [`https://devlabs.eu.cc`](https://devlabs.eu.cc)
 * **Verified Email Gateway**: `gauravpatil.site`
 
-> 📬 **Direct Inquiries & Collaboration**: To discuss project proposals, consulting engagements, or hiring/recruiter access, reach out directly via the verified Recruiter Portal at [`https://contact.gauravpatil.site`](https://contact.gauravpatil.site), browse live software releases at [`https://self.gauravpatil.site`](https://self.gauravpatil.site), view the verified interactive resume at [`https://resume.gauravpatil.site`](https://resume.gauravpatil.site), launch the interactive contact modal at [gauravpatil.site/contact](https://gauravpatil.site/contact), or email [`gaurav@gauravpatil.site`](mailto:gaurav@gauravpatil.site) (professional direct line) / [`hello@gauravpatil.site`](mailto:hello@gauravpatil.site) (general inquiries).
+> 📬 **Inquiries & Direct Collaboration**: For project proposals, enterprise consulting, or recruiter inquiries, reach out via the verified [Recruiter Portal](https://contact.gauravpatil.site), browse live software releases on the [Launchpad](https://self.gauravpatil.site), view credentials on the [Resume Portal](https://resume.gauravpatil.site), launch the interactive modal at [gauravpatil.site/contact](https://gauravpatil.site/contact), or email [`gaurav@gauravpatil.site`](mailto:gaurav@gauravpatil.site) (direct line) / [`hello@gauravpatil.site`](mailto:hello@gauravpatil.site) (general inquiries).
 
 ---
 
 ## 📑 Table of Contents
 
 - [1. Platform Overview & Highlights](#1-platform-overview--highlights)
-- [2. Architectural Highlights](#2-architectural-highlights)
-- [3. Interactive Communication Channels & Subdomains](#3-interactive-communication-channels--subdomains)
-- [4. Visual Design & User Experience](#4-visual-design--user-experience)
-- [5. Performance & Reliability Standards](#5-performance--reliability-standards)
-- [6. Legal Governance & Transparency (v0.0.1)](#6-legal-governance--transparency-v001)
-- [7. Official Communication Directory](#7-official-communication-directory)
-- [8. Technology Stack](#8-technology-stack)
-- [9. Local Development & Setup](#9-local-development--setup)
-- [10. Security & Responsible Disclosure](#10-security--responsible-disclosure)
-- [11. License & Copyright](#11-license--copyright)
+- [2. Verified Portals & Subdomains](#2-verified-portals--subdomains)
+- [3. Visual Design & User Experience](#3-visual-design--user-experience)
+- [4. Performance & Core Web Vitals](#4-performance--core-web-vitals)
+- [5. Official Verified Communication Directory](#5-official-verified-communication-directory)
+- [6. Technology Stack](#6-technology-stack)
+- [7. Local Development & Setup](#7-local-development--setup)
+- [8. Intellectual Property & Strict License (Terms of Use)](#8-intellectual-property--strict-license-terms-of-use)
+- [9. Security & Responsible Disclosure](#9-security--responsible-disclosure)
 
 ---
 
 ## 1. Platform Overview & Highlights
 
-Gaurav Portfolio serves as an active, production-grade showcase of modern full-stack web engineering, resilient system architecture, and interactive design:
+Gaurav Portfolio serves as an active, production-grade showcase of modern full-stack engineering, interactive UI/UX, and resilient cloud integration:
 
-* **Dual-Engine Dynamic Theme System**: Effortless 1-click toggling between signature Deep Luxury Dark mode and crisp Shiro/Kuro-inspired Enterprise Light mode, powered by `next-themes` with smooth 550ms glassmorphic transitions.
-* **Dynamic Bot Mitigation & Adaptive Cloudflare Turnstile**: Adaptive Turnstile security challenges across all entrypoints and subdomains, automatically rendering in matching light or dark visual themes.
-* **Interactive 3D WebGL Canvas**: Three.js Globe rendering smooth coordinate trajectories with theme-aware landmass styling, loaded asynchronously with zero layout reflow.
-* **Interactive Projects Launchpad (`self.gauravpatil.site`)**: Ultra-fast single-view zero-scroll hub with mobile tactile haptic pulses and instant outbound redirection.
-* **Shareable Contact Route (`/contact`)**: Dynamic interactive contact modal with bidirectional URL synchronization, native browser Back/Forward navigation, and direct shareable link resolution.
-* **Intelligent Personal Assistant & Live Chat**: Contextual portfolio navigator providing real-time technical project breakdowns, verified 1-to-1 communication, and automated inbox notification routing.
-* **Meta WhatsApp Cloud Integration**: Production WhatsApp channel for recruiters with two-bubble delivery sequence, 1-click email response triggers, and self-service GDPR Article 20 data exports.
-* **Vercel Hobby Plan & Quota Optimization**: 24-hour baseline ISR (`revalidate = 86400`), 1-year immutable caching for static media, selective edge routing, and WebP compression minimizing CPU execution and data transfer.
-* **Zero Layout Shift Standard (`CLS = 0`)**: Fixed skeleton bounds and GPU-accelerated opacity/transform transitions eliminating visual jitter across all devices.
-* **Privacy-First Data Architecture**: Anonymous inquiry support, ephemeral bot verification, and zero third-party behavioral tracking cookies.
+* **Dual-Engine Dynamic Theme System**: Seamless 1-click toggling between signature Deep Luxury Dark mode and crisp Enterprise Light mode with smooth 550ms glassmorphic transitions.
+* **Interactive 3D WebGL Canvas**: Theme-aware Three.js Globe rendering coordinate trajectories asynchronously with zero layout reflow.
+* **Interactive Projects Launchpad (`self.gauravpatil.site`)**: Single-view zero-scroll hub with mobile tactile haptic pulses and instant outbound navigation across 14+ live platforms.
+* **Shareable Dynamic Contact Route (`/contact`)**: Interactive contact modal with bidirectional URL synchronization, native browser history (Back/Forward), and shareable deep-linking.
+* **Intelligent Personal Assistant & Live Chat**: Contextual portfolio navigator providing technical breakdowns, verified 1-to-1 communication, and automated inbox notification routing.
+* **Meta WhatsApp Cloud Integration**: Direct messaging channel for recruiters featuring two-bubble delivery sequence, 1-click response triggers, and GDPR Article 20 data exports.
+* **Zero Layout Shift Standard (`CLS = 0`)**: Fixed skeleton bounds and GPU-accelerated opacity/transform transitions eliminating visual shifts across all screen sizes.
+* **Privacy-First Data Principles**: Anonymous inquiry support, ephemeral verification, and zero third-party behavioral tracking cookies.
 
 ---
 
-## 2. Architectural Highlights
+## 2. Verified Portals & Subdomains
 
-The platform follows clean separation of concerns, ensuring high maintainability and testability:
+To deliver optimal security, high performance, and tailored user experiences, the platform is partitioned into dedicated edge-routed subdomains:
 
-```text
-┌─────────────────────────────────────────────────────────────┐
-│                    Presentation Layer                       │
-│  (Next.js App Router, React 19 Components, Tailwind CSS)   │
-└──────────────────────────────┬──────────────────────────────┘
-                               │
-┌──────────────────────────────▼──────────────────────────────┐
-│                  Data Access Layer (DAL)                    │
-│   (Domain Repositories, Business Logic & Validation)        │
-└──────────────────────────────┬──────────────────────────────┘
-                               │
-┌──────────────────────────────▼──────────────────────────────┐
-│                    Data Source Adapters                     │
-│    (Cloud Firestore, Realtime Database, Redis & Storage)    │
-└──────────────────────────────┬──────────────────────────────┘
-                               │
-┌──────────────────────────────▼──────────────────────────────┐
-│                  External Infrastructure                    │
-│   (Brevo Email API, Meta WhatsApp Cloud, Cloudflare Edge)   │
-└─────────────────────────────────────────────────────────────┘
-```
-
-* **Clean Layer Isolation**: UI components interact strictly with domain repositories, preventing SDK leakage into client presentation components.
-* **Runtime Schema Validation**: Inbound and outbound payloads are validated using strict Zod schemas to ensure type-safe data pipelines.
-* **Transactional Reliability**: Idempotent email delivery keys and atomic database operations ensure robust message dispatch without duplicates.
+| Subdomain | Portal Name | Scope & Capabilities |
+| :--- | :--- | :--- |
+| [`gauravpatil.site`](https://gauravpatil.site) | **Flagship Ecosystem Hub** | Primary showcase with case studies, interactive 3D WebGL Globe, dynamic contact modals, and portfolio navigation. |
+| [`self.gauravpatil.site`](https://self.gauravpatil.site) | **Interactive Projects Launchpad** | Single-view zero-scroll directory aggregating 14+ production web applications and SaaS platforms with mobile tactile haptics. |
+| [`resume.gauravpatil.site`](https://resume.gauravpatil.site) | **Verified Resume Portal** | Dedicated credentials verification hub featuring interactive resume views, status indicators, and verified PDF downloads. |
+| [`contact.gauravpatil.site`](https://contact.gauravpatil.site) | **Recruiter Contact Gateway** | Streamlined communications gateway engineered specifically for executive recruiters, talent acquisition partners, and clients. |
+| [`talk.gauravpatil.site`](https://talk.gauravpatil.site) | **Talk Command Hub** | Real-time interactive communication interface with authenticated sessions and rate-limited messaging. |
+| [`devlabs.eu.cc`](https://devlabs.eu.cc) | **Pre-Production Staging Preview** | Active pre-release staging environment for feature testing and validation. |
 
 ---
 
-## 3. Interactive Communication Channels & Subdomains
-
-### 3.0.0 Interactive Projects Launchpad (`self.gauravpatil.site`)
-* **Single-View Zero-Scroll Architecture**: Engineered under a strict `100dvh` zero-vertical-scroll constraint across all viewports (from 320px mobile up to 4K displays).
-* **Mobile-Only Silent Haptic Feedback**: Tactile `15ms` physical vibration pulse on touch devices when opening any card or link (0 audio, strictly silent physical motor haptics).
-* **Vercel Hobby Plan & Quota Optimization**: 24-hour baseline ISR (`revalidate = 86400`) served 100% statically from Edge CDN cache (0 Function Invocations on visitor page loads, 0 Fluid Active CPU burn, and 0 unnecessary database reads).
-* **Dynamic Admin Freedom**: Synchronized with `/admin/projects` for real-time CRUD, reordering, and publishing controls with on-demand Edge cache purging.
-* **Responsive Single-Line Footer**: Clean horizontal footer layout avoiding awkward wraps on compact mobile screens.
-
-### 3.0.1 Verified Recruiter & Hiring Portal (`contact.gauravpatil.site`)
-* **Dedicated High-Touch Gateway**: Hosted at [`https://contact.gauravpatil.site`](https://contact.gauravpatil.site) (locally rewrites from `http://contact.localhost:3000` or `/contact-portal`).
-* **Instant Recruiter Verification**: Single-step email verification with automated domain typo autocorrection (`gmal` ➔ `gmail.com`) and zero passwords or friction.
-* **Direct Access Unlocked**: Candidate resume download, verified direct phone/WhatsApp lines, candidate dossier, and real-time live chat session.
-
-### 3.0.2 Verified Interactive Resume Portal (`resume.gauravpatil.site`)
-* **Dedicated Candidate Credentials Gateway**: Hosted at [`https://resume.gauravpatil.site`](https://resume.gauravpatil.site) (isolated Edge routing from `http://resume.localhost:3000` or `/resume`).
-* **Session Security & Anti-Tamper**: Cryptographic HMAC session tokens with enforced 30-minute inactivity auto-logout, in-memory client purge, and dedicated `/api/resume/auth/logout`.
-* **Bot Mitigation & Cloudflare Turnstile**: Automated abuse defense protecting credential disclosure and PDF download streams.
-* **Dynamic Lifecycle & Admin Governance**: Real-time admin control over resume status (`active`, `hired`, `suspended`) with executive suspended view states.
-* **Fluid Responsive Paper View**: Mobile-first touch-ergonomic design rendering crisply across mobile (down to 320px), tablet, and desktop screens with zero cumulative layout shift.
-
-### 3.0.3 Talk Command Hub (`talk.gauravpatil.site`)
-* **Real-Time Communication Interface**: Hosted at [`https://talk.gauravpatil.site`](https://talk.gauravpatil.site) with dedicated session gates, rate-limited messaging, and real-time synchronization.
-
-### 3.1 Shareable Dynamic Contact Form (`/contact`)
-* **Dynamic Route Launch**: Direct navigation to `/contact` loads the portfolio and automatically launches the interactive contact modal with centered focus.
-* **Address Bar Synchronization**: Opening the contact modal anywhere on the page dynamically updates the browser URL to `/contact` using the History API without page reload.
-* **Native History Support**: Pressing the browser **Back** button dismisses the modal, while pressing **Forward** re-opens it.
-* **Confidential & Anonymous Support**: Visitors have the right to submit inquiries anonymously or under pseudonyms without mandatory identity disclosure.
-* **Bot Defense**: Protected by invisible Cloudflare Turnstile verification without tracking cookies.
-
-### 3.2 Personal Assistant & Live Chat Ecosystem
-* **Navigation Companion**: Floating interactive assistant providing instant guidance across project architectures, tech stacks, and case studies.
-* **Verified Live Communication**: Access to live chat sessions requires a single-use 6-digit email passcode (OTP) dispatched exclusively from `no-reply@gauravpatil.site`.
-* **Session Security**: Verified sessions utilize encrypted 4-hour `httpOnly` session tokens with 1-click sign-out and detachment.
-* **Hybrid Routing Pipeline**: Messages stream in real-time when Gaurav is online, or trigger automated lead alerts directly to private inbox with 1-click reply routing.
-
-### 3.3 Meta WhatsApp Business Cloud Integration
-* **Direct Recruiter Channel**: Official WhatsApp Business Cloud API integration enabling recruiters and prospective clients to connect directly with Gaurav Patil.
-* **Two-Bubble Sequenced Delivery**: Clean delivery acknowledgment followed sequentially (with a 350ms natural pause) by an eye-catchy email prompt formatted with WhatsApp typography.
-* **1-Click Reply Notification Token**: Webhook alerts dispatch instant visitor email updates via Brevo with atomic transaction deduplication.
-* **Self-Service GDPR Portability (`/exportmydata`)**: Sending `/exportmydata` in WhatsApp compiles an encrypted in-memory ZIP package containing complete visual HTML transcripts, machine-readable JSON records, and a signed GDPR compliance certificate (links expire in 10 minutes).
-* **Instant Opt-Out (`STOP`)**: Sending `STOP` immediately unsubscribes the number and atomically erases conversation history from the database (GDPR Article 17).
-
----
-
-## 4. Visual Design & User Experience
+## 3. Visual Design & User Experience
 
 The application incorporates a tailored design language optimized for clarity, engagement, and accessibility:
 
-* **Aesthetic System**: Dual-theme luxury glassmorphism with dynamic light/dark capability.
 * **Dark Mode Palette**: Deep Space Black (`#000319`), Deep Navy Slate (`#04071D`), Royal Purple (`#CBACF9`), Cool Metallic Slate (`#C1C2D3`), and Emerald Accent (`#10B981`).
-* **Light Mode Palette**: Crisp Paper Slate (`#FAFAFA` / `#FFFFFF`), Violet Accents (`#7C3AED` / `#6D28D9`), Obsidian Text (`#0F172A`), and Slate Borders (`#E2E8F0`).
+* **Light Mode Palette**: Crisp Paper Slate (`#FAFAFA` / `#FFFFFF`), Violet Accents (`#7C3AED`), Obsidian Text (`#0F172A`), and Slate Borders (`#E2E8F0`).
 * **Visual Primitives**: Ambient 3D spotlights, bento grid layout variants, infinite marquee scrolls, theme-reactive Three.js globe, and touch-optimized action cards.
-* **Dynamic Theme Toggle**: Glassmorphic floating button with 550ms spring icon morphing, zero harsh borders, and synchronized CSS color-scheme transitions.
-* **Accessibility (WCAG 2.1 AA)**: Keyboard-navigable interactive controls, 44px minimum touch targets, accessible ARIA dialog roles, high contrast in both themes, and full `prefers-reduced-motion` fallbacks.
+* **Dynamic Theme Toggle**: Glassmorphic floating button with 550ms spring icon morphing, zero harsh borders, and synchronized CSS transitions.
+* **Accessibility (WCAG 2.1 AA)**: Keyboard-navigable controls, 44px minimum touch targets, accessible ARIA dialog roles, high contrast in both themes, and full `prefers-reduced-motion` fallbacks.
 * **Scroll Synchronization**: Dominant-viewport tracking that reflects active sections in the URL hash smoothly without layout jumps.
 
 ---
 
-## 5. Performance & Reliability Standards
+## 4. Performance & Core Web Vitals
 
-* **Turbopack Build Pipeline**: Optimized Next.js 15 compilations with zero warnings and strict TypeScript checks (`npx tsc --noEmit`).
-* **Vercel Free Hobby Quota Protection**:
-  * **24-Hour Baseline ISR (`revalidate = 86400`)**: Static Edge delivery prevents repeated serverless invocations and eliminates unnecessary database reads on visitor loads.
-  * **Selective Edge Middleware**: Static assets, Next.js images, fonts, and API routes bypass middleware evaluation, preserving Fluid Active CPU quota.
-  * **Immutable Asset Caching**: 1-year immutable cache headers (`public, max-age=31536000, immutable`) for static images, WebP assets, and JS bundles to conserve Fast Data Transfer.
-  * **High-Efficiency Media**: WebP image formats with 80-90% weight reduction compared to raw assets.
-* **Layout Shift Elimination**: Calibrated skeleton boundaries for all dynamic and below-the-fold modules guaranteeing `CLS = 0`.
-* **Micro-Animation Engineering**: Hardware-accelerated transitions operating at consistent 60fps across modern viewports.
-* **Graceful Degradation**: Client-side error boundaries ensure platform stability even if external services encounter temporary interruptions.
+* **Turbopack Build Pipeline**: Next.js 15 compilation with strict static typing and optimized asset delivery.
+* **Zero Cumulative Layout Shift (`CLS = 0`)**: Calibrated skeleton boundaries for all dynamic and below-the-fold modules.
+* **Immutable Asset Caching**: 1-year immutable caching for static media, WebP assets, and JavaScript bundles.
+* **Hardware Acceleration**: GPU-accelerated CSS transforms and transitions operating at a consistent 60fps across modern viewports.
+* **Graceful Degradation**: Error boundaries and fallback states ensure platform stability across edge conditions.
 
 ---
 
-## 6. Legal Governance & Transparency (v0.0.1)
+## 5. Official Verified Communication Directory
 
-The platform includes comprehensive transparency documentation accessible directly via dedicated routes:
-
-| Route | Document Title | Active Version | Scope & Responsibility |
-| :--- | :--- | :--- | :--- |
-| [`self.gauravpatil.site`](https://self.gauravpatil.site) | **Interactive Projects Launchpad** | `v1.0.0` | Ultra-fast single-view zero-scroll directory aggregating all 14 production SaaS and client platforms. |
-| [`resume.gauravpatil.site`](https://resume.gauravpatil.site) | **Verified Resume Portal** | `v1.0.0` | Dedicated verified interactive candidate resume, credentials verification, and PDF download hub. |
-| [`contact.gauravpatil.site`](https://contact.gauravpatil.site) | **Recruiter Contact Portal** | `v1.0.0` | Dedicated portal for recruiters, talent teams, candidate resume, and verified live communication. |
-| [`talk.gauravpatil.site`](https://talk.gauravpatil.site) | **Talk Command Hub** | `v1.0.0` | Real-time command center, interactive messaging gateway, and authenticated executive communication. |
-| [`/terms`](https://gauravpatil.site/terms) | **Terms of Service** | `v0.0.1` | Operating terms, intellectual property, acceptable use, and communication standards. |
-| [`/privacy`](https://gauravpatil.site/privacy) | **Privacy Policy** | `v0.0.1` | Data minimization principles, anonymity rights, encryption standards, and GDPR compliance. |
-| [`/security`](https://gauravpatil.site/security) | **Security Policy** | `v0.0.1` | Infrastructure defenses, authentication standards, and vulnerability disclosure policies. |
-| [`/accessibility`](https://gauravpatil.site/accessibility) | **Accessibility Statement** | `v0.0.1` | Mobile-first 10/10 standards, touch ergonomics, and WCAG 2.1 AA conformance details. |
-| [`/chat`](https://gauravpatil.site/chat) | **Assistant & Chat Guide** | `v0.0.1` | Complete technical breakdown of the personal assistant and live chat architecture. |
-
-### Mandatory Legal Update Dispatches (Strict Non-Marketing Standard)
-Submitting an email address through any feature of this portfolio &mdash; including Contact Form submissions, Assistant/Live Chat OTP authentication, support requests, or direct messaging &mdash; registers that address to receive mandatory policy, legal, and security announcements in accordance with the user's acceptance of use.
-* **Strict Non-Marketing Guarantee**: All dispatches are 100% transactional legal disclosures with zero marketing or promotional sequences.
-* **No-Unsubscribe Standard**: Because these notices represent vital contractual disclosures required to maintain transparency for all users who have interacted with the platform, no opt-out or unsubscribe mechanism is provided. Users will continue to receive mandatory notices even if automated email client features (such as Google/Gmail automatic 1-click unsubscribe headers) are triggered at the client level.
-* **Single-Entity Invariant**: All communications preserve the personal developer standard (*"Gaurav"*, *"my services"*, *"The automated system"*), avoiding corporate plurals (*"we", "our", "us"*).
-
----
-
-## 7. Official Communication Directory
-
-Official electronic communications, receipts, security notices, and legal updates originate strictly from verified email addresses under the authenticated primary domain `gauravpatil.site`:
+Official electronic communications, security notices, receipts, and correspondence originate strictly from verified email addresses under the authenticated primary domain `gauravpatil.site`:
 
 | Mailbox / Sender | Display Identity | Purpose & Scope | Expected Response |
 | :--- | :--- | :--- | :--- |
-| [`gaurav@gauravpatil.site`](mailto:gaurav@gauravpatil.site) | **Gaurav Patil** | **Professional Direct**: Executive direct line, bespoke engineering consulting, client contract proposals, and recruiter correspondence. | Direct personal review within 12–24 hours. |
-| [`hello@gauravpatil.site`](mailto:hello@gauravpatil.site) | **Gaurav Patil** | **Client & Inquiries**: Project proposals, collaboration inquiries, consulting requests, and public contact routing. | Auto-acknowledgement; personal response typically within 24 hours. |
+| [`gaurav@gauravpatil.site`](mailto:gaurav@gauravpatil.site) | **Gaurav Patil** | **Professional Direct**: Executive direct line, consulting engagements, contract proposals, and recruiter correspondence. | Direct personal review within 12–24 hours. |
+| [`hello@gauravpatil.site`](mailto:hello@gauravpatil.site) | **Gaurav Patil** | **Client & Inquiries**: Project proposals, collaboration inquiries, consulting requests, and general contact routing. | Auto-acknowledgement; personal response within 24 hours. |
 | [`me@gauravpatil.site`](mailto:me@gauravpatil.site) | **Gaurav Patil** | **Direct & Founder**: Direct communication, founder correspondence, and personal engineering discussions. | Personal response within 24 hours. |
 | [`work@gauravpatil.site`](mailto:work@gauravpatil.site) | **Gaurav Patil** | **Professional & Contracting**: Contract engagements, technical advisory, consulting, and recruitment dialogues. | Priority review within 12–24 hours. |
-| [`security@gauravpatil.site`](mailto:security@gauravpatil.site) | **Gaurav Patil** | **Security Operations**: Multi-factor authentication notices, login alerts, git push audit logs, and vulnerability reports. | Urgent security disclosures triaged immediately. |
-| [`help@gauravpatil.site`](mailto:help@gauravpatil.site) | **Gaurav Support** | **Technical Support**: Assistant inquiries, bug reports, user feedback, and portfolio navigation guidance. | Initial response within 12–24 business hours. |
-| [`no-reply@gauravpatil.site`](mailto:no-reply@gauravpatil.site) | **Gaurav Portfolio No-Reply** | **Automated Alerts (Do Not Reply)**: One-Time Passcodes (OTP), Live Chat verification, and mandatory legal announcements. | Automated dispatch; inbound replies are unmonitored. |
+| [`security@gauravpatil.site`](mailto:security@gauravpatil.site) | **Gaurav Patil** | **Security Operations**: Multi-factor authentication notices, login alerts, audit logs, and vulnerability reports. | Urgent security disclosures triaged immediately. |
+| [`help@gauravpatil.site`](mailto:help@gauravpatil.site) | **Gaurav Support** | **Technical Support**: Assistant inquiries, bug reports, user feedback, and portfolio navigation guidance. | Response within 12–24 business hours. |
+| [`no-reply@gauravpatil.site`](mailto:no-reply@gauravpatil.site) | **Gaurav Portfolio No-Reply** | **Automated Alerts (Do Not Reply)**: One-Time Passcodes (OTP), Live Chat verification, and system receipts. | Automated dispatch; inbound replies are unmonitored. |
 
-> 🛡️ **Email Security & Authenticity**: Outgoing emails are authenticated with SPF, DKIM, and DMARC cryptographic signatures. Inbound email addresses are never enrolled in marketing lists or commercial campaigns.
+> 🛡️ **Email Security & Authenticity**: Outgoing emails are cryptographically authenticated with SPF, DKIM, and DMARC alignments. Inbound email addresses are never enrolled in marketing lists or commercial campaigns.
 
 ---
 
-## 8. Technology Stack
+## 6. Technology Stack
 
-| Layer | Technologies | Key Responsibilities |
+| Layer | Technologies | Key Highlights |
 | :--- | :--- | :--- |
 | **Framework** | [Next.js 15](https://nextjs.org/) (App Router, Turbopack) | Server Components, Server Actions, Dynamic Streaming |
-| **Core View** | [React 19](https://react.dev/) & [TypeScript 5](https://www.typescriptlang.org/) | Concurrent rendering, typed state, custom hooks |
-| **Styling** | [Tailwind CSS 3.4](https://tailwindcss.com/) & Tailwind Merge | Modern utility-first design system |
+| **Core View** | [React 19](https://react.dev/) & [TypeScript 5](https://www.typescriptlang.org/) | Concurrent rendering, strict static typing, custom hooks |
+| **Styling** | [Tailwind CSS 3.4](https://tailwindcss.com/) & Tailwind Merge | Modern utility-first design system with custom theme tokens |
 | **3D Graphics** | [Three.js](https://threejs.org/) & [Three-Globe](https://github.com/vasturiano/three-globe) | Interactive WebGL globe visualization |
 | **Motion** | [Motion (Framer Motion)](https://motion.dev/) | Fluid layout animations, transitions, bento grids |
-| **Database & Auth** | [Firebase](https://firebase.google.com/) (Firestore, RTDB, Storage, Auth) | Multi-store persistence, real-time sync, file storage, Admin SDK |
-| **Cache & Rate Limit** | [Upstash Redis](https://upstash.com/) | Edge caching, distributed locks, sliding window rate-limiting |
+| **Database & Auth** | [Firebase](https://firebase.google.com/) | Real-time synchronization, multi-store persistence, secure authentication |
+| **Cache & Limits** | [Upstash Redis](https://upstash.com/) | Edge caching, distributed locks, rate-limiting |
 | **Messaging** | [Meta WhatsApp Cloud API](https://developers.facebook.com/docs/whatsapp/cloud-api) | Direct messaging, automated notification triggers, GDPR export |
-| **Bot Mitigation** | [Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/) | Privacy-preserving, non-interactive challenge verification |
-| **Email Infrastructure** | [Brevo REST API](https://www.brevo.com/) & [Resend](https://resend.com/) | Dual-engine transactional delivery, idempotency, push audit failover |
+| **Bot Defense** | [Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/) | Privacy-preserving challenge verification |
+| **Email Infrastructure** | [Brevo REST API](https://www.brevo.com/) & [Resend](https://resend.com/) | Transactional delivery with idempotency and cryptographic alignment |
 | **Validation** | [Zod](https://zod.dev/) | Strict runtime data validation schemas |
 
 ---
 
-## 9. Local Development & Setup
+## 7. Local Development & Setup
 
 ### Prerequisites
 * **Node.js**: `v20.x` or `v22.x` (LTS recommended)
@@ -249,30 +152,37 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser to explore the portfolio, or [http://localhost:3000/contact](http://localhost:3000/contact) to test the dynamic contact modal.
-
-### Code Quality Verification
-
-```bash
-# Run full static TypeScript type-checking (zero mutations)
-npx tsc --noEmit
-
-# Run ESLint validation
-npm run lint
-```
+Open [http://localhost:3000](http://localhost:3000) in your browser to view the portfolio, or [http://localhost:3000/contact](http://localhost:3000/contact) to test the dynamic contact route.
 
 ---
 
-## 10. Security & Responsible Disclosure
+## 8. Intellectual Property & Strict License (Terms of Use)
 
-* **Zero Hardcoded Secrets**: Credentials, service accounts, and API tokens are managed via encrypted environment configurations and are never committed to version control.
+> ### ⚖️ Source-Available & Strict Intellectual Property Notice
+> 
+> This repository is **publicly accessible and open-source for personal inspection, educational study, code review, and evaluation**. However, all source code, visual designs, brand identity, and proprietary assets are the protected intellectual property of **Gaurav Patil**.
+
+### 🟢 Permitted Use (What You CAN Do):
+* **View and Study:** You are welcome to view, read, browse, and study the codebase for personal learning, educational purposes, code review, and technical evaluation.
+* **Fork for Private Study:** You may fork the repository strictly for personal study or to submit pull requests/improvements back to this project.
+* **Reference Architectural Concepts:** You may reference high-level conceptual ideas for learning, provided you write your own original code.
+
+### 🔴 Prohibited Use (What You CANNOT Do):
+* **No Code Reuse or Copying:** You may **NOT** copy, duplicate, replicate, extract, or reuse any part of the source code, stylesheets, 3D WebGL implementations, custom shaders, or components for your own portfolio, commercial products, or client projects.
+* **No Cloning or Re-Skinning:** You may **NOT** clone, re-skin, re-brand, or host this website or any of its subdomains as your own portfolio or personal web presence.
+* **No Commercial Exploitation or Redistribution:** You may **NOT** sell, sublicense, distribute, repackage, or commercialize this codebase, UI templates, or any derived works.
+* **No Trademark or Likeness Infringement:** The name **Gaurav Patil**, the domain `gauravpatil.site` (and associated subdomains), logos, headshots, written case studies, testimonials, and personal likeness are strictly reserved and may not be used without prior written authorization.
+
+For the full legal text, review the [LICENSE](LICENSE) file.
+
+---
+
+## 9. Security & Responsible Disclosure
+
+* **Zero Hardcoded Secrets**: Credentials, service accounts, and API tokens are managed strictly via environment configurations and are never committed to version control.
 * **Edge Rate Limiting**: Public endpoints are protected by bot challenges, request throttling, and payload sanitization.
-* **Responsible Vulnerability Disclosure**: If you discover a potential security issue, please send a confidential report with reproduction steps to [`security@gauravpatil.site`](mailto:security@gauravpatil.site).
+* **Responsible Vulnerability Disclosure**: If you discover a potential security issue, please send a confidential report with reproduction steps directly to [`security@gauravpatil.site`](mailto:security@gauravpatil.site).
 
 ---
 
-## 11. License & Copyright
-
-This project is licensed under the terms of the [MIT License](LICENSE).
-
-&copy; 2026 **Gaurav Patil**. All rights reserved.
+&copy; 2026 **Gaurav Patil**. All rights reserved. Intellectual Property of Gaurav Patil.
