@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import React from "react";
 import { Geist, Geist_Mono } from "next/font/google";
+import { RecruiterThemeEnforcer } from "@/components/contact-portal/layout/RecruiterThemeEnforcer";
 
 const adminSans = Geist({
   variable: "--font-admin-sans",
@@ -135,23 +136,61 @@ export default function RecruiterPortalLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div
-      data-portal="true"
-      className={`${adminSans.variable} ${adminMono.variable} font-admin-sans relative h-[100dvh] max-h-[100dvh] w-full overflow-hidden bg-[#FAFAFA] text-black flex flex-col`}
-    >
+    <>
+      {/* 1. Synchronous Frame-0 light theme lock: guarantees pure light theme before paint */}
       <script
         dangerouslySetInnerHTML={{
-          __html: `document.documentElement.classList.add('light');document.documentElement.classList.remove('dark');`,
+          __html: `(function(){
+            try {
+              var el = document.documentElement;
+              el.classList.remove('dark');
+              el.classList.add('light');
+              el.style.backgroundColor = '#FAFAFA';
+              el.style.colorScheme = 'light';
+              el.setAttribute('data-theme-isolated', 'recruiter');
+              if (document.body) {
+                document.body.style.backgroundColor = '#FAFAFA';
+                document.body.style.color = '#000000';
+              }
+            } catch(e) {}
+          })();`,
         }}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(recruiterPortalJsonLd) }}
+
+      {/* 2. Permanent Frame-0 style override: prevents any dark theme inheritance on recruiter portal */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            html:has([data-portal-type="recruiter"]),
+            html:has([data-portal="recruiter"]),
+            html:has([data-portal="true"]),
+            body:has([data-portal-type="recruiter"]),
+            body:has([data-portal="recruiter"]),
+            body:has([data-portal="true"]) {
+              background-color: #FAFAFA !important;
+              color-scheme: light !important;
+            }
+          `,
+        }}
       />
-      {/* Main 100dvh zero-scroll content container */}
-      <main className="relative z-10 flex-1 flex flex-col h-full max-h-[100dvh] overflow-hidden">
-        {children}
-      </main>
-    </div>
+
+      {/* 3. Runtime Theme Lock: isolates from BroadcastChannel/cookie sync and restores prior theme on unmount */}
+      <RecruiterThemeEnforcer />
+
+      <div
+        data-portal="true"
+        data-portal-type="recruiter"
+        className={`${adminSans.variable} ${adminMono.variable} font-admin-sans relative h-[100dvh] max-h-[100dvh] w-full overflow-hidden bg-[#FAFAFA] text-black flex flex-col`}
+      >
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(recruiterPortalJsonLd) }}
+        />
+        {/* Main 100dvh zero-scroll content container */}
+        <main className="relative z-10 flex-1 flex flex-col h-full max-h-[100dvh] overflow-hidden">
+          {children}
+        </main>
+      </div>
+    </>
   );
 }

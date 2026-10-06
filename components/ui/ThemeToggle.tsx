@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { createPortal } from "react-dom";
 import { useTheme } from "@/lib/theme";
 import { writeThemeCookieSync } from "@/lib/theme/cookie";
@@ -17,11 +18,20 @@ export function ThemeToggle({
   className,
   variant = "floating",
 }: ThemeToggleProps) {
+  const pathname = usePathname() || "";
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [targetTheme, setTargetTheme] = useState<"light" | "dark" | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPortalSuppressed, setIsPortalSuppressed] = useState(false);
+
+  // SSR route suppression for Talk Portal, Recruiter Portal, and Admin Console
+  const isSsrSuppressed =
+    pathname.startsWith("/talk") ||
+    pathname.startsWith("/contact-portal") ||
+    pathname.startsWith("/contact") ||
+    pathname.startsWith("/admin");
 
   const phase1TimerRef = useRef<NodeJS.Timeout | null>(null);
   const phase2TimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -29,6 +39,31 @@ export function ThemeToggle({
 
   useEffect(() => {
     setMounted(true);
+
+    const checkPortalSuppression = () => {
+      if (typeof window === "undefined") return false;
+      const host = window.location.hostname.toLowerCase();
+      const isSuppressedHost =
+        host.startsWith("talk.") ||
+        host.startsWith("contact.") ||
+        host.startsWith("admin.");
+      const isSuppressedPath =
+        pathname.startsWith("/talk") ||
+        pathname.startsWith("/contact-portal") ||
+        pathname.startsWith("/contact") ||
+        pathname.startsWith("/admin");
+      const hasSuppressedAttr = Boolean(
+        document.querySelector('[data-portal="talk"]') ||
+        document.querySelector('[data-portal-type="recruiter"]') ||
+        document.querySelector('[data-portal="recruiter"]') ||
+        document.querySelector('[data-portal="true"]') ||
+        document.querySelector('[data-admin="true"]') ||
+        document.documentElement.getAttribute("data-theme-isolated") === "recruiter"
+      );
+      return isSuppressedHost || isSuppressedPath || hasSuppressedAttr;
+    };
+
+    setIsPortalSuppressed(checkPortalSuppression());
 
     const handleModalState = (e?: Event) => {
       const customEvent = e as CustomEvent<{ isOpen?: boolean }> | undefined;
@@ -66,7 +101,7 @@ export function ThemeToggle({
         document.documentElement.classList.remove("theme-transitioning");
       }
     };
-  }, []);
+  }, [pathname]);
 
   const isDark = mounted ? resolvedTheme === "dark" : true;
 
@@ -121,12 +156,18 @@ export function ThemeToggle({
     }, 180);
   };
 
+  const shouldSuppressFloating = variant === "floating" && (isSsrSuppressed || isPortalSuppressed);
+
+  if (shouldSuppressFloating) {
+    return null;
+  }
+
   if (!mounted) {
     return (
       <div
         className={cn(
           variant === "floating"
-            ? "fixed z-[4950] bottom-[calc(1.25rem+env(safe-area-inset-bottom,0px))] left-[calc(1rem+env(safe-area-inset-left,0px))] sm:bottom-auto sm:left-auto sm:top-[calc(1.5rem+env(safe-area-inset-top,0px))] sm:right-[calc(2rem+env(safe-area-inset-right,0px))]"
+            ? "theme-toggle-floating fixed z-[4950] bottom-[calc(1.25rem+env(safe-area-inset-bottom,0px))] left-[calc(1rem+env(safe-area-inset-left,0px))] sm:bottom-auto sm:left-auto sm:top-[calc(1.5rem+env(safe-area-inset-top,0px))] sm:right-[calc(2rem+env(safe-area-inset-right,0px))]"
             : "relative",
           "w-10 h-10 sm:w-11 sm:h-11 rounded-full opacity-0 pointer-events-none",
           className
@@ -227,7 +268,7 @@ export function ThemeToggle({
         className={cn(
           "group relative flex items-center justify-center rounded-full select-none touch-manipulation focus:outline-none transition-all duration-300",
           variant === "floating"
-            ? "fixed z-[4950] w-10 h-10 sm:w-11 sm:h-11 backdrop-blur-2xl bottom-[calc(1.25rem+env(safe-area-inset-bottom,0px))] left-[calc(1rem+env(safe-area-inset-left,0px))] sm:bottom-auto sm:left-auto sm:top-[calc(1.5rem+env(safe-area-inset-top,0px))] sm:right-[calc(2rem+env(safe-area-inset-right,0px))]"
+            ? "theme-toggle-floating fixed z-[4950] w-10 h-10 sm:w-11 sm:h-11 backdrop-blur-2xl bottom-[calc(1.25rem+env(safe-area-inset-bottom,0px))] left-[calc(1rem+env(safe-area-inset-left,0px))] sm:bottom-auto sm:left-auto sm:top-[calc(1.5rem+env(safe-area-inset-top,0px))] sm:right-[calc(2rem+env(safe-area-inset-right,0px))]"
             : "w-9 h-9 sm:w-10 sm:h-10 backdrop-blur-2xl",
           isDark
             ? "bg-[#0A0D24]/90 hover:bg-[#12163A] border border-white/20 text-amber-400 shadow-[0_4px_20px_rgba(0,0,0,0.5),0_0_12px_rgba(251,191,36,0.15)] ring-1 ring-white/10"

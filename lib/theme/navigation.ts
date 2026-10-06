@@ -50,11 +50,15 @@ export function getSubdomainUrl(
         if (rawUrl.startsWith("/contact-portal")) {
           const path = rawUrl.replace(/^\/contact-portal/, "") || "/";
           const url = new URL(`http://contact.localhost${port}${path}`);
-          if (activeTheme) url.searchParams.set("theme", activeTheme);
+          url.searchParams.delete("theme");
           return url.toString();
         }
       }
       const url = new URL(rawUrl, "https://gauravpatil.site");
+      if (rawUrl.startsWith("/contact-portal")) {
+        url.searchParams.delete("theme");
+        return `${url.pathname}${url.search}${url.hash}`;
+      }
       if (activeTheme) url.searchParams.set("theme", activeTheme);
       return `${url.pathname}${url.search}${url.hash}`;
     }
@@ -83,8 +87,18 @@ export function getSubdomainUrl(
       }
     }
 
-    // Append theme parameter for ecosystem domains
+    // Recruiter Portal operates strictly in pure light theme for HR - exclude from ?theme sync
     const targetHost = url.hostname.toLowerCase();
+    const isContactPortalHost =
+      targetHost === "contact.gauravpatil.site" ||
+      targetHost.startsWith("contact.localhost");
+
+    if (isContactPortalHost) {
+      url.searchParams.delete("theme");
+      return url.toString();
+    }
+
+    // Append theme parameter for ecosystem domains
     const isEcosystemHost =
       targetHost === "gauravpatil.site" ||
       targetHost.endsWith(".gauravpatil.site") ||

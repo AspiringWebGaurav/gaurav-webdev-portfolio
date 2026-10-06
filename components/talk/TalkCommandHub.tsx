@@ -176,52 +176,24 @@ const PaginationBar: React.FC<PaginationBarProps> = ({
 
 export const TalkCommandHub: React.FC = () => {
   const router = useRouter();
-  const { setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [themeMode, setThemeMode] = useState<"light" | "dark">("light");
 
   useEffect(() => {
     setMounted(true);
     if (typeof document !== "undefined" && document.body) {
       document.body.style.removeProperty("background-color");
     }
-    try {
-      const saved = localStorage.getItem("talk_theme");
-      if (saved === "dark") {
-        setThemeMode("dark");
-        setTheme("dark");
-        document.documentElement.classList.add("dark");
-        document.documentElement.classList.remove("light");
-      } else {
-        setThemeMode("light");
-        setTheme("light");
-        document.documentElement.classList.remove("dark");
-        document.documentElement.classList.add("light");
-      }
-    } catch {
-      setThemeMode("light");
-      setTheme("light");
-    }
-  }, [setTheme]);
+  }, []);
 
-  const isDark = mounted ? themeMode === "dark" : false;
+  const isDark = mounted ? resolvedTheme === "dark" : false;
 
   const toggleTheme = () => {
-    const nextTheme = themeMode === "dark" ? "light" : "dark";
-    setThemeMode(nextTheme);
+    const nextTheme = isDark ? "light" : "dark";
     setTheme(nextTheme);
     try {
       localStorage.setItem("talk_theme", nextTheme);
     } catch {}
-    if (typeof document !== "undefined") {
-      if (nextTheme === "dark") {
-        document.documentElement.classList.add("dark");
-        document.documentElement.classList.remove("light");
-      } else {
-        document.documentElement.classList.remove("dark");
-        document.documentElement.classList.add("light");
-      }
-    }
   };
 
   // Mobile Navigation Tab State with Persistence

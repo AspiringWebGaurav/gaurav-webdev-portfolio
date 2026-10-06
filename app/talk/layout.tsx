@@ -44,18 +44,38 @@ export default function TalkLayout({
         dangerouslySetInnerHTML={{
           __html: `(function(){
             try {
-              var saved = localStorage.getItem('talk_theme');
-              if (saved === 'dark') {
-                document.documentElement.classList.add('dark');
-                document.documentElement.classList.remove('light');
-              } else {
-                document.documentElement.classList.remove('dark');
-                document.documentElement.classList.add('light');
+              var p = new URLSearchParams(window.location.search);
+              var u = p.get('theme');
+              var t = (u === 'light' || u === 'dark') ? u : null;
+              if (!t) {
+                var ck = document.cookie.split(';');
+                for (var i = 0; i < ck.length; i++) {
+                  var c = ck[i].trim();
+                  if (c.indexOf('theme=') === 0) {
+                    var v = c.substring(6);
+                    if (v === 'light' || v === 'dark') { t = v; break; }
+                  }
+                }
               }
-            } catch(e) {
-              document.documentElement.classList.remove('dark');
-              document.documentElement.classList.add('light');
-            }
+              if (!t) {
+                var st = localStorage.getItem('gaurav_theme_sync_storage');
+                if (st) {
+                  var parsed = JSON.parse(st);
+                  if (parsed && (parsed.theme === 'light' || parsed.theme === 'dark')) {
+                    t = parsed.theme;
+                  }
+                }
+              }
+              if (!t) {
+                var saved = localStorage.getItem('talk_theme');
+                if (saved === 'dark' || saved === 'light') { t = saved; }
+              }
+              if (!t) { t = 'dark'; }
+              var el = document.documentElement;
+              el.classList.remove('light', 'dark');
+              el.classList.add(t);
+              el.style.colorScheme = t;
+            } catch(e) {}
           })();`,
         }}
       />

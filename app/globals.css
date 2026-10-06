@@ -98,12 +98,31 @@
                 border-color 0.35s cubic-bezier(0.22, 1, 0.36, 1),
                 color 0.35s cubic-bezier(0.22, 1, 0.36, 1) !important;
   }
+  /* Recruiter Portal & Admin pure light surface isolation */
+  body:has([data-portal-type="recruiter"]),
+  body:has([data-portal="recruiter"]),
+  body:has([data-theme-isolated="recruiter"]),
+  [data-portal-type="recruiter"],
+  [data-portal="recruiter"],
   body:has([data-portal="true"]),
   [data-portal="true"],
   body:has([data-admin="true"]),
   [data-admin="true"] {
-    background-color: #FFFFFF !important;
+    background-color: #FAFAFA !important;
     color: #000000 !important;
+    color-scheme: light !important;
+  }
+
+  /* Unconditional CSS suppression of floating theme toggle button on isolated portals */
+  body:has([data-portal="talk"]) .theme-toggle-floating,
+  body:has([data-portal-type="recruiter"]) .theme-toggle-floating,
+  body:has([data-portal="recruiter"]) .theme-toggle-floating,
+  body:has([data-theme-isolated="recruiter"]) .theme-toggle-floating,
+  body:has([data-portal="true"]) .theme-toggle-floating,
+  body:has([data-admin="true"]) .theme-toggle-floating {
+    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
   }
   button,
   a,

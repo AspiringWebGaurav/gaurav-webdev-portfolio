@@ -371,20 +371,37 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  const host = request.headers.get("host") || "";
+  const isDedicatedRecruiterSubdomain =
+    host === "contact.gauravpatil.site" ||
+    host === "contact.localhost:3000" ||
+    host === "contact.localhost" ||
+    host.startsWith("contact.localhost") ||
+    request.headers.get("x-dev-subdomain") === "contact";
+
+  const isRecruiterPortal =
+    isDedicatedRecruiterSubdomain ||
+    pathname.startsWith("/contact-portal") ||
+    pathname.startsWith("/contact");
+
   const themeQuery = request.nextUrl.searchParams.get("theme");
   const isThemeQueryValid = themeQuery === "light" || themeQuery === "dark";
 
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-pathname", pathname);
-  if (isThemeQueryValid) {
+
+  if (isRecruiterPortal) {
+    // Recruiter Portal operates strictly in pure light theme for HR - completely isolated from theme sync
+    requestHeaders.set("x-theme", "light");
+    requestHeaders.set("x-is-contact-portal", "true");
+  } else if (isThemeQueryValid) {
     requestHeaders.set("x-theme", themeQuery);
   }
 
   const response = await handleRouting(request, requestHeaders);
 
-  // Cross-subdomain theme synchronization
-  if (isThemeQueryValid && themeQuery) {
-    const host = request.headers.get("host") || "";
+  // Cross-subdomain theme synchronization (skip completely for recruiter portal)
+  if (!isRecruiterPortal && isThemeQueryValid && themeQuery) {
     const isLocalHost =
       host.includes("localhost") ||
       host.startsWith("127.0.0.1") ||

@@ -33,6 +33,25 @@ const ThemeContext = createContext<UseThemeProps>({
   themes: ["light", "dark"],
 });
 
+export function isRecruiterPortalEnvironment(): boolean {
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname.toLowerCase();
+    if (host.startsWith("contact.")) return true;
+    const path = window.location.pathname;
+    if (path.startsWith("/contact-portal") || path.startsWith("/contact")) return true;
+    if (typeof document !== "undefined") {
+      if (
+        document.documentElement.getAttribute("data-theme-isolated") === "recruiter" ||
+        document.querySelector('[data-portal-type="recruiter"]') ||
+        document.querySelector('[data-portal="recruiter"]')
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 export function ThemeProvider({
   children,
   defaultTheme = "dark",
@@ -43,6 +62,9 @@ export function ThemeProvider({
 
   // Initialize state from URL param, shared cookie, or established DOM class
   const [theme, setThemeState] = useState<Theme>(() => {
+    if (typeof window !== "undefined" && isRecruiterPortalEnvironment()) {
+      return "light";
+    }
     if (typeof window !== "undefined") {
       try {
         const urlParam = new URLSearchParams(window.location.search).get("theme");
@@ -62,12 +84,19 @@ export function ThemeProvider({
   const applyThemeToDOM = useCallback((newTheme: Theme) => {
     if (typeof document === "undefined") return;
     const d = document.documentElement;
+    if (isRecruiterPortalEnvironment()) {
+      d.classList.remove("dark");
+      d.classList.add("light");
+      d.style.colorScheme = "light";
+      return;
+    }
     d.classList.remove("light", "dark");
     d.classList.add(newTheme);
     d.style.colorScheme = newTheme;
   }, []);
 
   const setTheme = useCallback((next: Theme | string) => {
+    if (isRecruiterPortalEnvironment()) return;
     const validTheme: Theme = next === "light" ? "light" : "dark";
     const now = Date.now();
     versionRef.current += 1;
@@ -115,6 +144,11 @@ export function ThemeProvider({
   // Synchronize on mount from URL param or established DOM class
   useEffect(() => {
     if (typeof window !== "undefined") {
+      if (isRecruiterPortalEnvironment()) {
+        applyThemeToDOM("light");
+        setThemeState("light");
+        return;
+      }
       try {
         const params = new URLSearchParams(window.location.search);
         const urlTheme = params.get("theme");
@@ -149,6 +183,7 @@ export function ThemeProvider({
       broadcastRef.current = channel;
 
       channel.onmessage = (event: MessageEvent<ThemeSyncMessage>) => {
+        if (isRecruiterPortalEnvironment()) return;
         if (event.data?.type === "THEME_CHANGED" && (event.data.theme === "light" || event.data.theme === "dark")) {
           // Staleness guard: ignore older or out-of-order events
           if (event.data.timestamp > lastTimestampRef.current) {
@@ -162,6 +197,7 @@ export function ThemeProvider({
 
     // 2. Storage event listener for cross-tab sync
     const handleStorage = (event: StorageEvent) => {
+      if (isRecruiterPortalEnvironment()) return;
       if (event.key === "gaurav_theme_sync_storage" && event.newValue) {
         try {
           const parsed = JSON.parse(event.newValue);
@@ -177,6 +213,7 @@ export function ThemeProvider({
 
     // 3. Cross-Subdomain Open Tab Reconciliation (Focus & Visibility Events)
     const reconcileFromSharedCookie = () => {
+      if (isRecruiterPortalEnvironment()) return;
       const cookieTheme = readThemeCookieSync();
       if (cookieTheme && (cookieTheme === "light" || cookieTheme === "dark")) {
         setThemeState((current) => {

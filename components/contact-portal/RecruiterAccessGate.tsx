@@ -15,9 +15,7 @@ import {
   FaChevronDown,
 } from "react-icons/fa";
 import { validateEmailWithTypo, getAutocorrectedEmail } from "@/lib/recruiter/validation";
-import { useTheme } from "@/lib/theme";
 import { getSubdomainUrl } from "@/lib/theme/navigation";
-import { writeThemeCookieSync } from "@/lib/theme/cookie";
 
 interface CountryOption {
   code: string;
@@ -164,13 +162,6 @@ export function RecruiterAccessGate({ onSuccess }: RecruiterAccessGateProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
 
-  const { resolvedTheme } = useTheme();
-  const [themeMounted, setThemeMounted] = useState(false);
-  useEffect(() => {
-    setThemeMounted(true);
-  }, []);
-  const isDark = themeMounted ? resolvedTheme === "dark" : false;
-
   const turnstileContainerRef = useRef<HTMLDivElement | null>(null);
   const turnstileWidgetIdRef = useRef<string | null>(null);
 
@@ -214,7 +205,7 @@ export function RecruiterAccessGate({ onSuccess }: RecruiterAccessGateProps) {
       const id = win.turnstile.render(turnstileContainerRef.current, {
         sitekey: turnstileSiteKey,
         action: "contact_portal",
-        theme: isDark ? "dark" : "light",
+        theme: "light",
         callback: (token: string) => {
           setTurnstileToken(token);
         },
@@ -236,16 +227,15 @@ export function RecruiterAccessGate({ onSuccess }: RecruiterAccessGateProps) {
     } catch (err) {
       console.warn("Turnstile render error:", err);
     }
-  }, [turnstileSiteKey, isDark]);
+  }, [turnstileSiteKey]);
 
-  // Re-render Turnstile dynamically when theme toggles
   useEffect(() => {
-    if (step !== "FORM" || !themeMounted) return;
+    if (step !== "FORM") return;
     const win = window as unknown as { turnstile?: unknown };
     if (win.turnstile && turnstileContainerRef.current) {
       renderTurnstile();
     }
-  }, [isDark, step, themeMounted, renderTurnstile]);
+  }, [step, renderTurnstile]);
 
   useEffect(() => {
     if (step !== "FORM") return;
@@ -900,10 +890,9 @@ export function RecruiterAccessGate({ onSuccess }: RecruiterAccessGateProps) {
           <span>recruiter portal · Gaurav Patil</span>
           <span>·</span>
           <a
-            href={getSubdomainUrl("https://resume.gauravpatil.site", resolvedTheme)}
+            href={getSubdomainUrl("https://resume.gauravpatil.site")}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => writeThemeCookieSync(resolvedTheme)}
             className="text-[#7C3AED] hover:underline font-medium"
           >
             resume.gauravpatil.site
