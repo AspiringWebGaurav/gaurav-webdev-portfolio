@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { cookies } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import { VercelInsights } from "@/components/analytics/VercelInsights";
 import "./globals.css";
@@ -8,6 +9,7 @@ import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { PortfolioPreloader } from "@/components/ui/PortfolioPreloader";
 import { seoRepository } from "@/lib/dal/repositories/cms/seo.repository";
 import { SEED_SEO } from "@/lib/dal/repositories/seed-data";
+import { THEME_COOKIE_NAME } from "@/lib/theme/cookie";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -210,21 +212,27 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const rawTheme = cookieStore.get(THEME_COOKIE_NAME)?.value;
+  const initialTheme: "light" | "dark" = rawTheme === "light" ? "light" : "dark";
+
   return (
     <html
       lang="en"
+      className={initialTheme}
+      style={{ colorScheme: initialTheme }}
       suppressHydrationWarning
     >
       <head>
-        {/* Synchronous pre-paint theme resolver: reads server-set cookie before DOM paint (0ms FOUC) */}
+        {/* Synchronous pre-paint theme resolver: reads server-set cookie before DOM paint */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var m=document.cookie.match(/(?:^|;\\s*)theme=(light|dark)(?:;|$)/);var t=m?m[1]:'dark';var d=document.documentElement;d.classList.remove('light','dark');d.classList.add(t);d.style.colorScheme=t;}catch(e){}})();`,
+            __html: `(function(){try{var m=document.cookie.match(/(?:^|;\\s*)theme=(light|dark)(?:;|$)/);var t=m?m[1]:'${initialTheme}';var d=document.documentElement;d.classList.remove('light','dark');d.classList.add(t);d.style.colorScheme=t;}catch(e){}})();`,
           }}
         />
         <link rel="preconnect" href="https://challenges.cloudflare.com" crossOrigin="anonymous" />
@@ -234,7 +242,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable}`}
         suppressHydrationWarning
       >
-        <ThemeProvider defaultTheme="dark">
+        <ThemeProvider defaultTheme={initialTheme}>
           <PortfolioPreloader />
           <RouteProgressBar />
           <ThemeToggle />
