@@ -4,14 +4,10 @@ import { ADMIN_COOKIE_NAME } from "@/lib/admin/constants";
 import { verifyAdminSession } from "@/lib/admin/auth";
 import { TALK_COOKIE_NAME, TALK_PORTAL_HOST } from "@/lib/talk/constants";
 import { verifyTalkSession } from "@/lib/talk/session";
+import { THEME_COOKIE_NAME, THEME_COOKIE_MAX_AGE, getSharedCookieDomain } from "@/lib/theme/cookie";
 
-export async function middleware(request: NextRequest) {
+async function handleRouting(request: NextRequest, requestHeaders: Headers): Promise<NextResponse> {
   const { pathname, search } = request.nextUrl;
-
-  // 0. Bypass Vercel Edge internals, Web Analytics and Speed Insights beacon endpoints
-  if (pathname.startsWith("/_vercel")) {
-    return NextResponse.next();
-  }
 
   const host = request.headers.get("host") || "";
   const forwardedProto = request.headers.get("x-forwarded-proto");
@@ -37,9 +33,6 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL(canonicalUrl), 301);
     }
   }
-
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("x-pathname", pathname);
 
   // 2. Recruiter Contact Portal Edge Router (contact.gauravpatil.site)
   const RECRUITER_PORTAL_HOST = "contact.gauravpatil.site";
@@ -368,6 +361,57 @@ export async function middleware(request: NextRequest) {
       headers: requestHeaders,
     },
   });
+}
+
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // 0. Bypass Vercel Edge internals, Web Analytics and Speed Insights beacon endpoints
+  if (pathname.startsWith("/_vercel")) {
+    return NextResponse.next();
+  }
+
+  const themeQuery = request.nextUrl.searchParams.get("theme");
+  const isThemeQueryValid = themeQuery === "light" || themeQuery === "dark";
+
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", pathname);
+  if (isThemeQueryValid) {
+    requestHeaders.set("x-theme", themeQuery);
+  }
+
+  const response = await handleRouting(request, requestHeaders);
+
+  // Cross-subdomain theme synchronization
+  if (isThemeQueryValid && themeQuery) {
+    const host = request.headers.get("host") || "";
+    const isLocalHost =
+      host.includes("localhost") ||
+      host.startsWith("127.0.0.1") ||
+      host.startsWith("192.168.") ||
+      host.startsWith("10.") ||
+      host.startsWith("172.");
+    const domain = getSharedCookieDomain(host);
+    const isSecure = process.env.NODE_ENV === "production" && !isLocalHost;
+
+    // 1. Clear any host-only cookie that could shadow the wildcard domain cookie
+    response.headers.append(
+      "Set-Cookie",
+      `${THEME_COOKIE_NAME}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${isSecure ? "; Secure" : ""}`
+    );
+
+    // 2. Write authoritative wildcard domain cookie
+    response.cookies.set(THEME_COOKIE_NAME, themeQuery, {
+      path: "/",
+      domain: domain || undefined,
+      maxAge: THEME_COOKIE_MAX_AGE,
+      sameSite: "lax",
+      secure: isSecure,
+      httpOnly: false,
+    });
+  }
+
+  return response;
 }
 
 export const config = {

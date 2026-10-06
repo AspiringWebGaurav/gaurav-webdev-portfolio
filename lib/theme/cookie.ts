@@ -36,6 +36,16 @@ export function getSharedCookieDomain(hostname?: string): string | undefined {
 }
 
 /**
+ * Clears any host-only theme cookie on the current origin to prevent RFC 6265
+ * cookie shadowing of wildcard domain cookies.
+ */
+export function cleanHostOnlyThemeCookie(): void {
+  if (typeof document === "undefined") return;
+  const isSecure = typeof window !== "undefined" && window.location.protocol === "https:";
+  document.cookie = `${THEME_COOKIE_NAME}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${isSecure ? "; Secure" : ""}`;
+}
+
+/**
  * Synchronously writes the theme cookie to the document.
  * Must be invoked immediately upon user interaction before any navigation.
  */
@@ -44,30 +54,45 @@ export function writeThemeCookieSync(theme: "light" | "dark", hostname?: string)
 
   const domain = getSharedCookieDomain(hostname);
   const isSecure = typeof window !== "undefined" && window.location.protocol === "https:";
-  
-  let cookieString = `${THEME_COOKIE_NAME}=${theme}; Path=/; Max-Age=${THEME_COOKIE_MAX_AGE}; SameSite=Lax`;
+
   if (domain) {
-    cookieString += `; Domain=${domain}`;
-  }
-  if (isSecure) {
-    cookieString += `; Secure`;
-  }
+    // 1. Kill any existing host-only cookie on the current host to prevent shadowing
+    cleanHostOnlyThemeCookie();
 
-  document.cookie = cookieString;
-
-  // Local development fallback: On localhost, if domain was omitted, also write
-  // explicitly for the current host to ensure immediate availability.
-  if (!domain && typeof window !== "undefined") {
+    // 2. Set authoritative wildcard domain cookie
+    document.cookie = `${THEME_COOKIE_NAME}=${theme}; Path=/; Max-Age=${THEME_COOKIE_MAX_AGE}; Domain=${domain}; SameSite=Lax${isSecure ? "; Secure" : ""}`;
+  } else {
+    // Localhost or isolated environment: write host-only cookie
     document.cookie = `${THEME_COOKIE_NAME}=${theme}; Path=/; Max-Age=${THEME_COOKIE_MAX_AGE}; SameSite=Lax`;
   }
 }
 
 /**
  * Reads and validates the theme cookie from document.cookie.
+ * Robust against multiple cookie entries, stale shadowing, and whitespace.
  */
 export function readThemeCookieSync(): "light" | "dark" | null {
   if (typeof document === "undefined") return null;
 
-  const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${THEME_COOKIE_NAME}=(light|dark)(?:;|$)`));
-  return match ? (match[1] as "light" | "dark") : null;
+  // On shared domains, clean up host-only cookie if present
+  const domain = getSharedCookieDomain();
+  if (domain) {
+    cleanHostOnlyThemeCookie();
+  }
+
+  // Parse all cookies to find the latest valid theme
+  const cookies = document.cookie.split(";");
+  let resolved: "light" | "dark" | null = null;
+
+  for (let i = 0; i < cookies.length; i++) {
+    const cookie = cookies[i].trim();
+    if (cookie.startsWith(`${THEME_COOKIE_NAME}=`)) {
+      const val = cookie.substring(THEME_COOKIE_NAME.length + 1).trim();
+      if (val === "light" || val === "dark") {
+        resolved = val;
+      }
+    }
+  }
+
+  return resolved;
 }

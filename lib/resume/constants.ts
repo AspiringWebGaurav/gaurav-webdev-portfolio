@@ -18,7 +18,7 @@ export const DEFAULT_RESUME_DATA: ResumeData = {
     linkedin: "https://linkedin.com/in/gaurav-patil-profile",
     github: "https://github.com/AspiringWebGaurav",
     summary:
-      "Production-focused Full-Stack & Systems Engineer with 3+ years of experience architecting high-throughput distributed web applications, native desktop tools (Rust/Tauri), and enterprise edge architectures. Proven track record in high-availability platforms, sub-millisecond edge routing, zero-trust security gates, and resilient database synchronization.",
+      "Production-focused Full-Stack & Systems Engineer with 3+ years of experience architecting fast, scalable distributed web applications, native desktop tools (Rust/Tauri), and enterprise edge architectures. Proven track record in high-availability platforms, sub-millisecond edge routing, zero-trust security gates, and resilient database synchronization.",
   },
   skillCategories: [
     {

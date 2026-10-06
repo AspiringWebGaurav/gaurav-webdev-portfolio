@@ -41,8 +41,16 @@ export function ThemeProvider({
   const lastTimestampRef = useRef(Date.now());
   const broadcastRef = useRef<BroadcastChannel | null>(null);
 
-  // Initialize state from shared cookie or established DOM class
+  // Initialize state from URL param, shared cookie, or established DOM class
   const [theme, setThemeState] = useState<Theme>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const urlParam = new URLSearchParams(window.location.search).get("theme");
+        if (urlParam === "light" || urlParam === "dark") {
+          return urlParam;
+        }
+      } catch {}
+    }
     if (typeof document !== "undefined") {
       const fromCookie = readThemeCookieSync();
       if (fromCookie) return fromCookie;
@@ -86,7 +94,15 @@ export function ThemeProvider({
       } catch {}
     }
 
-    // 5. Asynchronous server confirmation (fire-and-forget, non-blocking)
+    // 5. Cross-tab storage event bridge
+    try {
+      localStorage.setItem(
+        "gaurav_theme_sync_storage",
+        JSON.stringify({ theme: validTheme, timestamp: now })
+      );
+    } catch {}
+
+    // 6. Asynchronous server confirmation (fire-and-forget, non-blocking)
     fetch("/api/theme", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -96,16 +112,36 @@ export function ThemeProvider({
     });
   }, [applyThemeToDOM]);
 
-  // Synchronize on mount if client DOM already had class from synchronous head script
+  // Synchronize on mount from URL param or established DOM class
   useEffect(() => {
-    if (typeof document !== "undefined") {
+    if (typeof window !== "undefined") {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const urlTheme = params.get("theme");
+        if (urlTheme === "light" || urlTheme === "dark") {
+          applyThemeToDOM(urlTheme);
+          writeThemeCookieSync(urlTheme);
+          setThemeState(urlTheme);
+
+          // Clean URL parameter without reload
+          params.delete("theme");
+          const remaining = params.toString();
+          const cleanUrl =
+            window.location.pathname +
+            (remaining ? `?${remaining}` : "") +
+            window.location.hash;
+          window.history.replaceState(null, "", cleanUrl);
+          return;
+        }
+      } catch {}
+
       const isLight = document.documentElement.classList.contains("light");
       const current: Theme = isLight ? "light" : "dark";
       setThemeState((prev) => (prev !== current ? current : prev));
     }
-  }, []);
+  }, [applyThemeToDOM]);
 
-  // Dual-Channel Sync: Same-Origin BroadcastChannel + Cross-Subdomain Focus/Visibility Reconciliation
+  // Multi-Channel Sync: BroadcastChannel + Storage Events + Focus/Visibility Reconciliation
   useEffect(() => {
     // 1. Same-Origin Fast Path via BroadcastChannel
     if (typeof window !== "undefined" && "BroadcastChannel" in window) {
@@ -124,7 +160,22 @@ export function ThemeProvider({
       };
     }
 
-    // 2. Cross-Subdomain Open Tab Reconciliation (Focus & Visibility Events)
+    // 2. Storage event listener for cross-tab sync
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === "gaurav_theme_sync_storage" && event.newValue) {
+        try {
+          const parsed = JSON.parse(event.newValue);
+          if ((parsed.theme === "light" || parsed.theme === "dark") && parsed.timestamp > lastTimestampRef.current) {
+            lastTimestampRef.current = parsed.timestamp;
+            applyThemeToDOM(parsed.theme);
+            setThemeState(parsed.theme);
+          }
+        } catch {}
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+
+    // 3. Cross-Subdomain Open Tab Reconciliation (Focus & Visibility Events)
     const reconcileFromSharedCookie = () => {
       const cookieTheme = readThemeCookieSync();
       if (cookieTheme && (cookieTheme === "light" || cookieTheme === "dark")) {
@@ -151,6 +202,7 @@ export function ThemeProvider({
         broadcastRef.current.close();
         broadcastRef.current = null;
       }
+      window.removeEventListener("storage", handleStorage);
       window.removeEventListener("focus", reconcileFromSharedCookie);
       document.removeEventListener("visibilitychange", handleVisibility);
     };

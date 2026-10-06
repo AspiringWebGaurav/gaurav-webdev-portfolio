@@ -2,6 +2,9 @@
 
 import React, { useState } from "react";
 import { FaDownload, FaEnvelope, FaFilePdf, FaCheck, FaGraduationCap, FaAward, FaExternalLinkAlt } from "react-icons/fa";
+import { useTheme } from "@/lib/theme";
+import { getSubdomainUrl } from "@/lib/theme/navigation";
+import { writeThemeCookieSync } from "@/lib/theme/cookie";
 
 interface ResumeScreenProps {
   recruiter: { name: string; company: string; email: string };
@@ -9,6 +12,7 @@ interface ResumeScreenProps {
 }
 
 export function ResumeScreen({ recruiter, onTrackAction }: ResumeScreenProps) {
+  const { resolvedTheme } = useTheme();
   const [emailStatus, setEmailStatus] = useState<"IDLE" | "SENDING" | "SENT" | "ERROR">("IDLE");
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
 
@@ -55,10 +59,13 @@ export function ResumeScreen({ recruiter, onTrackAction }: ResumeScreenProps) {
         <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
           Explore the live interactive resume on{" "}
           <a
-            href="https://resume.gauravpatil.site"
+            href={getSubdomainUrl("https://resume.gauravpatil.site", resolvedTheme)}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => onTrackAction("VIEW_INTERACTIVE_RESUME")}
+            onClick={() => {
+              writeThemeCookieSync(resolvedTheme);
+              onTrackAction("VIEW_INTERACTIVE_RESUME");
+            }}
             className="text-[#7C3AED] hover:underline font-semibold"
           >
             resume.gauravpatil.site
@@ -86,10 +93,13 @@ export function ResumeScreen({ recruiter, onTrackAction }: ResumeScreenProps) {
 
           <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
             <a
-              href="https://resume.gauravpatil.site"
+              href={getSubdomainUrl("https://resume.gauravpatil.site", resolvedTheme)}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => onTrackAction("VIEW_INTERACTIVE_RESUME")}
+              onClick={() => {
+                writeThemeCookieSync(resolvedTheme);
+                onTrackAction("VIEW_INTERACTIVE_RESUME");
+              }}
               className="px-3.5 py-2 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-md text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs"
             >
               <FaExternalLinkAlt className="text-[10px]" />
@@ -178,9 +188,10 @@ export function ResumeScreen({ recruiter, onTrackAction }: ResumeScreenProps) {
         </span>
         <div className="flex items-center gap-2 text-gray-500">
           <a
-            href="https://resume.gauravpatil.site"
+            href={getSubdomainUrl("https://resume.gauravpatil.site", resolvedTheme)}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => writeThemeCookieSync(resolvedTheme)}
             className="text-[#7C3AED] hover:underline font-semibold"
           >
             resume.gauravpatil.site

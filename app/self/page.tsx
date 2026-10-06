@@ -1,7 +1,10 @@
 import React from "react";
+import { cookies } from "next/headers";
 import { projectsRepository } from "@/lib/dal/repositories/cms/projects.repository";
 import { SEED_PROJECTS } from "@/lib/dal/repositories/seed-data";
 import { LaunchpadHaptics } from "@/components/self/LaunchpadHaptics";
+import { getSubdomainUrl } from "@/lib/theme/navigation";
+import { THEME_COOKIE_NAME } from "@/lib/theme/cookie";
 
 /**
  * 24-hour baseline ISR caching with On-Demand Edge Revalidation.
@@ -14,6 +17,9 @@ import { LaunchpadHaptics } from "@/components/self/LaunchpadHaptics";
 export const revalidate = 86400;
 
 export default async function SelfPage() {
+  const cookieStore = await cookies();
+  const currentTheme = cookieStore.get(THEME_COOKIE_NAME)?.value || "dark";
+
   const res = await projectsRepository.getProjects();
   const rawProjects = res.data && res.data.length > 0 ? res.data : SEED_PROJECTS;
   const projects = [...rawProjects]
@@ -86,7 +92,7 @@ export default async function SelfPage() {
           className="flex items-center justify-end gap-x-1.5 min-[380px]:gap-x-2 sm:gap-x-2.5 md:gap-x-3 text-slate-500 font-medium tracking-tight whitespace-nowrap overflow-hidden"
         >
           <a
-            href="https://contact.gauravpatil.site"
+            href={getSubdomainUrl("https://contact.gauravpatil.site", currentTheme)}
             target="_blank"
             rel="noopener noreferrer"
             title="Recruiter Contact Subdomain (contact.gauravpatil.site)"
@@ -107,7 +113,7 @@ export default async function SelfPage() {
           <span className="text-slate-300 select-none">·</span>
 
           <a
-            href="https://resume.gauravpatil.site"
+            href={getSubdomainUrl("https://resume.gauravpatil.site", currentTheme)}
             target="_blank"
             rel="noopener noreferrer"
             title="Interactive Resume Subdomain (resume.gauravpatil.site)"
@@ -128,7 +134,7 @@ export default async function SelfPage() {
           <span className="text-slate-300 select-none">·</span>
 
           <a
-            href="https://gauravpatil.site/#contact"
+            href={getSubdomainUrl("https://gauravpatil.site/#contact", currentTheme)}
             target="_blank"
             rel="noopener noreferrer"
             title="Direct Contact Form (gauravpatil.site/#contact)"

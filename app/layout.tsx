@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import { VercelInsights } from "@/components/analytics/VercelInsights";
 import "./globals.css";
@@ -217,8 +217,12 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const reqHeaders = await headers();
+  const themeHeader = reqHeaders.get("x-theme");
   const cookieStore = await cookies();
-  const rawTheme = cookieStore.get(THEME_COOKIE_NAME)?.value;
+  const rawTheme = (themeHeader === "light" || themeHeader === "dark")
+    ? themeHeader
+    : cookieStore.get(THEME_COOKIE_NAME)?.value;
   const initialTheme: "light" | "dark" = rawTheme === "light" ? "light" : "dark";
 
   return (
@@ -229,10 +233,10 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        {/* Synchronous pre-paint theme resolver: reads server-set cookie before DOM paint */}
+        {/* Synchronous pre-paint theme resolver: extracts URL theme, clears host shadowing, and aligns pre-paint DOM */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var m=document.cookie.match(/(?:^|;\\s*)theme=(light|dark)(?:;|$)/);var t=m?m[1]:'${initialTheme}';var d=document.documentElement;d.classList.remove('light','dark');d.classList.add(t);d.style.colorScheme=t;}catch(e){}})();`,
+            __html: `(function(){try{var p=new URLSearchParams(window.location.search);var u=p.get('theme');var h=window.location.hostname;var d=(h==='gauravpatil.site'||h.endsWith('.gauravpatil.site'))?'.gauravpatil.site':((h==='devlabs.eu.cc'||h.endsWith('.devlabs.eu.cc'))?'.devlabs.eu.cc':'');if(d){document.cookie='theme=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';}var t='${initialTheme}';if(u==='light'||u==='dark'){t=u;}else{var ck=document.cookie.split(';');for(var i=0;i<ck.length;i++){var c=ck[i].trim();if(c.indexOf('theme=')===0){var v=c.substring(6);if(v==='light'||v==='dark'){t=v;}}}}var el=document.documentElement;el.classList.remove('light','dark');el.classList.add(t);el.style.colorScheme=t;if(d){document.cookie='theme='+t+'; Path=/; Max-Age=31536000; Domain='+d+'; SameSite=Lax; Secure';}else{document.cookie='theme='+t+'; Path=/; Max-Age=31536000; SameSite=Lax';}if(u==='light'||u==='dark'){p.delete('theme');var rem=p.toString();var cl=window.location.pathname+(rem?'?'+rem:'')+window.location.hash;window.history.replaceState(null,'',cl);}}catch(e){}})();`,
           }}
         />
         <link rel="preconnect" href="https://challenges.cloudflare.com" crossOrigin="anonymous" />

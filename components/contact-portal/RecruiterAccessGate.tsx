@@ -16,6 +16,8 @@ import {
 } from "react-icons/fa";
 import { validateEmailWithTypo, getAutocorrectedEmail } from "@/lib/recruiter/validation";
 import { useTheme } from "@/lib/theme";
+import { getSubdomainUrl } from "@/lib/theme/navigation";
+import { writeThemeCookieSync } from "@/lib/theme/cookie";
 
 interface CountryOption {
   code: string;
@@ -898,9 +900,10 @@ export function RecruiterAccessGate({ onSuccess }: RecruiterAccessGateProps) {
           <span>recruiter portal · Gaurav Patil</span>
           <span>·</span>
           <a
-            href="https://resume.gauravpatil.site"
+            href={getSubdomainUrl("https://resume.gauravpatil.site", resolvedTheme)}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => writeThemeCookieSync(resolvedTheme)}
             className="text-[#7C3AED] hover:underline font-medium"
           >
             resume.gauravpatil.site

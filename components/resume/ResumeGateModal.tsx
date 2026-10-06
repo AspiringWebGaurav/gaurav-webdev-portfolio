@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useTheme } from "@/lib/theme";
+import { getSubdomainUrl } from "@/lib/theme/navigation";
 import {
   IoMailOutline,
   IoArrowForward,
@@ -37,19 +38,12 @@ export const ResumeGateModal: React.FC<ResumeGateModalProps> = ({
     setMounted(true);
   }, []);
 
-  // Robust dark mode check: tracks resolvedTheme dynamically
-  const isDark = mounted ? resolvedTheme === "dark" : true;
+  // Direct, robust theme check derived dynamically from resolvedTheme
+  const isDark = resolvedTheme === "dark";
 
   const toggleTheme = () => {
     const nextTheme = isDark ? "light" : "dark";
     setTheme(nextTheme);
-    if (typeof document !== "undefined") {
-      if (nextTheme === "dark") {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
-    }
   };
 
   // Step state: "details" -> "otp"
@@ -863,7 +857,7 @@ export const ResumeGateModal: React.FC<ResumeGateModalProps> = ({
             className="grid grid-cols-3 gap-1 p-1 rounded-xl border text-[11px] font-medium"
           >
             <a
-              href="https://gauravpatil.site"
+              href={getSubdomainUrl("https://gauravpatil.site", resolvedTheme)}
               target="_blank"
               rel="noopener noreferrer"
               title="Portfolio — Gaurav Patil"
@@ -875,7 +869,7 @@ export const ResumeGateModal: React.FC<ResumeGateModalProps> = ({
             </a>
 
             <a
-              href="https://contact.gauravpatil.site"
+              href={getSubdomainUrl("https://contact.gauravpatil.site", resolvedTheme)}
               target="_blank"
               rel="noopener noreferrer"
               title="Recruiter Portal — Direct Messaging"
@@ -887,7 +881,7 @@ export const ResumeGateModal: React.FC<ResumeGateModalProps> = ({
             </a>
 
             <a
-              href="https://gauravpatil.site/#contact"
+              href={getSubdomainUrl("https://gauravpatil.site/#contact", resolvedTheme)}
               target="_blank"
               rel="noopener noreferrer"
               title="Gaurav Patil — Full Stack Software Engineer Building Production-Ready Digital Systems"

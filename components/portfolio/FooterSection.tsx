@@ -11,6 +11,9 @@ import MagicButton from "@/components/ui/MagicButton";
 import { ContactModal } from "@/components/contact/ContactModal";
 import type { CtaDocument, FooterDocument, SocialLinkDocument } from "@/types/portfolio";
 import { SEED_CTA, SEED_FOOTER, SEED_SOCIAL_LINKS } from "@/lib/dal/repositories/seed-data";
+import { useTheme } from "@/lib/theme";
+import { getSubdomainUrl } from "@/lib/theme/navigation";
+import { writeThemeCookieSync } from "@/lib/theme/cookie";
 
 interface FooterSectionProps {
   cta?: CtaDocument;
@@ -26,6 +29,7 @@ export const FooterSection = ({
   const [isContactOpen, setIsContactOpen] = useState(false);
   const pathname = usePathname();
   const isDirectInitRef = useRef(false);
+  const { resolvedTheme } = useTheme();
 
   // Helper to open the contact form and push /contact to browser address bar
   const handleOpenContact = useCallback(() => {
@@ -153,9 +157,10 @@ export const FooterSection = ({
             <span>Hiring or Recruiter Inquiry?</span>
             <div className="flex items-center gap-2 flex-wrap justify-center">
               <a
-                href="https://resume.gauravpatil.site"
+                href={getSubdomainUrl("https://resume.gauravpatil.site", resolvedTheme)}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => writeThemeCookieSync(resolvedTheme)}
                 title="https://resume.gauravpatil.site"
                 className="group text-[#7C3AED] dark:text-purple hover:text-purple-600 dark:hover:text-[#CBACF9] font-semibold inline-flex items-center transition-colors touch-manipulation"
               >
@@ -167,9 +172,10 @@ export const FooterSection = ({
               </a>
               <span className="text-slate-300 dark:text-neutral-600 hidden sm:inline">·</span>
               <a
-                href="https://contact.gauravpatil.site"
+                href={getSubdomainUrl("https://contact.gauravpatil.site", resolvedTheme)}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => writeThemeCookieSync(resolvedTheme)}
                 title="https://contact.gauravpatil.site"
                 className="group text-[#7C3AED] dark:text-purple hover:text-purple-600 dark:hover:text-[#CBACF9] font-semibold inline-flex items-center transition-colors touch-manipulation"
               >
@@ -193,18 +199,20 @@ export const FooterSection = ({
           </span>
           <span className="text-slate-300 dark:text-neutral-600">·</span>
           <a
-            href="https://resume.gauravpatil.site"
+            href={getSubdomainUrl("https://resume.gauravpatil.site", resolvedTheme)}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => writeThemeCookieSync(resolvedTheme)}
             className="hover:text-[#7C3AED] dark:hover:text-purple transition-colors duration-200"
           >
             Resume
           </a>
           <span className="text-slate-300 dark:text-neutral-600">·</span>
           <a
-            href="https://contact.gauravpatil.site"
+            href={getSubdomainUrl("https://contact.gauravpatil.site", resolvedTheme)}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => writeThemeCookieSync(resolvedTheme)}
             className="hover:text-[#7C3AED] dark:hover:text-purple transition-colors duration-200"
           >
             Recruiter Portal

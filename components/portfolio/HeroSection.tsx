@@ -80,8 +80,8 @@ export const HeroSection = ({ data = SEED_HERO }: HeroSectionProps) => {
           <p className="text-center mt-2 sm:mt-3 mb-7 sm:mb-8 text-sm sm:text-base md:text-lg lg:text-[19px] text-slate-600 dark:text-[#C1C2D3] max-w-4xl lg:max-w-[920px] leading-relaxed tracking-normal transition-colors duration-200">
             I&apos;m{" "}
             <span className="text-slate-900 dark:text-white font-semibold">Gaurav Patil</span> &mdash; a{" "}
-            <span className="text-[#7C3AED] dark:text-purple/90 font-medium">Full Stack Software Engineer &amp; Systems Developer</span>, building high&#8209;throughput web architectures,<br className="hidden md:inline" />{" "}
-            native Rust &amp; Tauri desktop applications, and scalable cloud backends<br className="hidden md:inline" />{" "}
+            <span className="text-[#7C3AED] dark:text-purple/90 font-medium">Full Stack Software Engineer &amp; Systems Developer</span>, building fast, scalable web applications,<br className="hidden md:inline" />{" "}
+            native Rust &amp; Tauri desktop applications, and reliable cloud backends<br className="hidden md:inline" />{" "}
             with Next.js, Firebase/Firestore, and Redis.
           </p>
 

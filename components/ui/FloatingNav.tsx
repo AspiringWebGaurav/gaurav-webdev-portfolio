@@ -10,6 +10,9 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/lib/theme";
+import { getSubdomainUrl } from "@/lib/theme/navigation";
+import { writeThemeCookieSync } from "@/lib/theme/cookie";
 
 const SECTIONS = ["about", "projects", "testimonials", "experience", "approach", "contact"] as const;
 
@@ -27,6 +30,7 @@ export const FloatingNav = ({
   const pathname = usePathname();
   const router = useRouter();
   const { scrollYProgress } = useScroll();
+  const { resolvedTheme } = useTheme();
 
   // set true for the initial state so that nav bar is visible in the hero section
   const [visible, setVisible] = useState(true);
@@ -371,13 +375,22 @@ export const FloatingNav = ({
         {navItems.map((navItem, idx: number) => {
           const isExternal =
             navItem.link.startsWith("http://") || navItem.link.startsWith("https://");
+          const targetHref = isExternal
+            ? getSubdomainUrl(navItem.link, resolvedTheme)
+            : navItem.link;
+
           return (
             <Link
               key={`nav-link-${idx}-${navItem.name}`}
-              href={navItem.link}
+              href={targetHref}
               target={isExternal ? "_blank" : undefined}
               rel={isExternal ? "noopener noreferrer" : undefined}
-              onClick={(e) => handleNavClick(e, navItem.link)}
+              onClick={(e) => {
+                if (isExternal) {
+                  writeThemeCookieSync(resolvedTheme);
+                }
+                handleNavClick(e, navItem.link);
+              }}
               className={cn(
                 "relative items-center flex space-x-1 text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white touch-manipulation py-2 px-1.5 sm:px-2.5 min-h-[44px] transition-colors"
               )}

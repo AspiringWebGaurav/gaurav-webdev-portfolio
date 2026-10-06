@@ -12,6 +12,8 @@ import { FaLocationArrow } from "react-icons/fa6";
 import { SiCloudflare } from "@/components/ui/CloudflareIcon";
 import { validateName, validateEmail, validateMessage, countWords, MESSAGE_MAX_WORDS, MESSAGE_MAX_CHARS } from "@/lib/contact/validation";
 import { useTheme } from "@/lib/theme";
+import { getSubdomainUrl } from "@/lib/theme/navigation";
+import { writeThemeCookieSync } from "@/lib/theme/cookie";
 
 const TURNSTILE_SITE_KEY =
   process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY ||
@@ -1151,18 +1153,20 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
                       <a
-                        href="https://resume.gauravpatil.site"
+                        href={getSubdomainUrl("https://resume.gauravpatil.site", resolvedTheme)}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={() => writeThemeCookieSync(resolvedTheme)}
                         className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-semibold transition-colors inline-flex items-center gap-1 shadow-sm"
                       >
                         <span>resume.gauravpatil.site</span>
                         <span>→</span>
                       </a>
                       <a
-                        href="https://contact.gauravpatil.site"
+                        href={getSubdomainUrl("https://contact.gauravpatil.site", resolvedTheme)}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={() => writeThemeCookieSync(resolvedTheme)}
                         className="px-2.5 py-1 rounded-lg bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-[11px] font-semibold transition-colors inline-flex items-center gap-1 shadow-sm"
                       >
                         <span>contact.gauravpatil.site</span>
