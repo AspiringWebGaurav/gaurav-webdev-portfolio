@@ -284,7 +284,55 @@ async function handleRouting(request: NextRequest, requestHeaders: Headers): Pro
     return NextResponse.redirect(new URL(`http://self.localhost${port}${cleanPath}${search}`, request.url), 307);
   }
 
-  // 6. Dynamic Admin Gatekeeper Routing (/admin/*)
+  // 6. Downex Download Portal Edge Router (download.gauravpatil.site & download.localhost:3000)
+  const DOWNLOAD_PORTAL_HOST = "download.gauravpatil.site";
+  const isDedicatedDownloadSubdomain =
+    host === DOWNLOAD_PORTAL_HOST ||
+    ((isLocalHost || process.env.NODE_ENV === "development") && (
+      host === "download.localhost:3000" ||
+      host === "download.localhost" ||
+      host.startsWith("download.localhost") ||
+      request.headers.get("x-dev-subdomain") === "download"
+    ));
+
+  // Case A: Request on the Dedicated Download Subdomain
+  if (isDedicatedDownloadSubdomain) {
+    // 1. If user accesses /download or /download/ on the subdomain, redirect cleanly to root /
+    if (pathname === "/download" || pathname === "/download/") {
+      return NextResponse.redirect(new URL(`/${search}`, request.url), 301);
+    }
+
+    requestHeaders.set("x-is-download-portal", "true");
+    const targetPath =
+      pathname === "/"
+        ? "/download"
+        : pathname.startsWith("/download")
+        ? pathname
+        : `/download${pathname}`;
+    const rewriteUrl = new URL(`${targetPath}${search}`, request.url);
+    return NextResponse.rewrite(rewriteUrl, {
+      request: {
+        headers: requestHeaders,
+      },
+    });
+  }
+
+  // Case B: In production, redirect gauravpatil.site/download to https://download.gauravpatil.site/
+  if (!isLocalHost && !isVercelPreview && process.env.NODE_ENV !== "development") {
+    if (pathname.startsWith("/download")) {
+      const cleanPath = pathname.replace(/^\/download/, "") || "/";
+      return NextResponse.redirect(new URL(`https://${DOWNLOAD_PORTAL_HOST}${cleanPath}${search}`), 301);
+    }
+  }
+
+  // On local development, redirect http://localhost:3000/download to http://download.localhost:3000/
+  if ((isLocalHost || process.env.NODE_ENV === "development") && pathname.startsWith("/download")) {
+    const port = host.includes(":") ? `:${host.split(":")[1]}` : ":3000";
+    const cleanPath = pathname.replace(/^\/download/, "") || "/";
+    return NextResponse.redirect(new URL(`http://download.localhost${port}${cleanPath}${search}`, request.url), 307);
+  }
+
+  // 7. Dynamic Admin Gatekeeper Routing (/admin/*)
   if (pathname.startsWith("/admin")) {
     const sessionCookie = request.cookies.get(ADMIN_COOKIE_NAME)?.value;
     const verifiedSession = sessionCookie ? await verifyAdminSession(sessionCookie) : null;
