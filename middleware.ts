@@ -325,12 +325,7 @@ async function handleRouting(request: NextRequest, requestHeaders: Headers): Pro
     }
   }
 
-  // On local development, redirect http://localhost:3000/download to http://download.localhost:3000/
-  if ((isLocalHost || process.env.NODE_ENV === "development") && pathname.startsWith("/download")) {
-    const port = host.includes(":") ? `:${host.split(":")[1]}` : ":3000";
-    const cleanPath = pathname.replace(/^\/download/, "") || "/";
-    return NextResponse.redirect(new URL(`http://download.localhost${port}${cleanPath}${search}`, request.url), 307);
-  }
+  // On local development, allow direct testing on http://localhost:3000/download as well as http://download.localhost:3000/
 
   // 7. Dynamic Admin Gatekeeper Routing (/admin/*)
   if (pathname.startsWith("/admin")) {
@@ -432,6 +427,17 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/contact-portal") ||
     pathname.startsWith("/contact");
 
+  const isDedicatedDownloadSubdomain =
+    host === "download.gauravpatil.site" ||
+    host === "download.localhost:3000" ||
+    host === "download.localhost" ||
+    host.startsWith("download.localhost") ||
+    request.headers.get("x-dev-subdomain") === "download";
+
+  const isDownloadPortal =
+    isDedicatedDownloadSubdomain ||
+    pathname.startsWith("/download");
+
   const themeQuery = request.nextUrl.searchParams.get("theme");
   const isThemeQueryValid = themeQuery === "light" || themeQuery === "dark";
 
@@ -442,6 +448,10 @@ export async function middleware(request: NextRequest) {
     // Recruiter Portal operates strictly in pure light theme for HR - completely isolated from theme sync
     requestHeaders.set("x-theme", "light");
     requestHeaders.set("x-is-contact-portal", "true");
+  } else if (isDownloadPortal) {
+    // Download Portal operates strictly in clean light theme - matching product visual standard
+    requestHeaders.set("x-theme", "light");
+    requestHeaders.set("x-is-download-portal", "true");
   } else if (isThemeQueryValid) {
     requestHeaders.set("x-theme", themeQuery);
   }
@@ -449,7 +459,7 @@ export async function middleware(request: NextRequest) {
   const response = await handleRouting(request, requestHeaders);
 
   // Cross-subdomain theme synchronization (skip completely for recruiter portal)
-  if (!isRecruiterPortal && isThemeQueryValid && themeQuery) {
+  if (!isRecruiterPortal && !isDownloadPortal && isThemeQueryValid && themeQuery) {
     const isLocalHost =
       host.includes("localhost") ||
       host.startsWith("127.0.0.1") ||

@@ -26,11 +26,12 @@ export function ThemeToggle({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPortalSuppressed, setIsPortalSuppressed] = useState(false);
 
-  // SSR route suppression for Talk Portal, Recruiter Portal, and Admin Console
+  // SSR route suppression for Talk Portal, Recruiter Portal, Download Portal, and Admin Console
   const isSsrSuppressed =
     pathname.startsWith("/talk") ||
     pathname.startsWith("/contact-portal") ||
     pathname.startsWith("/contact") ||
+    pathname.startsWith("/download") ||
     pathname.startsWith("/admin");
 
   const phase1TimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -46,16 +47,19 @@ export function ThemeToggle({
       const isSuppressedHost =
         host.startsWith("talk.") ||
         host.startsWith("contact.") ||
+        host.startsWith("download.") ||
         host.startsWith("admin.");
       const isSuppressedPath =
         pathname.startsWith("/talk") ||
         pathname.startsWith("/contact-portal") ||
         pathname.startsWith("/contact") ||
+        pathname.startsWith("/download") ||
         pathname.startsWith("/admin");
       const hasSuppressedAttr = Boolean(
         document.querySelector('[data-portal="talk"]') ||
         document.querySelector('[data-portal-type="recruiter"]') ||
         document.querySelector('[data-portal="recruiter"]') ||
+        document.querySelector('[data-portal="download"]') ||
         document.querySelector('[data-portal="true"]') ||
         document.querySelector('[data-admin="true"]') ||
         document.documentElement.getAttribute("data-theme-isolated") === "recruiter"
