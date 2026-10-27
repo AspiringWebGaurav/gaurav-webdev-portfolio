@@ -27,12 +27,12 @@ export const metadata: Metadata = {
 
 const baseDesktopDownloadUrl = (
   process.env.NEXT_PUBLIC_DOWNEX_DOWNLOAD_URL ||
-  "https://gphost.eu.cc/raw/jYOY9ejl-KaH"
+  "https://gphost.eu.cc/raw/downex-desktop"
 ).split("?")[0];
 
 const baseExtensionDownloadUrl = (
   process.env.NEXT_PUBLIC_DOWNEX_EXTENSION_DOWNLOAD_URL ||
-  "https://gphost.eu.cc/raw/jNF1Ufun-qFz"
+  "https://gphost.eu.cc/raw/downex-extension"
 ).split("?")[0];
 
 const DESKTOP_DOWNLOAD_URL = `${baseDesktopDownloadUrl}?v=0.0.0-base-${Date.now()}`;
