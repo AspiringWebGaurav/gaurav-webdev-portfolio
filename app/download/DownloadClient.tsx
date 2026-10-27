@@ -48,8 +48,8 @@ const SHA256_CHECKSUM = "7319b88e586f8e1b6fd2ba373f280090835dc4ee79cabf11ca58193
 export default function DownloadClient({
   desktopDownloadUrl,
   desktopShareUrl,
-  extensionDownloadUrl = "https://gphost.eu.cc/raw/bxJH_LV0vd8E",
-  extensionShareUrl = "https://gphost.eu.cc/f/bxJH_LV0vd8E",
+  extensionDownloadUrl = "https://gphost.eu.cc/raw/jNF1Ufun-qFz",
+  extensionShareUrl = "https://gphost.eu.cc/f/jNF1Ufun-qFz",
 }: DownloadClientProps) {
   const [detectedOS, setDetectedOS] = useState<DetectedPlatform>("windows");
   const [mobileTab, setMobileTab] = useState<MobileTab>("windows");
@@ -73,7 +73,8 @@ export default function DownloadClient({
         if (res.ok) {
           const data = await res.json();
           if (data && data.version && data.version !== "0.0.0") {
-            setActiveVersion(`v${data.version}`);
+            const cleanVer = data.version.replace(/^v/, "");
+            setActiveVersion(`v${cleanVer}`);
           }
         }
       } catch {
