@@ -27,17 +27,27 @@ export const metadata: Metadata = {
 
 const baseDesktopDownloadUrl = (
   process.env.NEXT_PUBLIC_DOWNEX_DOWNLOAD_URL ||
-  "https://gphost.eu.cc/raw/6bdmYJAHYIBc"
+  "https://gphost.eu.cc/raw/8hYqY3i8uZrd"
+).split("?")[0];
+
+const baseExtensionDownloadUrl = (
+  process.env.NEXT_PUBLIC_DOWNEX_EXTENSION_DOWNLOAD_URL ||
+  "https://gphost.eu.cc/raw/bxJH_LV0vd8E"
 ).split("?")[0];
 
 const DESKTOP_DOWNLOAD_URL = `${baseDesktopDownloadUrl}?v=0.0.0-base-${Date.now()}`;
-const DESKTOP_SHARE_URL = `https://gphost.eu.cc/f/6bdmYJAHYIBc?v=0.0.0-base-${Date.now()}`;
+const DESKTOP_SHARE_URL = `https://gphost.eu.cc/f/8hYqY3i8uZrd?v=0.0.0-base-${Date.now()}`;
+
+const EXTENSION_DOWNLOAD_URL = `${baseExtensionDownloadUrl}?v=0.0.2-${Date.now()}`;
+const EXTENSION_SHARE_URL = `https://gphost.eu.cc/f/bxJH_LV0vd8E?v=0.0.2-${Date.now()}`;
 
 export default function DownloadPage() {
   return (
     <DownloadClient
       desktopDownloadUrl={DESKTOP_DOWNLOAD_URL}
       desktopShareUrl={DESKTOP_SHARE_URL}
+      extensionDownloadUrl={EXTENSION_DOWNLOAD_URL}
+      extensionShareUrl={EXTENSION_SHARE_URL}
     />
   );
 }

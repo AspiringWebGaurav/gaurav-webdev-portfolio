@@ -36,16 +36,20 @@ function detectPlatform(): DetectedPlatform {
 interface DownloadClientProps {
   desktopDownloadUrl: string;
   desktopShareUrl: string;
+  extensionDownloadUrl?: string;
+  extensionShareUrl?: string;
 }
 
 type MobileTab = "windows" | "extension";
 
 const BASE_VERSION = "v0.0.0";
-const SHA256_CHECKSUM = "a935401314ff914d79da9338f0d8ca8b0051e7f4c08479e0066e5e8e3d09a06d";
+const SHA256_CHECKSUM = "7319b88e586f8e1b6fd2ba373f280090835dc4ee79cabf11ca5819353a278e51";
 
 export default function DownloadClient({
   desktopDownloadUrl,
   desktopShareUrl,
+  extensionDownloadUrl = "https://gphost.eu.cc/raw/bxJH_LV0vd8E",
+  extensionShareUrl = "https://gphost.eu.cc/f/bxJH_LV0vd8E",
 }: DownloadClientProps) {
   const [detectedOS, setDetectedOS] = useState<DetectedPlatform>("windows");
   const [mobileTab, setMobileTab] = useState<MobileTab>("windows");
@@ -203,7 +207,7 @@ export default function DownloadClient({
                         )}
                       </div>
                       <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
-                        Immutable Base • Windows 10 &amp; 11 • ~4.1 MB
+                        Immutable Base • Windows 10 &amp; 11 • ~3.7 MB
                       </p>
                     </div>
                   </div>
@@ -312,7 +316,7 @@ export default function DownloadClient({
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <a
-                    href="https://github.com/AspiringWebGaurav/downex/archive/refs/heads/main.zip"
+                    href={extensionDownloadUrl}
                     className="flex-1 inline-flex items-center justify-center gap-2 h-10 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md active:scale-[0.98] transition-all"
                   >
                     <Download className="w-4 h-4" />
@@ -519,7 +523,7 @@ export default function DownloadClient({
                     <div className="text-zinc-300 dark:text-zinc-700">•</div>
                     <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Storage:</span> SQLite WAL</div>
                     <div className="text-zinc-300 dark:text-zinc-700">•</div>
-                    <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Size:</span> ~4.1 MB</div>
+                    <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Size:</span> ~3.7 MB</div>
                   </div>
                   <button
                     type="button"
@@ -570,7 +574,7 @@ export default function DownloadClient({
               <div>
                 <div className="flex items-center gap-2.5 mb-3">
                   <a
-                    href="https://github.com/AspiringWebGaurav/downex/archive/refs/heads/main.zip"
+                    href={extensionDownloadUrl}
                     className="flex-1 inline-flex items-center justify-center gap-2 h-10 lg:h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs lg:text-sm font-semibold shadow-xs active:scale-[0.99] transition-all"
                   >
                     <Download className="w-4 h-4" />
