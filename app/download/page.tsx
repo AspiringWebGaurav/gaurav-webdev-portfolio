@@ -36,10 +36,10 @@ const baseExtensionDownloadUrl = (
 ).split("?")[0];
 
 const DESKTOP_DOWNLOAD_URL = `${baseDesktopDownloadUrl}?v=0.0.0-base-${Date.now()}`;
-const DESKTOP_SHARE_URL = `https://gphost.eu.cc/f/jYOY9ejl-KaH?v=0.0.0-base-${Date.now()}`;
+const DESKTOP_SHARE_URL = `https://gphost.eu.cc/f/downex-desktop?v=0.0.0-base-${Date.now()}`;
 
 const EXTENSION_DOWNLOAD_URL = `${baseExtensionDownloadUrl}?v=0.0.2-${Date.now()}`;
-const EXTENSION_SHARE_URL = `https://gphost.eu.cc/f/jNF1Ufun-qFz?v=0.0.2-${Date.now()}`;
+const EXTENSION_SHARE_URL = `https://gphost.eu.cc/f/downex-extension?v=0.0.2-${Date.now()}`;
 
 export default function DownloadPage() {
   return (
