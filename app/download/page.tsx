@@ -37,19 +37,20 @@ const baseExtensionDownloadUrl = (
   "https://gphost.eu.cc/raw/downex-extension"
 ).split("?")[0];
 
-const DESKTOP_DOWNLOAD_URL = `${baseDesktopDownloadUrl}?v=0.0.0-base-${Date.now()}`;
-const DESKTOP_SHARE_URL = `https://gphost.eu.cc/f/downex-desktop?v=0.0.0-base-${Date.now()}`;
-
-const EXTENSION_DOWNLOAD_URL = `${baseExtensionDownloadUrl}?v=0.0.2-${Date.now()}`;
-const EXTENSION_SHARE_URL = `https://gphost.eu.cc/f/downex-extension?v=0.0.2-${Date.now()}`;
-
 export default function DownloadPage() {
+  const ts = Date.now();
+  const desktopDownloadUrl = `${baseDesktopDownloadUrl}?v=0.0.0-base-${ts}`;
+  const desktopShareUrl = `https://gphost.eu.cc/f/downex-desktop?v=0.0.0-base-${ts}`;
+
+  const extensionDownloadUrl = `${baseExtensionDownloadUrl}?v=0.0.2-${ts}`;
+  const extensionShareUrl = `https://gphost.eu.cc/f/downex-extension?v=0.0.2-${ts}`;
+
   return (
     <DownloadClient
-      desktopDownloadUrl={DESKTOP_DOWNLOAD_URL}
-      desktopShareUrl={DESKTOP_SHARE_URL}
-      extensionDownloadUrl={EXTENSION_DOWNLOAD_URL}
-      extensionShareUrl={EXTENSION_SHARE_URL}
+      desktopDownloadUrl={desktopDownloadUrl}
+      desktopShareUrl={desktopShareUrl}
+      extensionDownloadUrl={extensionDownloadUrl}
+      extensionShareUrl={extensionShareUrl}
     />
   );
 }
