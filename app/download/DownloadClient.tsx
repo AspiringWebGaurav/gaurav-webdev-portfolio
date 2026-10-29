@@ -87,6 +87,29 @@ export default function DownloadClient({
     checkOnlineRelease();
   }, []);
 
+  useEffect(() => {
+    // Smooth scroll and autofocus on #terms anchor if requested via URL hash
+    const handleHashScroll = () => {
+      if (typeof window !== "undefined" && window.location.hash === "#terms") {
+        setTimeout(() => {
+          const termsElem = document.getElementById("terms");
+          if (termsElem) {
+            termsElem.scrollIntoView({ behavior: "smooth", block: "center" });
+            termsElem.focus?.();
+            termsElem.classList.add("ring-2", "ring-violet-500", "ring-offset-2", "transition-all");
+            setTimeout(() => {
+              termsElem.classList.remove("ring-2", "ring-violet-500", "ring-offset-2");
+            }, 3000);
+          }
+        }, 300);
+      }
+    };
+
+    handleHashScroll();
+    window.addEventListener("hashchange", handleHashScroll);
+    return () => window.removeEventListener("hashchange", handleHashScroll);
+  }, []);
+
   const copyHash = async () => {
     try {
       await navigator.clipboard.writeText(SHA256_CHECKSUM);
@@ -370,11 +393,15 @@ export default function DownloadClient({
         </a>
 
         {/* Mobile Footer */}
-        <footer className="w-full h-5 flex items-center justify-between text-[9px] text-zinc-400 dark:text-zinc-500 border-t border-zinc-100 dark:border-zinc-900 shrink-0">
+        <footer id="mobile-footer" className="w-full h-auto py-1 flex items-center justify-between text-[9px] text-zinc-400 dark:text-zinc-500 border-t border-zinc-100 dark:border-zinc-900 shrink-0">
           <div>&copy; {new Date().getFullYear()} Downex</div>
           <div className="flex items-center gap-2">
-            <a href="https://gauravpatil.site" className="hover:text-zinc-600 dark:hover:text-zinc-300">
-              gauravpatil.site
+            <a href="https://gauravpatil.site/terms" className="text-violet-600 dark:text-violet-400 hover:underline">
+              Terms
+            </a>
+            <span>•</span>
+            <a href="https://gauravpatil.site/privacy" className="hover:text-zinc-600 dark:hover:text-zinc-300">
+              Privacy
             </a>
             <span>•</span>
             <span>GPHost</span>
@@ -631,8 +658,40 @@ export default function DownloadClient({
           </div>
         </main>
 
+        {/* Terms & Governance Anchor */}
+        <div
+          id="terms"
+          tabIndex={-1}
+          className="w-full px-6 lg:px-8 py-2.5 border-t border-zinc-100 dark:border-zinc-900 bg-zinc-50/70 dark:bg-zinc-900/40 flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400 shrink-0 outline-none rounded-lg focus:outline-none"
+        >
+          <div className="flex items-center gap-2">
+            <Shield className="w-3.5 h-3.5 text-violet-500 shrink-0" />
+            <span>
+              <strong>Terms of Service &amp; Governance:</strong> Downex processes downloads locally on your hardware with zero tracking or telemetry. Local SQLite WAL persistence.
+            </span>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <a
+              href="https://gauravpatil.site/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-violet-600 dark:text-violet-400 hover:underline font-semibold"
+            >
+              Full Terms of Service &rarr;
+            </a>
+            <a
+              href="https://gauravpatil.site/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-zinc-800 dark:hover:text-zinc-200 hover:underline"
+            >
+              Privacy Policy
+            </a>
+          </div>
+        </div>
+
         {/* Desktop Footer */}
-        <footer className="w-full px-6 lg:px-8 h-10 border-t border-zinc-100 dark:border-zinc-900 flex items-center justify-between text-[11px] text-zinc-400 dark:text-zinc-500 shrink-0">
+        <footer className="w-full px-6 lg:px-8 h-9 border-t border-zinc-100 dark:border-zinc-900 flex items-center justify-between text-[11px] text-zinc-400 dark:text-zinc-500 shrink-0">
           <div>&copy; {new Date().getFullYear()} Downex • Gaurav Patil</div>
           <div className="flex items-center gap-5">
             <a
