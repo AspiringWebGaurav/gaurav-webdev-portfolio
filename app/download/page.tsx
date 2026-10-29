@@ -25,6 +25,8 @@ export const metadata: Metadata = {
   },
 };
 
+// Permanent Immutable Base 0.0.0 Foundation Endpoints on GPHost
+// These endpoints are strictly locked, permanent, and never overwritten or deleted by OTA releases.
 const baseDesktopDownloadUrl = (
   process.env.NEXT_PUBLIC_DOWNEX_DOWNLOAD_URL ||
   "https://gphost.eu.cc/raw/downex-desktop"
