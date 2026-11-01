@@ -265,6 +265,7 @@ export default function DownloadClient({
                 <div className="flex items-center gap-2 mb-2">
                   <a
                     href={`${desktopDownloadUrl}${clientBuster}`}
+                    download="Downex-Setup.exe"
                     className="flex-1 inline-flex items-center justify-center gap-2 h-10 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 text-xs font-bold shadow-md active:scale-[0.98] transition-all"
                   >
                     <Download className="w-4 h-4" />
@@ -347,6 +348,7 @@ export default function DownloadClient({
                 <div className="flex items-center gap-2 mb-2">
                   <a
                     href={extensionDownloadUrl}
+                    download="downex-extension.zip"
                     className="flex-1 inline-flex items-center justify-center gap-2 h-10 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md active:scale-[0.98] transition-all"
                   >
                     <Download className="w-4 h-4" />
@@ -532,6 +534,7 @@ export default function DownloadClient({
                 <div className="flex items-center gap-2.5 mb-3">
                   <a
                     href={`${desktopDownloadUrl}${clientBuster}`}
+                    download="Downex-Setup.exe"
                     className="flex-1 inline-flex items-center justify-center gap-2 h-10 lg:h-11 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 text-xs lg:text-sm font-semibold shadow-xs active:scale-[0.99] transition-all"
                   >
                     <Download className="w-4 h-4" />
@@ -609,6 +612,7 @@ export default function DownloadClient({
                 <div className="flex items-center gap-2.5 mb-3">
                   <a
                     href={extensionDownloadUrl}
+                    download="downex-extension.zip"
                     className="flex-1 inline-flex items-center justify-center gap-2 h-10 lg:h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs lg:text-sm font-semibold shadow-xs active:scale-[0.99] transition-all"
                   >
                     <Download className="w-4 h-4" />

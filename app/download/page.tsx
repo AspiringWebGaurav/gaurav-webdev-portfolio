@@ -39,11 +39,11 @@ const baseExtensionDownloadUrl = (
 
 export default function DownloadPage() {
   const ts = Date.now();
-  const desktopDownloadUrl = `${baseDesktopDownloadUrl}?v=0.0.0-base-${ts}`;
-  const desktopShareUrl = `https://gphost.eu.cc/f/downex-desktop?v=0.0.0-base-${ts}`;
+  const desktopDownloadUrl = `${baseDesktopDownloadUrl}?t=${ts}`;
+  const desktopShareUrl = `https://gphost.eu.cc/f/downex-desktop?t=${ts}`;
 
-  const extensionDownloadUrl = `${baseExtensionDownloadUrl}?v=0.0.3-${ts}`;
-  const extensionShareUrl = `https://gphost.eu.cc/f/downex-extension?v=0.0.3-${ts}`;
+  const extensionDownloadUrl = `${baseExtensionDownloadUrl}?t=${ts}`;
+  const extensionShareUrl = `https://gphost.eu.cc/f/downex-extension?t=${ts}`;
 
   return (
     <DownloadClient
