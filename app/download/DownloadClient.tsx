@@ -206,7 +206,7 @@ export default function DownloadClient({
               }`}
             >
               <Puzzle className="w-3 h-3" />
-              <span>Updatable Extension</span>
+              <span>Auto-Updating Extension</span>
             </button>
           </div>
         </div>
@@ -289,7 +289,7 @@ export default function DownloadClient({
                 >
                   <span className="flex items-center gap-1.5">
                     <Puzzle className="w-3.5 h-3.5 text-emerald-500" />
-                    <span>Need Updatable Browser Extension?</span>
+                    <span>Need Auto-Updating Browser Extension?</span>
                   </span>
                   <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
                     Switch <ArrowRight className="w-2.5 h-2.5" />
@@ -308,32 +308,36 @@ export default function DownloadClient({
                     <div>
                       <div className="flex items-center gap-1.5">
                         <h2 className="text-sm font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-                          Updatable Extension
+                          Auto-Updating Extension
                         </h2>
                       </div>
                       <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
-                        Dynamic Updates • Manifest V3 • Chromium
+                        Modular Auto-Updates • Manifest V3 • Chromium
                       </p>
                     </div>
                   </div>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900">
-                    Updatable MV3
+                    Auto-Updating MV3
                   </span>
                 </div>
 
                 {/* Description */}
                 <p className="text-xs text-zinc-600 dark:text-zinc-400 mb-2 leading-relaxed">
-                  Dynamic companion extension. Receives ongoing updates as streaming formats evolve. Floating media grabber &amp; zero-config loopback bridge.
+                  Self-updating companion extension. Install once—Downex Desktop automatically updates media grabber rules and hooks directly on disk without manual zip re-downloads.
                 </p>
 
                 <div className="space-y-1 my-2 text-[10px] text-zinc-600 dark:text-zinc-400">
                   <div className="flex items-center gap-1.5">
                     <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
-                    <span>Updatable floating video/audio grabber</span>
+                    <span>Auto-updating in-DOM video/audio grabber</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
-                    <span>Loopback port 45123 token handshake</span>
+                    <span>Air-gapped loopback port 18888 token handshake</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
+                    <span>Instant in-browser hot reload on desktop updates</span>
                   </div>
                 </div>
               </div>
@@ -473,7 +477,7 @@ export default function DownloadClient({
               </span>
             </h1>
             <p className="text-zinc-500 dark:text-zinc-400 text-xs lg:text-sm mt-1 font-normal max-w-2xl">
-              High-performance desktop download manager with 64 dynamic socket acceleration, an immutable base foundation, and an updatable browser companion.
+              High-performance desktop download manager with 64 dynamic socket acceleration, an immutable base foundation, and an auto-updating companion extension.
             </p>
           </div>
 
@@ -584,19 +588,19 @@ export default function DownloadClient({
                         </h2>
                       </div>
                       <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                        Chrome, Edge, Brave &amp; Chromium • Updatable
+                        Chrome, Edge, Brave &amp; Chromium • Auto-Updating
                       </p>
                     </div>
                   </div>
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-900/60">
                     <RefreshCw className="w-3 h-3 text-emerald-500" />
-                    <span>Updatable MV3</span>
+                    <span>Auto-Updating MV3</span>
                   </span>
                 </div>
 
                 {/* Description */}
                 <p className="text-xs lg:text-sm text-zinc-600 dark:text-zinc-400 mb-3.5 leading-relaxed">
-                  Continuous dynamic companion extension. Receives ongoing updates as streaming protocols evolve. Real-time floating media grabber and local native loopback bridge.
+                  Modular self-updating companion extension. Install once—Downex Desktop automatically updates media sniffers and accelerator hooks on disk in real time without manual zip re-downloads.
                 </p>
               </div>
 
@@ -625,11 +629,11 @@ export default function DownloadClient({
                 </div>
 
                 <div className="pt-2.5 border-t border-zinc-200/80 dark:border-zinc-800 flex items-center gap-x-3 text-[11px] text-zinc-500 dark:text-zinc-400">
-                  <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Lifecycle:</span> Updatable</div>
+                  <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Lifecycle:</span> Auto-Updating</div>
                   <div className="text-zinc-300 dark:text-zinc-700">•</div>
                   <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Manifest:</span> V3</div>
                   <div className="text-zinc-300 dark:text-zinc-700">•</div>
-                  <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Integration:</span> Chromium</div>
+                  <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Integration:</span> Port 18888</div>
                 </div>
               </div>
             </div>
@@ -640,10 +644,10 @@ export default function DownloadClient({
             <div>
               <h3 className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 flex items-center gap-2">
                 <Globe className="w-3.5 h-3.5 text-violet-500" />
-                <span>Prefer manual unpack or extension source?</span>
+                <span>One-Time Easy Setup — Auto-Updates Forever</span>
               </h3>
               <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                Open <code className="px-1 py-0.2 rounded bg-zinc-200/70 dark:bg-zinc-800 text-[10px] font-mono text-zinc-700 dark:text-zinc-300">chrome://extensions</code>, enable Developer Mode, and click <em>Load unpacked</em> to connect the floating media grabber.
+                Extract once to a permanent folder (or click <em>Open Extension Folder</em> in Downex), open <code className="px-1 py-0.2 rounded bg-zinc-200/70 dark:bg-zinc-800 text-[10px] font-mono text-zinc-700 dark:text-zinc-300">chrome://extensions</code>, enable Developer Mode, and click <em>Load unpacked</em>. Downex automatically manages and hot-reloads all future updates seamlessly.
               </p>
             </div>
             <a

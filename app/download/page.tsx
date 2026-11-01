@@ -42,8 +42,8 @@ export default function DownloadPage() {
   const desktopDownloadUrl = `${baseDesktopDownloadUrl}?v=0.0.0-base-${ts}`;
   const desktopShareUrl = `https://gphost.eu.cc/f/downex-desktop?v=0.0.0-base-${ts}`;
 
-  const extensionDownloadUrl = `${baseExtensionDownloadUrl}?v=0.0.2-${ts}`;
-  const extensionShareUrl = `https://gphost.eu.cc/f/downex-extension?v=0.0.2-${ts}`;
+  const extensionDownloadUrl = `${baseExtensionDownloadUrl}?v=0.0.3-${ts}`;
+  const extensionShareUrl = `https://gphost.eu.cc/f/downex-extension?v=0.0.3-${ts}`;
 
   return (
     <DownloadClient
