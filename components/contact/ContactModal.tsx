@@ -1314,7 +1314,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                   placeholder="Tell me about your project, goals, or inquiries..."
                   disabled={isSubmitting}
                   className={`w-full p-2.5 sm:p-3 bg-slate-50 dark:bg-white/[0.04] border ${
-                    message.trim().length >= 8 && !messageValidation.isValid
+                    message.trim().length > 0 && !messageValidation.isValid
                       ? "border-amber-500/50 focus:border-amber-500"
                       : "border-slate-200 dark:border-white/[0.1] focus:border-[#7C3AED] dark:focus:border-purple"
                   } focus:bg-white dark:focus:bg-white/[0.07] rounded-xl text-base sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8B5CF6] transition-all resize-none leading-snug touch-manipulation flex-1 ${
@@ -1323,7 +1323,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                       : "min-h-[55px] sm:min-h-[85px] max-h-[75px] sm:max-h-[120px]"
                   }`}
                 />
-                {message.trim().length >= 8 && !messageValidation.isValid && messageValidation.error && (
+                {message.trim().length > 0 && !messageValidation.isValid && messageValidation.error && (
                   <p className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-300/90 leading-tight">
                     {messageValidation.error}
                   </p>

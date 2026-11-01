@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
 
     // Sanitization Checks
     const nameSanitization = sanitizeAndValidateText(name, "Full Name", 2, 100);
-    const messageSanitization = sanitizeAndValidateText(message, "Message", 10, 2000);
+    const messageSanitization = sanitizeAndValidateText(message, "Message", MESSAGE_MIN_CHARS, 2000);
 
     if (!nameSanitization.isValid) {
       throw new ApiError(

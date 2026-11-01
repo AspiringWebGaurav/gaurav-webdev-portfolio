@@ -161,9 +161,9 @@ export function countWords(text: string): number {
  * Validates message content.
  * Standard professional portfolio message limit: 2 - 100 words (min 10 characters).
  */
-export const MESSAGE_MIN_WORDS = 2;
+export const MESSAGE_MIN_WORDS = 1;
 export const MESSAGE_MAX_WORDS = 100;
-export const MESSAGE_MIN_CHARS = 10;
+export const MESSAGE_MIN_CHARS = 1;
 export const MESSAGE_MAX_CHARS = 1000;
 
 /**
@@ -196,18 +196,12 @@ export function validateMessage(message: string): ValidationResult {
   if (trimmed.length < MESSAGE_MIN_CHARS) {
     return {
       isValid: false,
-      error: `Message is too short (minimum ${MESSAGE_MIN_CHARS} characters).`,
+      error: "Please enter your message.",
     };
   }
 
   // 2. Max word check
   const words = countWords(trimmed);
-  if (words < MESSAGE_MIN_WORDS) {
-    return {
-      isValid: false,
-      error: `Please write at least ${MESSAGE_MIN_WORDS} words.`,
-    };
-  }
   if (words > MESSAGE_MAX_WORDS) {
     return {
       isValid: false,
@@ -216,8 +210,8 @@ export function validateMessage(message: string): ValidationResult {
   }
 
   // 3. Must contain meaningful alphabetical content (prevents pure digits or pure punctuation)
-  const letterCount = (trimmed.match(/[a-zA-Z\u00C0-\u024F\u1E00-\u1EFF]/g) || []).length;
-  if (letterCount < 4) {
+  const letterCount = (trimmed.match(/\p{L}/gu) || []).length;
+  if (letterCount < 1) {
     return {
       isValid: false,
       error: "Message must contain recognizable words or sentences.",
