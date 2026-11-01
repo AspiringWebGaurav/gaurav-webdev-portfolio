@@ -150,7 +150,7 @@ export default function DownloadClient({
             <ThemeToggle variant="inline" className="w-7 h-7 shrink-0" />
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[9px] font-semibold">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Base {BASE_VERSION} {activeVersion !== BASE_VERSION ? `• ${activeVersion}` : ""}
+              v0.0.0 {activeVersion !== BASE_VERSION ? `• ${activeVersion}` : ""}
             </span>
             <a
               href="https://gauravpatil.site"
@@ -168,7 +168,7 @@ export default function DownloadClient({
             <span>
               {detectedOS === "windows"
                 ? "Windows PC Detected"
-                : "Desktop & Browser Apps"}
+                : "Available for Windows"}
             </span>
           </div>
 
@@ -179,7 +179,7 @@ export default function DownloadClient({
             </span>
           </h1>
           <p className="text-zinc-500 dark:text-zinc-400 text-[10px] font-normal max-w-xs mx-auto line-clamp-1 mt-0.5">
-            Immutable Base Binary • 64-Socket Speed • Updatable Extension
+            Fast multi-threaded downloads • Browser integration • Seamless updates
           </p>
 
           {/* Segmented Switcher Tabs */}
@@ -194,7 +194,7 @@ export default function DownloadClient({
               }`}
             >
               <Monitor className="w-3 h-3" />
-              <span>Immutable Base App</span>
+              <span>Windows App</span>
             </button>
             <button
               type="button"
@@ -206,7 +206,7 @@ export default function DownloadClient({
               }`}
             >
               <Puzzle className="w-3 h-3" />
-              <span>Auto-Updating Extension</span>
+              <span>Browser Extension</span>
             </button>
           </div>
         </div>
@@ -233,18 +233,18 @@ export default function DownloadClient({
                         )}
                       </div>
                       <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
-                        Immutable Base • Windows 10 &amp; 11 • ~3.7 MB
+                        Windows 10 &amp; 11 • 64-bit • ~3.7 MB
                       </p>
                     </div>
                   </div>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-100 dark:bg-violet-950/80 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-900">
-                    Immutable v0.0.0
+                    v0.0.0 • Official
                   </span>
                 </div>
 
                 {/* Description */}
                 <p className="text-xs text-zinc-600 dark:text-zinc-400 mb-2 leading-relaxed">
-                  Permanent immutable base binary (v0.0.0). Never replaced or overwritten on disk, with future enhancements delivered silently in-process.
+                  Fast, multi-connection downloads with automatic pause and resume. Installs once and updates smoothly in the background.
                 </p>
 
                 {/* Checksum Box */}
@@ -268,7 +268,7 @@ export default function DownloadClient({
                     className="flex-1 inline-flex items-center justify-center gap-2 h-10 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 text-xs font-bold shadow-md active:scale-[0.98] transition-all"
                   >
                     <Download className="w-4 h-4" />
-                    <span>Download Base (.exe)</span>
+                    <span>Download for Windows (.exe)</span>
                   </a>
                   <a
                     href={`${desktopShareUrl}${clientBuster}`}
@@ -289,7 +289,7 @@ export default function DownloadClient({
                 >
                   <span className="flex items-center gap-1.5">
                     <Puzzle className="w-3.5 h-3.5 text-emerald-500" />
-                    <span>Need Auto-Updating Browser Extension?</span>
+                    <span>Looking for the browser extension?</span>
                   </span>
                   <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
                     Switch <ArrowRight className="w-2.5 h-2.5" />
@@ -308,36 +308,36 @@ export default function DownloadClient({
                     <div>
                       <div className="flex items-center gap-1.5">
                         <h2 className="text-sm font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-                          Auto-Updating Extension
+                          Browser Extension
                         </h2>
                       </div>
                       <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
-                        Modular Auto-Updates • Manifest V3 • Chromium
+                        Chrome, Edge, Brave &amp; Chromium
                       </p>
                     </div>
                   </div>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900">
-                    Auto-Updating MV3
+                    Auto-Updating
                   </span>
                 </div>
 
                 {/* Description */}
                 <p className="text-xs text-zinc-600 dark:text-zinc-400 mb-2 leading-relaxed">
-                  Self-updating companion extension. Install once—Downex Desktop automatically updates media grabber rules and hooks directly on disk without manual zip re-downloads.
+                  Integrates Downex directly into your browser to capture download links and media streams. Installs once and stays updated in the background.
                 </p>
 
                 <div className="space-y-1 my-2 text-[10px] text-zinc-600 dark:text-zinc-400">
                   <div className="flex items-center gap-1.5">
                     <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
-                    <span>Auto-updating in-DOM video/audio grabber</span>
+                    <span>One-click download capture for files and media</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
-                    <span>Air-gapped loopback port 18888 token handshake</span>
+                    <span>Fast, direct communication with Downex</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
-                    <span>Instant in-browser hot reload on desktop updates</span>
+                    <span>Automatic updates without re-installing</span>
                   </div>
                 </div>
               </div>
@@ -371,7 +371,7 @@ export default function DownloadClient({
                 >
                   <span className="flex items-center gap-1.5">
                     <Monitor className="w-3.5 h-3.5 text-violet-500" />
-                    <span>Need Immutable Windows App?</span>
+                    <span>Looking for the Windows app?</span>
                   </span>
                   <span className="font-semibold text-violet-600 dark:text-violet-400 flex items-center gap-0.5">
                     Switch <ArrowRight className="w-2.5 h-2.5" />
@@ -391,7 +391,7 @@ export default function DownloadClient({
         >
           <span className="flex items-center gap-1.5 truncate">
             <Globe className="w-3 h-3 text-violet-500 shrink-0" />
-            <span>Developer Mode: Chrome //extensions &rarr; Load Unpacked</span>
+            <span>Quick setup: chrome://extensions &rarr; Developer mode &rarr; Load unpacked</span>
           </span>
           <ArrowRight className="w-2.5 h-2.5 text-zinc-400 shrink-0 ml-1" />
         </a>
@@ -452,7 +452,7 @@ export default function DownloadClient({
 
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[11px] font-semibold shrink-0">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Live • Base {BASE_VERSION} {activeVersion !== BASE_VERSION ? `(Latest OTA: ${activeVersion})` : ""}
+              Official Release • v0.0.0 {activeVersion !== BASE_VERSION ? `(${activeVersion})` : ""}
             </span>
           </nav>
         </header>
@@ -463,7 +463,7 @@ export default function DownloadClient({
           <div className="text-left shrink-0">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20 text-[11px] font-semibold mb-1.5">
               <Sparkles className="w-3 h-3 text-violet-500" />
-              <span>Cross-Platform Native Apps</span>
+              <span>Desktop &amp; Browser</span>
               <span className="text-zinc-300 dark:text-zinc-700">•</span>
               <span className="text-zinc-700 dark:text-zinc-300 capitalize font-medium">
                 Detected: {detectedOS}
@@ -477,13 +477,13 @@ export default function DownloadClient({
               </span>
             </h1>
             <p className="text-zinc-500 dark:text-zinc-400 text-xs lg:text-sm mt-1 font-normal max-w-2xl">
-              High-performance desktop download manager with 64 dynamic socket acceleration, an immutable base foundation, and an auto-updating companion extension.
+              Fast, reliable download manager for Windows with automatic browser integration and background updates.
             </p>
           </div>
 
           {/* Dual Platform Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6 shrink-0">
-            {/* Card 1: Windows Desktop (IMMUTABLE BASE APP) */}
+            {/* Card 1: Windows Desktop */}
             <div
               className={`relative rounded-2xl border p-5 lg:p-6 flex flex-col justify-between transition-all shadow-xs hover:shadow-md ${
                 detectedOS === "windows"
@@ -511,19 +511,19 @@ export default function DownloadClient({
                         )}
                       </div>
                       <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                        Windows 10 &amp; 11 (64-bit) • Permanent Base
+                        Windows 10 &amp; 11 (64-bit)
                       </p>
                     </div>
                   </div>
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-violet-50 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 border border-violet-200/80 dark:border-violet-900/60">
-                    <Shield className="w-3 h-3 text-violet-500" />
-                    <span>Immutable Base {BASE_VERSION}</span>
+                    <ShieldCheck className="w-3 h-3 text-violet-500" />
+                    <span>Official Release</span>
                   </span>
                 </div>
 
                 {/* Description */}
                 <p className="text-xs lg:text-sm text-zinc-600 dark:text-zinc-400 mb-3.5 leading-relaxed">
-                  Permanent immutable base foundation (v0.0.0). The base executable binary is permanent and never replaced on disk, with future enhancements delivered silently through in-process shadow updates.
+                  Fast, multi-connection download manager with automatic pause and resume. Installs once and updates seamlessly in the background without interrupting your downloads.
                 </p>
               </div>
 
@@ -535,7 +535,7 @@ export default function DownloadClient({
                     className="flex-1 inline-flex items-center justify-center gap-2 h-10 lg:h-11 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 text-xs lg:text-sm font-semibold shadow-xs active:scale-[0.99] transition-all"
                   >
                     <Download className="w-4 h-4" />
-                    <span>Download Immutable Base (.exe)</span>
+                    <span>Download for Windows (.exe)</span>
                   </a>
 
                   <a
@@ -553,9 +553,9 @@ export default function DownloadClient({
 
                 <div className="pt-2.5 border-t border-zinc-200/80 dark:border-zinc-800 flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400">
                   <div className="flex items-center gap-x-2.5">
-                    <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Base:</span> Immutable v0.0.0</div>
+                    <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Platform:</span> Windows 10 &amp; 11</div>
                     <div className="text-zinc-300 dark:text-zinc-700">•</div>
-                    <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Storage:</span> SQLite WAL</div>
+                    <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Architecture:</span> 64-bit</div>
                     <div className="text-zinc-300 dark:text-zinc-700">•</div>
                     <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Size:</span> ~3.7 MB</div>
                   </div>
@@ -572,7 +572,7 @@ export default function DownloadClient({
               </div>
             </div>
 
-            {/* Card 2: Companion Extension (DYNAMIC & UPDATABLE) */}
+            {/* Card 2: Companion Extension */}
             <div className="relative rounded-2xl border p-5 lg:p-6 flex flex-col justify-between transition-all shadow-xs hover:shadow-md border-zinc-200/90 dark:border-zinc-800/90 bg-zinc-50/40 dark:bg-zinc-900/30 hover:border-zinc-300 dark:hover:border-zinc-700">
               <div>
                 {/* Card Header */}
@@ -584,23 +584,23 @@ export default function DownloadClient({
                     <div>
                       <div className="flex items-center gap-2">
                         <h2 className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-                          Downex Companion Extension
+                          Downex Browser Extension
                         </h2>
                       </div>
                       <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                        Chrome, Edge, Brave &amp; Chromium • Auto-Updating
+                        Chrome, Edge, Brave &amp; Chromium
                       </p>
                     </div>
                   </div>
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-900/60">
                     <RefreshCw className="w-3 h-3 text-emerald-500" />
-                    <span>Auto-Updating MV3</span>
+                    <span>Auto-Updating</span>
                   </span>
                 </div>
 
                 {/* Description */}
                 <p className="text-xs lg:text-sm text-zinc-600 dark:text-zinc-400 mb-3.5 leading-relaxed">
-                  Modular self-updating companion extension. Install once—Downex Desktop automatically updates media sniffers and accelerator hooks on disk in real time without manual zip re-downloads.
+                  Integrates Downex with your browser to automatically capture download links and video streams. Installs once and updates in the background—no manual re-downloads needed.
                 </p>
               </div>
 
@@ -629,11 +629,11 @@ export default function DownloadClient({
                 </div>
 
                 <div className="pt-2.5 border-t border-zinc-200/80 dark:border-zinc-800 flex items-center gap-x-3 text-[11px] text-zinc-500 dark:text-zinc-400">
-                  <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Lifecycle:</span> Auto-Updating</div>
+                  <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Browsers:</span> Chrome, Edge, Brave</div>
                   <div className="text-zinc-300 dark:text-zinc-700">•</div>
-                  <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Manifest:</span> V3</div>
+                  <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Type:</span> Manifest V3</div>
                   <div className="text-zinc-300 dark:text-zinc-700">•</div>
-                  <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Integration:</span> Port 18888</div>
+                  <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Updates:</span> Automatic</div>
                 </div>
               </div>
             </div>
@@ -644,10 +644,10 @@ export default function DownloadClient({
             <div>
               <h3 className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 flex items-center gap-2">
                 <Globe className="w-3.5 h-3.5 text-violet-500" />
-                <span>One-Time Easy Setup — Auto-Updates Forever</span>
+                <span>How to install the browser extension</span>
               </h3>
               <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                Extract once to a permanent folder (or click <em>Open Extension Folder</em> in Downex), open <code className="px-1 py-0.2 rounded bg-zinc-200/70 dark:bg-zinc-800 text-[10px] font-mono text-zinc-700 dark:text-zinc-300">chrome://extensions</code>, enable Developer Mode, and click <em>Load unpacked</em>. Downex automatically manages and hot-reloads all future updates seamlessly.
+                Extract the ZIP folder, open <code className="px-1 py-0.2 rounded bg-zinc-200/70 dark:bg-zinc-800 text-[10px] font-mono text-zinc-700 dark:text-zinc-300">chrome://extensions</code> in your browser, turn on Developer Mode, and click <em>Load unpacked</em>. Downex keeps it updated automatically from then on.
               </p>
             </div>
             <a
@@ -671,7 +671,7 @@ export default function DownloadClient({
           <div className="flex items-center gap-2">
             <Shield className="w-3.5 h-3.5 text-violet-500 shrink-0" />
             <span>
-              <strong>Terms of Service &amp; Governance:</strong> Downex processes downloads locally on your hardware with zero tracking or telemetry. Local SQLite WAL persistence.
+              <strong>Privacy &amp; Security:</strong> Downex runs entirely on your device with zero tracking, no ads, and no data collection. Your downloads stay private on your computer.
             </span>
           </div>
           <div className="flex items-center gap-3 shrink-0">
@@ -681,7 +681,7 @@ export default function DownloadClient({
               rel="noopener noreferrer"
               className="text-violet-600 dark:text-violet-400 hover:underline font-semibold"
             >
-              Full Terms of Service &rarr;
+              Terms of Service &rarr;
             </a>
             <a
               href="https://gauravpatil.site/privacy"
@@ -711,7 +711,7 @@ export default function DownloadClient({
               Terms
             </a>
             <span className="text-zinc-200 dark:text-zinc-800">|</span>
-            <span className="text-zinc-500">Powered by GPHost Cloud Engine</span>
+            <span className="text-zinc-500">Fast CDN mirrors powered by GPHost</span>
           </div>
         </footer>
       </div>

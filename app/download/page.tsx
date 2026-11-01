@@ -5,13 +5,13 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export const metadata: Metadata = {
-  title: "Download Downex | High-Performance Windows Download Manager",
+  title: "Download Downex | Fast & Modern Windows Download Manager",
   description:
-    "Download Downex v0.0.0 Base Foundation for Windows 10/11 with zero-UAC in-process OTA updates, multi-socket acceleration, and browser integration companion.",
+    "Download Downex for Windows 10 and 11. Multi-connection download speeds, automatic browser integration, and seamless background updates.",
   openGraph: {
-    title: "Download Downex — High-Performance Windows Download Manager",
+    title: "Download Downex — Fast & Modern Windows Download Manager",
     description:
-      "Instant multi-connection download acceleration with zero-UAC in-process updates, SQLite WAL persistence, and browser integration companion.",
+      "Fast multi-connection downloads, automatic browser integration, and seamless background updates.",
     url: "https://download.gauravpatil.site",
     siteName: "Downex",
     locale: "en_US",
@@ -19,13 +19,13 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Download Downex — High-Performance Windows Download Manager",
+    title: "Download Downex — Fast & Modern Windows Download Manager",
     description:
-      "Instant multi-connection download acceleration with zero-UAC in-process updates and browser extension.",
+      "Fast multi-connection downloads, automatic browser integration, and seamless background updates.",
   },
 };
 
-// Permanent Immutable Base 0.0.0 Foundation Endpoints on GPHost
+// Permanent Base 0.0.0 Endpoints on GPHost
 // These endpoints are strictly locked, permanent, and never overwritten or deleted by OTA releases.
 const baseDesktopDownloadUrl = (
   process.env.NEXT_PUBLIC_DOWNEX_DOWNLOAD_URL ||
