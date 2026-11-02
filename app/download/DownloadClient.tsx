@@ -55,7 +55,7 @@ export default function DownloadClient({
   const [mobileTab, setMobileTab] = useState<MobileTab>("windows");
   const [copiedHash, setCopiedHash] = useState(false);
   const [activeVersion, setActiveVersion] = useState<string>(BASE_VERSION);
-  const [activeExtensionVersion, setActiveExtensionVersion] = useState<string>("v0.0.5");
+  const [activeExtensionVersion, setActiveExtensionVersion] = useState<string>("v0.0.6");
   const [clientBuster, setClientBuster] = useState<string>("");
 
   useEffect(() => {
