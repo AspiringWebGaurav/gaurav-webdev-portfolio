@@ -16,7 +16,6 @@ import {
   Check,
   Flame,
   Shield,
-  RefreshCw,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
@@ -55,7 +54,6 @@ export default function DownloadClient({
   const [mobileTab, setMobileTab] = useState<MobileTab>("windows");
   const [copiedHash, setCopiedHash] = useState(false);
   const [activeVersion, setActiveVersion] = useState<string>(BASE_VERSION);
-  const [activeExtensionVersion, setActiveExtensionVersion] = useState<string>("v0.0.6");
   const [clientBuster, setClientBuster] = useState<string>("");
 
   useEffect(() => {
@@ -78,10 +76,6 @@ export default function DownloadClient({
           if (data && data.version && data.version !== "0.0.0") {
             const cleanVer = data.version.replace(/^v/, "");
             setActiveVersion(`v${cleanVer}`);
-          }
-          if (data?.extension_version) {
-            const cleanExt = data.extension_version.replace(/^v/, "");
-            setActiveExtensionVersion(`v${cleanExt}`);
           }
         }
       } catch {
@@ -184,7 +178,7 @@ export default function DownloadClient({
             </span>
           </h1>
           <p className="text-zinc-500 dark:text-zinc-400 text-[10px] font-normal max-w-xs mx-auto line-clamp-1 mt-0.5">
-            Fast multi-threaded downloads • Browser integration • Seamless updates
+            Fast multi-threaded downloads • Browser capture • Just install and that&apos;s it
           </p>
 
           {/* Segmented Switcher Tabs */}
@@ -192,11 +186,10 @@ export default function DownloadClient({
             <button
               type="button"
               onClick={() => setMobileTab("windows")}
-              className={`flex items-center gap-1 px-3 py-1 rounded-lg transition-all ${
-                mobileTab === "windows"
+              className={`flex items-center gap-1 px-3 py-1 rounded-lg transition-all ${mobileTab === "windows"
                   ? "bg-white dark:bg-zinc-800 text-violet-600 dark:text-violet-400 font-bold shadow-xs"
                   : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
-              }`}
+                }`}
             >
               <Monitor className="w-3 h-3" />
               <span>Windows App</span>
@@ -204,11 +197,10 @@ export default function DownloadClient({
             <button
               type="button"
               onClick={() => setMobileTab("extension")}
-              className={`flex items-center gap-1 px-3 py-1 rounded-lg transition-all ${
-                mobileTab === "extension"
+              className={`flex items-center gap-1 px-3 py-1 rounded-lg transition-all ${mobileTab === "extension"
                   ? "bg-white dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 font-bold shadow-xs"
                   : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
-              }`}
+                }`}
             >
               <Puzzle className="w-3 h-3" />
               <span>Browser Extension</span>
@@ -249,7 +241,7 @@ export default function DownloadClient({
 
                 {/* Description */}
                 <p className="text-xs text-zinc-600 dark:text-zinc-400 mb-2 leading-relaxed">
-                  Fast, multi-connection downloads with automatic pause and resume. Installs once and updates smoothly in the background.
+                  Download, install, and that&apos;s it. Accelerated multi-connection downloads with pause, resume, and seamless background updates.
                 </p>
 
                 {/* Checksum Box */}
@@ -323,27 +315,27 @@ export default function DownloadClient({
                     </div>
                   </div>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900">
-                    {activeExtensionVersion} • Auto-Updating
+                    Install Once • Zero Bloat
                   </span>
                 </div>
 
                 {/* Description */}
                 <p className="text-xs text-zinc-600 dark:text-zinc-400 mb-2 leading-relaxed">
-                  Integrates Downex directly into your browser to capture download links and media streams. Installs once and stays updated in the background.
+                  Just install once and that&apos;s it. Quietly runs in the background to catch browser downloads (.zip, .exe, .iso, etc.) and forward them to Downex. No popups, no UI bloat, and no maintenance needed.
                 </p>
 
                 <div className="space-y-1 my-2 text-[10px] text-zinc-600 dark:text-zinc-400">
                   <div className="flex items-center gap-1.5">
                     <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
-                    <span>One-click download capture for files and media</span>
+                    <span>Just install once into your browser</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
-                    <span>Fast, direct communication with Downex</span>
+                    <span>Automatically catches browser downloads</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
-                    <span>Automatic updates without re-installing</span>
+                    <span>Zero popups, zero background CPU drain</span>
                   </div>
                 </div>
               </div>
@@ -484,7 +476,7 @@ export default function DownloadClient({
               </span>
             </h1>
             <p className="text-zinc-500 dark:text-zinc-400 text-xs lg:text-sm mt-1 font-normal max-w-2xl">
-              Fast, reliable download manager for Windows with automatic browser integration and background updates.
+              Download, install, and that&apos;s it. High-speed multi-connection downloads with automatic browser capture, pause/resume, and zero configuration.
             </p>
           </div>
 
@@ -492,11 +484,10 @@ export default function DownloadClient({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6 shrink-0">
             {/* Card 1: Windows Desktop */}
             <div
-              className={`relative rounded-2xl border p-5 lg:p-6 flex flex-col justify-between transition-all shadow-xs hover:shadow-md ${
-                detectedOS === "windows"
+              className={`relative rounded-2xl border p-5 lg:p-6 flex flex-col justify-between transition-all shadow-xs hover:shadow-md ${detectedOS === "windows"
                   ? "border-violet-500/70 bg-violet-50/20 dark:bg-violet-950/20 ring-1 ring-violet-500/30"
                   : "border-zinc-200/90 dark:border-zinc-800/90 bg-zinc-50/40 dark:bg-zinc-900/30 hover:border-zinc-300 dark:hover:border-zinc-700"
-              }`}
+                }`}
             >
               <div>
                 {/* Card Header */}
@@ -530,7 +521,7 @@ export default function DownloadClient({
 
                 {/* Description */}
                 <p className="text-xs lg:text-sm text-zinc-600 dark:text-zinc-400 mb-3.5 leading-relaxed">
-                  Fast, multi-connection download manager with automatic pause and resume. Installs once and updates seamlessly in the background without interrupting your downloads.
+                  Fast, multi-connection downloads with automatic pause and resume. Just install and that&apos;s it—runs ultra-lightweight and keeps itself smoothly updated in the background.
                 </p>
               </div>
 
@@ -601,14 +592,14 @@ export default function DownloadClient({
                     </div>
                   </div>
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-900/60">
-                    <RefreshCw className="w-3 h-3 text-emerald-500" />
-                    <span>{activeExtensionVersion} • Auto-Updating</span>
+                    <ShieldCheck className="w-3 h-3 text-emerald-500" />
+                    <span>Install Once • Zero Bloat</span>
                   </span>
                 </div>
 
                 {/* Description */}
                 <p className="text-xs lg:text-sm text-zinc-600 dark:text-zinc-400 mb-3.5 leading-relaxed">
-                  Integrates Downex with your browser to automatically capture download links and video streams. Installs once and updates in the background—no manual re-downloads needed.
+                  Integrates Downex with your browser to automatically capture download links (.zip, .exe, .iso, etc.). Install once and that&apos;s it—zero popups, zero UI bloat, and no update maintenance needed.
                 </p>
               </div>
 
@@ -642,7 +633,7 @@ export default function DownloadClient({
                   <div className="text-zinc-300 dark:text-zinc-700">•</div>
                   <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Type:</span> Manifest V3</div>
                   <div className="text-zinc-300 dark:text-zinc-700">•</div>
-                  <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Updates:</span> Automatic</div>
+                  <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Setup:</span> Load unpacked once</div>
                 </div>
               </div>
             </div>
@@ -653,10 +644,10 @@ export default function DownloadClient({
             <div>
               <h3 className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 flex items-center gap-2">
                 <Globe className="w-3.5 h-3.5 text-violet-500" />
-                <span>How to install the browser extension</span>
+                <span>How to install the browser extension in 30 seconds</span>
               </h3>
               <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                Extract the ZIP folder, open <code className="px-1 py-0.2 rounded bg-zinc-200/70 dark:bg-zinc-800 text-[10px] font-mono text-zinc-700 dark:text-zinc-300">chrome://extensions</code> in your browser, turn on Developer Mode, and click <em>Load unpacked</em>. Downex keeps it updated automatically from then on.
+                Extract the ZIP folder, open <code className="px-1 py-0.2 rounded bg-zinc-200/70 dark:bg-zinc-800 text-[10px] font-mono text-zinc-700 dark:text-zinc-300">chrome://extensions</code> in your browser, turn on Developer Mode, and click <em>Load unpacked</em>. That&apos;s it! It runs quietly in the background forever.
               </p>
             </div>
             <a

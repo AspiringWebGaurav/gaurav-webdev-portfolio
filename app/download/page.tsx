@@ -7,11 +7,11 @@ export const revalidate = 0;
 export const metadata: Metadata = {
   title: "Download Downex | Fast & Modern Windows Download Manager",
   description:
-    "Download Downex for Windows 10 and 11. Multi-connection download speeds, automatic browser integration, and seamless background updates.",
+    "Download Downex for Windows 10 and 11. Multi-connection download speeds, automatic browser integration, and seamless background updates. Just install and that's it.",
   openGraph: {
     title: "Download Downex — Fast & Modern Windows Download Manager",
     description:
-      "Fast multi-connection downloads, automatic browser integration, and seamless background updates.",
+      "Just install and that's it. High-speed multi-connection downloads, automatic browser integration, and zero configuration.",
     url: "https://download.gauravpatil.site",
     siteName: "Downex",
     locale: "en_US",
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Download Downex — Fast & Modern Windows Download Manager",
     description:
-      "Fast multi-connection downloads, automatic browser integration, and seamless background updates.",
+      "Just install and that's it. High-speed multi-connection downloads, automatic browser integration, and zero configuration.",
   },
 };
 
