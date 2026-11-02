@@ -41,7 +41,6 @@ interface DownloadClientProps {
 
 type MobileTab = "windows" | "extension";
 
-const BASE_VERSION = "v0.0.0";
 const SHA256_CHECKSUM = "f483ff0b6fa86d238e6958676383c62b35ea58c6acffa8fdd525a76e9ab252cb";
 
 export default function DownloadClient({
@@ -53,37 +52,12 @@ export default function DownloadClient({
   const [detectedOS, setDetectedOS] = useState<DetectedPlatform>("windows");
   const [mobileTab, setMobileTab] = useState<MobileTab>("windows");
   const [copiedHash, setCopiedHash] = useState(false);
-  const [activeVersion, setActiveVersion] = useState<string>(BASE_VERSION);
   const [clientBuster, setClientBuster] = useState<string>("");
 
   useEffect(() => {
     setClientBuster(`&_t=${Date.now()}`);
     const platform = detectPlatform();
     setDetectedOS(platform);
-
-    // Online release discovery: query GPHost OTA registry for newer active releases
-    async function checkOnlineRelease() {
-      try {
-        const res = await fetch(
-          "https://gphost.eu.cc/api/v1/releases/downex/latest?target=windows-x86_64&arch=x86_64&current_version=0.0.0",
-          {
-            headers: { Accept: "application/json" },
-            cache: "no-store",
-          }
-        );
-        if (res.ok) {
-          const data = await res.json();
-          if (data && data.version && data.version !== "0.0.0") {
-            const cleanVer = data.version.replace(/^v/, "");
-            setActiveVersion(`v${cleanVer}`);
-          }
-        }
-      } catch {
-        // Fallback cleanly to verified base version
-      }
-    }
-
-    checkOnlineRelease();
   }, []);
 
   useEffect(() => {
@@ -147,10 +121,6 @@ export default function DownloadClient({
 
           <div className="flex items-center gap-2">
             <ThemeToggle variant="inline" className="w-7 h-7 shrink-0" />
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[9px] font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              v0.0.0 {activeVersion !== BASE_VERSION ? `• ${activeVersion}` : ""}
-            </span>
             <a
               href="https://gauravpatil.site"
               className="px-2 py-0.5 rounded-lg text-[10px] font-medium text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition-colors"
@@ -448,11 +418,6 @@ export default function DownloadClient({
             <div className="flex items-center px-1">
               <ThemeToggle variant="inline" className="w-8 h-8 shrink-0" />
             </div>
-
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[11px] font-semibold shrink-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Official Release • v0.0.0 {activeVersion !== BASE_VERSION ? `(${activeVersion})` : ""}
-            </span>
           </nav>
         </header>
 
