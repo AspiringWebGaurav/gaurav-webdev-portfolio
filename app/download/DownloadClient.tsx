@@ -55,6 +55,7 @@ export default function DownloadClient({
   const [mobileTab, setMobileTab] = useState<MobileTab>("windows");
   const [copiedHash, setCopiedHash] = useState(false);
   const [activeVersion, setActiveVersion] = useState<string>(BASE_VERSION);
+  const [activeExtensionVersion, setActiveExtensionVersion] = useState<string>("v0.0.5");
   const [clientBuster, setClientBuster] = useState<string>("");
 
   useEffect(() => {
@@ -77,6 +78,10 @@ export default function DownloadClient({
           if (data && data.version && data.version !== "0.0.0") {
             const cleanVer = data.version.replace(/^v/, "");
             setActiveVersion(`v${cleanVer}`);
+          }
+          if (data?.extension_version) {
+            const cleanExt = data.extension_version.replace(/^v/, "");
+            setActiveExtensionVersion(`v${cleanExt}`);
           }
         }
       } catch {
@@ -318,7 +323,7 @@ export default function DownloadClient({
                     </div>
                   </div>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900">
-                    Auto-Updating
+                    {activeExtensionVersion} • Auto-Updating
                   </span>
                 </div>
 
@@ -347,7 +352,7 @@ export default function DownloadClient({
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <a
-                    href={extensionDownloadUrl}
+                    href={`${extensionDownloadUrl}${clientBuster}`}
                     download="downex-extension.zip"
                     className="flex-1 inline-flex items-center justify-center gap-2 h-10 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md active:scale-[0.98] transition-all"
                   >
@@ -597,7 +602,7 @@ export default function DownloadClient({
                   </div>
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-900/60">
                     <RefreshCw className="w-3 h-3 text-emerald-500" />
-                    <span>Auto-Updating</span>
+                    <span>{activeExtensionVersion} • Auto-Updating</span>
                   </span>
                 </div>
 
@@ -611,7 +616,7 @@ export default function DownloadClient({
               <div>
                 <div className="flex items-center gap-2.5 mb-3">
                   <a
-                    href={extensionDownloadUrl}
+                    href={`${extensionDownloadUrl}${clientBuster}`}
                     download="downex-extension.zip"
                     className="flex-1 inline-flex items-center justify-center gap-2 h-10 lg:h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs lg:text-sm font-semibold shadow-xs active:scale-[0.99] transition-all"
                   >
