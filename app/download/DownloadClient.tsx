@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
 import {
   Monitor,
   Puzzle,
@@ -9,6 +8,7 @@ import {
   Download,
   ShieldCheck,
   ArrowRight,
+  ArrowLeft,
   Globe,
   Copy,
   Check,
@@ -19,7 +19,9 @@ import {
   Layers,
   CheckCircle2,
 } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import MarketingLayer from "./MarketingLayer";
 
 export type DetectedPlatform = "windows" | "android" | "ios" | "mac" | "linux" | "other";
 
@@ -42,6 +44,7 @@ interface DownloadClientProps {
 }
 
 type MobileTab = "windows" | "extension";
+type DownexView = "marketing" | "download";
 
 const SHA256_CHECKSUM = "f483ff0b6fa86d238e6958676383c62b35ea58c6acffa8fdd525a76e9ab252cb";
 
@@ -51,34 +54,66 @@ export default function DownloadClient({
   extensionDownloadUrl = "https://gphost.eu.cc/raw/downex-extension",
   extensionShareUrl = "https://gphost.eu.cc/f/downex-extension",
 }: DownloadClientProps) {
+  const [view, setView] = useState<DownexView>("marketing");
   const [detectedOS, setDetectedOS] = useState<DetectedPlatform>("windows");
   const [copiedHash, setCopiedHash] = useState(false);
   const [mobileTab, setMobileTab] = useState<MobileTab>("windows");
   const [clientBuster, setClientBuster] = useState<string>("");
 
+  const openDownloadView = () => {
+    setView("download");
+    if (typeof window !== "undefined") {
+      window.history.pushState(null, "", "#download");
+    }
+  };
+
+  const openMarketingView = () => {
+    setView("marketing");
+    if (typeof window !== "undefined") {
+      window.history.pushState(null, "", window.location.pathname);
+    }
+  };
+
   useEffect(() => {
     setDetectedOS(detectPlatform());
     setClientBuster(`?t=${Date.now()}`);
 
-    const handleHashScroll = () => {
-      if (typeof window !== "undefined" && window.location.hash === "#terms") {
-        setTimeout(() => {
-          const termsElem = document.getElementById("terms");
-          if (termsElem) {
-            termsElem.scrollIntoView({ behavior: "smooth", block: "center" });
-            termsElem.focus?.();
-            termsElem.classList.add("ring-2", "ring-violet-500", "ring-offset-2", "transition-all");
-            setTimeout(() => {
-              termsElem.classList.remove("ring-2", "ring-violet-500", "ring-offset-2");
-            }, 3000);
-          }
-        }, 300);
-      }
-    };
+    if (typeof window !== "undefined") {
+      const syncViewFromUrl = () => {
+        const hash = window.location.hash;
+        const search = window.location.search;
+        if (
+          hash === "#download" ||
+          search.includes("view=download") ||
+          search.includes("tab=download")
+        ) {
+          setView("download");
+        } else if (hash === "#terms") {
+          setView("download");
+          setTimeout(() => {
+            const termsElem = document.getElementById("terms");
+            if (termsElem) {
+              termsElem.scrollIntoView({ behavior: "smooth", block: "center" });
+              termsElem.focus?.();
+              termsElem.classList.add("ring-2", "ring-violet-500", "ring-offset-2", "transition-all");
+              setTimeout(() => {
+                termsElem.classList.remove("ring-2", "ring-violet-500", "ring-offset-2");
+              }, 3000);
+            }
+          }, 300);
+        } else {
+          setView("marketing");
+        }
+      };
 
-    handleHashScroll();
-    window.addEventListener("hashchange", handleHashScroll);
-    return () => window.removeEventListener("hashchange", handleHashScroll);
+      syncViewFromUrl();
+      window.addEventListener("hashchange", syncViewFromUrl);
+      window.addEventListener("popstate", syncViewFromUrl);
+      return () => {
+        window.removeEventListener("hashchange", syncViewFromUrl);
+        window.removeEventListener("popstate", syncViewFromUrl);
+      };
+    }
   }, []);
 
   const copyHash = async () => {
@@ -107,29 +142,62 @@ export default function DownloadClient({
         <div className="absolute inset-x-0 top-0 bottom-14 bg-[radial-gradient(#94a3b8_1.25px,transparent_1.25px)] dark:bg-[radial-gradient(#3f3f46_1.25px,transparent_1.25px)] [background-size:24px_24px] opacity-60 dark:opacity-40 [mask-image:linear-gradient(to_bottom,black_80%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_80%,transparent_100%)]" />
       </div>
 
-      {/* =========================================================================
-          1. DEDICATED MOBILE LAYOUT (Strict 100dvh, Single View, Zero Scroll)
-          ========================================================================= */}
-      <div className="flex md:hidden h-full max-h-dvh w-full flex-col justify-between overflow-hidden p-3.5 relative z-10">
-        {/* Mobile Header (Seamless Transparent, No Border Line) */}
-        <header className="w-full h-8 flex items-center justify-between shrink-0 pb-1.5 bg-transparent">
-          <Link href="/" className="flex items-center gap-2 group">
-            <Download className="w-5 h-5 text-violet-600 dark:text-violet-400 shrink-0" />
-            <span className="font-bold text-xs tracking-tight text-zinc-900 dark:text-zinc-100">
-              Downex
-            </span>
-          </Link>
+      <AnimatePresence mode="wait">
+        {view === "marketing" ? (
+          <motion.div
+            key="marketing"
+            initial={{ opacity: 0, scale: 0.995 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.995 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="w-full h-full overflow-hidden"
+          >
+            <MarketingLayer
+              onOpenDownload={openDownloadView}
+              desktopDownloadUrl={desktopDownloadUrl}
+              extensionDownloadUrl={extensionDownloadUrl}
+              detectedOS={detectedOS}
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="download"
+            initial={{ opacity: 0, scale: 0.995 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.995 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="w-full h-full overflow-hidden flex flex-col justify-between"
+          >
+            {/* =========================================================================
+                1. DEDICATED MOBILE LAYOUT (Strict 100dvh, Single View, Zero Scroll)
+                ========================================================================= */}
+            <div className="flex md:hidden h-full max-h-dvh w-full flex-col justify-between overflow-hidden p-3.5 relative z-10">
+              {/* Mobile Header (Seamless Transparent, No Border Line) */}
+              <header className="w-full h-8 flex items-center justify-between shrink-0 pb-1.5 bg-transparent">
+                <button
+                  type="button"
+                  onClick={openMarketingView}
+                  className="flex items-center gap-2 group cursor-pointer text-left select-none"
+                  title="Return to Downex Overview"
+                >
+                  <Download className="w-5 h-5 text-violet-600 dark:text-violet-400 stroke-[2.2]" />
+                  <span className="font-brand text-[21px] text-zinc-950 dark:text-zinc-50 tracking-wide leading-none select-none">
+                    downex
+                  </span>
+                </button>
 
-          <div className="flex items-center gap-2">
-            <ThemeToggle variant="inline" className="w-7 h-7 shrink-0" />
-            <a
-              href="https://gauravpatil.site"
-              className="px-2 py-0.5 rounded-lg text-[10px] font-medium text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition-colors"
-            >
-              Portfolio
-            </a>
-          </div>
-        </header>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={openMarketingView}
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-medium text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition-colors"
+                  >
+                    <ArrowLeft className="w-3 h-3" />
+                    <span>Overview</span>
+                  </button>
+                  <ThemeToggle variant="inline" className="w-7 h-7 shrink-0" />
+                </div>
+              </header>
 
         {/* Mobile Hero Header */}
         <div className="shrink-0 text-center pt-0.5">
@@ -377,12 +445,30 @@ export default function DownloadClient({
       <div className="hidden md:flex h-full max-h-dvh w-full flex-col justify-between overflow-hidden relative z-10">
         {/* Desktop Navbar (Seamless Transparent, No Border Line, Dot Matrix Shows Through) */}
         <header className="w-full px-6 lg:px-8 h-12 lg:h-14 flex items-center justify-between shrink-0 bg-transparent transition-colors">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <Download className="w-5 h-5 text-violet-600 dark:text-violet-400 shrink-0" />
-            <span className="font-bold text-base tracking-tight text-zinc-950 dark:text-zinc-50">
-              Downex
-            </span>
-          </Link>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={openMarketingView}
+              className="flex items-center gap-2.5 group cursor-pointer text-left select-none"
+              title="Return to Downex Overview"
+            >
+              <Download className="w-6 h-6 text-violet-600 dark:text-violet-400 stroke-[2.2] group-hover:scale-105 transition-transform" />
+              <span className="font-brand text-[25px] text-zinc-950 dark:text-zinc-50 tracking-wide leading-none select-none group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">
+                downex
+              </span>
+            </button>
+
+            <span className="h-3.5 w-[1.5px] bg-zinc-300 dark:bg-zinc-700 rounded-full shrink-0" aria-hidden="true" />
+
+            <button
+              type="button"
+              onClick={openMarketingView}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Overview</span>
+            </button>
+          </div>
 
           {/* Cleanly Aligned Desktop Navigation with Vertical Dividers & Inline Theme Toggle */}
           <nav className="flex items-center gap-3.5 text-xs font-medium text-zinc-600 dark:text-zinc-400">
@@ -688,6 +774,9 @@ export default function DownloadClient({
           </div>
         </footer>
       </div>
+    </motion.div>
+  )}
+</AnimatePresence>
     </div>
   );
 }

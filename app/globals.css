@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Damion&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -303,3 +304,57 @@ html.dark body:has([data-portal="talk"]) {
 
 
 
+
+.font-brand {
+  font-family: 'Damion', cursive;
+}
+
+@keyframes progress-stripes {
+  from {
+    background-position: 24px 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+.animate-stripes {
+  background-image: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.22) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.22) 50%,
+    rgba(255, 255, 255, 0.22) 75%,
+    transparent 75%,
+    transparent
+  );
+  background-size: 24px 24px;
+  animation: progress-stripes 0.85s linear infinite;
+}
+
+@keyframes progress-shimmer {
+  0% {
+    transform: translateX(-150%) skewX(-20deg);
+  }
+  50%, 100% {
+    transform: translateX(250%) skewX(-20deg);
+  }
+}
+
+.animate-shimmer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  left: 0;
+  will-change: transform;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.65) 50%,
+    transparent 100%
+  );
+  animation: progress-shimmer 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}

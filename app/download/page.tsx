@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import DownloadClient from "./DownloadClient";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const dynamic = "force-static";
+export const revalidate = false;
 
 export const metadata: Metadata = {
   title: "Download Downex | Fast & Modern Windows Download Manager",
@@ -38,12 +38,11 @@ const baseExtensionDownloadUrl = (
 ).split("?")[0];
 
 export default function DownloadPage() {
-  const ts = Date.now();
-  const desktopDownloadUrl = `${baseDesktopDownloadUrl}?t=${ts}`;
-  const desktopShareUrl = `https://gphost.eu.cc/f/downex-desktop?t=${ts}`;
+  const desktopDownloadUrl = baseDesktopDownloadUrl;
+  const desktopShareUrl = "https://gphost.eu.cc/f/downex-desktop";
 
-  const extensionDownloadUrl = `${baseExtensionDownloadUrl}?t=${ts}`;
-  const extensionShareUrl = `https://gphost.eu.cc/f/downex-extension?t=${ts}`;
+  const extensionDownloadUrl = baseExtensionDownloadUrl;
+  const extensionShareUrl = "https://gphost.eu.cc/f/downex-extension";
 
   return (
     <DownloadClient
