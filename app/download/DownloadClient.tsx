@@ -8,14 +8,16 @@ import {
   ExternalLink,
   Download,
   ShieldCheck,
-  Sparkles,
   ArrowRight,
   Globe,
-  CheckCircle2,
   Copy,
   Check,
-  Flame,
+  Zap,
+  RefreshCw,
+  FolderOpen,
   Shield,
+  Layers,
+  CheckCircle2,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
@@ -50,18 +52,14 @@ export default function DownloadClient({
   extensionShareUrl = "https://gphost.eu.cc/f/downex-extension",
 }: DownloadClientProps) {
   const [detectedOS, setDetectedOS] = useState<DetectedPlatform>("windows");
-  const [mobileTab, setMobileTab] = useState<MobileTab>("windows");
   const [copiedHash, setCopiedHash] = useState(false);
+  const [mobileTab, setMobileTab] = useState<MobileTab>("windows");
   const [clientBuster, setClientBuster] = useState<string>("");
 
   useEffect(() => {
-    setClientBuster(`&_t=${Date.now()}`);
-    const platform = detectPlatform();
-    setDetectedOS(platform);
-  }, []);
+    setDetectedOS(detectPlatform());
+    setClientBuster(`?t=${Date.now()}`);
 
-  useEffect(() => {
-    // Smooth scroll and autofocus on #terms anchor if requested via URL hash
     const handleHashScroll = () => {
       if (typeof window !== "undefined" && window.location.hash === "#terms") {
         setTimeout(() => {
@@ -96,24 +94,27 @@ export default function DownloadClient({
   return (
     <div
       data-portal="download"
-      className="relative w-full h-dvh max-h-dvh overflow-hidden bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none font-sans antialiased transition-colors duration-300"
+      className="relative w-full h-dvh max-h-dvh overflow-hidden bg-[#fafafa] dark:bg-[#09090b] text-zinc-900 dark:text-zinc-100 select-none font-sans antialiased transition-colors duration-300"
     >
-      {/* Background Ambient Glow */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 w-[720px] h-[360px] bg-gradient-to-tr from-violet-600/15 via-indigo-500/10 to-cyan-500/15 blur-3xl rounded-full opacity-35 dark:opacity-25"
-      />
+      {/* =========================================================================
+          UNIFIED CENTRALIZED DOT MATRIX CANVAS (Single Continuous Entity)
+          ========================================================================= */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden select-none" aria-hidden="true">
+        {/* Base Neutral Canvas */}
+        <div className="absolute inset-0 bg-[#fafafa] dark:bg-[#09090b] transition-colors duration-300" />
+
+        {/* Clean Neutral Dot Grid Matrix (24px x 24px) - Continuous Top-to-Bottom */}
+        <div className="absolute inset-x-0 top-0 bottom-14 bg-[radial-gradient(#94a3b8_1.25px,transparent_1.25px)] dark:bg-[radial-gradient(#3f3f46_1.25px,transparent_1.25px)] [background-size:24px_24px] opacity-60 dark:opacity-40 [mask-image:linear-gradient(to_bottom,black_80%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_80%,transparent_100%)]" />
+      </div>
 
       {/* =========================================================================
           1. DEDICATED MOBILE LAYOUT (Strict 100dvh, Single View, Zero Scroll)
           ========================================================================= */}
       <div className="flex md:hidden h-full max-h-dvh w-full flex-col justify-between overflow-hidden p-3.5 relative z-10">
-        {/* Mobile Header */}
-        <header className="w-full h-8 flex items-center justify-between shrink-0 border-b border-zinc-100 dark:border-zinc-900 pb-1.5">
+        {/* Mobile Header (Seamless Transparent, No Border Line) */}
+        <header className="w-full h-8 flex items-center justify-between shrink-0 pb-1.5 bg-transparent">
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-violet-600 via-indigo-600 to-cyan-500 text-white flex items-center justify-center font-black text-[11px] shadow-xs">
-              <Flame className="w-3.5 h-3.5 text-white" />
-            </div>
+            <Download className="w-5 h-5 text-violet-600 dark:text-violet-400 shrink-0" />
             <span className="font-bold text-xs tracking-tight text-zinc-900 dark:text-zinc-100">
               Downex
             </span>
@@ -132,48 +133,37 @@ export default function DownloadClient({
 
         {/* Mobile Hero Header */}
         <div className="shrink-0 text-center pt-0.5">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20 text-[9px] font-semibold mb-1">
-            <Sparkles className="w-2.5 h-2.5 text-violet-500" />
-            <span>
-              {detectedOS === "windows"
-                ? "Windows PC Detected"
-                : "Available for Windows"}
-            </span>
-          </div>
-
           <h1 className="text-xl font-black tracking-tight text-zinc-950 dark:text-zinc-50 leading-tight">
             <span>Download </span>
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-violet-600 via-indigo-600 to-cyan-500 dark:from-violet-400 dark:via-indigo-400 dark:to-cyan-400">
+            <span className="text-violet-600 dark:text-violet-400">
               Downex
             </span>
           </h1>
-          <p className="text-zinc-500 dark:text-zinc-400 text-[10px] font-normal max-w-xs mx-auto line-clamp-1 mt-0.5">
-            Fast multi-threaded downloads • Browser capture • Just install and that&apos;s it
+          <p className="text-zinc-500 dark:text-zinc-400 text-[10px] mt-0.5">
+            Fast downloads with pause, resume &amp; browser catch.
           </p>
 
-          {/* Segmented Switcher Tabs */}
-          <div className="mt-2 inline-flex items-center p-0.5 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-[10px] font-medium shadow-xs">
+          {/* Mobile OS Switcher Pills */}
+          <div className="mt-2 inline-flex items-center p-0.5 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[10px] font-medium shadow-xs">
             <button
-              type="button"
               onClick={() => setMobileTab("windows")}
-              className={`flex items-center gap-1 px-3 py-1 rounded-lg transition-all ${mobileTab === "windows"
-                  ? "bg-white dark:bg-zinc-800 text-violet-600 dark:text-violet-400 font-bold shadow-xs"
+              className={`px-3 py-1 rounded-lg transition-all ${
+                mobileTab === "windows"
+                  ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-bold shadow-xs"
                   : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
-                }`}
+              }`}
             >
-              <Monitor className="w-3 h-3" />
-              <span>Windows App</span>
+              Windows App
             </button>
             <button
-              type="button"
               onClick={() => setMobileTab("extension")}
-              className={`flex items-center gap-1 px-3 py-1 rounded-lg transition-all ${mobileTab === "extension"
+              className={`px-3 py-1 rounded-lg transition-all ${
+                mobileTab === "extension"
                   ? "bg-white dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 font-bold shadow-xs"
                   : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
-                }`}
+              }`}
             >
-              <Puzzle className="w-3 h-3" />
-              <span>Browser Extension</span>
+              Extension
             </button>
           </div>
         </div>
@@ -181,11 +171,11 @@ export default function DownloadClient({
         {/* Mobile Tab Content Card */}
         <div className="flex-1 min-h-0 flex flex-col justify-between my-2">
           {mobileTab === "windows" ? (
-            <div className="flex-1 min-h-0 flex flex-col justify-between rounded-2xl border border-violet-500/30 dark:border-violet-500/20 bg-gradient-to-b from-violet-500/[0.08] via-zinc-50/50 dark:via-zinc-900/50 to-white dark:to-zinc-950 p-3.5 shadow-sm">
+            <div className="flex-1 min-h-0 flex flex-col justify-between rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3.5 shadow-xs">
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-10 h-10 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 flex items-center justify-center shadow-md shadow-zinc-900/20 shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 flex items-center justify-center shadow-md shadow-zinc-900/10 shrink-0">
                       <Monitor className="w-5 h-5" />
                     </div>
                     <div>
@@ -200,52 +190,50 @@ export default function DownloadClient({
                         )}
                       </div>
                       <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
-                        Windows 10 &amp; 11 • 64-bit • ~3.7 MB
+                        Windows 10 &amp; 11 • 64-bit
                       </p>
                     </div>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-100 dark:bg-violet-950/80 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-900">
-                    v0.0.0 • Official
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
+                    Official Release
                   </span>
                 </div>
 
-                {/* Description */}
-                <p className="text-xs text-zinc-600 dark:text-zinc-400 mb-2 leading-relaxed">
-                  Download, install, and that&apos;s it. Accelerated multi-connection downloads with pause, resume, and seamless background updates.
-                </p>
-
-                {/* Checksum Box */}
-                <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[9px] text-zinc-500 dark:text-zinc-400 font-mono mb-2">
-                  <span className="truncate mr-2">SHA-256: {SHA256_CHECKSUM.slice(0, 16)}...</span>
-                  <button
-                    type="button"
-                    onClick={copyHash}
-                    className="text-violet-600 dark:text-violet-400 hover:underline font-sans font-bold shrink-0 cursor-pointer"
-                  >
-                    {copiedHash ? "Copied" : "Copy"}
-                  </button>
+                {/* Features List */}
+                <div className="space-y-1.5 text-[11px] text-zinc-600 dark:text-zinc-400 my-2">
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3 h-3 text-zinc-700 dark:text-zinc-300 shrink-0" />
+                    <span>Multi-threaded acceleration for maximum speed</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3 h-3 text-zinc-700 dark:text-zinc-300 shrink-0" />
+                    <span>Pause and resume anytime without data loss</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3 h-3 text-zinc-700 dark:text-zinc-300 shrink-0" />
+                    <span>Instant clipboard and browser catch</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Actions & Switcher */}
+              {/* Actions & Specs */}
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <a
                     href={`${desktopDownloadUrl}${clientBuster}`}
-                    download="Downex-Setup.exe"
-                    className="flex-1 inline-flex items-center justify-center gap-2 h-10 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 text-xs font-bold shadow-md active:scale-[0.98] transition-all"
+                    className="flex-1 inline-flex items-center justify-center gap-2 h-10 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 text-xs font-bold shadow-xs active:scale-[0.98] transition-all"
                   >
                     <Download className="w-4 h-4" />
-                    <span>Download for Windows (.exe)</span>
+                    <span>Download Windows (.exe)</span>
                   </a>
                   <a
                     href={`${desktopShareUrl}${clientBuster}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center justify-center gap-1 h-10 px-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-semibold active:scale-[0.98] transition-all shrink-0"
-                    title="Download Mirror"
+                    title="Mirror"
                   >
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <ShieldCheck className="w-3.5 h-3.5 text-zinc-500" />
                     <span>Mirror</span>
                   </a>
                 </div>
@@ -257,7 +245,7 @@ export default function DownloadClient({
                 >
                   <span className="flex items-center gap-1.5">
                     <Puzzle className="w-3.5 h-3.5 text-emerald-500" />
-                    <span>Looking for the browser extension?</span>
+                    <span>Need the Browser Extension?</span>
                   </span>
                   <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
                     Switch <ArrowRight className="w-2.5 h-2.5" />
@@ -266,35 +254,29 @@ export default function DownloadClient({
               </div>
             </div>
           ) : (
-            <div className="flex-1 min-h-0 flex flex-col justify-between rounded-2xl border border-emerald-500/30 dark:border-emerald-500/20 bg-gradient-to-b from-emerald-500/[0.08] via-zinc-50/50 dark:via-zinc-900/50 to-white dark:to-zinc-950 p-3.5 shadow-sm">
+            <div className="flex-1 min-h-0 flex flex-col justify-between rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3.5 shadow-xs">
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-md shadow-emerald-600/20 shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-600/20 shrink-0">
                       <Puzzle className="w-5 h-5" />
                     </div>
                     <div>
-                      <div className="flex items-center gap-1.5">
-                        <h2 className="text-sm font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-                          Browser Extension
-                        </h2>
-                      </div>
+                      <h2 className="text-sm font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+                        Browser Extension
+                      </h2>
                       <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
-                        Chrome, Edge, Brave &amp; Chromium
+                        Chrome, Edge &amp; Chromium
                       </p>
                     </div>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-900/60">
                     Install Once • Zero Bloat
                   </span>
                 </div>
 
-                {/* Description */}
-                <p className="text-xs text-zinc-600 dark:text-zinc-400 mb-2 leading-relaxed">
-                  Just install once and that&apos;s it. Quietly runs in the background to catch browser downloads (.zip, .exe, .iso, etc.) and forward them to Downex. No popups, no UI bloat, and no maintenance needed.
-                </p>
-
-                <div className="space-y-1 my-2 text-[10px] text-zinc-600 dark:text-zinc-400">
+                {/* Features List */}
+                <div className="space-y-1.5 text-[11px] text-zinc-600 dark:text-zinc-400 my-2">
                   <div className="flex items-center gap-1.5">
                     <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
                     <span>Just install once into your browser</span>
@@ -316,7 +298,7 @@ export default function DownloadClient({
                   <a
                     href={`${extensionDownloadUrl}${clientBuster}`}
                     download="downex-browser-extension.zip"
-                    className="flex-1 inline-flex items-center justify-center gap-2 h-10 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md active:scale-[0.98] transition-all"
+                    className="flex-1 inline-flex items-center justify-center gap-2 h-10 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs active:scale-[0.98] transition-all"
                   >
                     <Download className="w-4 h-4" />
                     <span>Download Extension (.zip)</span>
@@ -339,10 +321,10 @@ export default function DownloadClient({
                   className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-zinc-100/70 dark:bg-zinc-900/60 text-[10px] text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
                 >
                   <span className="flex items-center gap-1.5">
-                    <Monitor className="w-3.5 h-3.5 text-violet-500" />
+                    <Monitor className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-300" />
                     <span>Looking for the Windows app?</span>
                   </span>
-                  <span className="font-semibold text-violet-600 dark:text-violet-400 flex items-center gap-0.5">
+                  <span className="font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-0.5">
                     Switch <ArrowRight className="w-2.5 h-2.5" />
                   </span>
                 </button>
@@ -356,28 +338,35 @@ export default function DownloadClient({
           href="https://github.com/AspiringWebGaurav/downex/tree/main/downex-browser-extension#readme"
           target="_blank"
           rel="noopener noreferrer"
-          className="h-8 px-2.5 rounded-xl bg-zinc-100/80 dark:bg-zinc-900/80 border border-zinc-200/70 dark:border-zinc-800/70 flex items-center justify-between text-[10px] font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200/60 dark:hover:bg-zinc-800 transition-colors shrink-0 mb-1"
+          className="h-8 px-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-[10px] font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200/60 dark:hover:bg-zinc-800 transition-colors shrink-0 mb-1"
         >
           <span className="flex items-center gap-1.5 truncate">
-            <Globe className="w-3 h-3 text-violet-500 shrink-0" />
+            <Globe className="w-3 h-3 text-zinc-500 shrink-0" />
             <span>Quick setup: chrome://extensions &rarr; Developer mode &rarr; Load unpacked</span>
           </span>
           <ArrowRight className="w-2.5 h-2.5 text-zinc-400 shrink-0 ml-1" />
         </a>
 
-        {/* Mobile Footer */}
-        <footer id="mobile-footer" className="w-full h-auto py-1 flex items-center justify-between text-[9px] text-zinc-400 dark:text-zinc-500 border-t border-zinc-100 dark:border-zinc-900 shrink-0">
+        {/* Mobile Footer (Seamless Transparent, No Border Line) */}
+        <footer id="mobile-footer" className="w-full h-auto py-1 flex items-center justify-between text-[9px] text-zinc-400 dark:text-zinc-500 shrink-0 bg-transparent">
           <div>&copy; {new Date().getFullYear()} Downex</div>
           <div className="flex items-center gap-2">
-            <a href="https://gauravpatil.site/terms" className="text-violet-600 dark:text-violet-400 hover:underline">
+            <a href="https://gauravpatil.site/terms" className="hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
               Terms
             </a>
             <span>•</span>
-            <a href="https://gauravpatil.site/privacy" className="hover:text-zinc-600 dark:hover:text-zinc-300">
+            <a href="https://gauravpatil.site/privacy" className="hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
               Privacy
             </a>
             <span>•</span>
-            <span>GPHost</span>
+            <a
+              href="https://gphost.eu.cc"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
+            >
+              GPHost
+            </a>
           </div>
         </footer>
       </div>
@@ -386,25 +375,26 @@ export default function DownloadClient({
           2. DESKTOP & TABLET VIEWPORT (Strict 100dvh, Pixel-Matched, Zero Overlap)
           ========================================================================= */}
       <div className="hidden md:flex h-full max-h-dvh w-full flex-col justify-between overflow-hidden relative z-10">
-        {/* Desktop Navbar */}
-        <header className="w-full px-6 lg:px-8 h-12 lg:h-14 flex items-center justify-between shrink-0 border-b border-zinc-100 dark:border-zinc-900">
+        {/* Desktop Navbar (Seamless Transparent, No Border Line, Dot Matrix Shows Through) */}
+        <header className="w-full px-6 lg:px-8 h-12 lg:h-14 flex items-center justify-between shrink-0 bg-transparent transition-colors">
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-violet-600 via-indigo-600 to-cyan-500 text-white flex items-center justify-center font-black text-sm shadow-xs">
-              <Flame className="w-4 h-4 text-white" />
-            </div>
+            <Download className="w-5 h-5 text-violet-600 dark:text-violet-400 shrink-0" />
             <span className="font-bold text-base tracking-tight text-zinc-950 dark:text-zinc-50">
               Downex
             </span>
           </Link>
 
-          {/* Cleanly Aligned Desktop Navigation with Inline Theme Toggle */}
-          <nav className="flex items-center gap-4 text-xs font-medium text-zinc-600 dark:text-zinc-400">
+          {/* Cleanly Aligned Desktop Navigation with Vertical Dividers & Inline Theme Toggle */}
+          <nav className="flex items-center gap-3.5 text-xs font-medium text-zinc-600 dark:text-zinc-400">
             <a
               href="https://gauravpatil.site"
               className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
             >
               Portfolio
             </a>
+
+            <span className="h-3.5 w-[1.5px] bg-zinc-300 dark:bg-zinc-700 rounded-full shrink-0" aria-hidden="true" />
+
             <a
               href="https://github.com/AspiringWebGaurav/downex"
               target="_blank"
@@ -414,8 +404,10 @@ export default function DownloadClient({
               GitHub
             </a>
 
+            <span className="h-3.5 w-[1.5px] bg-zinc-300 dark:bg-zinc-700 rounded-full shrink-0" aria-hidden="true" />
+
             {/* Seamless Inline Theme Button (Zero Layout Shift or Floating Collision) */}
-            <div className="flex items-center px-1">
+            <div className="flex items-center">
               <ThemeToggle variant="inline" className="w-8 h-8 shrink-0" />
             </div>
           </nav>
@@ -425,23 +417,14 @@ export default function DownloadClient({
         <main className="w-full flex-1 min-h-0 flex flex-col justify-evenly py-2 lg:py-3 px-6 lg:px-8 max-w-6xl mx-auto">
           {/* Headline Section */}
           <div className="text-left shrink-0">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20 text-[11px] font-semibold mb-1.5">
-              <Sparkles className="w-3 h-3 text-violet-500" />
-              <span>Desktop &amp; Browser</span>
-              <span className="text-zinc-300 dark:text-zinc-700">•</span>
-              <span className="text-zinc-700 dark:text-zinc-300 capitalize font-medium">
-                Detected: {detectedOS}
-              </span>
-            </div>
-
             <h1 className="text-3xl lg:text-4xl 2xl:text-5xl font-black tracking-tight text-zinc-950 dark:text-zinc-50 leading-tight">
               <span>Download </span>
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-violet-600 via-indigo-600 to-cyan-500 dark:from-violet-400 dark:via-indigo-400 dark:to-cyan-400">
+              <span className="text-violet-600 dark:text-violet-400">
                 Downex
               </span>
             </h1>
-            <p className="text-zinc-500 dark:text-zinc-400 text-xs lg:text-sm mt-1 font-normal max-w-2xl">
-              Download, install, and that&apos;s it. High-speed multi-connection downloads with automatic browser capture, pause/resume, and zero configuration.
+            <p className="text-zinc-500 dark:text-zinc-400 text-xs lg:text-sm mt-1 font-normal max-w-none">
+              Fast downloads with pause, resume, speed limits, and automatic browser catch — built to replace most downloaders.
             </p>
           </div>
 
@@ -449,16 +432,13 @@ export default function DownloadClient({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6 shrink-0">
             {/* Card 1: Windows Desktop */}
             <div
-              className={`relative rounded-2xl border p-5 lg:p-6 flex flex-col justify-between transition-all shadow-xs hover:shadow-md ${detectedOS === "windows"
-                  ? "border-violet-500/70 bg-violet-50/20 dark:bg-violet-950/20 ring-1 ring-violet-500/30"
-                  : "border-zinc-200/90 dark:border-zinc-800/90 bg-zinc-50/40 dark:bg-zinc-900/30 hover:border-zinc-300 dark:hover:border-zinc-700"
-                }`}
+              className="relative rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 lg:p-6 flex flex-col justify-between transition-all shadow-xs hover:shadow-md"
             >
               <div>
                 {/* Card Header */}
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 flex items-center justify-center shadow-xs shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 flex items-center justify-center shadow-md shadow-zinc-900/10 shrink-0">
                       <Monitor className="w-5 h-5" />
                     </div>
                     <div>
@@ -467,27 +447,45 @@ export default function DownloadClient({
                           Downex for Windows
                         </h2>
                         {detectedOS === "windows" && (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-violet-600 text-white shadow-2xs">
-                            <CheckCircle2 className="w-2.5 h-2.5" />
-                            <span>Your Device</span>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-600 text-white shadow-xs">
+                            Your Device
                           </span>
                         )}
                       </div>
                       <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                        Windows 10 &amp; 11 (64-bit)
+                        Windows 10 &amp; 11 (64-bit) • Native Desktop App
                       </p>
                     </div>
                   </div>
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-violet-50 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 border border-violet-200/80 dark:border-violet-900/60">
-                    <ShieldCheck className="w-3 h-3 text-violet-500" />
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
+                    <ShieldCheck className="w-3.5 h-3.5 text-zinc-500" />
                     <span>Official Release</span>
                   </span>
                 </div>
 
-                {/* Description */}
-                <p className="text-xs lg:text-sm text-zinc-600 dark:text-zinc-400 mb-3.5 leading-relaxed">
-                  Fast, multi-connection downloads with automatic pause and resume. Just install and that&apos;s it—runs ultra-lightweight and keeps itself smoothly updated in the background.
-                </p>
+                {/* Feature Bullets (Clean App-Style Neutral Capsules) */}
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/70 dark:border-zinc-700/60 text-xs text-zinc-700 dark:text-zinc-300">
+                    <Zap className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-300 shrink-0" />
+                    <span><strong>Fast Download Speeds:</strong> Downloads files in multiple pieces at once for top internet speed.</span>
+                  </div>
+                  <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/70 dark:border-zinc-700/60 text-xs text-zinc-700 dark:text-zinc-300">
+                    <RefreshCw className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-300 shrink-0" />
+                    <span><strong>Pause and Resume:</strong> Pause anytime and pick up right where you left off without restarting.</span>
+                  </div>
+                  <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/70 dark:border-zinc-700/60 text-xs text-zinc-700 dark:text-zinc-300">
+                    <Layers className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-300 shrink-0" />
+                    <span><strong>Instant Link Catch:</strong> Copies download links automatically or paste any URL with one click.</span>
+                  </div>
+                  <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/70 dark:border-zinc-700/60 text-xs text-zinc-700 dark:text-zinc-300">
+                    <FolderOpen className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-300 shrink-0" />
+                    <span><strong>Clean File Sorting:</strong> Organizes your downloads neatly into Videos, Music, and Documents.</span>
+                  </div>
+                  <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/70 dark:border-zinc-700/60 text-xs text-zinc-700 dark:text-zinc-300">
+                    <Shield className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-300 shrink-0" />
+                    <span><strong>100% Private &amp; Safe:</strong> No ads, no accounts, and zero tracking. Stays strictly on your PC.</span>
+                  </div>
+                </div>
               </div>
 
               {/* Actions & Specs */}
@@ -495,38 +493,36 @@ export default function DownloadClient({
                 <div className="flex items-center gap-2.5 mb-3">
                   <a
                     href={`${desktopDownloadUrl}${clientBuster}`}
-                    download="Downex-Setup.exe"
-                    className="flex-1 inline-flex items-center justify-center gap-2 h-10 lg:h-11 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 text-xs lg:text-sm font-semibold shadow-xs active:scale-[0.99] transition-all"
+                    className="flex-1 inline-flex items-center justify-center gap-2 h-10 lg:h-11 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 text-xs lg:text-sm font-semibold shadow-xs active:scale-[0.99] transition-all"
                   >
                     <Download className="w-4 h-4" />
-                    <span>Download for Windows (.exe)</span>
+                    <span>Download for Windows</span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 dark:bg-zinc-200 text-zinc-300 dark:text-zinc-700">.exe</span>
                   </a>
 
                   <a
                     href={`${desktopShareUrl}${clientBuster}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-1.5 px-3 h-10 lg:h-11 rounded-xl bg-white hover:bg-zinc-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-semibold transition-all border border-zinc-200/90 dark:border-zinc-800 shrink-0"
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 h-10 lg:h-11 rounded-xl bg-white hover:bg-zinc-50 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-semibold transition-all border border-zinc-200 dark:border-zinc-700 shrink-0"
                     title="Download Mirror"
                   >
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <ShieldCheck className="w-3.5 h-3.5 text-zinc-500" />
                     <span>Mirror</span>
                     <ExternalLink className="w-3 h-3 text-zinc-400" />
                   </a>
                 </div>
 
-                <div className="pt-2.5 border-t border-zinc-200/80 dark:border-zinc-800 flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400">
+                <div className="pt-2.5 border-t border-zinc-200/70 dark:border-zinc-800/70 flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400">
                   <div className="flex items-center gap-x-2.5">
                     <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Platform:</span> Windows 10 &amp; 11</div>
                     <div className="text-zinc-300 dark:text-zinc-700">•</div>
-                    <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Architecture:</span> 64-bit</div>
-                    <div className="text-zinc-300 dark:text-zinc-700">•</div>
-                    <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Size:</span> ~3.7 MB</div>
+                    <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Arch:</span> 64-bit</div>
                   </div>
                   <button
                     type="button"
                     onClick={copyHash}
-                    className="flex items-center gap-1 text-[10px] text-violet-600 dark:text-violet-400 hover:underline font-mono font-medium cursor-pointer"
+                    className="flex items-center gap-1 text-[10px] text-zinc-600 dark:text-zinc-400 hover:underline font-mono font-medium cursor-pointer"
                     title="Click to copy SHA-256 Checksum"
                   >
                     {copiedHash ? <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3 h-3" />}
@@ -537,12 +533,14 @@ export default function DownloadClient({
             </div>
 
             {/* Card 2: Companion Extension */}
-            <div className="relative rounded-2xl border p-5 lg:p-6 flex flex-col justify-between transition-all shadow-xs hover:shadow-md border-zinc-200/90 dark:border-zinc-800/90 bg-zinc-50/40 dark:bg-zinc-900/30 hover:border-zinc-300 dark:hover:border-zinc-700">
+            <div
+              className="relative rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 lg:p-6 flex flex-col justify-between transition-all shadow-xs hover:shadow-md"
+            >
               <div>
                 {/* Card Header */}
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-xs shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-600/10 shrink-0">
                       <Puzzle className="w-5 h-5" />
                     </div>
                     <div>
@@ -552,7 +550,7 @@ export default function DownloadClient({
                         </h2>
                       </div>
                       <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                        Chrome, Edge, Brave &amp; Chromium
+                        Chrome, Edge, Brave &amp; Chromium • Companion
                       </p>
                     </div>
                   </div>
@@ -562,10 +560,29 @@ export default function DownloadClient({
                   </span>
                 </div>
 
-                {/* Description */}
-                <p className="text-xs lg:text-sm text-zinc-600 dark:text-zinc-400 mb-3.5 leading-relaxed">
-                  Integrates Downex with your browser to automatically capture download links (.zip, .exe, .iso, etc.). Install once and that&apos;s it—zero popups, zero UI bloat, and no update maintenance needed.
-                </p>
+                {/* Feature Bullets (Clean App-Style Neutral Capsules) */}
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/70 dark:border-zinc-700/60 text-xs text-zinc-700 dark:text-zinc-300">
+                    <span className="text-xs">🎯</span>
+                    <span><strong>1-Click Browser Catch:</strong> Automatically sends download links (.zip, .exe, .iso) to Downex.</span>
+                  </div>
+                  <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/70 dark:border-zinc-700/60 text-xs text-zinc-700 dark:text-zinc-300">
+                    <span className="text-xs">🌐</span>
+                    <span><strong>Works Everywhere:</strong> Supports Google Chrome, Microsoft Edge, Brave, and Chromium.</span>
+                  </div>
+                  <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/70 dark:border-zinc-700/60 text-xs text-zinc-700 dark:text-zinc-300">
+                    <span className="w-4 h-4 rounded bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-[10px] flex items-center justify-center shrink-0">1</span>
+                    <span><strong>Step 1 (Dev Mode):</strong> Open <code className="px-1 py-0.5 rounded bg-zinc-200/70 dark:bg-zinc-800 text-[10px]">chrome://extensions</code> and turn on Developer Mode.</span>
+                  </div>
+                  <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/70 dark:border-zinc-700/60 text-xs text-zinc-700 dark:text-zinc-300">
+                    <span className="w-4 h-4 rounded bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-[10px] flex items-center justify-center shrink-0">2</span>
+                    <span><strong>Step 2 (Load Folder):</strong> Click &apos;Load unpacked&apos; and select the extracted extension folder.</span>
+                  </div>
+                  <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/70 dark:border-zinc-700/60 text-xs text-zinc-700 dark:text-zinc-300">
+                    <span className="text-xs">🪄</span>
+                    <span><strong>Zero Popups &amp; Quiet:</strong> Runs silently in the background with zero ads and zero update hassle.</span>
+                  </div>
+                </div>
               </div>
 
               {/* Actions & Specs */}
@@ -577,106 +594,97 @@ export default function DownloadClient({
                     className="flex-1 inline-flex items-center justify-center gap-2 h-10 lg:h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs lg:text-sm font-semibold shadow-xs active:scale-[0.99] transition-all"
                   >
                     <Download className="w-4 h-4" />
-                    <span>Download Extension (.zip)</span>
+                    <span>Download Extension</span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-700 text-white">.zip</span>
                   </a>
 
                   <a
                     href={extensionShareUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-1.5 px-3 h-10 lg:h-11 rounded-xl bg-white hover:bg-zinc-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-semibold transition-all border border-zinc-200/90 dark:border-zinc-800 shrink-0"
-                    title="Extension Mirror"
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 h-10 lg:h-11 rounded-xl bg-white hover:bg-zinc-50 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-semibold transition-all border border-zinc-200 dark:border-zinc-700 shrink-0"
+                    title="Download Mirror"
                   >
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <ShieldCheck className="w-3.5 h-3.5 text-zinc-500" />
                     <span>Mirror</span>
                     <ExternalLink className="w-3 h-3 text-zinc-400" />
                   </a>
                 </div>
 
-                <div className="pt-2.5 border-t border-zinc-200/80 dark:border-zinc-800 flex items-center gap-x-3 text-[11px] text-zinc-500 dark:text-zinc-400">
-                  <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Browsers:</span> Chrome, Edge, Brave</div>
-                  <div className="text-zinc-300 dark:text-zinc-700">•</div>
-                  <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Type:</span> Manifest V3</div>
-                  <div className="text-zinc-300 dark:text-zinc-700">•</div>
-                  <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Setup:</span> Load unpacked once</div>
+                <div className="pt-2.5 border-t border-zinc-200/70 dark:border-zinc-800/70 flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400">
+                  <div className="flex items-center gap-x-2">
+                    <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Type:</span> Manifest V3</div>
+                    <div className="text-zinc-300 dark:text-zinc-700">•</div>
+                    <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Browsers:</span> Chromium</div>
+                    <div className="text-zinc-300 dark:text-zinc-700">•</div>
+                    <div><span className="font-medium text-zinc-700 dark:text-zinc-300">Setup:</span> Install Once</div>
+                  </div>
+
+                  <a
+                    href="https://github.com/AspiringWebGaurav/downex/tree/main/downex-browser-extension#readme"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] font-medium text-zinc-500 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                  >
+                    <span>Setup Guide</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
                 </div>
               </div>
             </div>
           </div>
-
-          {/* Setup / Developer Mode Option Strip */}
-          <div className="rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 py-2.5 px-4 flex items-center justify-between gap-4 text-left bg-zinc-50/40 dark:bg-zinc-900/30 shrink-0">
-            <div>
-              <h3 className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 flex items-center gap-2">
-                <Globe className="w-3.5 h-3.5 text-violet-500" />
-                <span>How to install the browser extension in 30 seconds</span>
-              </h3>
-              <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                Extract the ZIP folder, open <code className="px-1 py-0.2 rounded bg-zinc-200/70 dark:bg-zinc-800 text-[10px] font-mono text-zinc-700 dark:text-zinc-300">chrome://extensions</code> in your browser, turn on Developer Mode, and click <em>Load unpacked</em>. That&apos;s it! It runs quietly in the background forever.
-              </p>
-            </div>
-            <a
-              href="https://github.com/AspiringWebGaurav/downex/tree/main/downex-browser-extension#readme"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3.5 h-8 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-xs font-semibold text-zinc-800 dark:text-zinc-200 transition-colors shrink-0"
-            >
-              <span>Setup Guide</span>
-              <ArrowRight className="w-3 h-3" />
-            </a>
-          </div>
         </main>
 
-        {/* Terms & Governance Anchor */}
-        <div
+        {/* Single Unified Edge-to-Edge Footer (Seamless Transparent, No Border Line, Dot Matrix Shows Through) */}
+        <footer
           id="terms"
           tabIndex={-1}
-          className="w-full px-6 lg:px-8 py-2.5 border-t border-zinc-100 dark:border-zinc-900 bg-zinc-50/70 dark:bg-zinc-900/40 flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400 shrink-0 outline-none rounded-lg focus:outline-none"
+          className="w-full h-12 shrink-0 bg-transparent outline-none focus:outline-none transition-colors"
         >
-          <div className="flex items-center gap-2">
-            <Shield className="w-3.5 h-3.5 text-violet-500 shrink-0" />
-            <span>
-              <strong>Privacy &amp; Security:</strong> Downex runs entirely on your device with zero tracking, no ads, and no data collection. Your downloads stay private on your computer.
-            </span>
-          </div>
-          <div className="flex items-center gap-3 shrink-0">
-            <a
-              href="https://gauravpatil.site/terms"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-violet-600 dark:text-violet-400 hover:underline font-semibold"
-            >
-              Terms of Service &rarr;
-            </a>
-            <a
-              href="https://gauravpatil.site/privacy"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-zinc-800 dark:hover:text-zinc-200 hover:underline"
-            >
-              Privacy Policy
-            </a>
-          </div>
-        </div>
+          <div className="w-full px-6 lg:px-8 h-full flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400">
+            <div>
+              &copy; {new Date().getFullYear()} Downex &bull;{" "}
+              <a
+                href="https://gauravpatil.site"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-zinc-700 dark:text-zinc-300 hover:text-violet-600 dark:hover:text-violet-400 hover:underline underline-offset-4 decoration-violet-500/50 dark:decoration-violet-400/50 transition-colors"
+              >
+                Gaurav Patil
+              </a>
+            </div>
 
-        {/* Desktop Footer */}
-        <footer className="w-full px-6 lg:px-8 h-9 border-t border-zinc-100 dark:border-zinc-900 flex items-center justify-between text-[11px] text-zinc-400 dark:text-zinc-500 shrink-0">
-          <div>&copy; {new Date().getFullYear()} Downex • Gaurav Patil</div>
-          <div className="flex items-center gap-5">
-            <a
-              href="https://gauravpatil.site/privacy"
-              className="hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
-            >
-              Privacy
-            </a>
-            <a
-              href="https://gauravpatil.site/terms"
-              className="hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
-            >
-              Terms
-            </a>
-            <span className="text-zinc-200 dark:text-zinc-800">|</span>
-            <span className="text-zinc-500">Fast CDN mirrors powered by GPHost</span>
+            <div className="flex items-center gap-4 text-xs font-medium">
+              <a
+                href="https://gauravpatil.site/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:underline"
+              >
+                Terms
+              </a>
+              <span className="text-zinc-300 dark:text-zinc-700">&bull;</span>
+              <a
+                href="https://gauravpatil.site/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:underline"
+              >
+                Privacy
+              </a>
+              <span className="h-3.5 w-[1.5px] bg-zinc-300 dark:bg-zinc-700 rounded-full shrink-0" aria-hidden="true" />
+              <span className="text-zinc-400 dark:text-zinc-500 text-[11px]">
+                Fast CDN mirrors powered by{" "}
+                <a
+                  href="https://gphost.eu.cc"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-zinc-700 dark:text-zinc-300 hover:text-violet-600 dark:hover:text-violet-400 hover:underline underline-offset-4 decoration-violet-500/50 dark:decoration-violet-400/50 transition-colors"
+                >
+                  GPHost
+                </a>
+              </span>
+            </div>
           </div>
         </footer>
       </div>

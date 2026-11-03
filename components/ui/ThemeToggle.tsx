@@ -273,16 +273,23 @@ export function ThemeToggle({
           "group relative flex items-center justify-center rounded-full select-none touch-manipulation focus:outline-none transition-all duration-300",
           variant === "floating"
             ? "theme-toggle-floating fixed z-[4950] w-10 h-10 sm:w-11 sm:h-11 backdrop-blur-2xl bottom-[calc(1.25rem+env(safe-area-inset-bottom,0px))] left-[calc(1rem+env(safe-area-inset-left,0px))] sm:bottom-auto sm:left-auto sm:top-[calc(1.5rem+env(safe-area-inset-top,0px))] sm:right-[calc(2rem+env(safe-area-inset-right,0px))]"
-            : "w-9 h-9 sm:w-10 sm:h-10 backdrop-blur-2xl",
-          isDark
-            ? "bg-[#0A0D24]/90 hover:bg-[#12163A] border border-white/20 text-amber-400 shadow-[0_4px_20px_rgba(0,0,0,0.5),0_0_12px_rgba(251,191,36,0.15)] ring-1 ring-white/10"
-            : "bg-white/95 hover:bg-white border border-slate-300/90 text-violet-600 shadow-[0_4px_20px_rgba(124,58,237,0.16),0_1px_3px_rgba(0,0,0,0.08)] ring-1 ring-violet-500/10",
+            : "w-8 h-8 backdrop-blur-md",
+          variant === "floating"
+            ? isDark
+              ? "bg-[#0A0D24]/90 hover:bg-[#12163A] border border-white/20 text-amber-400 shadow-[0_4px_20px_rgba(0,0,0,0.5),0_0_12px_rgba(251,191,36,0.15)] ring-1 ring-white/10"
+              : "bg-white/95 hover:bg-white border border-slate-300/90 text-violet-600 shadow-[0_4px_20px_rgba(124,58,237,0.16),0_1px_3px_rgba(0,0,0,0.08)] ring-1 ring-violet-500/10"
+            : isDark
+              ? "bg-[#0A0D24]/80 hover:bg-[#12163A] border border-white/15 text-amber-400 shadow-2xs ring-1 ring-white/5"
+              : "bg-white/90 hover:bg-white border border-slate-200/90 text-violet-600 shadow-2xs ring-1 ring-violet-500/10",
           isTransitioning ? "cursor-wait opacity-90" : "cursor-pointer",
           isHidden && "opacity-0 pointer-events-none scale-75 translate-y-2 sm:-translate-y-2 invisible",
           className
         )}
       >
-        <div className="relative w-5 h-5 flex items-center justify-center pointer-events-none">
+        <div className={cn(
+          "relative flex items-center justify-center pointer-events-none",
+          variant === "inline" ? "w-4 h-4" : "w-5 h-5"
+        )}>
           {/* Sun icon: active in dark mode (click to turn on light) */}
           <motion.div
             initial={false}
@@ -294,7 +301,10 @@ export function ThemeToggle({
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             className="absolute inset-0 flex items-center justify-center"
           >
-            <IoSunnyOutline className="w-5 h-5 text-amber-400 group-hover:rotate-12 transition-transform duration-300" />
+            <IoSunnyOutline className={cn(
+              "text-amber-400 group-hover:rotate-12 transition-transform duration-300",
+              variant === "inline" ? "w-4 h-4" : "w-5 h-5"
+            )} />
           </motion.div>
 
           {/* Moon icon: active in light mode (click to turn on dark) */}
@@ -308,7 +318,10 @@ export function ThemeToggle({
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             className="absolute inset-0 flex items-center justify-center"
           >
-            <IoMoonOutline className="w-4.5 h-4.5 text-[#7C3AED] group-hover:-rotate-12 transition-transform duration-300" />
+            <IoMoonOutline className={cn(
+              "text-[#7C3AED] group-hover:-rotate-12 transition-transform duration-300",
+              variant === "inline" ? "w-4 h-4" : "w-5 h-5"
+            )} />
           </motion.div>
         </div>
       </motion.button>

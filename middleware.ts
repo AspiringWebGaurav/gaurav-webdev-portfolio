@@ -295,11 +295,31 @@ async function handleRouting(request: NextRequest, requestHeaders: Headers): Pro
       request.headers.get("x-dev-subdomain") === "downex"
     ));
 
-  // Case A: Request on the Dedicated Download Subdomain
+  // Case A: Request on the Dedicated Downex Subdomain
   if (isDedicatedDownloadSubdomain) {
     // 1. If user accesses /download or /download/ on the subdomain, redirect cleanly to root /
     if (pathname === "/download" || pathname === "/download/") {
       return NextResponse.redirect(new URL(`/${search}`, request.url), 301);
+    }
+
+    // 2. Strict Domain Isolation: Only root / and asset routes are valid on downex.gauravpatil.site
+    const isImageOrStatic =
+      pathname.includes("opengraph-image") ||
+      pathname.includes("twitter-image") ||
+      pathname.includes("icon") ||
+      pathname.includes("favicon") ||
+      pathname.includes("robots.txt") ||
+      pathname.includes("sitemap.xml") ||
+      pathname.startsWith("/brand");
+
+    if (
+      pathname !== "/" &&
+      !pathname.startsWith("/api") &&
+      !pathname.startsWith("/_next") &&
+      !isImageOrStatic
+    ) {
+      const rootUrl = new URL(`/${search}`, request.url);
+      return NextResponse.redirect(rootUrl, 302);
     }
 
     requestHeaders.set("x-is-download-portal", "true");
@@ -317,7 +337,7 @@ async function handleRouting(request: NextRequest, requestHeaders: Headers): Pro
     });
   }
 
-  // Case B: In production, redirect gauravpatil.site/download to https://download.gauravpatil.site/
+  // Case B: In production, redirect gauravpatil.site/download to pure subdomain https://downex.gauravpatil.site/
   if (!isLocalHost && !isVercelPreview && process.env.NODE_ENV !== "development") {
     if (pathname.startsWith("/download")) {
       const cleanPath = pathname.replace(/^\/download/, "") || "/";
@@ -325,7 +345,12 @@ async function handleRouting(request: NextRequest, requestHeaders: Headers): Pro
     }
   }
 
-  // On local development, allow direct testing on http://localhost:3000/download as well as http://download.localhost:3000/
+  // Case C: On local development, redirect http://localhost:3000/download to pure subdomain http://downex.localhost:3000/
+  if ((isLocalHost || process.env.NODE_ENV === "development") && pathname.startsWith("/download")) {
+    const port = host.includes(":") ? `:${host.split(":")[1]}` : ":3000";
+    const cleanPath = pathname.replace(/^\/download/, "") || "/";
+    return NextResponse.redirect(new URL(`http://downex.localhost${port}${cleanPath}${search}`, request.url), 307);
+  }
 
   // 7. Dynamic Admin Gatekeeper Routing (/admin/*)
   if (pathname.startsWith("/admin")) {
