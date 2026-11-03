@@ -47,7 +47,7 @@ export default function MarketingLayer({
   onOpenDownload,
 }: MarketingLayerProps) {
   return (
-    <div className="relative w-full h-full max-h-dvh flex flex-col justify-between overflow-hidden select-none">
+    <div data-portal="download" className="relative w-full h-full max-h-dvh flex flex-col justify-between overflow-hidden select-none">
       {/* Aceternity Spotlight for subtle ambient glow in dark mode */}
       <div className="pointer-events-none select-none hidden dark:block">
         <Spotlight

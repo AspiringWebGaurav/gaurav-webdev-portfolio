@@ -120,6 +120,14 @@
   body:has([data-portal="recruiter"]) .theme-toggle-floating,
   body:has([data-theme-isolated="recruiter"]) .theme-toggle-floating,
   body:has([data-portal="true"]) .theme-toggle-floating,
+  body:has([data-portal="download"]) .theme-toggle-floating,
+  body:has([data-portal="downex"]) .theme-toggle-floating,
+  html:has([data-portal="download"]) .theme-toggle-floating,
+  html:has([data-portal="downex"]) .theme-toggle-floating,
+  html[data-portal="download"] .theme-toggle-floating,
+  html[data-portal="downex"] .theme-toggle-floating,
+  body[data-portal="download"] .theme-toggle-floating,
+  body[data-portal="downex"] .theme-toggle-floating,
   body:has([data-admin="true"]) .theme-toggle-floating {
     display: none !important;
     opacity: 0 !important;

@@ -78,6 +78,10 @@ export default function DownloadClient({
     setDetectedOS(detectPlatform());
     setClientBuster(`?t=${Date.now()}`);
 
+    if (typeof document !== "undefined") {
+      document.documentElement.setAttribute("data-portal", "download");
+    }
+
     if (typeof window !== "undefined") {
       const syncViewFromUrl = () => {
         const hash = window.location.hash;

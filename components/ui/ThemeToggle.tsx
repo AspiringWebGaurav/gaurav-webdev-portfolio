@@ -48,6 +48,8 @@ export function ThemeToggle({
         host.startsWith("talk.") ||
         host.startsWith("contact.") ||
         host.startsWith("download.") ||
+        host.startsWith("downex.") ||
+        host.includes("downex.") ||
         host.startsWith("admin.");
       const isSuppressedPath =
         pathname.startsWith("/talk") ||
@@ -60,6 +62,9 @@ export function ThemeToggle({
         document.querySelector('[data-portal-type="recruiter"]') ||
         document.querySelector('[data-portal="recruiter"]') ||
         document.querySelector('[data-portal="download"]') ||
+        document.querySelector('[data-portal="downex"]') ||
+        document.documentElement.getAttribute("data-portal") === "download" ||
+        document.documentElement.getAttribute("data-portal") === "downex" ||
         document.querySelector('[data-portal="true"]') ||
         document.querySelector('[data-admin="true"]') ||
         document.documentElement.getAttribute("data-theme-isolated") === "recruiter"
@@ -160,7 +165,15 @@ export function ThemeToggle({
     }, 180);
   };
 
-  const shouldSuppressFloating = variant === "floating" && (isSsrSuppressed || isPortalSuppressed);
+  const isDirectHostSuppressed =
+    typeof window !== "undefined" &&
+    (window.location.hostname.toLowerCase().startsWith("downex.") ||
+      window.location.hostname.toLowerCase().includes("downex.") ||
+      window.location.hostname.toLowerCase().startsWith("talk.") ||
+      window.location.hostname.toLowerCase().startsWith("contact."));
+
+  const shouldSuppressFloating =
+    variant === "floating" && (isSsrSuppressed || isPortalSuppressed || isDirectHostSuppressed);
 
   if (shouldSuppressFloating) {
     return null;
