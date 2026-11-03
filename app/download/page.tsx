@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     title: "Download Downex — Fast & Modern Windows Download Manager",
     description:
       "Just install and that's it. High-speed multi-connection downloads, automatic browser integration, and zero configuration.",
-    url: "https://download.gauravpatil.site",
+    url: "https://downex.gauravpatil.site",
     siteName: "Downex",
     locale: "en_US",
     type: "website",

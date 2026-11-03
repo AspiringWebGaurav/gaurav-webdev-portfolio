@@ -284,15 +284,15 @@ async function handleRouting(request: NextRequest, requestHeaders: Headers): Pro
     return NextResponse.redirect(new URL(`http://self.localhost${port}${cleanPath}${search}`, request.url), 307);
   }
 
-  // 6. Downex Download Portal Edge Router (download.gauravpatil.site & download.localhost:3000)
-  const DOWNLOAD_PORTAL_HOST = "download.gauravpatil.site";
+  // 6. Downex Download Portal Edge Router (downex.gauravpatil.site & downex.localhost:3000)
+  const DOWNLOAD_PORTAL_HOST = "downex.gauravpatil.site";
   const isDedicatedDownloadSubdomain =
     host === DOWNLOAD_PORTAL_HOST ||
     ((isLocalHost || process.env.NODE_ENV === "development") && (
-      host === "download.localhost:3000" ||
-      host === "download.localhost" ||
-      host.startsWith("download.localhost") ||
-      request.headers.get("x-dev-subdomain") === "download"
+      host === "downex.localhost:3000" ||
+      host === "downex.localhost" ||
+      host.startsWith("downex.localhost") ||
+      request.headers.get("x-dev-subdomain") === "downex"
     ));
 
   // Case A: Request on the Dedicated Download Subdomain
@@ -428,11 +428,11 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/contact");
 
   const isDedicatedDownloadSubdomain =
-    host === "download.gauravpatil.site" ||
-    host === "download.localhost:3000" ||
-    host === "download.localhost" ||
-    host.startsWith("download.localhost") ||
-    request.headers.get("x-dev-subdomain") === "download";
+    host === "downex.gauravpatil.site" ||
+    host === "downex.localhost:3000" ||
+    host === "downex.localhost" ||
+    host.startsWith("downex.localhost") ||
+    request.headers.get("x-dev-subdomain") === "downex";
 
   const isDownloadPortal =
     isDedicatedDownloadSubdomain ||
