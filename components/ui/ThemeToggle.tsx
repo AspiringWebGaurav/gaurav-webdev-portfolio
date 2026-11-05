@@ -50,12 +50,15 @@ export function ThemeToggle({
         host.startsWith("download.") ||
         host.startsWith("downex.") ||
         host.includes("downex.") ||
+        host.startsWith("cp.") ||
+        host.includes("cp.apps.") ||
         host.startsWith("admin.");
       const isSuppressedPath =
         pathname.startsWith("/talk") ||
         pathname.startsWith("/contact-portal") ||
         pathname.startsWith("/contact") ||
         pathname.startsWith("/download") ||
+        pathname.startsWith("/cp") ||
         pathname.startsWith("/admin");
       const hasSuppressedAttr = Boolean(
         document.querySelector('[data-portal="talk"]') ||
@@ -63,8 +66,12 @@ export function ThemeToggle({
         document.querySelector('[data-portal="recruiter"]') ||
         document.querySelector('[data-portal="download"]') ||
         document.querySelector('[data-portal="downex"]') ||
+        document.querySelector('[data-portal="cp"]') ||
+        document.querySelector('[data-portal="cp-download"]') ||
         document.documentElement.getAttribute("data-portal") === "download" ||
         document.documentElement.getAttribute("data-portal") === "downex" ||
+        document.documentElement.getAttribute("data-portal") === "cp" ||
+        document.documentElement.getAttribute("data-portal") === "cp-download" ||
         document.querySelector('[data-portal="true"]') ||
         document.querySelector('[data-admin="true"]') ||
         document.documentElement.getAttribute("data-theme-isolated") === "recruiter"
@@ -169,6 +176,8 @@ export function ThemeToggle({
     typeof window !== "undefined" &&
     (window.location.hostname.toLowerCase().startsWith("downex.") ||
       window.location.hostname.toLowerCase().includes("downex.") ||
+      window.location.hostname.toLowerCase().startsWith("cp.") ||
+      window.location.hostname.toLowerCase().includes("cp.apps.") ||
       window.location.hostname.toLowerCase().startsWith("talk.") ||
       window.location.hostname.toLowerCase().startsWith("contact."));
 

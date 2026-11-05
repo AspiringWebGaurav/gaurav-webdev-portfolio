@@ -128,6 +128,14 @@
   html[data-portal="downex"] .theme-toggle-floating,
   body[data-portal="download"] .theme-toggle-floating,
   body[data-portal="downex"] .theme-toggle-floating,
+  body:has([data-portal="cp"]) .theme-toggle-floating,
+  body:has([data-portal="cp-download"]) .theme-toggle-floating,
+  html:has([data-portal="cp"]) .theme-toggle-floating,
+  html:has([data-portal="cp-download"]) .theme-toggle-floating,
+  html[data-portal="cp"] .theme-toggle-floating,
+  html[data-portal="cp-download"] .theme-toggle-floating,
+  body[data-portal="cp"] .theme-toggle-floating,
+  body[data-portal="cp-download"] .theme-toggle-floating,
   body:has([data-admin="true"]) .theme-toggle-floating {
     display: none !important;
     opacity: 0 !important;

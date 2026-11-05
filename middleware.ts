@@ -352,7 +352,84 @@ async function handleRouting(request: NextRequest, requestHeaders: Headers): Pro
     return NextResponse.redirect(new URL(`http://downex.localhost${port}${cleanPath}${search}`, request.url), 307);
   }
 
-  // 7. Dynamic Admin Gatekeeper Routing (/admin/*)
+  // 7. CP Engine Download Portal Edge Router (cp.apps.gauravpatil.site & cp.apps.localhost:3000)
+  const CP_PORTAL_HOST = "cp.apps.gauravpatil.site";
+  const isDedicatedCpSubdomain =
+    host === CP_PORTAL_HOST ||
+    ((isLocalHost || process.env.NODE_ENV === "development") && (
+      host === "cp.apps.localhost:3000" ||
+      host === "cp.apps.localhost" ||
+      host.startsWith("cp.apps.localhost") ||
+      request.headers.get("x-dev-subdomain") === "cp"
+    ));
+
+  // Case A: Request on the Dedicated CP Subdomain
+  if (isDedicatedCpSubdomain) {
+    // 1. If user accesses /cp or /cp/ on the subdomain, redirect cleanly to root /
+    if (pathname === "/cp" || pathname === "/cp/") {
+      return NextResponse.redirect(new URL(`/${search}`, request.url), 301);
+    }
+
+    // 2. Strict Domain Isolation: Only root /, legal/docs, and asset routes are valid on cp.apps.gauravpatil.site
+    const isImageOrStatic =
+      pathname.includes("opengraph-image") ||
+      pathname.includes("twitter-image") ||
+      pathname.includes("icon") ||
+      pathname.includes("favicon") ||
+      pathname.includes("robots.txt") ||
+      pathname.includes("sitemap.xml") ||
+      pathname.startsWith("/brand");
+
+    const isCpLegalOrDocRoute =
+      pathname === "/terms" ||
+      pathname === "/privacy" ||
+      pathname === "/how-to-use" ||
+      pathname.startsWith("/terms/") ||
+      pathname.startsWith("/privacy/") ||
+      pathname.startsWith("/how-to-use/");
+
+    if (
+      pathname !== "/" &&
+      !isCpLegalOrDocRoute &&
+      !pathname.startsWith("/api") &&
+      !pathname.startsWith("/_next") &&
+      !isImageOrStatic
+    ) {
+      const rootUrl = new URL(`/${search}`, request.url);
+      return NextResponse.redirect(rootUrl, 302);
+    }
+
+    requestHeaders.set("x-is-cp-portal", "true");
+    const targetPath =
+      pathname === "/"
+        ? "/cp"
+        : pathname.startsWith("/cp")
+        ? pathname
+        : `/cp${pathname}`;
+    const rewriteUrl = new URL(`${targetPath}${search}`, request.url);
+    return NextResponse.rewrite(rewriteUrl, {
+      request: {
+        headers: requestHeaders,
+      },
+    });
+  }
+
+  // Case B: In production, redirect gauravpatil.site/cp to pure subdomain https://cp.apps.gauravpatil.site/
+  if (!isLocalHost && !isVercelPreview && process.env.NODE_ENV !== "development") {
+    if (pathname.startsWith("/cp")) {
+      const cleanPath = pathname.replace(/^\/cp/, "") || "/";
+      return NextResponse.redirect(new URL(`https://${CP_PORTAL_HOST}${cleanPath}${search}`, request.url), 301);
+    }
+  }
+
+  // Case C: On local development, redirect http://localhost:3000/cp to pure subdomain http://cp.apps.localhost:3000/
+  if ((isLocalHost || process.env.NODE_ENV === "development") && pathname.startsWith("/cp")) {
+    const port = host.includes(":") ? `:${host.split(":")[1]}` : ":3000";
+    const cleanPath = pathname.replace(/^\/cp/, "") || "/";
+    return NextResponse.redirect(new URL(`http://cp.apps.localhost${port}${cleanPath}${search}`, request.url), 307);
+  }
+
+  // 8. Dynamic Admin Gatekeeper Routing (/admin/*)
   if (pathname.startsWith("/admin")) {
     const sessionCookie = request.cookies.get(ADMIN_COOKIE_NAME)?.value;
     const verifiedSession = sessionCookie ? await verifyAdminSession(sessionCookie) : null;
@@ -463,6 +540,17 @@ export async function middleware(request: NextRequest) {
     isDedicatedDownloadSubdomain ||
     pathname.startsWith("/download");
 
+  const isDedicatedCpSubdomain =
+    host === "cp.apps.gauravpatil.site" ||
+    host === "cp.apps.localhost:3000" ||
+    host === "cp.apps.localhost" ||
+    host.startsWith("cp.apps.localhost") ||
+    request.headers.get("x-dev-subdomain") === "cp";
+
+  const isCpPortal =
+    isDedicatedCpSubdomain ||
+    pathname.startsWith("/cp");
+
   const themeQuery = request.nextUrl.searchParams.get("theme");
   const isThemeQueryValid = themeQuery === "light" || themeQuery === "dark";
 
@@ -477,6 +565,8 @@ export async function middleware(request: NextRequest) {
     // Download Portal operates strictly in clean light theme - matching product visual standard
     requestHeaders.set("x-theme", "light");
     requestHeaders.set("x-is-download-portal", "true");
+  } else if (isCpPortal) {
+    requestHeaders.set("x-is-cp-portal", "true");
   } else if (isThemeQueryValid) {
     requestHeaders.set("x-theme", themeQuery);
   }
@@ -484,7 +574,7 @@ export async function middleware(request: NextRequest) {
   const response = await handleRouting(request, requestHeaders);
 
   // Cross-subdomain theme synchronization (skip completely for recruiter portal)
-  if (!isRecruiterPortal && !isDownloadPortal && isThemeQueryValid && themeQuery) {
+  if (!isRecruiterPortal && !isDownloadPortal && !isCpPortal && isThemeQueryValid && themeQuery) {
     const isLocalHost =
       host.includes("localhost") ||
       host.startsWith("127.0.0.1") ||
