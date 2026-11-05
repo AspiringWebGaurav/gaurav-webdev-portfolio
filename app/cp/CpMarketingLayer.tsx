@@ -10,6 +10,7 @@ import {
   Pause,
   X,
   Clock,
+  ShieldCheck,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Spotlight } from "@/components/ui/Spotlight";
