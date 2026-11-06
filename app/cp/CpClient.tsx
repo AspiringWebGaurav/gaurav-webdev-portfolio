@@ -14,6 +14,9 @@ import {
   CheckCircle2,
   Eye,
   EyeOff,
+  AlertTriangle,
+  Clock,
+  Wrench,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
@@ -142,13 +145,13 @@ export default function CpClient({
 
               <div className="flex items-center gap-2">
                 <ThemeToggle variant="inline" className="w-8 h-8 shrink-0" />
-                <a
-                  href={`${desktopDownloadUrl}${clientBuster}`}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
+                <div
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-bold cursor-not-allowed select-none"
+                  title="Downloads are temporarily paused while maintenance and launch preparation is underway"
                 >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>Direct Download</span>
-                </a>
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                  <span>Downloads Paused</span>
+                </div>
               </div>
             </header>
 
@@ -166,36 +169,50 @@ export default function CpClient({
                         CP for Windows
                       </h2>
                       <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                        <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                          <span>Official Release</span>
+                        <span className="font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                          <span>Launch &amp; Maintenance in Progress</span>
                         </span>
                         <span>&bull;</span>
-                        <span>2.90 MiB</span>
+                        <span>Base v0.0.1</span>
                         <span>&bull;</span>
                         <span>Windows 10 / 11 (64-bit)</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Primary Download CTA */}
+                  {/* Disabled Download CTA with Maintenance Notice */}
                   <div className="flex items-center gap-2 sm:self-center">
-                    <a
-                      href={`${desktopDownloadUrl}${clientBuster}`}
-                      className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-emerald-500/20 active:scale-95 transition-all"
+                    <div
+                      className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-amber-500/15 dark:bg-amber-500/20 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs sm:text-sm font-bold cursor-not-allowed select-none shadow-sm"
+                      title="Direct download option is temporarily offline for scheduled launch and maintenance"
                     >
-                      <Download className="w-4 h-4" />
-                      <span>Download</span>
-                    </a>
-                    <a
-                      href={`${desktopShareUrl}${clientBuster}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title="Mirror / Alternate Download Link"
-                      className="inline-flex items-center justify-center w-10 h-10 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
+                      <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 animate-pulse" />
+                      <span>Temporarily Offline</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Maintenance & Launch Notice Banner */}
+                <div className="mt-4 p-4 rounded-xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/90 dark:border-amber-800/60 text-amber-900 dark:text-amber-200 shadow-xs">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+                      <Wrench className="w-4 h-4 animate-spin-slow" />
+                    </div>
+                    <div className="text-xs space-y-1">
+                      <div className="font-bold text-sm text-amber-950 dark:text-amber-100 flex items-center gap-2">
+                        <span>Launch &amp; Infrastructure Maintenance Underway</span>
+                        <span className="px-2 py-0.5 rounded-md bg-amber-200/70 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 text-[10px] font-mono uppercase tracking-wider">
+                          Temporary
+                        </span>
+                      </div>
+                      <p className="text-amber-800/90 dark:text-amber-300/90 leading-relaxed">
+                        We are currently actively working on the production launch, modular OTA pipeline optimization, and staging fresh binary releases for the CP application.
+                      </p>
+                      <p className="text-amber-700 dark:text-amber-400 font-medium pt-0.5">
+                        ⚡ The download option has been temporarily paused while we finalize deployment. Official downloads will be restored as soon as validation completes.
+                      </p>
+                    </div>
                   </div>
                 </div>
 

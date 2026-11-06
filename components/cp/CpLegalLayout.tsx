@@ -177,11 +177,12 @@ export default function CpLegalLayout({
 
             <Link
               href="/#download"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-transform active:scale-95"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs font-bold shadow-xs transition-transform active:scale-95"
+              title="Launch & Maintenance in Progress"
             >
-              <Download className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Get CP Engine</span>
-              <span className="sm:hidden">Get CP</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+              <span className="hidden sm:inline">Launch &amp; Maintenance</span>
+              <span className="sm:hidden">Maintenance</span>
             </Link>
 
             <button

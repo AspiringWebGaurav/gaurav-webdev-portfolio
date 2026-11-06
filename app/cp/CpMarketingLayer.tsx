@@ -11,6 +11,8 @@ import {
   X,
   Clock,
   ShieldCheck,
+  Wrench,
+  AlertTriangle,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Spotlight } from "@/components/ui/Spotlight";
@@ -70,16 +72,22 @@ export default function CpMarketingLayer({
             <ThemeToggle variant="inline" className="w-7 h-7 shrink-0" />
             <button
               onClick={onOpenDownload}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold shadow-xs active:scale-95 transition-all"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-[11px] font-bold shadow-xs active:scale-95 transition-all"
+              title="Launch & Maintenance in Progress"
             >
-              <Download className="w-3 h-3" />
-              <span>Get</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+              <span>Launch</span>
             </button>
           </div>
         </header>
 
         {/* Mobile Hero Header */}
         <div className="shrink-0 text-center pt-1">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-[10px] font-semibold mb-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+            <span>Launch &amp; Maintenance in Progress &bull; Temporary</span>
+          </div>
+
           <h1 className="text-xl font-black tracking-tight text-zinc-950 dark:text-zinc-50 leading-tight">
             <span>Copy. Paste.</span>{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-600 dark:from-emerald-400 dark:via-teal-300 dark:to-cyan-300">
@@ -88,7 +96,7 @@ export default function CpMarketingLayer({
           </h1>
 
           <p className="text-zinc-500 dark:text-zinc-400 text-[11px] mt-1 px-2 leading-relaxed">
-            Makes copying and pasting files super fast on Windows.
+            Makes copying and pasting files super fast on Windows. Downloads are temporarily paused for maintenance.
           </p>
         </div>
 
@@ -155,10 +163,10 @@ export default function CpMarketingLayer({
             {/* CTA Inside Card */}
             <button
               onClick={onOpenDownload}
-              className="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all"
+              className="w-full py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-800 dark:text-amber-300 font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer"
             >
-              <Download className="w-3.5 h-3.5" />
-              <span>Download</span>
+              <Clock className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
+              <span>Launch &amp; Maintenance &bull; Paused</span>
             </button>
           </div>
         </div>
@@ -279,10 +287,10 @@ export default function CpMarketingLayer({
 
             <button
               onClick={onOpenDownload}
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-xs active:scale-95 transition-all cursor-pointer"
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-800 dark:text-amber-300 font-semibold text-xs shadow-xs active:scale-95 transition-all cursor-pointer"
             >
-              <Download className="w-3.5 h-3.5" />
-              <span>Download</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+              <span>Maintenance &amp; Launch</span>
             </button>
           </nav>
         </header>
@@ -291,6 +299,11 @@ export default function CpMarketingLayer({
         <main className="w-full flex-1 min-h-0 flex flex-col justify-evenly py-1 lg:py-2 px-4 lg:px-8 max-w-5xl xl:max-w-6xl mx-auto">
           {/* Hero Pitch Headline */}
           <div className="text-center shrink-0 w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/60 border border-amber-300/80 dark:border-amber-700/60 text-amber-800 dark:text-amber-300 text-xs font-semibold shadow-xs mb-2">
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+              <span>Currently working on Launch &amp; Maintenance &bull; Downloads Temporarily Offline</span>
+            </div>
+
             <h1 className="text-2xl md:text-[32px] lg:text-[40px] xl:text-[46px] font-black tracking-tight text-zinc-950 dark:text-zinc-50 leading-tight">
               <span>Copy. Paste.</span>{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-600 dark:from-emerald-400 dark:via-teal-300 dark:to-cyan-300">
@@ -299,17 +312,17 @@ export default function CpMarketingLayer({
             </h1>
 
             <p className="text-xs lg:text-sm text-zinc-600 dark:text-zinc-400 mt-1.5 font-normal max-w-2xl mx-auto leading-relaxed">
-              Makes Windows copy and paste super fast. Move large files, games, and videos in seconds—just copy and paste like you normally do.
+              Makes Windows copy and paste super fast. We are currently performing scheduled launch preparation and infrastructure maintenance for CP Engine; downloads are temporarily paused.
             </p>
 
             {/* Primary Action Buttons */}
             <div className="flex items-center justify-center gap-3 mt-3">
               <button
                 onClick={onOpenDownload}
-                className="group inline-flex items-center justify-center gap-2.5 h-10 lg:h-11 px-6 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 text-xs lg:text-sm font-bold shadow-lg shadow-emerald-500/15 hover:shadow-emerald-500/25 active:scale-95 transition-all cursor-pointer"
+                className="group inline-flex items-center justify-center gap-2.5 h-10 lg:h-11 px-6 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs lg:text-sm font-bold shadow-md shadow-amber-500/10 active:scale-95 transition-all cursor-pointer"
               >
-                <Download className="w-4 h-4 text-emerald-400 dark:text-emerald-600 group-hover:translate-y-0.5 transition-transform" />
-                <span>Download for Windows</span>
+                <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 animate-pulse" />
+                <span>Launch &amp; Maintenance in Progress</span>
                 <ArrowRight className="w-3.5 h-3.5 opacity-70 group-hover:translate-x-0.5 transition-transform" />
               </button>
 
@@ -317,8 +330,8 @@ export default function CpMarketingLayer({
                 onClick={onOpenDownload}
                 className="inline-flex items-center justify-center gap-2 h-10 lg:h-11 px-4 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-semibold hover:bg-zinc-50 dark:hover:bg-zinc-800/80 active:scale-95 transition-all cursor-pointer"
               >
-                <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                <span>SHA-256 Verified</span>
+                <Wrench className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                <span>Maintenance Notice</span>
               </button>
             </div>
           </div>
