@@ -27,7 +27,7 @@ interface CpClientProps {
 type CpView = "marketing" | "download";
 
 const CP_SHA256_CHECKSUM =
-  "095671bdafda1b9181ab0b6504fb9eef20ea0a4eede4faffc49536fdab01e896";
+  "3f473fbee0aa89f9764c46756c6b887940019a694b4dc56165ab6e43d8cc8cec";
 
 export default function CpClient({
   desktopDownloadUrl,
