@@ -72,22 +72,17 @@ export default function CpMarketingLayer({
             <ThemeToggle variant="inline" className="w-7 h-7 shrink-0" />
             <button
               onClick={onOpenDownload}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-[11px] font-bold shadow-xs active:scale-95 transition-all"
-              title="Launch & Maintenance in Progress"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold shadow-xs active:scale-95 transition-all cursor-pointer"
+              title="Download CP Engine"
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-              <span>Launch</span>
+              <Download className="w-3 h-3" />
+              <span>Download</span>
             </button>
           </div>
         </header>
 
         {/* Mobile Hero Header */}
         <div className="shrink-0 text-center pt-1">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-[10px] font-semibold mb-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-            <span>Launch &amp; Maintenance in Progress &bull; Temporary</span>
-          </div>
-
           <h1 className="text-xl font-black tracking-tight text-zinc-950 dark:text-zinc-50 leading-tight">
             <span>Copy. Paste.</span>{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-600 dark:from-emerald-400 dark:via-teal-300 dark:to-cyan-300">
@@ -96,7 +91,7 @@ export default function CpMarketingLayer({
           </h1>
 
           <p className="text-zinc-500 dark:text-zinc-400 text-[11px] mt-1 px-2 leading-relaxed">
-            Makes copying and pasting files super fast on Windows. Downloads are temporarily paused for maintenance.
+            Makes copying and pasting files super fast on Windows with native NVMe hardware acceleration and zero bloat.
           </p>
         </div>
 
@@ -219,6 +214,24 @@ export default function CpMarketingLayer({
             </a>
             <span>&bull;</span>
             <a
+              href="/aou"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+            >
+              AOU
+            </a>
+            <span>&bull;</span>
+            <a
+              href="/how-to-use#dynamic-ota"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+            >
+              Updates
+            </a>
+            <span>&bull;</span>
+            <a
               href="/how-to-use"
               target="_blank"
               rel="noopener noreferrer"
@@ -263,6 +276,8 @@ export default function CpMarketingLayer({
           <nav className="flex items-center gap-3.5 text-xs font-medium text-zinc-600 dark:text-zinc-400">
             <a
               href="https://gauravpatil.site"
+              target="_blank"
+              rel="noopener noreferrer"
               className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
             >
               Portfolio
@@ -287,52 +302,50 @@ export default function CpMarketingLayer({
 
             <button
               onClick={onOpenDownload}
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-800 dark:text-amber-300 font-semibold text-xs shadow-xs active:scale-95 transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-xs active:scale-95 transition-all cursor-pointer"
+              title="Download CP Engine"
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-              <span>Maintenance &amp; Launch</span>
+              <Download className="w-3.5 h-3.5" />
+              <span>Download (.exe)</span>
             </button>
           </nav>
         </header>
 
         {/* Desktop Main Content Area (Strictly Fits Viewport, Zero Scroll) */}
-        <main className="w-full flex-1 min-h-0 flex flex-col justify-evenly py-1 lg:py-2 px-4 lg:px-8 max-w-5xl xl:max-w-6xl mx-auto">
+        <main className="w-full flex-1 min-h-0 flex flex-col justify-between py-1 pb-2 px-4 lg:px-8 max-w-4xl xl:max-w-5xl mx-auto">
           {/* Hero Pitch Headline */}
-          <div className="text-center shrink-0 w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/60 border border-amber-300/80 dark:border-amber-700/60 text-amber-800 dark:text-amber-300 text-xs font-semibold shadow-xs mb-2">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-              <span>Currently working on Launch &amp; Maintenance &bull; Downloads Temporarily Offline</span>
-            </div>
-
-            <h1 className="text-2xl md:text-[32px] lg:text-[40px] xl:text-[46px] font-black tracking-tight text-zinc-950 dark:text-zinc-50 leading-tight">
+          <div className="text-center shrink-0 w-full max-w-3xl lg:max-w-4xl mx-auto">
+            <h1 className="text-2xl md:text-[28px] lg:text-[34px] xl:text-[38px] font-black tracking-tight text-zinc-950 dark:text-zinc-50 leading-tight">
               <span>Copy. Paste.</span>{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-600 dark:from-emerald-400 dark:via-teal-300 dark:to-cyan-300">
                 Faster.
               </span>
             </h1>
 
-            <p className="text-xs lg:text-sm text-zinc-600 dark:text-zinc-400 mt-1.5 font-normal max-w-2xl mx-auto leading-relaxed">
-              Makes Windows copy and paste super fast. We are currently performing scheduled launch preparation and infrastructure maintenance for CP Engine; downloads are temporarily paused.
+            <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1 font-normal max-w-2xl mx-auto leading-relaxed">
+              Makes Windows copy and paste super fast. Built with native async I/O completion ports (IOCP), quiet background operation, and verified background updates.
             </p>
 
             {/* Primary Action Buttons */}
-            <div className="flex items-center justify-center gap-3 mt-3">
+            <div className="flex items-center justify-center gap-3 mt-2 sm:mt-2.5">
               <button
                 onClick={onOpenDownload}
-                className="group inline-flex items-center justify-center gap-2.5 h-10 lg:h-11 px-6 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs lg:text-sm font-bold shadow-md shadow-amber-500/10 active:scale-95 transition-all cursor-pointer"
+                className="group inline-flex items-center justify-center gap-2 h-9 lg:h-10 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-[13px] font-bold shadow-sm active:scale-95 transition-all cursor-pointer"
               >
-                <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 animate-pulse" />
-                <span>Launch &amp; Maintenance in Progress</span>
+                <Download className="w-3.5 h-3.5" />
+                <span>Download for Windows (.exe)</span>
                 <ArrowRight className="w-3.5 h-3.5 opacity-70 group-hover:translate-x-0.5 transition-transform" />
               </button>
 
-              <button
-                onClick={onOpenDownload}
-                className="inline-flex items-center justify-center gap-2 h-10 lg:h-11 px-4 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-semibold hover:bg-zinc-50 dark:hover:bg-zinc-800/80 active:scale-95 transition-all cursor-pointer"
+              <a
+                href="/how-to-use"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 h-9 lg:h-10 px-3.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-semibold hover:bg-zinc-50 dark:hover:bg-zinc-800/80 active:scale-95 transition-all cursor-pointer"
               >
-                <Wrench className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                <span>Maintenance Notice</span>
-              </button>
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span>How It Works &bull; Docs</span>
+              </a>
             </div>
           </div>
 
@@ -358,7 +371,7 @@ export default function CpMarketingLayer({
               </div>
 
               {/* Native Window Body (Pixel-Matched to TransferView) */}
-              <div className="p-3.5 sm:p-4 space-y-2.5">
+              <div className="p-3 sm:p-3.5 space-y-2">
                 {/* Header Row */}
                 <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-900">
                   <div className="flex items-center gap-2.5">
@@ -476,45 +489,45 @@ export default function CpMarketingLayer({
           </div>
 
           {/* Dynamic Architectural Capabilities */}
-          <div className="w-full max-w-4xl mx-auto shrink-0 grid grid-cols-3 gap-3 my-1 text-left">
-            <div className="p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/60 dark:bg-zinc-950/60 backdrop-blur-sm">
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-5 h-5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 flex items-center justify-center">
-                  <Zap className="w-3 h-3 text-amber-500 fill-amber-500" />
+          <div className="w-full max-w-3xl xl:max-w-4xl mx-auto shrink-0 grid grid-cols-3 gap-2 sm:gap-3 my-0.5 text-left">
+            <div className="p-2 sm:p-2.5 rounded-xl border border-zinc-200/90 dark:border-zinc-800/90 bg-white dark:bg-zinc-950 shadow-2xs">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <div className="w-4 h-4 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 flex items-center justify-center">
+                  <Zap className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
                 </div>
-                <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
+                <div className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100">
                   Super Fast Copy
                 </div>
               </div>
-              <div className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
+              <div className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-snug">
                 Copies big games, movies, and files at top speed with no waiting.
               </div>
             </div>
 
-            <div className="p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/60 dark:bg-zinc-950/60 backdrop-blur-sm">
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-5 h-5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 flex items-center justify-center">
-                  <HardDrive className="w-3 h-3 text-emerald-500" />
+            <div className="p-2 sm:p-2.5 rounded-xl border border-zinc-200/90 dark:border-zinc-800/90 bg-white dark:bg-zinc-950 shadow-2xs">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <div className="w-4 h-4 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 flex items-center justify-center">
+                  <HardDrive className="w-2.5 h-2.5 text-emerald-500" />
                 </div>
-                <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
+                <div className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100">
                   Runs Quietly
                 </div>
               </div>
-              <div className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
+              <div className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-snug">
                 Sits quietly near your clock without slowing down your PC or games.
               </div>
             </div>
 
-            <div className="p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/60 dark:bg-zinc-950/60 backdrop-blur-sm">
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-5 h-5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 flex items-center justify-center">
-                  <Sparkles className="w-3 h-3 text-emerald-500" />
+            <div className="p-2 sm:p-2.5 rounded-xl border border-zinc-200/90 dark:border-zinc-800/90 bg-white dark:bg-zinc-950 shadow-2xs">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <div className="w-4 h-4 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 flex items-center justify-center">
+                  <Sparkles className="w-2.5 h-2.5 text-emerald-500" />
                 </div>
-                <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
+                <div className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100">
                   Automatic Updates
                 </div>
               </div>
-              <div className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
+              <div className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-snug">
                 Updates itself quietly in the background without any annoying popups.
               </div>
             </div>
@@ -522,7 +535,7 @@ export default function CpMarketingLayer({
         </main>
 
         {/* Desktop Enterprise Footer */}
-        <footer className="w-full h-11 lg:h-12 shrink-0 bg-transparent transition-colors">
+        <footer className="w-full h-10 lg:h-11 shrink-0 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-t border-zinc-200/80 dark:border-zinc-800/80 z-30 transition-colors">
           <div className="w-full px-6 lg:px-8 h-full flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400">
             <div className="flex items-center gap-2">
               <span>&copy; {new Date().getFullYear()} CP Engine</span>
@@ -531,13 +544,13 @@ export default function CpMarketingLayer({
                 href="https://gauravpatil.site"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-medium text-zinc-700 dark:text-zinc-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline underline-offset-4 transition-colors"
+                className="font-medium text-zinc-700 dark:text-zinc-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline transition-colors"
               >
                 Gaurav Patil
               </a>
               <span>&bull;</span>
               <a
-                href="https://github.com/Gaurav-Patil-07/cp/blob/master/LICENSE"
+                href="https://github.com/AspiringWebGaurav/cp/blob/main/LICENSE"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-zinc-900 dark:hover:text-zinc-200 hover:underline transition-colors"
@@ -545,32 +558,50 @@ export default function CpMarketingLayer({
                 MIT License
               </a>
             </div>
-            <div className="flex items-center gap-3 sm:gap-4 text-[11px] font-medium">
+            <div className="flex items-center gap-2.5 sm:gap-3 text-[11px] font-medium">
               <a
                 href="/terms"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-zinc-600 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline underline-offset-4 transition-colors"
+                className="text-zinc-600 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline transition-colors"
               >
-                Terms of Service
+                Terms
               </a>
               <span className="text-zinc-300 dark:text-zinc-700">&bull;</span>
               <a
                 href="/privacy"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-zinc-600 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline underline-offset-4 transition-colors"
+                className="text-zinc-600 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline transition-colors"
               >
-                Privacy Policy
+                Privacy
+              </a>
+              <span className="text-zinc-300 dark:text-zinc-700">&bull;</span>
+              <a
+                href="/aou"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-zinc-600 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline transition-colors"
+              >
+                AOU
+              </a>
+              <span className="text-zinc-300 dark:text-zinc-700">&bull;</span>
+              <a
+                href="/how-to-use#dynamic-ota"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-zinc-600 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline transition-colors"
+              >
+                Updates
               </a>
               <span className="text-zinc-300 dark:text-zinc-700">&bull;</span>
               <a
                 href="/how-to-use"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-zinc-600 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline underline-offset-4 transition-colors"
+                className="text-zinc-600 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline transition-colors"
               >
-                How to Use
+                Docs
               </a>
               <span className="text-zinc-300 dark:text-zinc-700">&bull;</span>
               <a
@@ -579,7 +610,7 @@ export default function CpMarketingLayer({
                 rel="noopener noreferrer"
                 className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:underline"
               >
-                Author Portfolio
+                Portfolio
               </a>
               <span className="text-zinc-300 dark:text-zinc-700">&bull;</span>
               <span className="text-zinc-400 dark:text-zinc-500 text-[11px]">
@@ -588,9 +619,9 @@ export default function CpMarketingLayer({
                   href="https://gphost.eu.cc"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-medium text-zinc-700 dark:text-zinc-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline underline-offset-4 transition-colors"
+                  className="font-medium text-zinc-700 dark:text-zinc-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline transition-colors"
                 >
-                  GPHost Global CDN
+                  GPHost CDN
                 </a>
               </span>
             </div>

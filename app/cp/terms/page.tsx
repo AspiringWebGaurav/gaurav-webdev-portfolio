@@ -34,7 +34,7 @@ const termsSections = [
   { id: "definitions", title: "2. Technical & Legal Definitions" },
   { id: "version-scope", title: "3. Scope of Release v0.0.1 (Base Binary)" },
   { id: "dynamic-ota", title: "4. Dynamic OTA Updates & Edge Protocols" },
-  { id: "kernel-iocp", title: "5. Win32 Kernel Interception & 4MB IOCP" },
+  { id: "kernel-iocp", title: "5. Hardware Acceleration Architecture & Safety" },
   { id: "process-lifecycle", title: "6. Process Lifecycle & Paste Continuation" },
   { id: "license-grant", title: "7. License Grant & Open Source Terms" },
   { id: "acceptable-use", title: "8. Acceptable Use & Prohibited Acts" },
@@ -98,7 +98,7 @@ export default function CpTermsPage() {
               &ldquo;Base Binary (v0.0.1)&rdquo;
             </div>
             <p className="text-zinc-600 dark:text-zinc-400 leading-snug">
-              The immutable, statically anchored Windows executable distributed via the primary installer package (<code className="font-mono">CP_0.0.1_x64-setup.exe</code>), verified by SHA-256 hash <code className="font-mono">96029cb894...</code>.
+              The immutable, statically anchored Windows executable distributed via the primary installer package (<code className="font-mono">cp-setup.exe</code>), verified by SHA-256 hash <code className="font-mono">f7a21e240c...</code>.
             </p>
           </div>
 
@@ -113,10 +113,10 @@ export default function CpTermsPage() {
 
           <div className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50">
             <div className="font-bold font-mono text-emerald-600 dark:text-emerald-400 mb-1">
-              &ldquo;4MB IOCP Kernel Streaming&rdquo;
+              &ldquo;Hardware-Accelerated File Streaming&rdquo;
             </div>
             <p className="text-zinc-600 dark:text-zinc-400 leading-snug">
-              The unbuffered Windows I/O Completion Port architecture utilizing <code className="font-mono">FILE_FLAG_NO_BUFFERING</code> and 4,194,304-byte sector-aligned memory frames for maximum physical storage throughput.
+              The asynchronous Windows file transfer engine utilizing direct storage pipelines for maximum physical drive throughput while preserving complete user-mode system stability.
             </p>
           </div>
         </div>
@@ -195,21 +195,21 @@ export default function CpTermsPage() {
         <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-200 dark:border-zinc-800">
           <Zap className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
           <h2 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-zinc-50">
-            5. Win32 Kernel Interception &amp; 4MB IOCP Architecture
+            5. Hardware Acceleration Architecture &amp; Safety
           </h2>
         </div>
         <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          The core technological innovation of CP Engine is the replacement of Explorer&rsquo;s legacy single-threaded synchronous file copy subsystem with an asynchronous kernel worker pool:
+          The core innovation of CP Engine is the replacement of Explorer&rsquo;s legacy single-threaded synchronous file copy subsystem with an asynchronous user-mode worker architecture:
         </p>
         <div className="space-y-2 text-xs sm:text-sm text-zinc-700 dark:text-zinc-300">
           <p>
-            <strong>Clipboard Operation Interception:</strong> When a user invokes Ctrl+V or the Explorer paste menu following a file copy command, CP Engine reads the <code className="font-mono">CF_HDROP</code> structure. If the source and destination paths qualify for accelerated unbuffered streaming, CP Engine presents its hardware transfer HUD and manages the stream.
+            <strong>Clipboard Operation Handling:</strong> When a user invokes Ctrl+V or the Explorer paste menu following a file copy command, CP Engine inspects the standard file drop structure. If paths qualify for accelerated direct streaming, CP Engine presents its hardware transfer HUD and manages the stream.
           </p>
           <p>
-            <strong>Unbuffered Hardware Streaming:</strong> File descriptors are opened with <code className="font-mono">FILE_FLAG_NO_BUFFERING | FILE_FLAG_WRITE_THROUGH</code>. Buffer writes are aligned to physical 4,096-byte hardware disk sector boundaries in 4MB segments, enabling Direct Memory Access (DMA) between NVMe controller channels.
+            <strong>Direct Hardware Streaming:</strong> Optimized memory pipelines stream data directly between storage channels without unnecessary intermediate operating system cache thrashing, enabling modern NVMe drives to operate at high speed.
           </p>
           <p>
-            <strong>Filesystem Integrity:</strong> CP Engine does not modify Windows filesystem drivers or hook the NT Kernel at Ring 0. All operations utilize documented, supported Win32 User-Mode APIs, ensuring complete stability and compatibility with Windows Defender and Enterprise Endpoint Protection suites.
+            <strong>Filesystem Integrity &amp; Safety:</strong> CP Engine does not install kernel-level drivers or hook the NT Kernel at Ring 0. All operations execute strictly within documented Win32 user-mode APIs, ensuring maximum operating system stability and enterprise security compatibility.
           </p>
         </div>
       </section>
@@ -292,13 +292,13 @@ export default function CpTermsPage() {
         <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 font-mono text-xs space-y-2">
           <div className="text-zinc-500 text-[11px]">Official v0.0.1 Base Installer SHA-256 Hash:</div>
           <div className="p-2.5 rounded-lg bg-zinc-100 dark:bg-black/60 text-emerald-600 dark:text-emerald-400 font-bold break-all select-all">
-            96029cb894160dd270256667ae6fb9c56f64ccac7e7cf02d3c74537141aa5592
+            f7a21e240c6ca3ee8131e48b46ea9ab9b4a25f09ebf7faebe65cfb86c555354f
           </div>
           <div className="text-zinc-500 text-[11px] pt-1">
             Verification Command (Windows PowerShell):
           </div>
           <div className="p-2 rounded bg-zinc-100 dark:bg-black/60 text-zinc-800 dark:text-zinc-200">
-            Get-FileHash -Algorithm SHA256 .\CP_0.0.1_x64-setup.exe
+            Get-FileHash -Algorithm SHA256 .\cp-setup.exe
           </div>
         </div>
       </section>

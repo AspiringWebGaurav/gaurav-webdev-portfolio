@@ -30,7 +30,7 @@ interface CpClientProps {
 type CpView = "marketing" | "download";
 
 const CP_SHA256_CHECKSUM =
-  "96029cb894160dd270256667ae6fb9c56f64ccac7e7cf02d3c74537141aa5592";
+  "f7a21e240c6ca3ee8131e48b46ea9ab9b4a25f09ebf7faebe65cfb86c555354f";
 
 export default function CpClient({
   desktopDownloadUrl,
@@ -146,11 +146,11 @@ export default function CpClient({
               <div className="flex items-center gap-2">
                 <ThemeToggle variant="inline" className="w-8 h-8 shrink-0" />
                 <div
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-bold cursor-not-allowed select-none"
-                  title="Downloads are temporarily paused while maintenance and launch preparation is underway"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold select-none"
+                  title="CP Engine Official Release"
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                  <span>Downloads Paused</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Official Base Release</span>
                 </div>
               </div>
             </header>
@@ -169,9 +169,9 @@ export default function CpClient({
                         CP for Windows
                       </h2>
                       <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                        <span className="font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                          <span>Launch &amp; Maintenance in Progress</span>
+                        <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          <span>Verified Base Release</span>
                         </span>
                         <span>&bull;</span>
                         <span>Base v0.0.1</span>
@@ -181,36 +181,45 @@ export default function CpClient({
                     </div>
                   </div>
 
-                  {/* Disabled Download CTA with Maintenance Notice */}
+                  {/* Active Download CTA & Direct GPHost Mirror */}
                   <div className="flex items-center gap-2 sm:self-center">
-                    <div
-                      className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-amber-500/15 dark:bg-amber-500/20 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs sm:text-sm font-bold cursor-not-allowed select-none shadow-sm"
-                      title="Direct download option is temporarily offline for scheduled launch and maintenance"
+                    <a
+                      href={`${desktopDownloadUrl}${clientBuster}`}
+                      download="cp-setup.exe"
+                      className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold shadow-md active:scale-95 transition-all cursor-pointer"
+                      title="Download CP Engine v0.0.1 for Windows"
                     >
-                      <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 animate-pulse" />
-                      <span>Temporarily Offline</span>
-                    </div>
+                      <Download className="w-4 h-4" />
+                      <span>Download for Windows (.exe)</span>
+                    </a>
+                    <a
+                      href={desktopShareUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 h-10 px-3.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-semibold transition-all border border-zinc-200 dark:border-zinc-800"
+                      title="Open GPHost Public Mirror Page"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>Mirror</span>
+                    </a>
                   </div>
                 </div>
 
-                {/* Maintenance & Launch Notice Banner */}
-                <div className="mt-4 p-4 rounded-xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/90 dark:border-amber-800/60 text-amber-900 dark:text-amber-200 shadow-xs">
+                {/* Release & Security Highlights Banner */}
+                <div className="mt-4 p-3.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/50 text-emerald-950 dark:text-emerald-200 shadow-xs">
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
-                      <Wrench className="w-4 h-4 animate-spin-slow" />
+                    <div className="w-8 h-8 rounded-lg bg-emerald-600/15 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0 mt-0.5">
+                      <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     </div>
                     <div className="text-xs space-y-1">
-                      <div className="font-bold text-sm text-amber-950 dark:text-amber-100 flex items-center gap-2">
-                        <span>Launch &amp; Infrastructure Maintenance Underway</span>
-                        <span className="px-2 py-0.5 rounded-md bg-amber-200/70 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 text-[10px] font-mono uppercase tracking-wider">
-                          Temporary
+                      <div className="font-bold text-sm text-emerald-950 dark:text-emerald-100 flex items-center gap-2">
+                        <span>Official Production Base Release &bull; Anchored Foundation</span>
+                        <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 text-[10px] font-mono uppercase tracking-wider font-semibold">
+                          v0.0.1 Stable
                         </span>
                       </div>
-                      <p className="text-amber-800/90 dark:text-amber-300/90 leading-relaxed">
-                        We are currently actively working on the production launch, modular OTA pipeline optimization, and staging fresh binary releases for the CP application.
-                      </p>
-                      <p className="text-amber-700 dark:text-amber-400 font-medium pt-0.5">
-                        ⚡ The download option has been temporarily paused while we finalize deployment. Official downloads will be restored as soon as validation completes.
+                      <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                        Direct NVMe-speed hardware acceleration with async I/O completion ports (IOCP), quiet background operation, and cryptographically verified background OTA updates.
                       </p>
                     </div>
                   </div>
@@ -355,17 +364,28 @@ export default function CpClient({
                 </div>
 
                 {/* Auto-Update Dynamic Assurance Note */}
-                <div className="mt-4 p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-2.5 text-xs text-emerald-800 dark:text-emerald-200">
-                  <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                  <span>
-                    <strong>Auto Updates On:</strong> Stays up to date automatically in the background with zero popups.
-                  </span>
+                <div className="mt-4 p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-between text-xs text-emerald-800 dark:text-emerald-200">
+                  <div className="flex items-center gap-2.5">
+                    <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span>
+                      <strong>Auto Updates On:</strong> Stays up to date automatically in the background with zero popups.
+                    </span>
+                  </div>
+                  <a
+                    href="/how-to-use#dynamic-ota"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 font-semibold text-emerald-700 dark:text-emerald-300 hover:underline shrink-0 ml-2"
+                  >
+                    <span>OTA Docs</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
                 </div>
               </div>
             </main>
 
             {/* Enterprise Single-Line Desktop Footer */}
-            <footer className="w-full h-11 lg:h-12 shrink-0 bg-transparent transition-colors">
+            <footer className="w-full h-10 lg:h-11 shrink-0 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-t border-zinc-200/80 dark:border-zinc-800/80 z-30 transition-colors">
               <div className="w-full h-full flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400">
                 <div className="flex items-center gap-2">
                   <span>&copy; {new Date().getFullYear()} CP Engine</span>
@@ -373,7 +393,7 @@ export default function CpClient({
                   <span>Gaurav Patil</span>
                   <span>&bull;</span>
                   <a
-                    href="https://github.com/Gaurav-Patil-07/cp/blob/master/LICENSE"
+                    href="https://github.com/AspiringWebGaurav/cp/blob/main/LICENSE"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:text-zinc-900 dark:hover:text-zinc-200 hover:underline transition-colors"
@@ -381,14 +401,14 @@ export default function CpClient({
                     MIT License
                   </a>
                 </div>
-                <div className="flex items-center gap-3 sm:gap-4 font-medium text-[11px]">
+                <div className="flex items-center gap-2.5 sm:gap-3 text-[11px] font-medium">
                   <a
                     href="/terms"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline transition-colors"
                   >
-                    Terms of Service
+                    Terms
                   </a>
                   <span className="text-zinc-300 dark:text-zinc-700">&bull;</span>
                   <a
@@ -397,7 +417,25 @@ export default function CpClient({
                     rel="noopener noreferrer"
                     className="hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline transition-colors"
                   >
-                    Privacy Policy
+                    Privacy
+                  </a>
+                  <span className="text-zinc-300 dark:text-zinc-700">&bull;</span>
+                  <a
+                    href="/aou"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline transition-colors"
+                  >
+                    AOU
+                  </a>
+                  <span className="text-zinc-300 dark:text-zinc-700">&bull;</span>
+                  <a
+                    href="/how-to-use#dynamic-ota"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline transition-colors"
+                  >
+                    Updates
                   </a>
                   <span className="text-zinc-300 dark:text-zinc-700">&bull;</span>
                   <a
@@ -406,7 +444,7 @@ export default function CpClient({
                     rel="noopener noreferrer"
                     className="hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline transition-colors"
                   >
-                    How to Use
+                    Docs
                   </a>
                   <span className="text-zinc-300 dark:text-zinc-700">&bull;</span>
                   <a
@@ -415,7 +453,7 @@ export default function CpClient({
                     rel="noopener noreferrer"
                     className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
                   >
-                    Author Portfolio
+                    Portfolio
                   </a>
                   <span className="text-zinc-300 dark:text-zinc-700">&bull;</span>
                   <a
@@ -424,7 +462,7 @@ export default function CpClient({
                     rel="noopener noreferrer"
                     className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
                   >
-                    GPHost Global CDN
+                    GPHost CDN
                   </a>
                 </div>
               </div>

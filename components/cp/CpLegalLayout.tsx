@@ -80,6 +80,12 @@ export default function CpLegalLayout({
       active: pathname.includes("/privacy"),
     },
     {
+      label: "Acceptance (AOU)",
+      href: "/aou",
+      icon: FileText,
+      active: pathname.includes("/aou"),
+    },
+    {
       label: "How to Use & Manual",
       href: "/how-to-use",
       icon: BookOpen,
@@ -177,12 +183,11 @@ export default function CpLegalLayout({
 
             <Link
               href="/#download"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs font-bold shadow-xs transition-transform active:scale-95"
-              title="Launch & Maintenance in Progress"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs transition-all active:scale-95"
+              title="Download CP Engine v0.0.1 for Windows"
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-              <span className="hidden sm:inline">Launch &amp; Maintenance</span>
-              <span className="sm:hidden">Maintenance</span>
+              <Download className="w-3.5 h-3.5" />
+              <span>Download (.exe)</span>
             </Link>
 
             <button
@@ -334,7 +339,7 @@ export default function CpLegalLayout({
                 </span>
               </div>
               <p className="text-zinc-500 leading-snug">
-                Native Win32 Explorer file transfer accelerator. Intercepts standard clipboard paste operations with unbuffered 4MB IOCP kernel streaming.
+                High-performance Windows file transfer utility. Designed to accelerate everyday copy and paste workflows with a lightweight, background-friendly approach.
               </p>
               <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono font-semibold">
                 Release v0.0.1 (Base Foundation)
@@ -364,6 +369,14 @@ export default function CpLegalLayout({
                   </Link>
                 </li>
                 <li>
+                  <Link
+                    href="/aou"
+                    className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                  >
+                    Acceptance Agreement (AOU)
+                  </Link>
+                </li>
+                <li>
                   <a
                     href="https://github.com/Gaurav-Patil-07/cp/blob/master/LICENSE"
                     target="_blank"
@@ -380,39 +393,39 @@ export default function CpLegalLayout({
             {/* Col 3 */}
             <div className="space-y-2">
               <div className="font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider font-mono text-[11px]">
-                Systems &amp; Architecture
+                Overview &amp; Guides
               </div>
               <ul className="space-y-1.5 text-zinc-600 dark:text-zinc-400">
                 <li>
                   <Link
-                    href="/how-to-use"
+                    href="/how-to-use#problem-statement"
                     className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
                   >
-                    Operational Manual &amp; Quickstart
+                    Problem Statement &amp; Motivation
                   </Link>
                 </li>
                 <li>
                   <Link
-                    href="/how-to-use#dynamic-ota"
+                    href="/how-to-use#approach"
                     className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
                   >
-                    Dynamic OTA Architecture
+                    Engineering Approach &amp; Overview
                   </Link>
                 </li>
                 <li>
                   <Link
-                    href="/how-to-use#iocp-streaming"
+                    href="/how-to-use#workflow"
                     className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
                   >
-                    4MB IOCP Kernel Workers
+                    Quickstart &amp; Everyday Usage
                   </Link>
                 </li>
                 <li>
                   <Link
-                    href="/how-to-use#checksum"
+                    href="/how-to-use#checksum-verification"
                     className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
                   >
-                    SHA-256 Verification Guide
+                    Cryptographic Verification
                   </Link>
                 </li>
               </ul>

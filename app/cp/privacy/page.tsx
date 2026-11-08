@@ -83,7 +83,7 @@ export default function CpPrivacyPage() {
               <span>100% Local</span>
             </div>
             <p className="text-emerald-900/80 dark:text-emerald-200/80 text-[11px] leading-snug">
-              Unbuffered memory buffers and IOCP completion queues operate exclusively in local RAM.
+              All memory buffers and streaming operations operate strictly in temporary local system RAM.
             </p>
           </div>
 
@@ -128,21 +128,21 @@ export default function CpPrivacyPage() {
         <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-200 dark:border-zinc-800">
           <HardDrive className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
           <h2 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-zinc-50">
-            3. Local Unbuffered File Streaming
+            3. Local High-Speed File Streaming
           </h2>
         </div>
         <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          When transferring files between folders, drives, or network shares, CP Engine employs unbuffered 4MB IOCP kernel streaming. Here is what happens to your files:
+          When transferring files between folders, drives, or external media, CP Engine streams data locally and directly. Here is how your privacy is protected:
         </p>
         <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 space-y-2 text-xs sm:text-sm text-zinc-700 dark:text-zinc-300">
           <p>
-            <strong>Kernel Direct Memory Access (DMA):</strong> Data is read in 4,194,304-byte chunks directly from source disk blocks into locked system RAM pages and transferred to destination disk blocks.
+            <strong>Direct Local Streaming:</strong> Data is read directly from your source drive and written to your destination drive without passing through third-party services or persistent staging caches.
           </p>
           <p>
-            <strong>No Cloud Mirroring:</strong> At no point are your files, documents, archives, or ISOs uploaded to any server, proxy, or cache. CP Engine possesses zero cloud upload capabilities for user files.
+            <strong>Zero Cloud Mirroring:</strong> At no point are your files, documents, photos, or archives transmitted to any external server, cloud proxy, or remote analytics platform. CP Engine has zero remote upload capabilities for user data.
           </p>
           <p>
-            <strong>No In-Memory Retention:</strong> Memory buffers are zeroed out and reclaimed immediately upon I/O packet completion by the Windows kernel manager.
+            <strong>Zero In-Memory Retention:</strong> Temporary memory buffers are cleared and returned to the operating system immediately once each block is written to disk.
           </p>
         </div>
       </section>

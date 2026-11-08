@@ -384,9 +384,13 @@ async function handleRouting(request: NextRequest, requestHeaders: Headers): Pro
       pathname === "/terms" ||
       pathname === "/privacy" ||
       pathname === "/how-to-use" ||
+      pathname === "/aou" ||
+      pathname === "/acceptable-use" ||
       pathname.startsWith("/terms/") ||
       pathname.startsWith("/privacy/") ||
-      pathname.startsWith("/how-to-use/");
+      pathname.startsWith("/how-to-use/") ||
+      pathname.startsWith("/aou/") ||
+      pathname.startsWith("/acceptable-use/");
 
     if (
       pathname !== "/" &&
