@@ -14,9 +14,6 @@ import {
   CheckCircle2,
   Eye,
   EyeOff,
-  AlertTriangle,
-  Clock,
-  Wrench,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";

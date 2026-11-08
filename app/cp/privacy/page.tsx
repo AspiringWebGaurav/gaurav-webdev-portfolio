@@ -9,7 +9,6 @@ import {
   FileText,
   UserX,
   AlertCircle,
-  ExternalLink,
   CheckCircle2,
 } from "lucide-react";
 

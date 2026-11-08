@@ -11,17 +11,12 @@ import {
   X,
   Clock,
   ShieldCheck,
-  Wrench,
-  AlertTriangle,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Spotlight } from "@/components/ui/Spotlight";
 
 // Static telemetry constants (Ubuntu 24.04 LTS open-source ISO) - 100% Zero-JS-Overhead, Vercel Edge Optimized
 const FILE_NAME = "Ubuntu-24.04-LTS-Desktop-x86_64.iso";
-const SOURCE_PATH = "C:\\Users\\gaura\\Downloads\\Ubuntu-24.04-LTS-Desktop-x86_64.iso";
-const DEST_PATH = "D:\\";
-const FILE_SIZE = "9.64 GB";
 const TRANSFERRED_PROGRESS = "4.89 GB / 9.64 GB";
 const TRANSFERRED_BYTES = "4.89 GB";
 const PROGRESS_PERCENT = "50.7%";
@@ -32,12 +27,11 @@ const ETA_TIME = "13s";
 interface CpMarketingLayerProps {
   onOpenDownload: () => void;
   onOpenSteps?: () => void;
-  desktopDownloadUrl: string;
+  desktopDownloadUrl?: string;
 }
 
 export default function CpMarketingLayer({
   onOpenDownload,
-  desktopDownloadUrl,
 }: CpMarketingLayerProps) {
 
   return (

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import CpLegalLayout from "@/components/cp/CpLegalLayout";
 import {
-  FileCheck,
   Scale,
   ShieldCheck,
   Zap,
@@ -10,7 +9,6 @@ import {
   Cpu,
   AlertTriangle,
   RefreshCw,
-  ExternalLink,
 } from "lucide-react";
 
 export const dynamic = "force-static";

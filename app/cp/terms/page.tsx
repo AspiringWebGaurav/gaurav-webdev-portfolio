@@ -10,7 +10,6 @@ import {
   FileCheck,
   AlertTriangle,
   Lock,
-  ExternalLink,
 } from "lucide-react";
 
 export const dynamic = "force-static";

@@ -1,24 +1,19 @@
 import type { Metadata } from "next";
 import CpLegalLayout from "@/components/cp/CpLegalLayout";
 import {
-  BookOpen,
   Download,
   Zap,
   HardDrive,
   RefreshCw,
   Cpu,
   ShieldCheck,
-  CheckCircle2,
   Terminal,
-  Layers,
   Sparkles,
   HelpCircle,
   Copy,
   Sliders,
-  Play,
   Pause,
   X,
-  ExternalLink,
   AlertCircle,
 } from "lucide-react";
 
