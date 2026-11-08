@@ -283,7 +283,7 @@ export default function CpHowToUsePage() {
           </div>
           <div className="bg-black/60 p-3 rounded-lg text-zinc-300 text-[11px] break-all select-all font-mono">
             Algorithm : SHA256<br />
-            Hash      : <span className="text-emerald-400 font-bold">F7A21E240C6CA3EE8131E48B46EA9AB9B4A25F09EBF7FAEBE65CFB86C555354F</span><br />
+            Hash      : <span className="text-emerald-400 font-bold">095671BDAFDA1B9181AB0B6504FB9EEF20EA0A4EEDE4FAFFC49536FDAB01E896</span><br />
             Path      : C:\Users\...\Downloads\cp-setup.exe
           </div>
         </div>

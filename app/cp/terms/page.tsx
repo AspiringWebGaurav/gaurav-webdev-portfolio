@@ -97,7 +97,7 @@ export default function CpTermsPage() {
               &ldquo;Base Binary (v0.0.1)&rdquo;
             </div>
             <p className="text-zinc-600 dark:text-zinc-400 leading-snug">
-              The immutable, statically anchored Windows executable distributed via the primary installer package (<code className="font-mono">cp-setup.exe</code>), verified by SHA-256 hash <code className="font-mono">f7a21e240c...</code>.
+              The immutable, statically anchored Windows executable distributed via the primary installer package (<code className="font-mono">cp-setup.exe</code>), verified by SHA-256 hash <code className="font-mono">095671bdaf...</code>.
             </p>
           </div>
 
@@ -291,7 +291,7 @@ export default function CpTermsPage() {
         <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 font-mono text-xs space-y-2">
           <div className="text-zinc-500 text-[11px]">Official v0.0.1 Base Installer SHA-256 Hash:</div>
           <div className="p-2.5 rounded-lg bg-zinc-100 dark:bg-black/60 text-emerald-600 dark:text-emerald-400 font-bold break-all select-all">
-            f7a21e240c6ca3ee8131e48b46ea9ab9b4a25f09ebf7faebe65cfb86c555354f
+            095671bdafda1b9181ab0b6504fb9eef20ea0a4eede4faffc49536fdab01e896
           </div>
           <div className="text-zinc-500 text-[11px] pt-1">
             Verification Command (Windows PowerShell):
