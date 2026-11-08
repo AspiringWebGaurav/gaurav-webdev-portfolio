@@ -8,13 +8,13 @@ import {
   FileText,
   BookOpen,
   ArrowLeft,
-  Download,
   ExternalLink,
   Sparkles,
   ChevronRight,
   Menu,
   X,
   Scale,
+  Clock,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
@@ -181,14 +181,13 @@ export default function CpLegalLayout({
           <div className="flex items-center gap-2">
             <ThemeToggle variant="inline" className="w-8 h-8 shrink-0" />
 
-            <Link
-              href="/#download"
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs transition-all active:scale-95"
-              title="Download CP Engine v0.0.1 for Windows"
+            <button
+              disabled
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-zinc-200 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 text-xs font-bold shadow-none cursor-not-allowed select-none"
             >
-              <Download className="w-3.5 h-3.5" />
-              <span>Download (.exe)</span>
-            </Link>
+              <Clock className="w-3.5 h-3.5" />
+              <span>Coming Soon</span>
+            </button>
 
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

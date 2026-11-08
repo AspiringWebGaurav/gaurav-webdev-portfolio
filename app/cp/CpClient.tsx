@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import {
-  Download,
   ShieldCheck,
   ArrowLeft,
   Copy,
@@ -14,6 +13,7 @@ import {
   CheckCircle2,
   Eye,
   EyeOff,
+  Clock,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
@@ -31,12 +31,10 @@ const CP_SHA256_CHECKSUM =
 
 export default function CpClient({
   desktopDownloadUrl,
-  desktopShareUrl,
 }: CpClientProps) {
   const [view, setView] = useState<CpView>("marketing");
   const [copiedHash, setCopiedHash] = useState(false);
   const [showHash, setShowHash] = useState(false);
-  const [clientBuster, setClientBuster] = useState<string>("");
 
   const openDownloadView = () => {
     setView("download");
@@ -53,8 +51,6 @@ export default function CpClient({
   };
 
   useEffect(() => {
-    setClientBuster(`?t=${Date.now()}`);
-
     if (typeof document !== "undefined") {
       document.documentElement.setAttribute("data-portal", "cp");
     }
@@ -143,11 +139,11 @@ export default function CpClient({
               <div className="flex items-center gap-2">
                 <ThemeToggle variant="inline" className="w-8 h-8 shrink-0" />
                 <div
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold select-none"
-                  title="CP Engine Official Release"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-bold select-none"
+                  title="CP Engine"
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>Official Base Release</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                  <span>Coming Soon</span>
                 </div>
               </div>
             </header>
@@ -166,9 +162,9 @@ export default function CpClient({
                         CP for Windows
                       </h2>
                       <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                        <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                          <span>Verified Base Release</span>
+                        <span className="font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                          <span>Coming Soon</span>
                         </span>
                         <span>&bull;</span>
                         <span>Base v0.0.1</span>
@@ -178,27 +174,15 @@ export default function CpClient({
                     </div>
                   </div>
 
-                  {/* Active Download CTA & Direct GPHost Mirror */}
+                  {/* Download Locked - Coming Soon */}
                   <div className="flex items-center gap-2 sm:self-center">
-                    <a
-                      href={`${desktopDownloadUrl}${clientBuster}`}
-                      download="cp-setup.exe"
-                      className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold shadow-md active:scale-95 transition-all cursor-pointer"
-                      title="Download CP Engine v0.0.1 for Windows"
+                    <button
+                      disabled
+                      className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-zinc-200 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 text-xs sm:text-sm font-bold shadow-none cursor-not-allowed select-none"
                     >
-                      <Download className="w-4 h-4" />
-                      <span>Download for Windows (.exe)</span>
-                    </a>
-                    <a
-                      href={desktopShareUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 h-10 px-3.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-semibold transition-all border border-zinc-200 dark:border-zinc-800"
-                      title="Open GPHost Public Mirror Page"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                      <span>Mirror</span>
-                    </a>
+                      <Clock className="w-4 h-4" />
+                      <span>Coming Soon</span>
+                    </button>
                   </div>
                 </div>
 
