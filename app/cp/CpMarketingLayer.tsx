@@ -24,12 +24,12 @@ const TRANSFER_SPEED = "351.4 MB/s";
 const ETA_TIME = "13s";
 
 export interface CpMarketingLayerProps {
-  onOpenDownload: () => void;
+  onOpenDownload?: () => void;
   onOpenSteps?: () => void;
   desktopDownloadUrl?: string;
 }
 
-export default function CpMarketingLayer() {
+export default function CpMarketingLayer({}: CpMarketingLayerProps = {}) {
 
   return (
     <div
