@@ -10,6 +10,7 @@ import {
   X,
   Clock,
   ShieldCheck,
+  Download,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Spotlight } from "@/components/ui/Spotlight";
@@ -29,7 +30,10 @@ export interface CpMarketingLayerProps {
   desktopDownloadUrl?: string;
 }
 
-export default function CpMarketingLayer({}: CpMarketingLayerProps = {}) {
+export default function CpMarketingLayer({
+  onOpenDownload,
+  desktopDownloadUrl,
+}: CpMarketingLayerProps = {}) {
 
   return (
     <div
@@ -62,11 +66,11 @@ export default function CpMarketingLayer({}: CpMarketingLayerProps = {}) {
           <div className="flex items-center gap-2">
             <ThemeToggle variant="inline" className="w-7 h-7 shrink-0" />
             <button
-              disabled
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-zinc-200 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 text-[11px] font-bold shadow-none cursor-not-allowed select-none"
+              onClick={onOpenDownload}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold shadow-xs active:scale-95 transition-all cursor-pointer"
             >
-              <Clock className="w-3 h-3" />
-              <span>Coming Soon</span>
+              <Download className="w-3 h-3" />
+              <span>Get</span>
             </button>
           </div>
         </header>
@@ -146,12 +150,13 @@ export default function CpMarketingLayer({}: CpMarketingLayerProps = {}) {
             </div>
 
             {/* CTA Inside Card */}
-            <div
-              className="w-full py-2 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 font-bold text-xs flex items-center justify-center gap-1.5 shadow-none select-none"
+            <button
+              onClick={onOpenDownload}
+              className="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer"
             >
-              <Clock className="w-3.5 h-3.5 text-zinc-400" />
-              <span>Coming Soon</span>
-            </div>
+              <Download className="w-3.5 h-3.5" />
+              <span>Download CP for Windows</span>
+            </button>
           </div>
         </div>
 
@@ -290,11 +295,11 @@ export default function CpMarketingLayer({}: CpMarketingLayerProps = {}) {
             <span className="h-3.5 w-[1.5px] bg-zinc-300 dark:bg-zinc-700 rounded-full shrink-0" aria-hidden="true" />
 
             <button
-              disabled
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-zinc-200 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 font-semibold text-xs shadow-none cursor-not-allowed select-none"
+              onClick={onOpenDownload}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-xs active:scale-95 transition-all cursor-pointer"
             >
-              <Clock className="w-3.5 h-3.5" />
-              <span>Coming Soon</span>
+              <Download className="w-3.5 h-3.5" />
+              <span>Download CP</span>
             </button>
           </nav>
         </header>
@@ -317,11 +322,12 @@ export default function CpMarketingLayer({}: CpMarketingLayerProps = {}) {
             {/* Primary Action Buttons */}
             <div className="flex items-center justify-center gap-3 mt-2 sm:mt-2.5">
               <button
-                disabled
-                className="inline-flex items-center justify-center gap-2 h-9 lg:h-10 px-5 rounded-xl bg-zinc-200 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 text-xs sm:text-[13px] font-bold shadow-none cursor-not-allowed select-none"
+                onClick={onOpenDownload}
+                className="group inline-flex items-center justify-center gap-2 h-9 lg:h-10 px-5 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 text-xs sm:text-[13px] font-bold shadow-md shadow-emerald-500/10 active:scale-95 transition-all cursor-pointer"
               >
-                <Clock className="w-3.5 h-3.5" />
-                <span>Coming Soon</span>
+                <Download className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-600 group-hover:translate-y-0.5 transition-transform" />
+                <span>Download CP for Windows</span>
+                <ArrowRight className="w-3.5 h-3.5 opacity-70 group-hover:translate-x-0.5 transition-transform" />
               </button>
 
               <a
