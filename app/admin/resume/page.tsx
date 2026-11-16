@@ -11,7 +11,7 @@ export default async function AdminResumePage() {
   return (
     <AdminPageContainer
       breadcrumb="RESUME STUDIO"
-      subtitle="resume.gauravpatil.site Management"
+      subtitle="resume.services.gauravpatil.site Management"
       title="Official Resume Content & Live Studio"
     >
       <AdminSuspense fallbackTitle="Resume Studio">

@@ -76,7 +76,8 @@ export function ContactScreen({ recruiter, onTrackAction }: ContactScreenProps) 
 
   const turnstileSiteKey =
     process.env.NEXT_PUBLIC_RECRUITER_TURNSTILE_SITE_KEY ||
-    "0x4AAAAAAFK5EIqLbibzxLzf";
+    process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY ||
+    "0x4AAAAAAGC9IJm9wk-xm7O2";
 
   // Check if session already verified Turnstile
   useEffect(() => {

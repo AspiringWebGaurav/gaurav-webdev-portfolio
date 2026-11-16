@@ -57,7 +57,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       challengeId: result.challengeId,
-      message: "Code sent.",
+      devOtp: result.devOtp,
+      message: result.devOtp ? `[DEV] Code: ${result.devOtp}` : "Code sent.",
     });
   } catch (err) {
     console.error("[TalkSendOtpAPI] Internal error:", err);

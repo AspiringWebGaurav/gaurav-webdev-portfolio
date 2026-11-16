@@ -1,4 +1,4 @@
-export const TALK_PORTAL_HOST = "talk.gauravpatil.site";
+export const TALK_PORTAL_HOST = "talk.services.gauravpatil.site";
 export const TALK_COOKIE_NAME = "talk_session_token";
 export const TALK_CHALLENGE_COOKIE_NAME = "talk_otp_challenge_id";
 

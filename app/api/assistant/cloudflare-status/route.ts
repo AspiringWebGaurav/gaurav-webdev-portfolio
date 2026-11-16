@@ -14,7 +14,7 @@ export async function GET() {
       {
         ok: true,
         isSimulatedDowntime: settings?.isSimulatedDowntime === true,
-        siteKey: settings?.siteKey || "0x4AAAAAAEilFWDvwBZ3NPSK",
+        siteKey: settings?.siteKey || "0x4AAAAAAGC9IJm9wk-xm7O2",
         maxRetryAttempts: settings?.maxRetryAttempts || 2,
         circuitBreakerEnabled: settings?.circuitBreakerEnabled !== false,
         fallbackEmailGateway: settings?.fallbackEmailGateway || "no-reply@gauravpatil.site",
@@ -30,7 +30,7 @@ export async function GET() {
       {
         ok: false,
         isSimulatedDowntime: false,
-        siteKey: "0x4AAAAAAEilFWDvwBZ3NPSK",
+        siteKey: "0x4AAAAAAGC9IJm9wk-xm7O2",
         maxRetryAttempts: 2,
         circuitBreakerEnabled: true,
         fallbackEmailGateway: "no-reply@gauravpatil.site",

@@ -1236,7 +1236,7 @@ export async function dispatchRecruiterVerifiedAdminNotification(params: {
 }
 
 /**
- * Dispatches a 6-digit OTP verification code to unlock Gaurav's Resume on resume.gauravpatil.site.
+ * Dispatches a 6-digit OTP verification code to unlock Gaurav's Resume on resume.services.gauravpatil.site.
  */
 export async function dispatchResumeOtpEmail(params: {
   email: string;
@@ -1289,7 +1289,7 @@ export async function dispatchResumeOtpEmail(params: {
 }
 
 /**
- * Dispatches an instant notification to Gaurav when someone unlocks and views their resume on resume.gauravpatil.site.
+ * Dispatches an instant notification to Gaurav when someone unlocks and views their resume on resume.services.gauravpatil.site.
  */
 export async function dispatchResumeViewedAdminNotification(params: {
   name: string;
@@ -1317,7 +1317,7 @@ export async function dispatchResumeViewedAdminNotification(params: {
   const adminEmail = process.env.ADMIN_EMAIL || "gauravpatil5737@gmail.com";
 
   const bodyContentHtml = `
-    <p style="${EMAIL_SPACING.greetingMargin}font-weight:600;color:#111827;font-size:15px;">📄 Resume Viewed on resume.gauravpatil.site</p>
+    <p style="${EMAIL_SPACING.greetingMargin}font-weight:600;color:#111827;font-size:15px;">📄 Resume Viewed on resume.services.gauravpatil.site</p>
     <p style="${EMAIL_SPACING.paragraphMargin}color:#374151;font-size:14px;line-height:1.5;">
       A verified visitor has completed security verification and opened your Official Resume:
     </p>
@@ -1345,7 +1345,7 @@ export async function dispatchResumeViewedAdminNotification(params: {
     },
   });
 
-  const textContent = `Resume Viewed on resume.gauravpatil.site\n\nName: ${params.name.trim()}\nCompany: ${params.company || "N/A"}\nEmail: ${params.email.trim()}\nCountry: ${countryDisplay || "Unknown"}\nTime: ${timestampStr}\n\n-- Security Monitor`;
+  const textContent = `Resume Viewed on resume.services.gauravpatil.site\n\nName: ${params.name.trim()}\nCompany: ${params.company || "N/A"}\nEmail: ${params.email.trim()}\nCountry: ${countryDisplay || "Unknown"}\nTime: ${timestampStr}\n\n-- Security Monitor`;
 
   return sendTransactionalEmail({
     purpose: "SECURITY_ALERT",

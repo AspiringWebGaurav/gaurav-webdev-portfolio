@@ -24,7 +24,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://contact.gauravpatil.site"),
+  metadataBase: new URL("https://contact.services.gauravpatil.site"),
   title: {
     default: "Verified Recruiter Portal | Gaurav Patil — Full Stack Software Engineer",
     template: "%s | Gaurav Patil Recruiter Portal",
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
   creator: "Gaurav Patil",
   publisher: "Gaurav Patil",
   alternates: {
-    canonical: "https://contact.gauravpatil.site",
+    canonical: "https://contact.services.gauravpatil.site",
   },
   robots: {
     index: true,
@@ -65,7 +65,7 @@ export const metadata: Metadata = {
     title: "Verified Recruiter Portal | Gaurav Patil — Full Stack Software Engineer",
     description:
       "Direct verified gateway for engineering leaders, hiring managers, and executive recruiters to connect with Gaurav Patil. Access verified candidate resume and direct communication channels.",
-    url: "https://contact.gauravpatil.site",
+    url: "https://contact.services.gauravpatil.site",
     siteName: "Gaurav Patil Recruiter Portal",
     locale: "en_US",
     type: "website",
@@ -102,20 +102,20 @@ const recruiterPortalJsonLd = {
       sameAs: [
         "https://github.com/AspiringWebGaurav",
         "https://gauravpatil.site",
-        "https://contact.gauravpatil.site",
+        "https://contact.services.gauravpatil.site",
       ],
       contactPoint: {
         "@type": "ContactPoint",
         contactType: "recruiter and talent inquiries",
-        url: "https://contact.gauravpatil.site",
+        url: "https://contact.services.gauravpatil.site",
         email: "gaurav@gauravpatil.site",
         availableLanguage: ["English", "Hindi", "Marathi"],
       },
     },
     {
       "@type": "ContactPage",
-      "@id": "https://contact.gauravpatil.site/#webpage",
-      url: "https://contact.gauravpatil.site",
+      "@id": "https://contact.services.gauravpatil.site/#webpage",
+      url: "https://contact.services.gauravpatil.site",
       name: "Verified Recruiter Portal | Gaurav Patil",
       description:
         "Direct verified gateway for engineering leaders, hiring managers, and executive recruiters to connect with Gaurav Patil. Access verified candidate resume and direct communication.",

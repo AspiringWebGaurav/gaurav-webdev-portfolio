@@ -26,12 +26,15 @@ export function ThemeToggle({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPortalSuppressed, setIsPortalSuppressed] = useState(false);
 
-  // SSR route suppression for Talk Portal, Recruiter Portal, Download Portal, and Admin Console
+  // SSR route suppression for portals that feature their own integrated header ThemeToggle
   const isSsrSuppressed =
     pathname.startsWith("/talk") ||
     pathname.startsWith("/contact-portal") ||
     pathname.startsWith("/contact") ||
     pathname.startsWith("/download") ||
+    pathname.startsWith("/apps") ||
+    pathname.startsWith("/services") ||
+    pathname.startsWith("/resume") ||
     pathname.startsWith("/admin");
 
   const phase1TimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -52,12 +55,21 @@ export function ThemeToggle({
         host.includes("downex.") ||
         host.startsWith("cp.") ||
         host.includes("cp.apps.") ||
+        host.startsWith("apps.") ||
+        host.includes("apps.") ||
+        host.startsWith("services.") ||
+        host.includes("services.") ||
+        host.startsWith("resume.") ||
+        host.includes("resume.") ||
         host.startsWith("admin.");
       const isSuppressedPath =
         pathname.startsWith("/talk") ||
         pathname.startsWith("/contact-portal") ||
         pathname.startsWith("/contact") ||
         pathname.startsWith("/download") ||
+        pathname.startsWith("/apps") ||
+        pathname.startsWith("/services") ||
+        pathname.startsWith("/resume") ||
         pathname.startsWith("/cp") ||
         pathname.startsWith("/admin");
       const hasSuppressedAttr = Boolean(
@@ -68,10 +80,14 @@ export function ThemeToggle({
         document.querySelector('[data-portal="downex"]') ||
         document.querySelector('[data-portal="cp"]') ||
         document.querySelector('[data-portal="cp-download"]') ||
+        document.querySelector('[data-portal="apps-hub"]') ||
+        document.querySelector('[data-portal="services-hub"]') ||
         document.documentElement.getAttribute("data-portal") === "download" ||
         document.documentElement.getAttribute("data-portal") === "downex" ||
         document.documentElement.getAttribute("data-portal") === "cp" ||
         document.documentElement.getAttribute("data-portal") === "cp-download" ||
+        document.documentElement.getAttribute("data-portal") === "apps-hub" ||
+        document.documentElement.getAttribute("data-portal") === "services-hub" ||
         document.querySelector('[data-portal="true"]') ||
         document.querySelector('[data-admin="true"]') ||
         document.documentElement.getAttribute("data-theme-isolated") === "recruiter"
@@ -178,6 +194,12 @@ export function ThemeToggle({
       window.location.hostname.toLowerCase().includes("downex.") ||
       window.location.hostname.toLowerCase().startsWith("cp.") ||
       window.location.hostname.toLowerCase().includes("cp.apps.") ||
+      window.location.hostname.toLowerCase().startsWith("apps.") ||
+      window.location.hostname.toLowerCase().includes("apps.") ||
+      window.location.hostname.toLowerCase().startsWith("services.") ||
+      window.location.hostname.toLowerCase().includes("services.") ||
+      window.location.hostname.toLowerCase().startsWith("resume.") ||
+      window.location.hostname.toLowerCase().includes("resume.") ||
       window.location.hostname.toLowerCase().startsWith("talk.") ||
       window.location.hostname.toLowerCase().startsWith("contact."));
 

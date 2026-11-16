@@ -10,6 +10,7 @@ import { PortfolioPreloader } from "@/components/ui/PortfolioPreloader";
 import { seoRepository } from "@/lib/dal/repositories/cms/seo.repository";
 import { SEED_SEO } from "@/lib/dal/repositories/seed-data";
 import { THEME_COOKIE_NAME } from "@/lib/theme/cookie";
+import { getServerTheme } from "@/lib/theme/server";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -225,7 +226,7 @@ export default async function RootLayout({
   const cookieStore = await cookies();
   const rawTheme = (themeHeader === "light" || themeHeader === "dark")
     ? themeHeader
-    : cookieStore.get(THEME_COOKIE_NAME)?.value;
+    : (cookieStore.get(THEME_COOKIE_NAME)?.value || getServerTheme());
   const initialTheme: "light" | "dark" = isContactPortal
     ? "light"
     : rawTheme === "light"

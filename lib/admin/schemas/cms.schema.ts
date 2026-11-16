@@ -235,7 +235,7 @@ export type AssistantUpdateInput = z.infer<typeof AssistantUpdateSchema>;
 // ============================================================================
 export const CloudflareUpdateSchema = z.object({
   isSimulatedDowntime: z.boolean().default(false),
-  siteKey: z.string().min(1).default("0x4AAAAAAEilFWDvwBZ3NPSK"),
+  siteKey: z.string().min(1).default("0x4AAAAAAGC9IJm9wk-xm7O2"),
   maxRetryAttempts: z.number().int().min(1).max(5).default(2),
   circuitBreakerEnabled: z.boolean().default(true),
   fallbackEmailGateway: z.string().email().default("no-reply@gauravpatil.site"),

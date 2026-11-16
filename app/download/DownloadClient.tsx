@@ -18,6 +18,7 @@ import {
   Shield,
   Layers,
   CheckCircle2,
+  Clock,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
@@ -266,8 +267,8 @@ export default function DownloadClient({
                       </p>
                     </div>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
-                    Official Release
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+                    On Hold
                   </span>
                 </div>
 
@@ -291,23 +292,13 @@ export default function DownloadClient({
               {/* Actions & Specs */}
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <a
-                    href={`${desktopDownloadUrl}${clientBuster}`}
-                    className="flex-1 inline-flex items-center justify-center gap-2 h-10 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 text-xs font-bold shadow-xs active:scale-[0.98] transition-all"
+                  <button
+                    disabled
+                    className="flex-1 inline-flex items-center justify-center gap-2 h-10 px-3 rounded-xl bg-zinc-200 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 text-xs font-bold cursor-not-allowed select-none border border-zinc-300 dark:border-zinc-700"
                   >
-                    <Download className="w-4 h-4" />
-                    <span>Download Windows (.exe)</span>
-                  </a>
-                  <a
-                    href={`${desktopShareUrl}${clientBuster}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-1 h-10 px-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-semibold active:scale-[0.98] transition-all shrink-0"
-                    title="Mirror"
-                  >
-                    <ShieldCheck className="w-3.5 h-3.5 text-zinc-500" />
-                    <span>Mirror</span>
-                  </a>
+                    <Clock className="w-4 h-4 text-amber-500" />
+                    <span>Download on Hold</span>
+                  </button>
                 </div>
 
                 <button
@@ -367,14 +358,13 @@ export default function DownloadClient({
               {/* Actions & Switcher */}
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <a
-                    href={`${extensionDownloadUrl}${clientBuster}`}
-                    download="downex-browser-extension.zip"
-                    className="flex-1 inline-flex items-center justify-center gap-2 h-10 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs active:scale-[0.98] transition-all"
+                  <button
+                    disabled
+                    className="flex-1 inline-flex items-center justify-center gap-2 h-10 px-3 rounded-xl bg-zinc-200 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 text-xs font-bold cursor-not-allowed select-none border border-zinc-300 dark:border-zinc-700"
                   >
-                    <Download className="w-4 h-4" />
-                    <span>Download Extension (.zip)</span>
-                  </a>
+                    <Clock className="w-4 h-4 text-emerald-500" />
+                    <span>Extension on Hold</span>
+                  </button>
                   <a
                     href="https://github.com/AspiringWebGaurav/downex/tree/main/downex-browser-extension#readme"
                     target="_blank"
@@ -547,9 +537,9 @@ export default function DownloadClient({
                       </p>
                     </div>
                   </div>
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
-                    <ShieldCheck className="w-3.5 h-3.5 text-zinc-500" />
-                    <span>Official Release</span>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+                    <Clock className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Download on Hold</span>
                   </span>
                 </div>
 
@@ -581,26 +571,13 @@ export default function DownloadClient({
               {/* Actions & Specs */}
               <div>
                 <div className="flex items-center gap-2.5 mb-3">
-                  <a
-                    href={`${desktopDownloadUrl}${clientBuster}`}
-                    className="flex-1 inline-flex items-center justify-center gap-2 h-10 lg:h-11 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 text-xs lg:text-sm font-semibold shadow-xs active:scale-[0.99] transition-all"
+                  <button
+                    disabled
+                    className="flex-1 inline-flex items-center justify-center gap-2 h-10 lg:h-11 rounded-xl bg-zinc-200 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 text-xs lg:text-sm font-semibold cursor-not-allowed select-none border border-zinc-300 dark:border-zinc-700"
                   >
-                    <Download className="w-4 h-4" />
-                    <span>Download for Windows</span>
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 dark:bg-zinc-200 text-zinc-300 dark:text-zinc-700">.exe</span>
-                  </a>
-
-                  <a
-                    href={`${desktopShareUrl}${clientBuster}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-1.5 px-3.5 h-10 lg:h-11 rounded-xl bg-white hover:bg-zinc-50 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-semibold transition-all border border-zinc-200 dark:border-zinc-700 shrink-0"
-                    title="Download Mirror"
-                  >
-                    <ShieldCheck className="w-3.5 h-3.5 text-zinc-500" />
-                    <span>Mirror</span>
-                    <ExternalLink className="w-3 h-3 text-zinc-400" />
-                  </a>
+                    <Clock className="w-4 h-4 text-amber-500" />
+                    <span>Download on Hold • Coming Soon</span>
+                  </button>
                 </div>
 
                 <div className="pt-2.5 border-t border-zinc-200/70 dark:border-zinc-800/70 flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400">
@@ -678,25 +655,22 @@ export default function DownloadClient({
               {/* Actions & Specs */}
               <div>
                 <div className="flex items-center gap-2.5 mb-3">
-                  <a
-                    href={`${extensionDownloadUrl}${clientBuster}`}
-                    download="downex-browser-extension.zip"
-                    className="flex-1 inline-flex items-center justify-center gap-2 h-10 lg:h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs lg:text-sm font-semibold shadow-xs active:scale-[0.99] transition-all"
+                  <button
+                    disabled
+                    className="flex-1 inline-flex items-center justify-center gap-2 h-10 lg:h-11 rounded-xl bg-zinc-200 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 text-xs lg:text-sm font-semibold cursor-not-allowed select-none border border-zinc-300 dark:border-zinc-700"
                   >
-                    <Download className="w-4 h-4" />
-                    <span>Download Extension</span>
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-700 text-white">.zip</span>
-                  </a>
+                    <Clock className="w-4 h-4 text-emerald-500" />
+                    <span>Extension on Hold • Coming Soon</span>
+                  </button>
 
                   <a
-                    href={extensionShareUrl}
+                    href="https://github.com/AspiringWebGaurav/downex/tree/main/downex-browser-extension#readme"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center justify-center gap-1.5 px-3.5 h-10 lg:h-11 rounded-xl bg-white hover:bg-zinc-50 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-semibold transition-all border border-zinc-200 dark:border-zinc-700 shrink-0"
-                    title="Download Mirror"
+                    title="Extension Documentation"
                   >
-                    <ShieldCheck className="w-3.5 h-3.5 text-zinc-500" />
-                    <span>Mirror</span>
+                    <span>Docs</span>
                     <ExternalLink className="w-3 h-3 text-zinc-400" />
                   </a>
                 </div>

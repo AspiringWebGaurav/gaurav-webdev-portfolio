@@ -16,6 +16,7 @@ import {
 } from "react-icons/fa";
 import { validateEmailWithTypo, getAutocorrectedEmail } from "@/lib/recruiter/validation";
 import { getSubdomainUrl } from "@/lib/theme/navigation";
+import { getTurnstileSiteKey } from "@/lib/security/turnstile-client";
 
 interface CountryOption {
   code: string;
@@ -168,7 +169,8 @@ export function RecruiterAccessGate({ onSuccess }: RecruiterAccessGateProps) {
   // Setup Turnstile Script
   const turnstileSiteKey =
     process.env.NEXT_PUBLIC_RECRUITER_TURNSTILE_SITE_KEY ||
-    "0x4AAAAAAFK5EIqLbibzxLzf";
+    process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY ||
+    "0x4AAAAAAGC9IJm9wk-xm7O2";
 
   const renderTurnstile = useCallback(() => {
     if (typeof window === "undefined" || !turnstileContainerRef.current) return;
@@ -202,8 +204,9 @@ export function RecruiterAccessGate({ onSuccess }: RecruiterAccessGateProps) {
     }
 
     try {
+      const activeSiteKey = getTurnstileSiteKey(turnstileSiteKey);
       const id = win.turnstile.render(turnstileContainerRef.current, {
-        sitekey: turnstileSiteKey,
+        sitekey: activeSiteKey,
         action: "contact_portal",
         theme: "light",
         callback: (token: string) => {
@@ -220,6 +223,10 @@ export function RecruiterAccessGate({ onSuccess }: RecruiterAccessGateProps) {
           }
         },
         "error-callback": () => {
+          if (process.env.NODE_ENV === "development") {
+            setTurnstileToken("dev_bypass_token");
+            return;
+          }
           setTurnstileToken(null);
         },
       });
@@ -301,7 +308,12 @@ export function RecruiterAccessGate({ onSuccess }: RecruiterAccessGateProps) {
       return;
     }
 
-    if (!turnstileToken) {
+    let effectiveToken = turnstileToken;
+    if (!effectiveToken && process.env.NODE_ENV === "development") {
+      effectiveToken = "dev_bypass_token";
+    }
+
+    if (!effectiveToken) {
       setErrorMessage("Please complete the Cloudflare security verification below.");
       return;
     }
@@ -321,7 +333,7 @@ export function RecruiterAccessGate({ onSuccess }: RecruiterAccessGateProps) {
           company: company.trim(),
           email: finalEmail,
           phone: fullPhone,
-          turnstileToken,
+          turnstileToken: effectiveToken,
         }),
       });
 
@@ -890,12 +902,12 @@ export function RecruiterAccessGate({ onSuccess }: RecruiterAccessGateProps) {
           <span>recruiter portal · Gaurav Patil</span>
           <span>·</span>
           <a
-            href={getSubdomainUrl("https://resume.gauravpatil.site")}
+            href={getSubdomainUrl("https://resume.services.gauravpatil.site")}
             target="_blank"
             rel="noopener noreferrer"
             className="text-[#7C3AED] hover:underline font-medium"
           >
-            resume.gauravpatil.site
+            resume.services.gauravpatil.site
           </a>
         </div>
         <span className="hidden sm:inline">Direct hiring & candidate contact</span>

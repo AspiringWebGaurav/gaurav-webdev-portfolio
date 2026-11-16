@@ -36,10 +36,10 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const allSkills = (resume.skillCategories || []).flatMap((c) => c.skills || []);
 
-  const shareImageUrl = "https://resume.gauravpatil.site/resume-og.png";
+  const shareImageUrl = "https://resume.services.gauravpatil.site/resume-og.png";
 
   return {
-    metadataBase: new URL("https://resume.gauravpatil.site"),
+    metadataBase: new URL("https://resume.services.gauravpatil.site"),
     title: {
       default: title,
       template: `%s | ${name} Resume`,
@@ -64,13 +64,13 @@ export async function generateMetadata(): Promise<Metadata> {
     creator: name,
     publisher: name,
     alternates: {
-      canonical: "https://resume.gauravpatil.site",
+      canonical: "https://resume.services.gauravpatil.site",
     },
     // OpenGraph Protocol (WhatsApp, LinkedIn, Facebook, Slack, iMessage)
     openGraph: {
       title,
       description,
-      url: "https://resume.gauravpatil.site",
+      url: "https://resume.services.gauravpatil.site",
       siteName: `${name} — Verified Software Engineer Resume`,
       images: [
         {
@@ -131,8 +131,8 @@ export default async function ResumeLayout({
     "@graph": [
       {
         "@type": "ProfilePage",
-        "@id": "https://resume.gauravpatil.site/#profilepage",
-        url: "https://resume.gauravpatil.site",
+        "@id": "https://resume.services.gauravpatil.site/#profilepage",
+        url: "https://resume.services.gauravpatil.site",
         name: `${name} — Official Verified Software Engineer Resume`,
         isPartOf: {
           "@type": "WebSite",
@@ -140,20 +140,20 @@ export default async function ResumeLayout({
           name: "Gaurav Patil Portfolio & Engineering IP",
           url: "https://gauravpatil.site",
         },
-        about: { "@id": "https://resume.gauravpatil.site/#person" },
+        about: { "@id": "https://resume.services.gauravpatil.site/#person" },
         primaryImageOfPage: {
           "@type": "ImageObject",
-          url: "https://resume.gauravpatil.site/resume-og.png",
+          url: "https://resume.services.gauravpatil.site/resume-og.png",
         },
       },
       {
         "@type": "Person",
-        "@id": "https://resume.gauravpatil.site/#person",
+        "@id": "https://resume.services.gauravpatil.site/#person",
         name,
         jobTitle: label,
         email: resume.basics?.email || "gaurav@gauravpatil.site",
         url: resume.basics?.website || "https://gauravpatil.site",
-        image: "https://resume.gauravpatil.site/resume-og.png",
+        image: "https://resume.services.gauravpatil.site/resume-og.png",
         sameAs: [
           resume.basics?.github || "https://github.com/AspiringWebGaurav",
           resume.basics?.linkedin || "https://linkedin.com/in/gaurav-patil-profile",

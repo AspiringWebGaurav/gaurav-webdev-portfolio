@@ -211,7 +211,7 @@ export function ThemeProvider({
     };
     window.addEventListener("storage", handleStorage);
 
-    // 3. Cross-Subdomain Open Tab Reconciliation (Focus & Visibility Events)
+    // 3. Cross-Subdomain Open Tab Reconciliation (Focus & Visibility Events via Single Backend)
     const reconcileFromSharedCookie = () => {
       if (isRecruiterPortalEnvironment()) return;
       const cookieTheme = readThemeCookieSync();
@@ -223,6 +223,23 @@ export function ThemeProvider({
           }
           return current;
         });
+      } else {
+        // Fallback for isolated localhost subdomains: query single backend
+        fetch("/api/theme")
+          .then((res) => (res.ok ? res.json() : null))
+          .then((data) => {
+            if (data?.success && (data.theme === "light" || data.theme === "dark")) {
+              setThemeState((current) => {
+                if (current !== data.theme) {
+                  applyThemeToDOM(data.theme);
+                  writeThemeCookieSync(data.theme);
+                  return data.theme;
+                }
+                return current;
+              });
+            }
+          })
+          .catch(() => {});
       }
     };
 

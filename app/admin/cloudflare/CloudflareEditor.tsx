@@ -26,7 +26,7 @@ export const CloudflareEditor: React.FC<{ initialData: CloudflareSettingsDocumen
 
   const [formData, setFormData] = useState({
     isSimulatedDowntime: initialData?.isSimulatedDowntime === true,
-    siteKey: initialData?.siteKey || "0x4AAAAAAEilFWDvwBZ3NPSK",
+    siteKey: initialData?.siteKey || "0x4AAAAAAGC9IJm9wk-xm7O2",
     maxRetryAttempts: initialData?.maxRetryAttempts || 2,
     circuitBreakerEnabled: initialData?.circuitBreakerEnabled !== false,
     fallbackEmailGateway: initialData?.fallbackEmailGateway || "no-reply@gauravpatil.site",
@@ -40,7 +40,7 @@ export const CloudflareEditor: React.FC<{ initialData: CloudflareSettingsDocumen
     if (initialData) {
       setFormData({
         isSimulatedDowntime: initialData.isSimulatedDowntime === true,
-        siteKey: initialData.siteKey || "0x4AAAAAAEilFWDvwBZ3NPSK",
+        siteKey: initialData.siteKey || "0x4AAAAAAGC9IJm9wk-xm7O2",
         maxRetryAttempts: initialData.maxRetryAttempts || 2,
         circuitBreakerEnabled: initialData.circuitBreakerEnabled !== false,
         fallbackEmailGateway: initialData.fallbackEmailGateway || "no-reply@gauravpatil.site",
@@ -71,7 +71,7 @@ export const CloudflareEditor: React.FC<{ initialData: CloudflareSettingsDocumen
 
     const payload = {
       isSimulatedDowntime: formData.isSimulatedDowntime,
-      siteKey: formData.siteKey.trim() || "0x4AAAAAAEilFWDvwBZ3NPSK",
+      siteKey: formData.siteKey.trim() || "0x4AAAAAAGC9IJm9wk-xm7O2",
       maxRetryAttempts: Number(formData.maxRetryAttempts) || 2,
       circuitBreakerEnabled: formData.circuitBreakerEnabled,
       fallbackEmailGateway: formData.fallbackEmailGateway.trim() || "no-reply@gauravpatil.site",
@@ -99,7 +99,7 @@ export const CloudflareEditor: React.FC<{ initialData: CloudflareSettingsDocumen
     if (initialData) {
       setFormData({
         isSimulatedDowntime: initialData.isSimulatedDowntime === true,
-        siteKey: initialData.siteKey || "0x4AAAAAAEilFWDvwBZ3NPSK",
+        siteKey: initialData.siteKey || "0x4AAAAAAGC9IJm9wk-xm7O2",
         maxRetryAttempts: initialData.maxRetryAttempts || 2,
         circuitBreakerEnabled: initialData.circuitBreakerEnabled !== false,
         fallbackEmailGateway: initialData.fallbackEmailGateway || "no-reply@gauravpatil.site",

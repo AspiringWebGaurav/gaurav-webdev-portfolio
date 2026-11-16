@@ -7,14 +7,14 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: "Terms of Service",
   description:
-    "Official Terms of Service, operating standards, and unified governance across all verified subdomains: gauravpatil.site, self.gauravpatil.site, contact.gauravpatil.site, resume.gauravpatil.site, talk.gauravpatil.site, and admin.gauravpatil.site.",
+    "Official Terms of Service, operating standards, and unified governance across all verified subdomains: gauravpatil.site, apps.gauravpatil.site, services.gauravpatil.site, resume.services.gauravpatil.site, talk.services.gauravpatil.site, and admin.gauravpatil.site.",
   alternates: {
     canonical: "https://gauravpatil.site/terms",
   },
   openGraph: {
     title: "Terms of Service | Gaurav Portfolio & All Subdomains",
     description:
-      "Official Terms of Service, operating standards, and unified governance across all verified subdomains: gauravpatil.site, self.gauravpatil.site, contact.gauravpatil.site, resume.gauravpatil.site, talk.gauravpatil.site, and admin.gauravpatil.site.",
+      "Official Terms of Service, operating standards, and unified governance across all verified subdomains: gauravpatil.site, apps.gauravpatil.site, services.gauravpatil.site, resume.services.gauravpatil.site, talk.services.gauravpatil.site, and admin.gauravpatil.site.",
     url: "https://gauravpatil.site/terms",
     siteName: "Gaurav Portfolio",
     type: "website",
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Terms of Service | Gaurav Portfolio & All Subdomains",
     description:
-      "Official Terms of Service, operating standards, and unified governance across all verified subdomains: gauravpatil.site, self.gauravpatil.site, contact.gauravpatil.site, resume.gauravpatil.site, talk.gauravpatil.site, and admin.gauravpatil.site.",
+      "Official Terms of Service, operating standards, and unified governance across all verified subdomains: gauravpatil.site, apps.gauravpatil.site, services.gauravpatil.site, resume.services.gauravpatil.site, talk.services.gauravpatil.site, and admin.gauravpatil.site.",
     creator: "@gauravpatil",
     images: ["https://gauravpatil.site/og-image.png"],
   },

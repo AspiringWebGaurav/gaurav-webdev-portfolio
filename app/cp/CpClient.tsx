@@ -13,7 +13,6 @@ import {
   CheckCircle2,
   Eye,
   EyeOff,
-  Clock,
   Download,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -28,7 +27,7 @@ interface CpClientProps {
 type CpView = "marketing" | "download";
 
 const CP_SHA256_CHECKSUM =
-  "365a584a4ba904358d09c3c6f18e0e04cfe457040e04b42d172615da44a26acd";
+  "69c968461fcc44209810b6dd20413b7250ae0399b0f1d15e81b050999bafc0fb";
 
 export default function CpClient({
   desktopDownloadUrl,
@@ -145,7 +144,7 @@ export default function CpClient({
                   title="CP Engine"
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>Base v0.0.1 Stable</span>
+                  <span>Available Now</span>
                 </div>
               </div>
             </header>
@@ -165,44 +164,31 @@ export default function CpClient({
                       </h2>
                       <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400 mt-1">
                         <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                          <span>Available Now</span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          <span>Ready to Install</span>
                         </span>
                         <span>&bull;</span>
-                        <span>Base v0.0.1</span>
+                        <span>v0.0.1</span>
                         <span>&bull;</span>
                         <span>Windows 10 / 11 (64-bit)</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Active Download Buttons */}
+                  {/* Active Download Button */}
                   <div className="flex items-center gap-2 sm:self-center">
                     <a
                       href={desktopDownloadUrl}
                       download="cp-setup.exe"
-                      className="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold shadow-md shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer"
+                      className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold shadow-md shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer select-none"
                     >
                       <Download className="w-4 h-4" />
-                      <span>Download for Windows</span>
-                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-700/80 text-emerald-100">.exe</span>
+                      <span>Download CP for Windows</span>
                     </a>
-                    {desktopShareUrl && (
-                      <a
-                        href={desktopShareUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center gap-1.5 px-3 h-10 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-semibold transition-all border border-zinc-200 dark:border-zinc-700 shrink-0"
-                        title="Download Mirror"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5 text-zinc-500" />
-                        <span className="hidden sm:inline">Mirror</span>
-                      </a>
-                    )}
                   </div>
                 </div>
 
-                {/* Release & Security Highlights Banner */}
+                {/* Release Highlights Banner */}
                 <div className="mt-4 p-3.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/50 text-emerald-950 dark:text-emerald-200 shadow-xs">
                   <div className="flex items-start gap-3">
                     <div className="w-8 h-8 rounded-lg bg-emerald-600/15 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0 mt-0.5">
@@ -210,13 +196,13 @@ export default function CpClient({
                     </div>
                     <div className="text-xs space-y-1">
                       <div className="font-bold text-sm text-emerald-950 dark:text-emerald-100 flex items-center gap-2">
-                        <span>Official Production Base Release &bull; Anchored Foundation</span>
+                        <span>Fast, Clean &amp; Safe Install</span>
                         <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 text-[10px] font-mono uppercase tracking-wider font-semibold">
-                          v0.0.1 Stable
+                          v0.0.1
                         </span>
                       </div>
                       <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed">
-                        Direct NVMe-speed hardware acceleration with async I/O completion ports (IOCP), quiet background operation, and cryptographically verified background OTA updates.
+                        Makes copying and pasting large files quick and smooth. Runs quietly in your system tray without slowing down your PC, and stays up to date automatically.
                       </p>
                     </div>
                   </div>
@@ -227,7 +213,7 @@ export default function CpClient({
                   <div className="flex items-center justify-between text-xs mb-1.5">
                     <div className="flex items-center gap-1.5 font-bold text-zinc-800 dark:text-zinc-200">
                       <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                      <span>SHA-256 Cryptographic Checksum</span>
+                      <span>File Verification (SHA-256)</span>
                     </div>
                     <div className="flex items-center gap-2.5">
                       <button
@@ -305,7 +291,7 @@ export default function CpClient({
                     </h3>
                     <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      <span>Edge Active</span>
+                      <span>Always Ready</span>
                     </span>
                   </div>
 
@@ -374,7 +360,7 @@ export default function CpClient({
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 font-semibold text-emerald-700 dark:text-emerald-300 hover:underline shrink-0 ml-2"
                   >
-                    <span>OTA Docs</span>
+                    <span>How updates work</span>
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 </div>
@@ -454,7 +440,7 @@ export default function CpClient({
                   </a>
                   <span className="text-zinc-300 dark:text-zinc-700">&bull;</span>
                   <a
-                    href="https://gphost.eu.cc"
+                    href={desktopShareUrl || "https://gphost.eu.cc/f/cp-desktop"}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"

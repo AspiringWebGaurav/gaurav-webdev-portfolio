@@ -48,7 +48,7 @@ export function OverviewScreen({ recruiter, onNavigate, onTrackAction }: Overvie
     {
       id: "resume",
       title: "Resume / CV",
-      description: "Interactive candidate resume at resume.gauravpatil.site or 1-click PDF download.",
+      description: "Interactive candidate resume at resume.services.gauravpatil.site or 1-click PDF download.",
       badge: "Interactive & PDF",
       badgeColor: "bg-purple-50 text-[#7C3AED] border-purple-200",
       icon: FaFileAlt,

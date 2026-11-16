@@ -176,24 +176,45 @@ export function validateCsrfOrigin(req: NextRequest): boolean {
   const trustedDomains = [
     "https://gauravpatil.site",
     "https://www.gauravpatil.site",
+    "https://apps.gauravpatil.site",
+    "https://cp.apps.gauravpatil.site",
+    "https://downex.apps.gauravpatil.site",
+    "https://sm.apps.gauravpatil.site",
+    "https://gpn.apps.gauravpatil.site",
+    "https://services.gauravpatil.site",
+    "https://resume.services.gauravpatil.site",
+    "https://talk.services.gauravpatil.site",
+    "https://contact.services.gauravpatil.site",
+    // Legacy subdomains
     "https://contact.gauravpatil.site",
     "https://resume.gauravpatil.site",
     "https://talk.gauravpatil.site",
+    "https://downex.gauravpatil.site",
     "https://self.gauravpatil.site",
     "https://devlabs.eu.cc",
     "https://www.devlabs.eu.cc",
     "http://localhost:3000",
+    "http://apps.localhost:3000",
+    "http://services.localhost:3000",
+    "http://cp.apps.localhost:3000",
+    "http://downex.apps.localhost:3000",
+    "http://sm.apps.localhost:3000",
+    "http://gpn.apps.localhost:3000",
+    "http://resume.services.localhost:3000",
+    "http://talk.services.localhost:3000",
+    "http://contact.services.localhost:3000",
     "http://contact.localhost:3000",
     "http://resume.localhost:3000",
     "http://talk.localhost:3000",
     "http://self.localhost:3000",
+    "http://downex.localhost:3000",
     "http://127.0.0.1:3000",
   ];
 
   if (trustedDomains.includes(cleanOrigin)) return true;
 
   // 5. Allow any localhost / 127.0.0.1 port in development
-  if (/^http:\/\/(localhost|contact\.localhost|resume\.localhost|talk\.localhost|self\.localhost|127\.0\.0\.1)(:\d+)?$/.test(cleanOrigin)) {
+  if (/^http:\/\/([a-z0-9.-]+\.)?(localhost|127\.0\.0\.1)(:\d+)?$/.test(cleanOrigin)) {
     return true;
   }
 

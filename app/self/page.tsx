@@ -5,6 +5,7 @@ import { SEED_PROJECTS } from "@/lib/dal/repositories/seed-data";
 import { LaunchpadHaptics } from "@/components/self/LaunchpadHaptics";
 import { getSubdomainUrl } from "@/lib/theme/navigation";
 import { THEME_COOKIE_NAME } from "@/lib/theme/cookie";
+import { getServerTheme } from "@/lib/theme/server";
 
 /**
  * 24-hour baseline ISR caching with On-Demand Edge Revalidation.
@@ -18,7 +19,7 @@ export const revalidate = 86400;
 
 export default async function SelfPage() {
   const cookieStore = await cookies();
-  const currentTheme = cookieStore.get(THEME_COOKIE_NAME)?.value || "dark";
+  const currentTheme = cookieStore.get(THEME_COOKIE_NAME)?.value || getServerTheme();
 
   const res = await projectsRepository.getProjects();
   const rawProjects = res.data && res.data.length > 0 ? res.data : SEED_PROJECTS;
@@ -92,15 +93,15 @@ export default async function SelfPage() {
           className="flex items-center justify-end gap-x-1.5 min-[380px]:gap-x-2 sm:gap-x-2.5 md:gap-x-3 text-slate-500 font-medium tracking-tight whitespace-nowrap overflow-hidden"
         >
           <a
-            href={getSubdomainUrl("https://contact.gauravpatil.site", currentTheme)}
+            href={getSubdomainUrl("https://apps.gauravpatil.site", currentTheme)}
             target="_blank"
             rel="noopener noreferrer"
-            title="Recruiter Contact Subdomain (contact.gauravpatil.site)"
+            title="PC Apps Suite (apps.gauravpatil.site)"
             className="group hover:text-blue-600 active:text-blue-700 transition-colors inline-flex items-center gap-0.5"
           >
             <span>
-              <span className="sm:hidden">Contact</span>
-              <span className="hidden sm:inline">contact.gauravpatil.site</span>
+              <span className="sm:hidden">Apps</span>
+              <span className="hidden sm:inline">apps.gauravpatil.site</span>
             </span>
             <span
               aria-hidden="true"
@@ -113,15 +114,36 @@ export default async function SelfPage() {
           <span className="text-slate-300 select-none">·</span>
 
           <a
-            href={getSubdomainUrl("https://resume.gauravpatil.site", currentTheme)}
+            href={getSubdomainUrl("https://services.gauravpatil.site", currentTheme)}
             target="_blank"
             rel="noopener noreferrer"
-            title="Interactive Resume Subdomain (resume.gauravpatil.site)"
+            title="Services Hub (services.gauravpatil.site)"
+            className="group hover:text-blue-600 active:text-blue-700 transition-colors inline-flex items-center gap-0.5"
+          >
+            <span>
+              <span className="sm:hidden">Services</span>
+              <span className="hidden sm:inline">services.gauravpatil.site</span>
+            </span>
+            <span
+              aria-hidden="true"
+              className="text-[8.5px] sm:text-[9px] text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform font-mono"
+            >
+              ↗
+            </span>
+          </a>
+
+          <span className="text-slate-300 select-none">·</span>
+
+          <a
+            href={getSubdomainUrl("https://resume.services.gauravpatil.site", currentTheme)}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Interactive Resume Subdomain (resume.services.gauravpatil.site)"
             className="group hover:text-blue-600 active:text-blue-700 transition-colors inline-flex items-center gap-0.5"
           >
             <span>
               <span className="sm:hidden">Resume</span>
-              <span className="hidden sm:inline">resume.gauravpatil.site</span>
+              <span className="hidden sm:inline">resume.services</span>
             </span>
             <span
               aria-hidden="true"

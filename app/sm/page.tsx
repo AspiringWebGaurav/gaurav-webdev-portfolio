@@ -1,0 +1,221 @@
+"use client";
+
+import React, { useState } from "react";
+import {
+  Clock,
+  Download,
+  Power,
+  ShieldCheck,
+  Check,
+  Copy,
+  ExternalLink,
+  Zap,
+  ArrowRight,
+} from "lucide-react";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { Spotlight } from "@/components/ui/Spotlight";
+import { LaunchpadHaptics } from "@/components/self/LaunchpadHaptics";
+import { useTheme } from "@/lib/theme";
+import { getSubdomainUrl } from "@/lib/theme/navigation";
+
+const DESKTOP_DOWNLOAD_URL = "https://gphost.eu.cc/raw/scheduleme-desktop";
+const DESKTOP_SHARE_URL = "https://gphost.eu.cc/f/scheduleme-desktop";
+
+export default function ScheduleMeDownloadPage() {
+  const { resolvedTheme } = useTheme();
+  const [copiedShare, setCopiedShare] = useState(false);
+
+  const handleCopyShare = () => {
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(DESKTOP_SHARE_URL);
+      setCopiedShare(true);
+      setTimeout(() => setCopiedShare(false), 2000);
+    }
+  };
+
+  return (
+    <main
+      data-portal="sm-download"
+      className="relative w-full h-[100dvh] max-h-dvh flex flex-col justify-between overflow-hidden select-none bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-zinc-100 transition-colors duration-200"
+    >
+      <LaunchpadHaptics />
+
+      {/* Spotlight ambient glow in dark mode */}
+      <div className="pointer-events-none select-none hidden dark:block">
+        <Spotlight
+          className="-top-24 left-1/3 h-[90vh] w-[70vw]"
+          fill="#f59e0b"
+        />
+      </div>
+
+      {/* =======================================================================
+          EDGE-TO-EDGE NAVBAR
+          ======================================================================= */}
+      <header className="shrink-0 w-full border-b border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md px-4 sm:px-6 lg:px-8 py-3 z-20">
+        <div className="w-full flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold shadow-2xs shrink-0">
+              <Clock className="w-5 h-5 stroke-[2.2]" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight leading-none">
+                  ScheduleMe
+                </h1>
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+                  v0.0.1
+                </span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 hidden sm:inline-flex">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Live Release
+                </span>
+              </div>
+              <p className="text-[11px] text-amber-600 dark:text-amber-400 font-mono mt-0.5 leading-none">
+                sm.apps.gauravpatil.site
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            <ThemeToggle variant="inline" className="w-8 h-8 rounded-lg shrink-0" />
+            <a
+              href={getSubdomainUrl("https://apps.gauravpatil.site", resolvedTheme)}
+              suppressHydrationWarning
+              className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-white/10 transition-all inline-flex items-center gap-1.5 shadow-2xs"
+            >
+              <span>Apps Hub</span>
+              <span className="text-[10px] text-slate-400">↗</span>
+            </a>
+            <a
+              href={getSubdomainUrl("https://gauravpatil.site", resolvedTheme)}
+              suppressHydrationWarning
+              className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold shadow-xs transition-all inline-flex items-center gap-1 active:scale-95"
+            >
+              <span>Portfolio</span>
+              <span className="text-[10px]">↗</span>
+            </a>
+          </div>
+        </div>
+      </header>
+
+      {/* =======================================================================
+          HERO BODY — 100dvh Single View
+          ======================================================================= */}
+      <div className="relative z-10 w-full max-w-4xl mx-auto px-4 sm:px-6 flex-1 min-h-0 flex flex-col justify-center items-center text-center my-auto">
+        <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+          Fast Windows Shutdown <br />
+          <span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
+            &amp; Power Scheduler
+          </span>
+        </h2>
+
+        <p className="mt-2.5 sm:mt-3 text-xs sm:text-sm md:text-base text-slate-600 dark:text-slate-300 max-w-lg leading-relaxed">
+          Ultra-lightweight Windows automation utility. Runs quietly in the notification tray, starts with Windows, and schedules shutdowns, restarts, and sleep with zero CPU overhead.
+        </p>
+
+        {/* Live Download & Share CTAs */}
+        <div className="mt-5 sm:mt-6 flex flex-col sm:flex-row items-center gap-3 w-full max-w-md justify-center">
+          <a
+            href={DESKTOP_DOWNLOAD_URL}
+            className="group w-full sm:w-auto px-6 py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-600/25 active:scale-95 transition-all cursor-pointer whitespace-nowrap"
+          >
+            <Download className="w-4 h-4 stroke-[2.2] shrink-0" />
+            <span className="whitespace-nowrap">Download for Windows</span>
+            <ArrowRight className="w-4 h-4 opacity-80 group-hover:translate-x-0.5 transition-transform shrink-0" />
+          </a>
+
+          <button
+            onClick={handleCopyShare}
+            className="w-full sm:w-auto px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5 border border-slate-200 dark:border-white/10 transition-colors cursor-pointer active:scale-95 shadow-2xs whitespace-nowrap"
+          >
+            {copiedShare ? (
+              <>
+                <Check className="w-4 h-4 text-emerald-500" />
+                <span>Link Copied!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-4 h-4" />
+                <span>Share Link</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        <div className="mt-3 flex items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+          <span>Windows 10 &amp; 11 (x64)</span>
+          <span>•</span>
+          <span>~4 MB Base Setup</span>
+          <span>•</span>
+          <span>GPHost OTA</span>
+        </div>
+
+        {/* 3 Quick Benefit Tiles */}
+        <div className="mt-6 sm:mt-8 grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3.5 w-full text-left max-w-3xl">
+          <div className="p-3 sm:p-4 rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/90 dark:border-white/10 shadow-2xs">
+            <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-bold text-xs sm:text-sm mb-1">
+              <Power className="w-3.5 h-3.5" />
+              <span>Silent Tray</span>
+            </div>
+            <p className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-400 leading-snug">
+              Minimizes directly to the notification area with zero taskbar clutter.
+            </p>
+          </div>
+
+          <div className="p-3 sm:p-4 rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/90 dark:border-white/10 shadow-2xs">
+            <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-bold text-xs sm:text-sm mb-1">
+              <Zap className="w-3.5 h-3.5" />
+              <span>Zero CPU</span>
+            </div>
+            <p className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-400 leading-snug">
+              Rust Win32 timers sleep completely until the target time triggers.
+            </p>
+          </div>
+
+          <div className="p-3 sm:p-4 rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/90 dark:border-white/10 shadow-2xs">
+            <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-bold text-xs sm:text-sm mb-1">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Direct OTA</span>
+            </div>
+            <p className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-400 leading-snug">
+              Atomic background updater syncs with Cloudflare R2 with zero wizards.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* =======================================================================
+          EDGE-TO-EDGE FOOTER
+          ======================================================================= */}
+      <footer className="shrink-0 w-full border-t border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md px-4 sm:px-6 lg:px-8 py-2.5 z-20">
+        <div className="w-full flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-mono">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-slate-800 dark:text-slate-200">ScheduleMe</span>
+            <span>·</span>
+            <span>v0.0.1 Rust &amp; Tauri</span>
+            <span className="hidden sm:inline text-slate-300 dark:text-slate-700">·</span>
+            <span className="hidden sm:inline text-slate-400 dark:text-slate-500">100dvh Zero-Scroll Workspace</span>
+          </div>
+
+          <nav aria-label="Ecosystem Navigation" className="flex items-center gap-4">
+            <a
+              href={getSubdomainUrl("https://apps.gauravpatil.site", resolvedTheme)}
+              suppressHydrationWarning
+              className="hover:text-amber-500 transition-colors"
+            >
+              apps.gauravpatil.site
+            </a>
+            <span className="text-slate-300 dark:text-slate-700">|</span>
+            <a
+              href={getSubdomainUrl("https://gauravpatil.site", resolvedTheme)}
+              suppressHydrationWarning
+              className="hover:text-amber-500 transition-colors"
+            >
+              gauravpatil.site
+            </a>
+          </nav>
+        </div>
+      </footer>
+    </main>
+  );
+}

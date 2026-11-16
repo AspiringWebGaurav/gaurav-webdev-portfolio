@@ -56,7 +56,7 @@ export function ResumeScreen({ recruiter, onTrackAction }: ResumeScreenProps) {
         <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
           Explore the live interactive resume on{" "}
           <a
-            href={getSubdomainUrl("https://resume.gauravpatil.site")}
+            href={getSubdomainUrl("https://resume.services.gauravpatil.site")}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => {
@@ -64,7 +64,7 @@ export function ResumeScreen({ recruiter, onTrackAction }: ResumeScreenProps) {
             }}
             className="text-[#7C3AED] hover:underline font-semibold"
           >
-            resume.gauravpatil.site
+            resume.services.gauravpatil.site
           </a>
           , download the comprehensive CV PDF, or have a copy dispatched directly to your inbox.
         </p>
@@ -89,7 +89,7 @@ export function ResumeScreen({ recruiter, onTrackAction }: ResumeScreenProps) {
 
           <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
             <a
-              href={getSubdomainUrl("https://resume.gauravpatil.site")}
+              href={getSubdomainUrl("https://resume.services.gauravpatil.site")}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => {
@@ -183,12 +183,12 @@ export function ResumeScreen({ recruiter, onTrackAction }: ResumeScreenProps) {
         </span>
         <div className="flex items-center gap-2 text-gray-500">
           <a
-            href={getSubdomainUrl("https://resume.gauravpatil.site")}
+            href={getSubdomainUrl("https://resume.services.gauravpatil.site")}
             target="_blank"
             rel="noopener noreferrer"
             className="text-[#7C3AED] hover:underline font-semibold"
           >
-            resume.gauravpatil.site
+            resume.services.gauravpatil.site
           </a>
           <span>&bull;</span>
           <span>1-Click Dispatch &bull; Updated 2026</span>

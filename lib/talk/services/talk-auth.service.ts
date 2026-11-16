@@ -41,7 +41,7 @@ export async function createTalkOtpChallenge(params: {
   clientIp?: string | null;
   userAgent?: string;
   requestHeaders?: Headers | null;
-}): Promise<{ success: boolean; challengeId?: string; error?: string }> {
+}): Promise<{ success: boolean; challengeId?: string; devOtp?: string; error?: string }> {
   const cleanEmail = params.email.trim().toLowerCase();
 
   if (cleanEmail !== TALK_ADMIN_EMAIL.toLowerCase()) {
@@ -84,8 +84,11 @@ export async function createTalkOtpChallenge(params: {
   }
 
   // 2. Dispatch OTP email to Gaurav Patil
+  let emailDispatched = false;
+  let emailError: string | undefined;
+
   try {
-    await dispatchOtpEmail({
+    const emailRes = await dispatchOtpEmail({
       email: cleanEmail,
       name: TALK_ADMIN_NAME,
       otp: rawOtp,
@@ -94,14 +97,38 @@ export async function createTalkOtpChallenge(params: {
       userAgent: params.userAgent,
       requestHeaders: params.requestHeaders,
     });
+    emailDispatched = emailRes.success;
+    if (!emailRes.success) {
+      emailError = emailRes.error;
+      console.warn("[TalkAuth] Transactional email warning:", emailRes.error);
+    }
   } catch (err) {
+    emailError = err instanceof Error ? err.message : "Email dispatch exception";
     console.error("[TalkAuth] Failed to dispatch OTP email:", err);
-    // Even if email dispatch has an edge error, log it
+  }
+
+  // In development, print the OTP code to terminal console for instant testing
+  if (process.env.NODE_ENV === "development") {
+    console.log(`\n======================================================`);
+    console.log(`🔐 [TalkAuth DEV OTP] Verification Code for ${cleanEmail}: ${rawOtp}`);
+    if (!emailDispatched) {
+      console.log(`⚠️ Email notice: ${emailError || "BREVO_API_KEY / RESEND_API_KEY not configured locally."}`);
+    }
+    console.log(`======================================================\n`);
+  }
+
+  // In production, reject if email dispatch failed
+  if (!emailDispatched && process.env.NODE_ENV === "production") {
+    return {
+      success: false,
+      error: emailError || "Failed to dispatch verification email. Please verify mail service configuration.",
+    };
   }
 
   return {
     success: true,
     challengeId,
+    devOtp: process.env.NODE_ENV === "development" ? rawOtp : undefined,
   };
 }
 

@@ -157,32 +157,44 @@ export const FooterSection = ({
             <span>Hiring or Recruiter Inquiry?</span>
             <div className="flex items-center gap-2 flex-wrap justify-center">
               <a
-                href={getSubdomainUrl("https://resume.gauravpatil.site", resolvedTheme)}
+                href={getSubdomainUrl("https://resume.services.gauravpatil.site", resolvedTheme)}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => writeThemeCookieSync(resolvedTheme)}
-                title="https://resume.gauravpatil.site"
+                title="https://resume.services.gauravpatil.site"
                 className="group text-[#7C3AED] dark:text-purple hover:text-purple-600 dark:hover:text-[#CBACF9] font-semibold inline-flex items-center transition-colors touch-manipulation"
               >
                 <span>Verified Resume Portal</span>
                 <span className="inline-block max-w-0 opacity-0 group-hover:max-w-[220px] group-hover:opacity-100 group-focus-visible:max-w-[220px] group-focus-visible:opacity-100 overflow-hidden whitespace-nowrap transition-all duration-300 ease-out text-[11px] font-normal text-slate-500 dark:text-neutral-400 group-hover:ml-1 group-focus-visible:ml-1">
-                  (resume.gauravpatil.site)
+                  (resume.services.gauravpatil.site)
                 </span>
                 <span className="ml-1 inline-block transition-transform duration-200 group-hover:translate-x-0.5">→</span>
               </a>
               <span className="text-slate-300 dark:text-neutral-600 hidden sm:inline">·</span>
               <a
-                href={getSubdomainUrl("https://contact.gauravpatil.site", resolvedTheme)}
+                href={getSubdomainUrl("https://contact.services.gauravpatil.site", resolvedTheme)}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => writeThemeCookieSync(resolvedTheme)}
-                title="https://contact.gauravpatil.site"
+                title="https://contact.services.gauravpatil.site"
                 className="group text-[#7C3AED] dark:text-purple hover:text-purple-600 dark:hover:text-[#CBACF9] font-semibold inline-flex items-center transition-colors touch-manipulation"
               >
                 <span>Recruiter Portal</span>
                 <span className="inline-block max-w-0 opacity-0 group-hover:max-w-[220px] group-hover:opacity-100 group-focus-visible:max-w-[220px] group-focus-visible:opacity-100 overflow-hidden whitespace-nowrap transition-all duration-300 ease-out text-[11px] font-normal text-slate-500 dark:text-neutral-400 group-hover:ml-1 group-focus-visible:ml-1">
-                  (contact.gauravpatil.site)
+                  (contact.services.gauravpatil.site)
                 </span>
+                <span className="ml-1 inline-block transition-transform duration-200 group-hover:translate-x-0.5">→</span>
+              </a>
+              <span className="text-slate-300 dark:text-neutral-600 hidden sm:inline">·</span>
+              <a
+                href={getSubdomainUrl("https://apps.gauravpatil.site", resolvedTheme)}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => writeThemeCookieSync(resolvedTheme)}
+                title="https://apps.gauravpatil.site"
+                className="group text-cyan-600 dark:text-cyan-400 hover:text-cyan-500 font-semibold inline-flex items-center transition-colors touch-manipulation"
+              >
+                <span>PC Apps Suite</span>
                 <span className="ml-1 inline-block transition-transform duration-200 group-hover:translate-x-0.5">→</span>
               </a>
             </div>
@@ -199,7 +211,27 @@ export const FooterSection = ({
           </span>
           <span className="text-slate-300 dark:text-neutral-600">·</span>
           <a
-            href={getSubdomainUrl("https://resume.gauravpatil.site", resolvedTheme)}
+            href={getSubdomainUrl("https://apps.gauravpatil.site", resolvedTheme)}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => writeThemeCookieSync(resolvedTheme)}
+            className="hover:text-[#7C3AED] dark:hover:text-purple transition-colors duration-200"
+          >
+            PC Apps
+          </a>
+          <span className="text-slate-300 dark:text-neutral-600">·</span>
+          <a
+            href={getSubdomainUrl("https://services.gauravpatil.site", resolvedTheme)}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => writeThemeCookieSync(resolvedTheme)}
+            className="hover:text-[#7C3AED] dark:hover:text-purple transition-colors duration-200"
+          >
+            Services
+          </a>
+          <span className="text-slate-300 dark:text-neutral-600">·</span>
+          <a
+            href={getSubdomainUrl("https://resume.services.gauravpatil.site", resolvedTheme)}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => writeThemeCookieSync(resolvedTheme)}
@@ -209,7 +241,7 @@ export const FooterSection = ({
           </a>
           <span className="text-slate-300 dark:text-neutral-600">·</span>
           <a
-            href={getSubdomainUrl("https://contact.gauravpatil.site", resolvedTheme)}
+            href={getSubdomainUrl("https://contact.services.gauravpatil.site", resolvedTheme)}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => writeThemeCookieSync(resolvedTheme)}

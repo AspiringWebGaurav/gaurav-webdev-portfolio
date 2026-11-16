@@ -414,7 +414,7 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
                 <span>1. Acceptance of Terms &amp; Universal Architecture Commitment</span>
               </h2>
               <p>
-                By accessing, browsing, submitting inquiries, authenticating, or otherwise interacting with <span className="text-purple font-semibold">Gaurav Portfolio</span> and its verified ecosystem of subdomains—including <code className="text-purple font-mono">gauravpatil.site</code>, <code className="text-purple font-mono">self.gauravpatil.site</code>, <code className="text-purple font-mono">contact.gauravpatil.site</code>, <code className="text-purple font-mono">resume.gauravpatil.site</code>, <code className="text-purple font-mono">talk.gauravpatil.site</code>, and <code className="text-purple font-mono">admin.gauravpatil.site</code>—you acknowledge and agree to be bound by these Terms of Service and all related policies. This platform commits to a strict 
+                By accessing, browsing, submitting inquiries, authenticating, or otherwise interacting with <span className="text-purple font-semibold">Gaurav Portfolio</span> and its verified ecosystem of subdomains—including <code className="text-purple font-mono">gauravpatil.site</code>, <code className="text-purple font-mono">apps.gauravpatil.site</code>, <code className="text-purple font-mono">services.gauravpatil.site</code>, <code className="text-purple font-mono">resume.services.gauravpatil.site</code>, <code className="text-purple font-mono">talk.services.gauravpatil.site</code>, <code className="text-purple font-mono">contact.services.gauravpatil.site</code>, and <code className="text-purple font-mono">admin.gauravpatil.site</code>—you acknowledge and agree to be bound by these Terms of Service and all related policies. This platform commits to a strict 
                 <strong className="text-slate-900 dark:text-white"> Mobile-First 10/10 Production Standard</strong>, ensuring zero horizontal overflow, 
                 fluid responsive typography, touch-ergonomic 44px hit targets, accessible reduced-motion fallbacks, and single-view contact and showcase workflows 
                 across all modern smartphones, tablets, and desktop workstations. If you do not agree with any provision, you may discontinue viewing or utilizing this platform.
@@ -448,16 +448,17 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
               </p>
               <ul className="list-disc list-inside space-y-2 pl-2 text-sm text-slate-600 dark:text-neutral-300">
                 <li><strong className="text-slate-900 dark:text-white">gauravpatil.site (Flagship Ecosystem Hub):</strong> Primary web presence showcasing production case studies, interactive Three.js 3D Globe models, engineering articles, client testimonials, and central inquiry gateways.</li>
-                <li><strong className="text-slate-900 dark:text-white">self.gauravpatil.site (Interactive Projects Launchpad):</strong> Ultra-fast, single-view zero-scroll launchpad aggregating all 14 production web applications, SaaS tools, and client platforms with instant outbound redirection.</li>
-                <li><strong className="text-slate-900 dark:text-white">contact.gauravpatil.site (Recruiter &amp; Executive Contact Gateway):</strong> Focused, zero-distraction communications portal engineered specifically for executive recruiters, talent acquisition partners, and enterprise clients.</li>
-                <li><strong className="text-slate-900 dark:text-white">resume.gauravpatil.site (Verified Candidate Credentials Portal):</strong> Isolated candidate verification portal featuring interactive credentials, verified PDF resumes, and 30-minute cryptographic session lifecycles.</li>
-                <li><strong className="text-slate-900 dark:text-white">talk.gauravpatil.site (Talk Command Hub):</strong> Real-time command center and interactive communication interface with authenticated session controls and rate-limited API access.</li>
+                <li><strong className="text-slate-900 dark:text-white">apps.gauravpatil.site (PC &amp; Web Apps Suite):</strong> Ultra-fast, single-view zero-scroll hub aggregating Windows desktop tools and distributed applications: CP Engine, Downex, ScheduleMe, and GPN Notes.</li>
+                <li><strong className="text-slate-900 dark:text-white">services.gauravpatil.site (Authoritative Services Hub):</strong> Unified portal showcasing verified services: Interactive Resume, Talk Command Hub, and Recruiter Gateway.</li>
+                <li><strong className="text-slate-900 dark:text-white">contact.services.gauravpatil.site (Recruiter &amp; Executive Contact Gateway):</strong> Focused, zero-distraction communications portal engineered specifically for executive recruiters, talent acquisition partners, and enterprise clients.</li>
+                <li><strong className="text-slate-900 dark:text-white">resume.services.gauravpatil.site (Verified Candidate Credentials Portal):</strong> Isolated candidate verification portal featuring interactive credentials, verified PDF resumes, and 30-minute cryptographic session lifecycles.</li>
+                <li><strong className="text-slate-900 dark:text-white">talk.services.gauravpatil.site (Talk Command Hub):</strong> Real-time command center and interactive communication interface with authenticated session controls and rate-limited API access.</li>
                 <li><strong className="text-slate-900 dark:text-white">admin.gauravpatil.site (Superadmin CMS &amp; Governance Cockpit):</strong> Strictly isolated administrative zone restricted to authorized Superadmins via Google OAuth 2.0 PKCE, salted HMAC-SHA256 2FA OTP, and zero-lockout IP security controls.</li>
               </ul>
             </section>
           )}
 
-          {/* Section 3: Interactive Projects Launchpad (self.gauravpatil.site) */}
+          {/* Section 3: Interactive Projects Launchpad (apps.gauravpatil.site) */}
           {(filterMode === "all" || filterMode === "subdomains") && (
             <section
               id="self-launchpad-terms"
@@ -470,22 +471,21 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-slate-900 dark:text-white flex items-center gap-2.5">
                   <FaRocket className="w-4 h-4 text-purple" />
-                  <span>3. Interactive Projects Launchpad (self.gauravpatil.site) &amp; Outbound Ecosystem</span>
+                  <span>3. Desktop &amp; Web Apps Suite (apps.gauravpatil.site)</span>
                 </h2>
                 {(highlightedSection === "self-launchpad-terms" || filterMode === "subdomains") && (
                   <span className="px-3 py-1 rounded-full text-[11px] font-mono font-semibold tracking-wide bg-purple-100 dark:bg-[#7C3AED]/30 text-purple-900 dark:text-[#CBACF9] border border-purple-300/80 dark:border-[#7C3AED]/50">
-                    Launchpad Term
+                    Apps Suite Term
                   </span>
                 )}
               </div>
               <p className="text-sm text-slate-600 dark:text-neutral-300 leading-relaxed">
-                The official interactive showcase and projects directory is hosted on <code className="text-purple font-mono">self.gauravpatil.site</code>. Use of the launchpad is subject to the following terms and operating conditions:
+                The official PC desktop applications and software suite is hosted on <code className="text-purple font-mono">apps.gauravpatil.site</code>. Use of the suite and its sub-portals (<code className="text-purple font-mono">cp.apps.gauravpatil.site</code>, <code className="text-purple font-mono">downex.apps.gauravpatil.site</code>, <code className="text-purple font-mono">sm.apps.gauravpatil.site</code>, <code className="text-purple font-mono">gpn.apps.gauravpatil.site</code>) is subject to the following terms and operating conditions:
               </p>
               <ul className="list-disc list-inside space-y-2 pl-2 text-sm text-slate-600 dark:text-neutral-300">
-                <li><strong className="text-slate-900 dark:text-white">Single-View Zero-Scroll Constraint:</strong> <code className="text-purple font-mono">self.gauravpatil.site</code> is engineered under an uncompromising zero-vertical-scroll constraint (<code className="text-purple font-mono">h-[100dvh] overflow-hidden</code>) across all viewports (320px mobile to 4K desktop). Visitors agree not to tamper with or inject styles that disrupt this architectural layout.</li>
-                <li><strong className="text-slate-900 dark:text-white">Outbound Redirection to Live Deployments:</strong> The launchpad serves as an authoritative directory redirecting visitors to external live applications (<code className="text-purple font-mono">send2me.eu.cc</code>, <code className="text-purple font-mono">deggy.com</code>, <code className="text-purple font-mono">shopit.eu.cc</code>, <code className="text-purple font-mono">promptora.eu.cc</code>, <code className="text-purple font-mono">nexuschat.eu.cc</code>, <code className="text-purple font-mono">cloudbox.eu.cc</code>, <code className="text-purple font-mono">zenithbank.eu.cc</code>, <code className="text-purple font-mono">devpulse.eu.cc</code>, <code className="text-purple font-mono">streamflow.eu.cc</code>, <code className="text-purple font-mono">crypto-tracker.eu.cc</code>, <code className="text-purple font-mono">taskflow.eu.cc</code>, <code className="text-purple font-mono">codecraft.eu.cc</code>, <code className="text-purple font-mono">eventhub.eu.cc</code>, <code className="text-purple font-mono">fitpulse.eu.cc</code>, and related platforms).</li>
-                <li><strong className="text-slate-900 dark:text-white">Third-Party Hosting &amp; Sandbox Disclaimers:</strong> External application links route directly to independent production environments, third-party cloud infrastructure (e.g. Vercel, independent cloud VPS), and external database sandboxes. Gaurav Patil does not warrant third-party hosting availability, uptime, latency, or data entered into external sandbox databases beyond <code className="text-purple font-mono">*.gauravpatil.site</code>.</li>
-                <li><strong className="text-slate-900 dark:text-white">Telemetry &amp; Zero-Tracking Guarantee:</strong> <code className="text-purple font-mono">self.gauravpatil.site</code> does not deploy invasive tracking scripts, commercial ad pixels, or cross-site tracking cookies. Dynamic state changes reflect purely within client-side memory.</li>
+                <li><strong className="text-slate-900 dark:text-white">Single-View Zero-Scroll Constraint:</strong> <code className="text-purple font-mono">apps.gauravpatil.site</code> and its application portals are engineered under an uncompromising zero-vertical-scroll constraint (<code className="text-purple font-mono">h-[100dvh] overflow-hidden</code>) across all viewports (320px mobile to 4K desktop). Visitors agree not to tamper with or inject styles that disrupt this architectural layout.</li>
+                <li><strong className="text-slate-900 dark:text-white">Software Release &amp; Availability:</strong> Downex, CP, and ScheduleMe desktop release binaries may temporarily display an administrative hold status during build validation and signing phases.</li>
+                <li><strong className="text-slate-900 dark:text-white">Telemetry &amp; Zero-Tracking Guarantee:</strong> Applications do not deploy invasive tracking scripts, commercial ad pixels, or cross-site tracking cookies.</li>
               </ul>
             </section>
           )}
@@ -503,14 +503,14 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-slate-900 dark:text-white flex items-center gap-2.5">
                   <FaEnvelopeOpenText className="w-4 h-4 text-purple" />
-                  <span>4. Recruiter &amp; Executive Contact Gateway (contact.gauravpatil.site)</span>
+                  <span>4. Recruiter &amp; Executive Contact Gateway (contact.services.gauravpatil.site)</span>
                 </h2>
                 <span className="px-3 py-1 rounded-full text-[11px] font-mono font-semibold tracking-wide bg-purple-100 dark:bg-[#7C3AED]/30 text-purple-900 dark:text-[#CBACF9] border border-purple-300/80 dark:border-[#7C3AED]/50">
                   {filterMode === "contact" ? "Contact Form Term" : "Subdomain Term"}
                 </span>
               </div>
               <p className="text-sm text-slate-600 dark:text-neutral-300 leading-relaxed">
-                The dedicated executive contact portal at <code className="text-purple font-mono">contact.gauravpatil.site</code> is engineered to provide recruiters and prospective enterprise partners with a streamlined, confidential communication pathway:
+                The dedicated executive contact portal at <code className="text-purple font-mono">contact.services.gauravpatil.site</code> is engineered to provide recruiters and prospective enterprise partners with a streamlined, confidential communication pathway:
               </p>
               <ul className="list-disc list-inside space-y-2 pl-2 text-sm text-slate-600 dark:text-neutral-300">
                 <li><strong className="text-slate-900 dark:text-white">Authorized Scope of Use:</strong> Reserved for bona fide recruitment inquiries, executive talent discussions, technical consulting proposals, and verified business collaboration.</li>
@@ -534,18 +534,18 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-slate-900 dark:text-white flex items-center gap-2.5">
                   <FaFileLines className="w-4 h-4 text-purple" />
-                  <span>5. Verified Interactive Resume Portal (resume.gauravpatil.site) Terms &amp; Security</span>
+                  <span>5. Verified Interactive Resume Portal (resume.services.gauravpatil.site) Terms &amp; Security</span>
                 </h2>
                 <span className="px-3 py-1 rounded-full text-[11px] font-mono font-semibold tracking-wide bg-purple-100 dark:bg-[#7C3AED]/30 text-purple-900 dark:text-[#CBACF9] border border-purple-300/80 dark:border-[#7C3AED]/50">
                   Resume Portal Term
                 </span>
               </div>
               <ul className="list-disc list-inside space-y-2 pl-2 text-sm text-slate-600 dark:text-neutral-300">
-                <li><strong className="text-slate-900 dark:text-white">Dedicated Domain Isolation:</strong> <code className="text-purple font-mono">resume.gauravpatil.site</code> is an isolated candidate presentation gateway engineered specifically for recruiters, engineering leaders, and hiring managers. Direct access from the main domain <code className="text-purple font-mono">/resume</code> is automatically redirected to <code className="text-purple font-mono">https://resume.gauravpatil.site</code>.</li>
+                <li><strong className="text-slate-900 dark:text-white">Dedicated Domain Isolation:</strong> <code className="text-purple font-mono">resume.services.gauravpatil.site</code> is an isolated candidate presentation gateway engineered specifically for recruiters, engineering leaders, and hiring managers. Direct access from the main domain <code className="text-purple font-mono">/resume</code> is automatically redirected to <code className="text-purple font-mono">https://resume.services.gauravpatil.site</code>.</li>
                 <li><strong className="text-slate-900 dark:text-white">Cryptographic 30-Minute Inactivity Expiry:</strong> For security and privacy, unlocked resume sessions are bound to an encrypted HMAC session token with an enforced 30-minute inactivity time-to-live (TTL). Once expired or explicitly revoked via the <strong>Log out</strong> trigger, memory caches and session access are atomically purged.</li>
                 <li><strong className="text-slate-900 dark:text-white">Anti-Abuse &amp; Cloudflare Turnstile Verification:</strong> Public mutation endpoints and access gates are protected by Cloudflare Turnstile to prevent automated scraping, bot attacks, and denial of service.</li>
                 <li><strong className="text-slate-900 dark:text-white">Dynamic Administrative Governance:</strong> Resume availability is dynamically controlled by Gaurav Patil via administrative lifecycle triggers (<code className="text-purple font-mono">active</code>, <code className="text-purple font-mono">hired</code>, <code className="text-purple font-mono">suspended</code>). When marked hired or suspended, the portal presents an authoritative executive status badge in lieu of full candidate credentials.</li>
-                <li><strong className="text-slate-900 dark:text-white">Authorized Candidate Evaluation:</strong> Information and case studies presented on <code className="text-purple font-mono">resume.gauravpatil.site</code> are provided solely for professional recruitment evaluation, hiring, and technical verification. Redistribution, commercial scraping, or unauthorized disclosure of candidate contact details is strictly prohibited.</li>
+                <li><strong className="text-slate-900 dark:text-white">Authorized Candidate Evaluation:</strong> Information and case studies presented on <code className="text-purple font-mono">resume.services.gauravpatil.site</code> are provided solely for professional recruitment evaluation, hiring, and technical verification. Redistribution, commercial scraping, or unauthorized disclosure of candidate contact details is strictly prohibited.</li>
               </ul>
             </section>
           )}
@@ -563,7 +563,7 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-slate-900 dark:text-white flex items-center gap-2.5">
                   <IoChatbubbleEllipses className="w-5 h-5 text-purple" />
-                  <span>6. Talk Command Hub (talk.gauravpatil.site) Real-Time Gateway</span>
+                  <span>6. Talk Command Hub (talk.services.gauravpatil.site) Real-Time Gateway</span>
                 </h2>
                 <span className="px-3 py-1 rounded-full text-[11px] font-mono font-semibold tracking-wide bg-purple-100 dark:bg-[#7C3AED]/30 text-purple-900 dark:text-[#CBACF9] border border-purple-300/80 dark:border-[#7C3AED]/50">
                   Subdomain Term
@@ -898,7 +898,7 @@ function TermsContentInner({ initialData, initialFocus }: TermsOfServiceContentP
               <span>14. Limitation of Liability &amp; Disclaimers</span>
             </h2>
             <p>
-              This website, its subdomains (<code className="text-purple font-mono">gauravpatil.site</code>, <code className="text-purple font-mono">self.gauravpatil.site</code>, <code className="text-purple font-mono">contact.gauravpatil.site</code>, <code className="text-purple font-mono">resume.gauravpatil.site</code>, <code className="text-purple font-mono">talk.gauravpatil.site</code>, <code className="text-purple font-mono">admin.gauravpatil.site</code>), and its demonstrative artifacts are provided on an &ldquo;as is&rdquo; and &ldquo;as available&rdquo; basis. In no event shall Gaurav Patil be liable for indirect, incidental, or consequential damages resulting from the use of this website.
+              This website, its subdomains (<code className="text-purple font-mono">gauravpatil.site</code>, <code className="text-purple font-mono">apps.gauravpatil.site</code>, <code className="text-purple font-mono">services.gauravpatil.site</code>, <code className="text-purple font-mono">contact.services.gauravpatil.site</code>, <code className="text-purple font-mono">resume.services.gauravpatil.site</code>, <code className="text-purple font-mono">talk.services.gauravpatil.site</code>, <code className="text-purple font-mono">admin.gauravpatil.site</code>), and its demonstrative artifacts are provided on an &ldquo;as is&rdquo; and &ldquo;as available&rdquo; basis. In no event shall Gaurav Patil be liable for indirect, incidental, or consequential damages resulting from the use of this website.
             </p>
           </section>
 

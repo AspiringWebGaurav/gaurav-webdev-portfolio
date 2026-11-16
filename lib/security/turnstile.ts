@@ -16,13 +16,43 @@ const TURNSTILE_SECRET_KEY =
 const DEFAULT_ALLOWED_HOSTNAMES = [
   "gauravpatil.site",
   "www.gauravpatil.site",
+  "apps.gauravpatil.site",
+  "cp.apps.gauravpatil.site",
+  "downex.apps.gauravpatil.site",
+  "sm.apps.gauravpatil.site",
+  "gpn.apps.gauravpatil.site",
+  "services.gauravpatil.site",
+  "resume.services.gauravpatil.site",
+  "talk.services.gauravpatil.site",
+  "contact.services.gauravpatil.site",
+  // Legacy subdomains (backwards compatibility)
   "contact.gauravpatil.site",
   "resume.gauravpatil.site",
+  "talk.gauravpatil.site",
+  "downex.gauravpatil.site",
+  "self.gauravpatil.site",
+  // Local development hostnames
   "localhost",
+  "apps.localhost",
+  "services.localhost",
+  "cp.apps.localhost",
+  "downex.apps.localhost",
+  "sm.apps.localhost",
+  "gpn.apps.localhost",
+  "resume.services.localhost",
+  "talk.services.localhost",
+  "contact.services.localhost",
   "resume.localhost",
   "contact.localhost",
+  "talk.localhost",
+  "downex.localhost",
+  "self.localhost",
   "127.0.0.1",
+  "example.com",
 ];
+
+// Cloudflare official test secret key (always passes on any domain)
+const CLOUDFLARE_TEST_SECRET_KEY = "1x0000000000000000000000000000000AA";
 
 export interface TurnstileVerificationResult {
   success: boolean;
@@ -45,15 +75,23 @@ export async function verifyTurnstileToken(
   remoteIp?: string,
   optionsOrSecret?: TurnstileOptionsOrSecret
 ): Promise<TurnstileVerificationResult> {
+  const isOptionsObject =
+    typeof optionsOrSecret === "object" && optionsOrSecret !== null;
+
   // Allow explicit mock token strictly in local development/testing
   if (
     process.env.NODE_ENV === "development" &&
-    token === "dev_bypass_token"
+    (token === "dev_bypass_token" ||
+      token === "dev-turnstile-bypass-token" ||
+      token?.startsWith("dev_"))
   ) {
     return {
       success: true,
       hostname: "localhost",
-      action: "contact_inquiry",
+      action:
+        isOptionsObject && typeof optionsOrSecret.expectedAction === "string"
+          ? optionsOrSecret.expectedAction
+          : "contact_inquiry",
     };
   }
 
@@ -74,9 +112,6 @@ export async function verifyTurnstileToken(
   }
 
   // Resolve options & secret
-  const isOptionsObject =
-    typeof optionsOrSecret === "object" && optionsOrSecret !== null;
-
   const explicitSecret = isOptionsObject
     ? optionsOrSecret.secretKeyOverride
     : typeof optionsOrSecret === "string"
@@ -124,8 +159,14 @@ export async function verifyTurnstileToken(
   );
 
   // 2. Dispatch canonical siteverify POST request to Cloudflare endpoint
+  // In development, if using test tokens or running locally, use CLOUDFLARE_TEST_SECRET_KEY if active secret fails or is default
+  const effectiveSecretKey =
+    process.env.NODE_ENV === "development" && (!activeSecretKey || activeSecretKey.startsWith("0x"))
+      ? CLOUDFLARE_TEST_SECRET_KEY
+      : activeSecretKey;
+
   const formData = new URLSearchParams();
-  formData.append("secret", activeSecretKey);
+  formData.append("secret", effectiveSecretKey);
   formData.append("response", cleanToken);
   if (remoteIp) {
     formData.append("remoteip", remoteIp);
@@ -150,13 +191,38 @@ export async function verifyTurnstileToken(
       };
     }
 
-    const data = (await response.json()) as {
+    let data = (await response.json()) as {
       success: boolean;
       "error-codes"?: string[];
       challenge_ts?: string;
       hostname?: string;
       action?: string;
     };
+
+    // If verification failed in development with production secret, try fallback to test secret key
+    if (!data.success && process.env.NODE_ENV === "development" && effectiveSecretKey !== CLOUDFLARE_TEST_SECRET_KEY) {
+      const fallbackFormData = new URLSearchParams();
+      fallbackFormData.append("secret", CLOUDFLARE_TEST_SECRET_KEY);
+      fallbackFormData.append("response", cleanToken);
+      if (remoteIp) fallbackFormData.append("remoteip", remoteIp);
+
+      const fallbackRes = await fetchWithTimeout(
+        "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: fallbackFormData.toString(),
+        },
+        5000
+      ).catch(() => null);
+
+      if (fallbackRes?.ok) {
+        const fallbackData = (await fallbackRes.json()) as typeof data;
+        if (fallbackData.success) {
+          data = fallbackData;
+        }
+      }
+    }
 
     if (!data.success) {
       const errorCodes = data["error-codes"] || [];
@@ -211,6 +277,18 @@ export async function verifyTurnstileToken(
       action: data.action,
     };
   } catch (err: unknown) {
+    if (process.env.NODE_ENV === "development") {
+      console.warn("Turnstile siteverify unreachable in development - allowing bypass:", err);
+      return {
+        success: true,
+        challenge_ts: new Date().toISOString(),
+        hostname: "localhost",
+        action:
+          isOptionsObject && typeof optionsOrSecret.expectedAction === "string"
+            ? optionsOrSecret.expectedAction
+            : undefined,
+      };
+    }
     console.error("Turnstile siteverify network error:", err);
     return {
       success: false,

@@ -14,11 +14,13 @@ import {
   IoAlertCircleOutline,
 } from "react-icons/io5";
 import { getAutocorrectedEmail, checkEmailAbuse } from "@/lib/recruiter/validation";
+import { getTurnstileSiteKey } from "@/lib/security/turnstile-client";
 
 const RESUME_TURNSTILE_SITE_KEY =
   process.env.NEXT_PUBLIC_RESUME_TURNSTILE_SITE_KEY ||
+  process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY ||
   process.env.NEXT_PUBLIC_RESUME_GAURAVPATIL_SITE_KEY ||
-  "0x4AAAAAAFL4V3sqf-IIM6LV";
+  "0x4AAAAAAGC9IJm9wk-xm7O2";
 
 interface ResumeGateModalProps {
   isOpen: boolean;
@@ -128,8 +130,10 @@ export const ResumeGateModal: React.FC<ResumeGateModalProps> = ({
 
       turnstileContainerRef.current.innerHTML = "";
 
+      const activeSiteKey = getTurnstileSiteKey(RESUME_TURNSTILE_SITE_KEY);
+
       const id = window.turnstile.render(turnstileContainerRef.current, {
-        sitekey: RESUME_TURNSTILE_SITE_KEY,
+        sitekey: activeSiteKey,
         theme: isDark ? "dark" : "light",
         size: "normal",
         action: "resume_gate",
@@ -138,6 +142,11 @@ export const ResumeGateModal: React.FC<ResumeGateModalProps> = ({
           setIsTurnstileReady(true);
         },
         "error-callback": () => {
+          if (process.env.NODE_ENV === "development") {
+            setTurnstileToken("dev_bypass_token");
+            setIsTurnstileReady(true);
+            return;
+          }
           setTurnstileToken(null);
           setIsTurnstileReady(false);
         },
@@ -284,7 +293,10 @@ export const ResumeGateModal: React.FC<ResumeGateModalProps> = ({
       setEmailSuggestion(null);
     }
 
-    const effectiveToken = getEffectiveTurnstileToken();
+    let effectiveToken = getEffectiveTurnstileToken();
+    if (!effectiveToken && process.env.NODE_ENV === "development") {
+      effectiveToken = "dev_bypass_token";
+    }
     if (!effectiveToken) {
       setErrorMsg("Please complete the verification check.");
       return;
@@ -869,7 +881,7 @@ export const ResumeGateModal: React.FC<ResumeGateModalProps> = ({
             </a>
 
             <a
-              href={getSubdomainUrl("https://contact.gauravpatil.site", resolvedTheme)}
+              href={getSubdomainUrl("https://contact.services.gauravpatil.site", resolvedTheme)}
               target="_blank"
               rel="noopener noreferrer"
               title="Recruiter Portal — Direct Messaging"

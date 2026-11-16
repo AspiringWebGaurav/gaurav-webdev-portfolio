@@ -1,6 +1,6 @@
 /**
  * Resume Portal Authentication & Session Service
- * resume.gauravpatil.site
+ * resume.services.gauravpatil.site
  *
  * Implements salted HMAC-SHA256 OTP challenges, Upstash Redis multi-tier rate limiting,
  * constant-time verification, and tamper-proof signed session cookies.

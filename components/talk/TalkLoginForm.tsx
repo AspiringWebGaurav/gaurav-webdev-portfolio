@@ -38,6 +38,7 @@ export const TalkLoginForm: React.FC = () => {
   const [step, setStep] = useState<"EMAIL" | "OTP">("EMAIL");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [challengeId, setChallengeId] = useState<string | null>(null);
+  const [devOtp, setDevOtp] = useState<string | null>(null);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -88,6 +89,9 @@ export const TalkLoginForm: React.FC = () => {
       }
 
       setChallengeId(data.challengeId);
+      if (data.devOtp) {
+        setDevOtp(data.devOtp);
+      }
       setStep("OTP");
       setCooldown(60);
       setOtp(["", "", "", "", "", ""]);
@@ -330,6 +334,27 @@ export const TalkLoginForm: React.FC = () => {
                   Change email
                 </button>
               </div>
+
+              {/* Developer Helper Banner in Local Dev */}
+              {devOtp && (
+                <div className="mb-3.5 p-2.5 rounded-xl bg-violet-500/10 border border-violet-500/25 text-xs flex items-center justify-between text-violet-700 dark:text-violet-300">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse" />
+                    <span><strong>DEV Code:</strong> <code className="font-mono font-bold tracking-widest">{devOtp}</code></span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const digits = devOtp.split("");
+                      setOtp(digits);
+                      handleVerifyOtp(devOtp);
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-[11px] font-semibold transition-all active:scale-95 shadow-xs"
+                  >
+                    Auto-Fill &amp; Verify
+                  </button>
+                </div>
+              )}
 
               {/* 6-box OTP Input Grid with Auto-Focus */}
               <div className="grid grid-cols-6 gap-2 sm:gap-2.5">

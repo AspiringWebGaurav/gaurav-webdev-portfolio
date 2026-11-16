@@ -52,6 +52,26 @@ export default async function Home() {
   const data = await getPortfolioData();
 
   const rawNav = data.navigation && data.navigation.length > 0 ? [...data.navigation] : [];
+
+  const hasApps = rawNav.some(
+    (item) => item.link.includes("apps") || item.name.toLowerCase() === "apps"
+  );
+  if (!hasApps) {
+    const projIdx = rawNav.findIndex((i) => i.link.includes("projects"));
+    const appsItem = {
+      id: "nav_apps",
+      name: "Apps",
+      link: "https://apps.gauravpatil.site",
+      order: 2,
+      isVisible: true,
+    };
+    if (projIdx !== -1) {
+      rawNav.splice(projIdx + 1, 0, appsItem);
+    } else {
+      rawNav.push(appsItem);
+    }
+  }
+
   const hasResume = rawNav.some(
     (item) => item.link.includes("resume") || item.name.toLowerCase() === "resume"
   );
@@ -60,7 +80,7 @@ export default async function Home() {
     const resumeItem = {
       id: "nav_resume",
       name: "Resume",
-      link: "https://resume.gauravpatil.site",
+      link: "https://resume.services.gauravpatil.site",
       order: 4,
       isVisible: true,
     };

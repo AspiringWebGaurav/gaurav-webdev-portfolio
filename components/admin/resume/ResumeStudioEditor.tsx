@@ -61,7 +61,7 @@ export const ResumeStudioEditor: React.FC<ResumeStudioEditorProps> = ({
           </div>
           <div>
             <h2 className="text-base font-bold text-gray-900 font-admin-mono">Resume Content Studio</h2>
-            <p className="text-xs text-gray-500">Live authoritative content for resume.gauravpatil.site</p>
+            <p className="text-xs text-gray-500">Live authoritative content for resume.services.gauravpatil.site</p>
           </div>
         </div>
 
@@ -112,7 +112,7 @@ export const ResumeStudioEditor: React.FC<ResumeStudioEditorProps> = ({
               </span>
             </h3>
             <p className="text-xs text-gray-500 mt-0.5">
-              Control public availability of resume.gauravpatil.site. Suspend the portal or announce hire without redeploying.
+              Control public availability of resume.services.gauravpatil.site. Suspend the portal or announce hire without redeploying.
             </p>
           </div>
 

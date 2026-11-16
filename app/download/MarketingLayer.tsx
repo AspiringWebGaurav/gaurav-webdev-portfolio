@@ -23,6 +23,7 @@ import {
   RefreshCw,
   ShieldCheck,
   Pause,
+  Clock,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Spotlight } from "@/components/ui/Spotlight";
@@ -73,10 +74,10 @@ export default function MarketingLayer({
             <ThemeToggle variant="inline" className="w-7 h-7 shrink-0" />
             <button
               onClick={onOpenDownload}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-violet-600 hover:bg-violet-700 text-white text-[11px] font-bold shadow-xs active:scale-95 transition-all"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 text-[11px] font-bold shadow-xs active:scale-95 transition-all"
             >
-              <Download className="w-3 h-3" />
-              <span>Get</span>
+              <Clock className="w-3 h-3 text-amber-500" />
+              <span>Hold</span>
             </button>
           </div>
         </header>
@@ -191,11 +192,11 @@ export default function MarketingLayer({
         <div className="shrink-0 mb-1">
           <button
             onClick={onOpenDownload}
-            className="w-full h-11 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 text-xs font-bold shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+            className="w-full h-11 rounded-xl bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 text-xs font-bold shadow-xs active:scale-[0.98] transition-all flex items-center justify-center gap-2"
           >
-            <Download className="w-4 h-4 text-violet-400 dark:text-violet-600" />
-            <span>Download Downex</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <Clock className="w-4 h-4 text-amber-500" />
+            <span>Download on Hold • Coming Soon</span>
+            <ArrowRight className="w-3.5 h-3.5 opacity-70" />
           </button>
         </div>
 
@@ -259,10 +260,10 @@ export default function MarketingLayer({
 
             <button
               onClick={onOpenDownload}
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-semibold text-xs shadow-xs active:scale-95 transition-all"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 font-semibold text-xs shadow-xs active:scale-95 transition-all cursor-pointer"
             >
-              <Download className="w-3.5 h-3.5" />
-              <span>Download</span>
+              <Clock className="w-3.5 h-3.5 text-amber-500" />
+              <span>Coming Soon</span>
             </button>
           </nav>
         </header>
@@ -286,10 +287,10 @@ export default function MarketingLayer({
             <div className="flex items-center justify-center gap-3 mt-2.5">
               <button
                 onClick={onOpenDownload}
-                className="group inline-flex items-center justify-center gap-2.5 h-10 lg:h-11 px-6 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 text-xs lg:text-sm font-bold shadow-lg shadow-violet-500/15 hover:shadow-violet-500/25 active:scale-95 transition-all"
+                className="group inline-flex items-center justify-center gap-2.5 h-10 lg:h-11 px-6 rounded-xl bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs lg:text-sm font-bold border border-zinc-300 dark:border-zinc-700 shadow-sm active:scale-95 transition-all cursor-pointer"
               >
-                <Download className="w-4 h-4 text-violet-400 dark:text-violet-600 group-hover:translate-y-0.5 transition-transform" />
-                <span>Download Downex</span>
+                <Clock className="w-4 h-4 text-amber-500" />
+                <span>Download on Hold • Coming Soon</span>
                 <ArrowRight className="w-3.5 h-3.5 opacity-70 group-hover:translate-x-0.5 transition-transform" />
               </button>
 

@@ -14,6 +14,7 @@ import {
 } from "react-icons/io5";
 import { CgSpinner } from "react-icons/cg";
 import { useTheme } from "@/lib/theme";
+import { getTurnstileSiteKey } from "@/lib/security/turnstile-client";
 
 interface DragCoordinates {
   x: number;
@@ -40,20 +41,12 @@ const TEST_INTERACTIVE_KEY = "3x00000000000000000000FF";
 const PRODUCTION_SITE_KEY =
   process.env.NEXT_PUBLIC_ASSISTANT_TURNSTILE_SITE_KEY ||
   process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY ||
-  "0x4AAAAAAEilFWDvwBZ3NPSK";
+  "0x4AAAAAAGC9IJm9wk-xm7O2";
 
 const getActiveSiteKey = (): string => {
-  if (typeof window !== "undefined") {
-    const hostname = window.location.hostname;
-    const isLocalhost =
-      hostname === "localhost" ||
-      hostname === "127.0.0.1" ||
-      hostname.endsWith(".local");
-    if (isLocalhost && !process.env.NEXT_PUBLIC_ASSISTANT_TURNSTILE_SITE_KEY) {
-      return TEST_INTERACTIVE_KEY;
-    }
-  }
-  return PRODUCTION_SITE_KEY;
+  return getTurnstileSiteKey(
+    process.env.NEXT_PUBLIC_ASSISTANT_TURNSTILE_SITE_KEY || PRODUCTION_SITE_KEY
+  );
 };
 
 const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;

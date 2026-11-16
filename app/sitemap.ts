@@ -36,6 +36,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: Date;
   }[] = [
     { path: "", priority: 1.0, changeFrequency: "weekly", lastModified: homeLastModified },
+    { path: "/apps", priority: 0.9, changeFrequency: "weekly", lastModified: homeLastModified },
+    { path: "/services", priority: 0.9, changeFrequency: "weekly", lastModified: homeLastModified },
     { path: "/projects", priority: 0.9, changeFrequency: "weekly", lastModified: homeLastModified },
     { path: "/blog", priority: 0.9, changeFrequency: "weekly", lastModified: homeLastModified },
     { path: "/chat", priority: 0.8, changeFrequency: "weekly", lastModified: releaseDate },
@@ -99,21 +101,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: item.priority,
   }));
 
-  // Authoritative dedicated recruiter subdomain
-  sitemapItems.push({
-    url: "https://contact.gauravpatil.site",
-    lastModified: homeLastModified,
-    changeFrequency: "weekly",
-    priority: 0.95,
-  });
+  // Authoritative ecosystem subdomains
+  const ecosystemSubdomains = [
+    "https://apps.gauravpatil.site",
+    "https://services.gauravpatil.site",
+    "https://resume.services.gauravpatil.site",
+    "https://talk.services.gauravpatil.site",
+    "https://contact.services.gauravpatil.site",
+    "https://cp.apps.gauravpatil.site",
+    "https://downex.apps.gauravpatil.site",
+    "https://sm.apps.gauravpatil.site",
+    "https://gpn.apps.gauravpatil.site",
+  ];
 
-  // Authoritative dedicated verified resume portal subdomain
-  sitemapItems.push({
-    url: "https://resume.gauravpatil.site",
-    lastModified: homeLastModified,
-    changeFrequency: "weekly",
-    priority: 0.95,
-  });
+  for (const subdomainUrl of ecosystemSubdomains) {
+    sitemapItems.push({
+      url: subdomainUrl,
+      lastModified: homeLastModified,
+      changeFrequency: "weekly",
+      priority: 0.95,
+    });
+  }
 
   return sitemapItems;
 }

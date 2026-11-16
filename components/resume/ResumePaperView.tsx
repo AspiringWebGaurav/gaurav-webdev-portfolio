@@ -227,7 +227,7 @@ export const ResumePaperView: React.FC<ResumePaperViewProps> = ({
         <div className="hidden print:flex flex-col items-center justify-center min-h-[400px] text-center p-10 font-sans text-slate-900">
           <h2 className="text-2xl font-bold mb-3">👀 Nice try, get a life noob 😂</h2>
           <p className="text-sm text-slate-600 max-w-md">
-            This resume is protected by server-side verification. Enter your email and verify your OTP at resume.gauravpatil.site to view, print, or download the real resume.
+            This resume is protected by server-side verification. Enter your email and verify your OTP at resume.services.gauravpatil.site to view, print, or download the real resume.
           </p>
         </div>
       )}

@@ -14,11 +14,12 @@ import { validateName, validateEmail, validateMessage, countWords, MESSAGE_MAX_W
 import { useTheme } from "@/lib/theme";
 import { getSubdomainUrl } from "@/lib/theme/navigation";
 import { writeThemeCookieSync } from "@/lib/theme/cookie";
+import { getTurnstileSiteKey } from "@/lib/security/turnstile-client";
 
 const TURNSTILE_SITE_KEY =
   process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY ||
   process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ||
-  "0x4AAAAAABe0jAr2HXu1hIs4";
+  "0x4AAAAAAGC9IJm9wk-xm7O2";
 
 const DRAFT_STORAGE_KEY = "gaurav_portfolio_contact_draft";
 
@@ -608,8 +609,9 @@ export const ContactModal: React.FC<ContactModalProps> = ({
         turnstileContainerRef.current.innerHTML = "";
       }
 
+      const activeSiteKey = getTurnstileSiteKey(TURNSTILE_SITE_KEY);
       const widgetId = window.turnstile.render(turnstileContainerRef.current, {
-        sitekey: TURNSTILE_SITE_KEY,
+        sitekey: activeSiteKey,
         theme: isDark ? "dark" : "light",
         size: "normal",
         action: "contact_inquiry",
@@ -627,6 +629,16 @@ export const ContactModal: React.FC<ContactModalProps> = ({
         "error-callback": (err: unknown) => {
           console.warn("Turnstile challenge error:", err);
           if (isMountedRef.current) {
+            if (process.env.NODE_ENV === "development") {
+              setTurnstileToken("dev_bypass_token");
+              setIsTurnstileReady(true);
+              if (pendingSubmitPayloadRef.current) {
+                const payload = pendingSubmitPayloadRef.current;
+                pendingSubmitPayloadRef.current = null;
+                submitWithToken("dev_bypass_token", payload.name, payload.email, payload.message);
+              }
+              return;
+            }
             setTurnstileToken(null);
             setIsTurnstileReady(false);
             if (pendingSubmitPayloadRef.current) {
@@ -1153,23 +1165,23 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
                       <a
-                        href={getSubdomainUrl("https://resume.gauravpatil.site", resolvedTheme)}
+                        href={getSubdomainUrl("https://resume.services.gauravpatil.site", resolvedTheme)}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={() => writeThemeCookieSync(resolvedTheme)}
                         className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-semibold transition-colors inline-flex items-center gap-1 shadow-sm"
                       >
-                        <span>resume.gauravpatil.site</span>
+                        <span>resume.services</span>
                         <span>→</span>
                       </a>
                       <a
-                        href={getSubdomainUrl("https://contact.gauravpatil.site", resolvedTheme)}
+                        href={getSubdomainUrl("https://contact.services.gauravpatil.site", resolvedTheme)}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={() => writeThemeCookieSync(resolvedTheme)}
                         className="px-2.5 py-1 rounded-lg bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-[11px] font-semibold transition-colors inline-flex items-center gap-1 shadow-sm"
                       >
-                        <span>contact.gauravpatil.site</span>
+                        <span>contact.services</span>
                         <span>→</span>
                       </a>
                     </div>

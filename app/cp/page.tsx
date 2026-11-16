@@ -5,13 +5,13 @@ export const dynamic = "force-static";
 export const revalidate = false;
 
 export const metadata: Metadata = {
-  title: "Download CP | High-Performance Windows Copy/Paste Engine",
+  title: "Download CP | Fast Windows Copy & Paste App",
   description:
-    "Native Win32 Explorer file transfer accelerator. Intercepts Ctrl+C / Ctrl+V and streams files through unbuffered 4MB IOCP kernel workers. Just install and copy.",
+    "Fast and simple file copying for Windows. Move large files and folders quickly without slowing down your computer. Just install and copy.",
   openGraph: {
-    title: "Download CP — High-Performance Windows Copy/Paste Engine",
+    title: "Download CP — Fast Windows Copy & Paste App",
     description:
-      "Copy. Paste. Faster. Native Win32 Explorer file transfer accelerator with unbuffered 4MB IOCP kernel streaming and zero UI flashing.",
+      "Copy. Paste. Faster. Move files and folders on Windows with high speed, quiet background operation, and zero lag.",
     url: "https://cp.apps.gauravpatil.site",
     siteName: "CP Engine",
     locale: "en_US",
@@ -19,9 +19,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Download CP — High-Performance Windows Copy/Paste Engine",
+    title: "Download CP — Fast Windows Copy & Paste App",
     description:
-      "Copy. Paste. Faster. Native Win32 Explorer file transfer accelerator with unbuffered 4MB IOCP kernel streaming.",
+      "Copy. Paste. Faster. Move files and folders on Windows with high speed and zero lag.",
   },
 };
 

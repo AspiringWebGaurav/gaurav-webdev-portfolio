@@ -1006,8 +1006,8 @@ export const SEED_NAVIGATION: NavigationDocument = {
   items: [
     { id: "nav_about", name: "About", link: "#about", order: 1, isVisible: true },
     { id: "nav_projects", name: "Projects", link: "#projects", order: 2, isVisible: true },
-    { id: "nav_blog", name: "Blog", link: "/blog", order: 3, isVisible: true },
-    { id: "nav_resume", name: "Resume", link: "https://resume.gauravpatil.site", order: 4, isVisible: true },
+    { id: "nav_apps", name: "Apps", link: "https://apps.gauravpatil.site", order: 3, isVisible: true },
+    { id: "nav_resume", name: "Resume", link: "https://resume.services.gauravpatil.site", order: 4, isVisible: true },
     { id: "nav_testimonials", name: "Testimonials", link: "#testimonials", order: 5, isVisible: true },
     { id: "nav_contact", name: "Contact", link: "#contact", order: 6, isVisible: true },
   ],
@@ -1102,7 +1102,7 @@ export const SEED_ASSISTANT: AssistantDocument = {
 export const SEED_CLOUDFLARE: CloudflareSettingsDocument = {
   id: "cloudflare_main",
   isSimulatedDowntime: false,
-  siteKey: "0x4AAAAAAEilFWDvwBZ3NPSK",
+  siteKey: "0x4AAAAAAGC9IJm9wk-xm7O2",
   maxRetryAttempts: 2,
   circuitBreakerEnabled: true,
   fallbackEmailGateway: "no-reply@gauravpatil.site",
@@ -1235,7 +1235,7 @@ export const SEED_TERMS_DOCUMENT: LegalDocument = {
       heading: "14. Limitation of Liability & External Disclaimers",
       filterMode: "all",
       order: 14,
-      contentMarkdown: "This website, its subdomains (`gauravpatil.site`, `self.gauravpatil.site`, `contact.gauravpatil.site`, `resume.gauravpatil.site`, `talk.gauravpatil.site`, `admin.gauravpatil.site`), and its demonstrative artifacts are provided on an \"as is\" and \"as available\" basis. In no event shall Gaurav Patil be liable for indirect, incidental, or consequential damages resulting from the use or inability to use this platform or any linked third-party production demonstration.",
+      contentMarkdown: "This website, its apps and services subdomains (`gauravpatil.site`, `apps.gauravpatil.site`, `services.gauravpatil.site`, `resume.services.gauravpatil.site`, `talk.services.gauravpatil.site`, `contact.services.gauravpatil.site`, `cp.apps.gauravpatil.site`, `downex.apps.gauravpatil.site`, `sm.apps.gauravpatil.site`, `gpn.apps.gauravpatil.site`), and its demonstrative artifacts are provided on an \"as is\" and \"as available\" basis. In no event shall Gaurav Patil be liable for indirect, incidental, or consequential damages resulting from the use or inability to use this platform or any linked third-party production demonstration.",
     },
     {
       id: "legal-contact",
@@ -1264,7 +1264,7 @@ export const SEED_PRIVACY_DOCUMENT: LegalDocument = {
       heading: "1. Overview & Privacy-First Philosophy",
       filterMode: "all",
       order: 1,
-      contentMarkdown: "Your privacy, autonomy, and security are non-negotiable. This Privacy Policy governs how data is handled across **Gaurav Portfolio** and its official verified subdomains: `gauravpatil.site`, `self.gauravpatil.site`, `contact.gauravpatil.site`, `resume.gauravpatil.site`, `talk.gauravpatil.site`, and `admin.gauravpatil.site`. The architecture operates on strict data minimization principles: only the minimum information necessary to facilitate professional communication is collected, with zero third-party data tracking, zero cookie profiling, and zero monetization of personal information.",
+      contentMarkdown: "Your privacy, autonomy, and security are non-negotiable. This Privacy Policy governs how data is handled across **Gaurav Portfolio** and its official verified subdomains: `gauravpatil.site`, `apps.gauravpatil.site`, `services.gauravpatil.site`, `resume.services.gauravpatil.site`, `talk.services.gauravpatil.site`, `contact.services.gauravpatil.site`, and associated app endpoints (`cp.apps.gauravpatil.site`, `downex.apps.gauravpatil.site`, `sm.apps.gauravpatil.site`, `gpn.apps.gauravpatil.site`). The architecture operates on strict data minimization principles: only the minimum information necessary to facilitate professional communication is collected, with zero third-party data tracking, zero cookie profiling, and zero monetization of personal information.",
     },
     {
       id: "anonymity",
@@ -1310,10 +1310,10 @@ export const SEED_PRIVACY_DOCUMENT: LegalDocument = {
     },
     {
       id: "resume-privacy",
-      heading: "8. Verified Resume Portal (resume.gauravpatil.site) Privacy & Inactivity Expiry",
+      heading: "8. Verified Resume Portal (resume.services.gauravpatil.site) Privacy & Inactivity Expiry",
       filterMode: "all",
       order: 8,
-      contentMarkdown: "The interactive resume gateway hosted at `resume.gauravpatil.site` adheres to uncompromising privacy and data security safeguards:\n\n- **Zero Tracking or Behavioral Analytics:** Browsing the resume portal sets zero cross-site advertising cookies, tracking beacons, or behavioral surveillance pixels. Evaluation telemetry is strictly ephemeral.\n- **30-Minute Inactivity Token Invalidation:** When accessing protected recruiter views, the session is governed by an encrypted `httpOnly`, `SameSite=Lax` cookie that automatically expires after 30 minutes of inactivity. Logging out triggers an immediate cryptographic session destruction.\n- **Ephemeral Cloudflare Bot Mitigation:** Bot verification is executed ephemerally via Cloudflare Turnstile without storing persistent user profiles.\n- **Data Sovereignty:** Recruiter verification emails submitted for access are utilized strictly for instant OTP passcode dispatch and security notifications to Gaurav Patil. They are never enrolled in marketing distribution lists or shared with third parties.",
+      contentMarkdown: "The interactive resume gateway hosted at `resume.services.gauravpatil.site` adheres to uncompromising privacy and data security safeguards:\n\n- **Zero Tracking or Behavioral Analytics:** Browsing the resume portal sets zero cross-site advertising cookies, tracking beacons, or behavioral surveillance pixels. Evaluation telemetry is strictly ephemeral.\n- **30-Minute Inactivity Token Invalidation:** When accessing protected recruiter views, the session is governed by an encrypted `httpOnly`, `SameSite=Lax` cookie that automatically expires after 30 minutes of inactivity. Logging out triggers an immediate cryptographic session destruction.\n- **Ephemeral Cloudflare Bot Mitigation:** Bot verification is executed ephemerally via Cloudflare Turnstile without storing persistent user profiles.\n- **Data Sovereignty:** Recruiter verification emails submitted for access are utilized strictly for instant OTP passcode dispatch and security notifications to Gaurav Patil. They are never enrolled in marketing distribution lists or shared with third parties.",
     },
     {
       id: "admin-privacy",
