@@ -220,6 +220,7 @@ Icon?
 .hintrc
 
 # Scratch, Local QA & Temporary Testing Artifacts
+all-base-app/
 scratch/
 scripts/
 .local-test-otp.json
