@@ -1,17 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   Download,
   ExternalLink,
-  Zap,
   Copy,
   Clock,
   BookOpen,
-  ShieldCheck,
-  Sparkles,
-  ArrowRight,
-  Terminal,
+  Wrench,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Spotlight } from "@/components/ui/Spotlight";
@@ -194,9 +190,9 @@ export default function AppsHubPage() {
                 <h1 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight leading-none">
                   Gaurav Patil <span className="text-cyan-600 dark:text-cyan-400 font-normal">/ Apps</span>
                 </h1>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  4 Apps Live
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                  Maintenance Mode
                 </span>
               </div>
               <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 leading-tight hidden sm:block mt-0.5">
@@ -233,9 +229,20 @@ export default function AppsHubPage() {
           ======================================================================= */}
       <div className="flex-1 min-h-0 w-full overflow-hidden px-3 sm:px-6 lg:px-8 py-2.5 sm:py-4 flex flex-col justify-center items-center z-10">
         <div className="w-full max-w-7xl h-full flex flex-col justify-center">
+          {/* Maintenance Notice Header */}
+          <div className="mb-2 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-800 dark:text-amber-300 text-[11px] sm:text-xs flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Wrench className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+              <span><strong>Maintenance Notice:</strong> App download channels are temporarily locked while undergoing scheduled polish and improvements.</span>
+            </div>
+            <span className="hidden sm:inline-block px-2 py-0.5 rounded text-[10px] font-mono bg-amber-500/20 text-amber-700 dark:text-amber-300 uppercase tracking-wider font-semibold">
+              Polishing &amp; Updates
+            </span>
+          </div>
+
           <section
             aria-label="PC & Web Applications"
-            className="w-full grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-5 h-full max-h-[calc(100dvh-110px)] sm:max-h-[calc(100dvh-130px)]"
+            className="w-full grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-5 h-full max-h-[calc(100dvh-140px)] sm:max-h-[calc(100dvh-160px)]"
           >
             {PC_APPS.map((app) => (
               <div
@@ -261,8 +268,8 @@ export default function AppsHubPage() {
                         {app.version}
                       </span>
                       <span
-                        className="w-2 h-2 rounded-full bg-emerald-500"
-                        title={app.statusBadge}
+                        className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"
+                        title="Under Maintenance • Active Polishing"
                       />
                     </div>
                   </div>

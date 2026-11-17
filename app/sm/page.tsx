@@ -3,14 +3,12 @@
 import React, { useState } from "react";
 import {
   Clock,
-  Download,
   Power,
   ShieldCheck,
   Check,
   Copy,
-  ExternalLink,
   Zap,
-  ArrowRight,
+  Wrench,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Spotlight } from "@/components/ui/Spotlight";
@@ -18,7 +16,6 @@ import { LaunchpadHaptics } from "@/components/self/LaunchpadHaptics";
 import { useTheme } from "@/lib/theme";
 import { getSubdomainUrl } from "@/lib/theme/navigation";
 
-const DESKTOP_DOWNLOAD_URL = "https://gphost.eu.cc/raw/scheduleme-desktop";
 const DESKTOP_SHARE_URL = "https://gphost.eu.cc/f/scheduleme-desktop";
 
 export default function ScheduleMeDownloadPage() {
@@ -65,9 +62,9 @@ export default function ScheduleMeDownloadPage() {
                 <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30">
                   v0.0.1
                 </span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 hidden sm:inline-flex">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Live Release
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 hidden sm:inline-flex">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                  Maintenance Mode
                 </span>
               </div>
               <p className="text-[11px] text-amber-600 dark:text-amber-400 font-mono mt-0.5 leading-none">
@@ -113,16 +110,21 @@ export default function ScheduleMeDownloadPage() {
           Ultra-lightweight Windows automation utility. Runs quietly in the notification tray, starts with Windows, and schedules shutdowns, restarts, and sleep with zero CPU overhead.
         </p>
 
+        {/* Maintenance Banner */}
+        <div className="mt-3 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs font-medium">
+          <Wrench className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+          <span><strong>Maintenance Mode:</strong> Downloads locked while undergoing active polishing and improvements.</span>
+        </div>
+
         {/* Live Download & Share CTAs */}
-        <div className="mt-5 sm:mt-6 flex flex-col sm:flex-row items-center gap-3 w-full max-w-md justify-center">
-          <a
-            href={DESKTOP_DOWNLOAD_URL}
-            className="group w-full sm:w-auto px-6 py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-600/25 active:scale-95 transition-all cursor-pointer whitespace-nowrap"
+        <div className="mt-4 sm:mt-5 flex flex-col sm:flex-row items-center gap-3 w-full max-w-md justify-center">
+          <div
+            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-800 dark:text-amber-200 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 cursor-not-allowed select-none shadow-xs whitespace-nowrap"
+            title="Maintenance Mode: ScheduleMe downloads temporarily paused for polishing and improvements"
           >
-            <Download className="w-4 h-4 stroke-[2.2] shrink-0" />
-            <span className="whitespace-nowrap">Download for Windows</span>
-            <ArrowRight className="w-4 h-4 opacity-80 group-hover:translate-x-0.5 transition-transform shrink-0" />
-          </a>
+            <Wrench className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+            <span className="whitespace-nowrap">Under Maintenance • Downloads Paused</span>
+          </div>
 
           <button
             onClick={handleCopyShare}

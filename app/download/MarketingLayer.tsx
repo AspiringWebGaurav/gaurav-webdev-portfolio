@@ -24,6 +24,7 @@ import {
   ShieldCheck,
   Pause,
   Clock,
+  Wrench,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Spotlight } from "@/components/ui/Spotlight";
@@ -76,8 +77,8 @@ export default function MarketingLayer({
               onClick={onOpenDownload}
               className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 text-[11px] font-bold shadow-xs active:scale-95 transition-all"
             >
-              <Clock className="w-3 h-3 text-amber-500" />
-              <span>Hold</span>
+              <Wrench className="w-3 h-3 text-amber-500" />
+              <span>Maintenance</span>
             </button>
           </div>
         </header>
@@ -262,8 +263,8 @@ export default function MarketingLayer({
               onClick={onOpenDownload}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 font-semibold text-xs shadow-xs active:scale-95 transition-all cursor-pointer"
             >
-              <Clock className="w-3.5 h-3.5 text-amber-500" />
-              <span>Coming Soon</span>
+              <Wrench className="w-3.5 h-3.5 text-amber-500" />
+              <span>Under Maintenance</span>
             </button>
           </nav>
         </header>
@@ -287,10 +288,10 @@ export default function MarketingLayer({
             <div className="flex items-center justify-center gap-3 mt-2.5">
               <button
                 onClick={onOpenDownload}
-                className="group inline-flex items-center justify-center gap-2.5 h-10 lg:h-11 px-6 rounded-xl bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs lg:text-sm font-bold border border-zinc-300 dark:border-zinc-700 shadow-sm active:scale-95 transition-all cursor-pointer"
+                className="group inline-flex items-center justify-center gap-2.5 h-10 lg:h-11 px-6 rounded-xl bg-amber-500/15 hover:bg-amber-500/20 text-amber-800 dark:text-amber-200 text-xs lg:text-sm font-bold border border-amber-500/30 shadow-xs active:scale-95 transition-all cursor-pointer"
               >
-                <Clock className="w-4 h-4 text-amber-500" />
-                <span>Download on Hold • Coming Soon</span>
+                <Wrench className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                <span>Under Maintenance • View Details</span>
                 <ArrowRight className="w-3.5 h-3.5 opacity-70 group-hover:translate-x-0.5 transition-transform" />
               </button>
 

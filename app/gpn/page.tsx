@@ -3,14 +3,12 @@
 import React from "react";
 import {
   BookOpen,
-  Download,
   Globe,
-  Smartphone,
   ShieldCheck,
   Zap,
   Lock,
   ExternalLink,
-  ArrowRight,
+  Wrench,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Spotlight } from "@/components/ui/Spotlight";
@@ -19,8 +17,6 @@ import { useTheme } from "@/lib/theme";
 import { getSubdomainUrl } from "@/lib/theme/navigation";
 
 const WEB_APP_URL = "https://gpnotes.eu.cc";
-const WINDOWS_DOWNLOAD_URL = "https://gphost.eu.cc/raw/gpn-app";
-const ANDROID_DOWNLOAD_URL = "https://gphost.eu.cc/raw/gpn-android";
 const UNIFIED_HUB_URL = "https://gpnotes.eu.cc/download";
 
 export default function GpnPortalPage() {
@@ -58,9 +54,9 @@ export default function GpnPortalPage() {
                 <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-500/30">
                   v0.0.0
                 </span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 hidden sm:inline-flex">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Live Release
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 hidden sm:inline-flex">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                  Maintenance Mode
                 </span>
               </div>
               <p className="text-[11px] text-cyan-600 dark:text-cyan-400 font-mono mt-0.5 leading-none">
@@ -106,16 +102,21 @@ export default function GpnPortalPage() {
           Local-first personal knowledge base with real-time peer collaboration (Yjs/WebRTC), local SQLite storage, rich TipTap formatting, and zero-knowledge encryption.
         </p>
 
+        {/* Maintenance Banner */}
+        <div className="mt-3 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs font-medium">
+          <Wrench className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+          <span><strong>Maintenance Mode:</strong> Native installers temporarily paused for polishing &amp; improvements.</span>
+        </div>
+
         {/* Live Multi-Platform CTAs (Styled like Existing Download Portal) */}
-        <div className="mt-5 sm:mt-6 grid grid-cols-1 sm:grid-cols-3 gap-2.5 w-full max-w-2xl">
-          <a
-            href={WINDOWS_DOWNLOAD_URL}
-            className="group px-3 sm:px-4 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs sm:text-[13px] flex items-center justify-center gap-1.5 sm:gap-2 shadow-lg shadow-cyan-600/25 active:scale-95 transition-all cursor-pointer whitespace-nowrap"
+        <div className="mt-4 sm:mt-5 grid grid-cols-1 sm:grid-cols-3 gap-2.5 w-full max-w-2xl">
+          <div
+            className="px-3 sm:px-4 py-3 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-800 dark:text-amber-200 font-bold text-xs sm:text-[13px] flex items-center justify-center gap-1.5 sm:gap-2 cursor-not-allowed select-none shadow-xs whitespace-nowrap"
+            title="Maintenance Mode: Windows downloads paused for polishing & updates"
           >
-            <Download className="w-4 h-4 stroke-[2.2] shrink-0" />
-            <span className="whitespace-nowrap">Download for Windows</span>
-            <ArrowRight className="w-3.5 h-3.5 opacity-80 group-hover:translate-x-0.5 transition-transform shrink-0" />
-          </a>
+            <Wrench className="w-4 h-4 text-amber-600 dark:text-amber-400 stroke-[2.2] shrink-0" />
+            <span className="whitespace-nowrap">Windows • Maintenance</span>
+          </div>
 
           <a
             href={WEB_APP_URL}
@@ -127,13 +128,13 @@ export default function GpnPortalPage() {
             <span className="whitespace-nowrap">Open Web App</span>
           </a>
 
-          <a
-            href={ANDROID_DOWNLOAD_URL}
-            className="px-3 sm:px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-semibold text-xs sm:text-[13px] flex items-center justify-center gap-1.5 sm:gap-2 border border-slate-200 dark:border-white/10 active:scale-95 transition-all shadow-2xs whitespace-nowrap"
+          <div
+            className="px-3 sm:px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 font-semibold text-xs sm:text-[13px] flex items-center justify-center gap-1.5 sm:gap-2 cursor-not-allowed select-none shadow-xs whitespace-nowrap"
+            title="Maintenance Mode: Android APK downloads paused for polishing & updates"
           >
-            <Smartphone className="w-4 h-4 text-emerald-600 dark:text-emerald-400 stroke-[2.2] shrink-0" />
-            <span className="whitespace-nowrap">Android APK</span>
-          </a>
+            <Wrench className="w-4 h-4 text-amber-500 stroke-[2.2] shrink-0" />
+            <span className="whitespace-nowrap">APK • Maintenance</span>
+          </div>
         </div>
 
         <div className="mt-3 flex items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400 font-mono">

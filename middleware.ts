@@ -177,11 +177,13 @@ async function handleRouting(request: NextRequest, requestHeaders: Headers): Pro
       pathname === "/how-to-use" ||
       pathname === "/aou" ||
       pathname === "/acceptable-use" ||
+      pathname === "/uninstalled" ||
       pathname.startsWith("/terms/") ||
       pathname.startsWith("/privacy/") ||
       pathname.startsWith("/how-to-use/") ||
       pathname.startsWith("/aou/") ||
-      pathname.startsWith("/acceptable-use/");
+      pathname.startsWith("/acceptable-use/") ||
+      pathname.startsWith("/uninstalled/");
 
     if (
       pathname !== "/" &&
@@ -201,6 +203,14 @@ async function handleRouting(request: NextRequest, requestHeaders: Headers): Pro
         ? pathname
         : `/cp${pathname}`;
     return NextResponse.rewrite(new URL(`${targetPath}${search}`, request.url), {
+      request: { headers: requestHeaders },
+    });
+  }
+
+  // In dev on bare localhost (e.g. localhost:3000), allow direct access to /cp routes
+  if (pathname.startsWith("/cp") && isLocalHost && !host.includes(".")) {
+    requestHeaders.set("x-is-cp-portal", "true");
+    return NextResponse.next({
       request: { headers: requestHeaders },
     });
   }
