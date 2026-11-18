@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef, useCallback } from "react";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 /**
@@ -16,7 +17,12 @@ import { cn } from "@/lib/utils";
  * 6. Leak-Free Timer Garbage Collection: All refs and listeners reliably flushed on unmount.
  */
 export function PortfolioPreloader() {
-  const [mounted, setMounted] = useState(true);
+  const pathname = usePathname();
+  const isUninstalledRoute =
+    Boolean(pathname && pathname.includes("/uninstalled")) ||
+    (typeof window !== "undefined" && window.location.pathname.includes("/uninstalled"));
+
+  const [mounted, setMounted] = useState(!isUninstalledRoute);
   const [isExiting, setIsExiting] = useState(false);
   const [progress, setProgress] = useState(25);
   const [statusText, setStatusText] = useState("Initializing experience...");
@@ -65,6 +71,11 @@ export function PortfolioPreloader() {
   }, [restoreScroll]);
 
   useEffect(() => {
+    if (isUninstalledRoute) {
+      setMounted(false);
+      return;
+    }
+
     // Check reduced motion preference
     if (typeof window !== "undefined" && window.matchMedia) {
       const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -155,9 +166,9 @@ export function PortfolioPreloader() {
         window.removeEventListener("keydown", handleKeyDown);
       }
     };
-  }, [finishLoading, restoreScroll]);
+  }, [finishLoading, restoreScroll, isUninstalledRoute]);
 
-  if (!mounted) return null;
+  if (isUninstalledRoute || !mounted) return null;
 
   return (
     <div

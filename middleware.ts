@@ -253,8 +253,13 @@ async function handleRouting(request: NextRequest, requestHeaders: Headers): Pro
       pathname.includes("sitemap.xml") ||
       pathname.startsWith("/brand");
 
+    const isDownexLegalOrDocRoute =
+      pathname === "/uninstalled" ||
+      pathname.startsWith("/uninstalled/");
+
     if (
       pathname !== "/" &&
+      !isDownexLegalOrDocRoute &&
       !pathname.startsWith("/api") &&
       !pathname.startsWith("/_next") &&
       !isImageOrStatic
@@ -266,12 +271,24 @@ async function handleRouting(request: NextRequest, requestHeaders: Headers): Pro
     const targetPath =
       pathname === "/"
         ? "/download"
+        : pathname === "/uninstalled"
+        ? "/downex/uninstalled"
+        : pathname.startsWith("/uninstalled/")
+        ? pathname.replace(/^\/uninstalled/, "/downex/uninstalled")
         : pathname.startsWith("/download")
         ? pathname
         : pathname.startsWith("/downex")
         ? pathname.replace(/^\/downex/, "/download")
         : `/download${pathname}`;
     return NextResponse.rewrite(new URL(`${targetPath}${search}`, request.url), {
+      request: { headers: requestHeaders },
+    });
+  }
+
+  // In dev on bare localhost (e.g. localhost:3000), allow direct access to /downex and /download routes
+  if ((pathname.startsWith("/downex") || pathname.startsWith("/download")) && isLocalHost && !host.includes(".")) {
+    requestHeaders.set("x-is-download-portal", "true");
+    return NextResponse.next({
       request: { headers: requestHeaders },
     });
   }
