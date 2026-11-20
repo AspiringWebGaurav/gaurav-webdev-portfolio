@@ -325,8 +325,17 @@ async function handleRouting(request: NextRequest, requestHeaders: Headers): Pro
       pathname.includes("robots.txt") ||
       pathname.includes("sitemap.xml");
 
+    const isSmLegalOrDocRoute =
+      pathname === "/docs" ||
+      pathname === "/uninstalled" ||
+      pathname === "/how-to-use" ||
+      pathname.startsWith("/docs/") ||
+      pathname.startsWith("/uninstalled/") ||
+      pathname.startsWith("/how-to-use/");
+
     if (
       pathname !== "/" &&
+      !isSmLegalOrDocRoute &&
       !pathname.startsWith("/api") &&
       !pathname.startsWith("/_next") &&
       !isImageOrStatic
@@ -342,6 +351,14 @@ async function handleRouting(request: NextRequest, requestHeaders: Headers): Pro
         ? pathname
         : `/sm${pathname}`;
     return NextResponse.rewrite(new URL(`${targetPath}${search}`, request.url), {
+      request: { headers: requestHeaders },
+    });
+  }
+
+  // In dev on bare localhost (e.g. localhost:3000), allow direct access to /sm routes
+  if (pathname.startsWith("/sm") && isLocalHost && !host.includes(".")) {
+    requestHeaders.set("x-is-sm-portal", "true");
+    return NextResponse.next({
       request: { headers: requestHeaders },
     });
   }
