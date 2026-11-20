@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 
 export const dynamic = "force-static";
 export const revalidate = false;
@@ -21,13 +20,10 @@ export const metadata: Metadata = {
   },
 };
 
-const BLUR_PLACEHOLDER =
-  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAMbSURBVDhPrdF9LBRgHAfwn7XaWjZrpVVU60X0h2pLqKy0XqxMrcVuxdL1tmEki4nMEUqLFcaV8hKXc6ukkLh059hx3Sl3Qnc65zjOVaKut6l9m+eq6f++fz37Pc/3s9/2EP2vhBirV+3/Ls7f97leEvChutn/fZXUb1Qk9R0RSDcPFku9+gulHjp+s4f++jMvfWFeQNuN5X/L/n0CF99vNZadaMZW1GHL5EN4fb2HjVYRPD8K4Wzhw9GUg3kD2XB4kwkH4xU4daSZfRovrmCAp6WiZB0asGmsEjHjEuRNqMAfVyHeIoaXvhBpZgkujDQh1SRGymAj4vSPsG6gALMfR91gwILR6+07ftSh89sopqfXasamrrx/Zn9i/mmFW+P5FgYsNeS36WBlF4YJC67pm8DT1uBkjxBu6iuI1lQiurMCUS8ECG+/hVpjB3tb3iOVMSDFKJZPDTTjQ1iruQonbRaW9GbBqSsTzupLsGuLA0nCQU0RoNpQuDYmMkBnNtoAuaWPAWH6KjjoLsNVl4OV3dlYqs6EoyoVM1pi4a3IAj0JBz0IhqcknQGvhvQ2oO+9iQF+uiLYd6djcVcmFr5Mx3wlDzNlZxHWUwnLlwmUDcpRYpBB+8nMgPRWoQ1oHe5lAPeNCKSKw9yOFDgokjCrNQ4rZDz8mJxkhempN3ViTgHHBsR23WWA2jqM+c+TQbJIkCQSJA7DGimPFbQfTNhWw4NvTSo87p8DVRwB8QNtgL3kbJvm9xcavo4hw9CAmNf3sV/Fx7KGeDZ/8a4fVBYEKuOASjkgERd2uYG2b6SWaMXyzgxITa+mbwnNmBHzqiPZWWbqBpVwQOVHQCUhoKJg2KX5t7L+jCenBaRNAj0Og8+zDJyS30KUvBQBTy9jdV08ukcNcBFGgkoPgYpDQHlBoNxA2J3ZXmzbIHnvemqKHiN1Aqg5AtRwAlTLBT06Csf6GCyqOg0SBoOEXFDhIVDOQVDCrre0x93dBkzluLcn3eEKSHRMQbdDlVQUoqSbh5WUH6SknANKunZQSRcDlJS4W0FRW8tp+8oNU7VfRUZVaMXTS/kAAAAASUVORK5CYII=";
-
 export default function ScheduleMeUninstalledPage() {
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center p-6 text-center select-none bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased">
-      {/* 1. Brand Logo + Title */}
+      {/* 1. Brand Logo + Title with 100% Vector SVG (Zero Vercel Image Quota Burn & Persistent Border) */}
       <a
         href="https://sm.apps.gauravpatil.site"
         target="_blank"
@@ -35,18 +31,30 @@ export default function ScheduleMeUninstalledPage() {
         className="inline-flex items-center gap-3 mb-6 group cursor-pointer"
         title="ScheduleMe"
       >
-        <Image
-          src="/brand/scheduleme-icon-sm.png"
-          alt="ScheduleMe"
-          width={32}
-          height={32}
-          priority
-          loading="eager"
-          decoding="async"
-          placeholder="blur"
-          blurDataURL={BLUR_PLACEHOLDER}
-          className="w-8 h-8 rounded-lg shadow-sm group-hover:scale-105 transition-transform"
-        />
+        <div className="w-8 h-8 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700/80 shadow-xs flex items-center justify-center p-1.5 shrink-0 group-hover:scale-105 transition-transform">
+          <svg
+            viewBox="0 0 64 64"
+            fill="none"
+            className="w-full h-full"
+            aria-hidden="true"
+          >
+            <path
+              d="M21.64 16.63A20.16 20.16 0 1 0 42.36 16.63"
+              stroke="#DC2626"
+              strokeWidth="7"
+              strokeLinecap="round"
+            />
+            <line
+              x1="32"
+              y1="10.24"
+              x2="32"
+              y2="30.72"
+              stroke="#DC2626"
+              strokeWidth="7"
+              strokeLinecap="round"
+            />
+          </svg>
+        </div>
         <span className="text-2xl sm:text-[26px] font-medium tracking-tight text-zinc-900 dark:text-zinc-100">
           ScheduleMe
         </span>

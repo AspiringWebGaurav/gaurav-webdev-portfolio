@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Clock, Power, RefreshCw, Moon, XCircle, ShieldCheck, Zap, Sliders, ArrowLeft } from "lucide-react";
+import { Power, RefreshCw, Moon, XCircle, ShieldCheck, Zap, Sliders, ArrowLeft } from "lucide-react";
 
 export const dynamic = "force-static";
 export const revalidate = false;
@@ -29,8 +29,11 @@ export default function ScheduleMeDocsPage() {
             className="inline-flex items-center gap-2.5 group"
             title="ScheduleMe"
           >
-            <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-              <Clock className="w-4 h-4 stroke-[2.2]" />
+            <div className="w-8 h-8 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700/80 shadow-xs flex items-center justify-center p-1.5 shrink-0 group-hover:scale-105 transition-transform">
+              <svg viewBox="0 0 64 64" fill="none" className="w-full h-full" aria-hidden="true">
+                <path d="M21.64 16.63A20.16 20.16 0 1 0 42.36 16.63" stroke="#DC2626" strokeWidth="7" strokeLinecap="round" />
+                <line x1="32" y1="10.24" x2="32" y2="30.72" stroke="#DC2626" strokeWidth="7" strokeLinecap="round" />
+              </svg>
             </div>
             <span className="font-bold text-base text-slate-900 dark:text-white tracking-tight">
               ScheduleMe
