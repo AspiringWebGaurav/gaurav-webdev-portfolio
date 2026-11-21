@@ -50,15 +50,12 @@ const SHA256_CHECKSUM = "f483ff0b6fa86d238e6958676383c62b35ea58c6acffa8fdd525a76
 
 export default function DownloadClient({
   desktopDownloadUrl,
-  desktopShareUrl,
   extensionDownloadUrl = "https://gphost.eu.cc/raw/downex-extension",
-  extensionShareUrl = "https://gphost.eu.cc/f/downex-extension",
 }: DownloadClientProps) {
   const [view, setView] = useState<DownexView>("marketing");
   const [detectedOS, setDetectedOS] = useState<DetectedPlatform>("windows");
   const [copiedHash, setCopiedHash] = useState(false);
   const [mobileTab, setMobileTab] = useState<MobileTab>("windows");
-  const [clientBuster, setClientBuster] = useState<string>("");
 
   const openDownloadView = () => {
     setView("download");
@@ -76,7 +73,6 @@ export default function DownloadClient({
 
   useEffect(() => {
     setDetectedOS(detectPlatform());
-    setClientBuster(`?t=${Date.now()}`);
 
     if (typeof document !== "undefined") {
       document.documentElement.setAttribute("data-portal", "download");

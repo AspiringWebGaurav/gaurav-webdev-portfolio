@@ -36,8 +36,6 @@ interface AssistantTurnstileGateProps {
   forcedFailureCount?: number;
 }
 
-const TEST_INTERACTIVE_KEY = "3x00000000000000000000FF";
-
 const PRODUCTION_SITE_KEY =
   process.env.NEXT_PUBLIC_ASSISTANT_TURNSTILE_SITE_KEY ||
   process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY ||

@@ -9,6 +9,7 @@ import {
   AlertTriangle,
   Lock,
   Puzzle,
+  ShieldAlert,
 } from "lucide-react";
 
 export const dynamic = "force-static";

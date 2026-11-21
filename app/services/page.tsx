@@ -1,14 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   FileText,
   MessageSquare,
   Users,
   ExternalLink,
-  ShieldCheck,
-  Sparkles,
-  ArrowRight,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Spotlight } from "@/components/ui/Spotlight";

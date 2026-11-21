@@ -143,8 +143,6 @@ const PC_APPS: AppItem[] = [
   },
 ];
 
-const IS_DEV = process.env.NODE_ENV === "development";
-
 export default function AppsHubPage() {
   const { resolvedTheme } = useTheme();
 
