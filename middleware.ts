@@ -254,7 +254,11 @@ async function handleRouting(request: NextRequest, requestHeaders: Headers): Pro
       pathname.startsWith("/brand");
 
     const isDownexLegalOrDocRoute =
+      pathname === "/terms" ||
+      pathname === "/privacy" ||
       pathname === "/uninstalled" ||
+      pathname.startsWith("/terms/") ||
+      pathname.startsWith("/privacy/") ||
       pathname.startsWith("/uninstalled/");
 
     if (
@@ -271,6 +275,10 @@ async function handleRouting(request: NextRequest, requestHeaders: Headers): Pro
     const targetPath =
       pathname === "/"
         ? "/download"
+        : pathname === "/terms" || pathname.startsWith("/terms/")
+        ? pathname.replace(/^\/terms/, "/downex/terms")
+        : pathname === "/privacy" || pathname.startsWith("/privacy/")
+        ? pathname.replace(/^\/privacy/, "/downex/privacy")
         : pathname === "/uninstalled"
         ? "/downex/uninstalled"
         : pathname.startsWith("/uninstalled/")

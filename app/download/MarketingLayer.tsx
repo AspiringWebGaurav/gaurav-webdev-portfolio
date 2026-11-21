@@ -205,11 +205,11 @@ export default function MarketingLayer({
         <footer className="w-full h-auto py-1 flex items-center justify-between text-[9px] text-zinc-400 dark:text-zinc-500 shrink-0 bg-transparent">
           <div>&copy; {new Date().getFullYear()} Downex</div>
           <div className="flex items-center gap-2">
-            <a href="https://gauravpatil.site/terms" className="hover:text-zinc-700 dark:hover:text-zinc-300">
+            <a href="/terms#terms" className="hover:text-zinc-700 dark:hover:text-zinc-300">
               Terms
             </a>
             <span>&bull;</span>
-            <a href="https://gauravpatil.site/privacy" className="hover:text-zinc-700 dark:hover:text-zinc-300">
+            <a href="/privacy#privacy" className="hover:text-zinc-700 dark:hover:text-zinc-300">
               Privacy
             </a>
             <span>&bull;</span>
@@ -564,18 +564,14 @@ export default function MarketingLayer({
 
             <div className="flex items-center gap-4 text-xs font-medium">
               <a
-                href="https://gauravpatil.site/terms"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/terms#terms"
                 className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:underline"
               >
                 Terms
               </a>
               <span className="text-zinc-300 dark:text-zinc-700">&bull;</span>
               <a
-                href="https://gauravpatil.site/privacy"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/privacy#privacy"
                 className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:underline"
               >
                 Privacy
