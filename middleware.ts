@@ -251,15 +251,20 @@ async function handleRouting(request: NextRequest, requestHeaders: Headers): Pro
       pathname.includes("favicon") ||
       pathname.includes("robots.txt") ||
       pathname.includes("sitemap.xml") ||
-      pathname.startsWith("/brand");
+      pathname.startsWith("/brand") ||
+      pathname.startsWith("/docs");
 
     const isDownexLegalOrDocRoute =
       pathname === "/terms" ||
       pathname === "/privacy" ||
       pathname === "/uninstalled" ||
+      pathname === "/how-queues-work" ||
+      pathname === "/queues" ||
       pathname.startsWith("/terms/") ||
       pathname.startsWith("/privacy/") ||
-      pathname.startsWith("/uninstalled/");
+      pathname.startsWith("/uninstalled/") ||
+      pathname.startsWith("/how-queues-work/") ||
+      pathname.startsWith("/queues/");
 
     if (
       pathname !== "/" &&
@@ -283,6 +288,10 @@ async function handleRouting(request: NextRequest, requestHeaders: Headers): Pro
         ? "/downex/uninstalled"
         : pathname.startsWith("/uninstalled/")
         ? pathname.replace(/^\/uninstalled/, "/downex/uninstalled")
+        : pathname === "/how-queues-work" || pathname.startsWith("/how-queues-work/") || pathname === "/queues" || pathname.startsWith("/queues/")
+        ? "/downex/how-queues-work"
+        : isImageOrStatic
+        ? pathname
         : pathname.startsWith("/download")
         ? pathname
         : pathname.startsWith("/downex")

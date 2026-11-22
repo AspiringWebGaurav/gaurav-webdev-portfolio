@@ -89,6 +89,12 @@ export default function DownexLegalLayout({
       icon: ShieldCheck,
       active: pathname.includes("/privacy"),
     },
+    {
+      label: "How Queues Work",
+      href: "/how-queues-work",
+      icon: Layers,
+      active: pathname.includes("/how-queues-work") || pathname.includes("/queues"),
+    },
   ];
 
   const scrollTo = (id: string) => {
@@ -144,7 +150,7 @@ export default function DownexLegalLayout({
                   downex
                 </span>
                 <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono tracking-wider uppercase font-bold">
-                  Legal &amp; Policy
+                  Guides &amp; Legal
                 </span>
               </div>
             </Link>
@@ -341,7 +347,7 @@ export default function DownexLegalLayout({
 
             <div className="space-y-2">
               <div className="font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider font-mono text-[11px]">
-                Legal &amp; Compliance
+                Guides &amp; Compliance
               </div>
               <ul className="space-y-1.5 text-xs text-zinc-600 dark:text-zinc-400">
                 <li>
@@ -352,6 +358,11 @@ export default function DownexLegalLayout({
                 <li>
                   <Link href="/privacy" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
                     Privacy Policy &amp; Zero-Telemetry
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/how-queues-work" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+                    How 1-by-1 Queue Works
                   </Link>
                 </li>
               </ul>
