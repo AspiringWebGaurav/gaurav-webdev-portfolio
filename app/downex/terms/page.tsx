@@ -87,6 +87,9 @@ export default function DownexTermsPage() {
           <li>
             <strong>Local IPC Loopback:</strong> An encrypted local loopback server (<code className="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 font-mono text-xs">127.0.0.1:18888</code>) communicating exclusively with authorized local client processes.
           </li>
+          <li>
+            <strong>Persistent Local SQLite Database:</strong> All download task records, volume statistics, and bandwidth telemetry are stored strictly in a local SQLite database (<code className="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 font-mono text-xs">downex.db</code>) on your computer. When uninstalling, you maintain the choice to preserve this queue database and telemetry intact on your local drive for future reinstalls.
+          </li>
         </ul>
       </section>
 

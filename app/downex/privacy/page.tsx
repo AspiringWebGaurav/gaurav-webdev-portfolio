@@ -140,16 +140,28 @@ export default function DownexPrivacyPage() {
         <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-200 dark:border-zinc-800">
           <Trash2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
           <h2 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-zinc-50">
-            6. Data Retention &amp; Complete Wipe
+            6. Local Database Persistence &amp; Uninstallation Retention Policy
           </h2>
         </div>
         <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          Because Downex stores zero data remotely, you retain 100% control over all data retention on your computer:
+          Because Downex stores zero data remotely on any cloud server, you retain 100% control over all data retention on your physical computer:
         </p>
         <ul className="list-disc pl-5 space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
-          <li><strong>Reset Defaults:</strong> You can reset all application preferences at any time directly inside the Settings tab.</li>
-          <li><strong>Complete Uninstall Wipe:</strong> Running the official uninstaller (<code className="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 font-mono text-xs">uninstall.exe</code>) with the wipe option removes the installation directory, all local task logs, staged binaries, registry auto-start entries, and local user state entirely. Zero residual traces remain.</li>
-          <li><strong>Preservation of Completed Files:</strong> Your already-downloaded personal files remain untouched in your Downloads folder unless you manually delete them.</li>
+          <li>
+            <strong>True Local SQLite Persistence:</strong> All task queue lifecycles, active/paused download states, total volume statistics, peak speeds, and lifetime throughput counters are saved strictly in your local SQLite database (<code className="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 font-mono text-xs">downex.db</code>) located in <code className="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 font-mono text-xs">%LOCALAPPDATA%\com.downex.manager</code>.
+          </li>
+          <li>
+            <strong>Option 1: Keep Downloaded Files &amp; History (Recommended):</strong> When uninstalling Downex, choosing this option removes the application executable and background service while preserving your downloaded files, task queue database, and historical telemetry intact on your local drive. If you reinstall Downex later, your full download history and statistics resume instantly.
+          </li>
+          <li>
+            <strong>Option 2: Delete App &amp; Settings:</strong> Removes the application binaries and clears local settings and temporary cache.
+          </li>
+          <li>
+            <strong>Option 3: Complete Clean Wipe (Irreversible):</strong> Running the official uninstaller (<code className="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 font-mono text-xs">uninstall.exe</code>) with the clean wipe option permanently removes all binaries, local task databases, staged chunks, registry autostart keys, and firewall rules. Zero residual traces remain.
+          </li>
+          <li>
+            <strong>Preservation of Completed Files:</strong> Your already-downloaded personal files in your configured Downloads folder are never deleted unless you manually choose to remove them from your file manager.
+          </li>
         </ul>
       </section>
 
