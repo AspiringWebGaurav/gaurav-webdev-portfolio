@@ -332,24 +332,34 @@ export default function DownexLegalLayout({
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="mt-20 border-t border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-950/50 py-12">
-        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pb-8">
-            <div className="space-y-2">
-              <div className="font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider font-mono text-[11px]">
-                Downex Download Manager
+      {/* Enterprise Full-Width Footer */}
+      <footer className="mt-20 border-t border-zinc-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-950/70 backdrop-blur-md">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 py-10">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 text-xs">
+            {/* Col 1 */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-black text-xs font-mono">
+                  DX
+                </div>
+                <span className="font-black text-sm text-zinc-900 dark:text-zinc-100 font-mono">
+                  Downex
+                </span>
               </div>
-              <p className="text-xs text-zinc-500 leading-relaxed">
+              <p className="text-zinc-500 leading-snug">
                 Independent High-Performance Windows Download Accelerator. Multi-connection segmented downloads, clipboard auto-capture, and silent background updates.
               </p>
+              <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono font-semibold">
+                Release v0.0.1 (Base Foundation)
+              </div>
             </div>
 
+            {/* Col 2 */}
             <div className="space-y-2">
               <div className="font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider font-mono text-[11px]">
-                Guides &amp; Compliance
+                Governance &amp; Compliance
               </div>
-              <ul className="space-y-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+              <ul className="space-y-1.5 text-zinc-600 dark:text-zinc-400">
                 <li>
                   <Link href="/terms" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
                     Terms of Service &amp; EULA
@@ -361,18 +371,53 @@ export default function DownexLegalLayout({
                   </Link>
                 </li>
                 <li>
-                  <Link href="/how-queues-work" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
-                    How 1-by-1 Queue Works
+                  <Link href="/privacy#persistence" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+                    SQLite Persistence Guarantee
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/privacy#wipe" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+                    Safe Uninstall Retention
                   </Link>
                 </li>
               </ul>
             </div>
 
+            {/* Col 3 */}
+            <div className="space-y-2">
+              <div className="font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider font-mono text-[11px]">
+                Guides &amp; Workflows
+              </div>
+              <ul className="space-y-1.5 text-zinc-600 dark:text-zinc-400">
+                <li>
+                  <Link href="/how-queues-work" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+                    How 1-by-1 Queue Works
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/how-queues-work#queue-controls" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+                    Queue Lifecycle &amp; Auto-Retry
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/how-queues-work#faq" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+                    Frequently Asked Questions
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/terms#ip" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+                    Intellectual Property
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Col 4 */}
             <div className="space-y-2">
               <div className="font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider font-mono text-[11px]">
                 Author &amp; Infrastructure
               </div>
-              <ul className="space-y-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+              <ul className="space-y-1.5 text-zinc-600 dark:text-zinc-400">
                 <li>
                   <a
                     href="https://gauravpatil.site"
@@ -380,7 +425,7 @@ export default function DownexLegalLayout({
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
                   >
-                    <span>Gaurav Patil (Portfolio)</span>
+                    <span>Author Portfolio (Gaurav Patil)</span>
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 </li>
@@ -391,7 +436,18 @@ export default function DownexLegalLayout({
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
                   >
-                    <span>GPHost Global CDN</span>
+                    <span>GPHost Global CDN (R2 Edge)</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://github.com/AspiringWebGaurav"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                  >
+                    <span>GitHub Ecosystem</span>
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 </li>
