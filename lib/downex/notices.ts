@@ -199,7 +199,7 @@ export function normalizeNotices(
     });
   }
 
-  return list.sort((a, b) => b.createdAt - a.createdAt);
+  return list.sort((a, b) => a.createdAt - b.createdAt || a.id.localeCompare(b.id));
 }
 
 export function filterActiveNotices(

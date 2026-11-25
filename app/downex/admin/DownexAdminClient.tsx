@@ -291,6 +291,10 @@ export default function DownexAdminClient({
   const [noticeDirection, setNoticeDirection] = useState<MarqueeNoticeDirection>("rtl");
   const [noticeSpeed, setNoticeSpeed] = useState<number>(DEFAULT_MARQUEE_SPEED);
   const [noticeShowCountdown, setNoticeShowCountdown] = useState<boolean>(false);
+  const [previewQueueState, setPreviewQueueState] = useState<{ currentId: string | null; cycleKey: number }>({
+    currentId: null,
+    cycleKey: 0,
+  });
   const [durationMode, setDurationMode] = useState<"preset" | "custom" | "exact">("preset");
   const [presetDurationMs, setPresetDurationMs] = useState<number | null>(null);
   const [customDurationValue, setCustomDurationValue] = useState<string>("2");
@@ -692,7 +696,11 @@ export default function DownexAdminClient({
         try {
           const payload = JSON.parse(e.data);
           if (payload && Array.isArray(payload.notices)) {
-            setNotices(payload.notices);
+            setNotices(
+              [...payload.notices].sort(
+                (a, b) => (a.createdAt || 0) - (b.createdAt || 0) || String(a.id).localeCompare(String(b.id))
+              )
+            );
             setIsLiveStream(true);
           }
         } catch {}
@@ -1134,11 +1142,19 @@ export default function DownexAdminClient({
     return displayAdminName.slice(0, 2).toUpperCase() || "AD";
   }, [displayAdminName]);
 
-  const activeNoticesCount = useMemo(() => {
-    return notices.filter(
-      (n) => n.active && (n.expiresAt === null || n.expiresAt > nowTick)
-    ).length;
+  const activeOrderedNotices = useMemo(() => {
+    return [...notices]
+      .filter((n) => n.active && (n.expiresAt === null || n.expiresAt > nowTick))
+      .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0) || String(a.id).localeCompare(String(b.id)));
   }, [notices, nowTick]);
+
+  const activeNoticesCount = activeOrderedNotices.length;
+
+  const activeStackOrderMap = useMemo(() => {
+    const map = new Map<string, number>();
+    activeOrderedNotices.forEach((n, idx) => map.set(n.id, idx + 1));
+    return map;
+  }, [activeOrderedNotices]);
 
   const computeResolvedExpiresAt = useCallback((): number | null => {
     const now = Date.now();
@@ -1170,9 +1186,11 @@ export default function DownexAdminClient({
     const days = Math.floor(totalSec / 86400);
     const hours = Math.floor((totalSec % 86400) / 3600);
     const mins = Math.floor((totalSec % 3600) / 60);
+    const secs = totalSec % 60;
     if (days > 0) return `${days}d ${hours}h left`;
     if (hours > 0) return `${hours}h ${mins}m left`;
-    return `${Math.max(1, mins)}m left`;
+    if (mins > 0) return `${mins}m left`;
+    return `${Math.max(1, secs)}s left`;
   }, []);
 
   const handleCreateNotice = async (e?: React.FormEvent) => {
@@ -1223,7 +1241,11 @@ export default function DownexAdminClient({
       });
       const data = await res.json();
       if (res.ok && data.notice) {
-        setNotices((prev) => [data.notice, ...prev.filter((n) => n.id !== data.notice.id)]);
+        setNotices((prev) =>
+          [...prev.filter((n) => n.id !== data.notice.id), data.notice].sort(
+            (a, b) => (a.createdAt || 0) - (b.createdAt || 0) || String(a.id).localeCompare(String(b.id))
+          )
+        );
         setNoticeText("");
         setActionFeedback({ text: "Live notice sent to all Downex apps.", type: "success" });
       } else {
@@ -2214,19 +2236,60 @@ export default function DownexAdminClient({
           </div>
             </>
           ) : (() => {
-            const previewMeta = resolveModeMeta({
-              tone: noticeTone,
-              modeLabel: noticeModeLabel,
-              modeColor: noticeModeColor,
-            });
+            const hasDraftText = noticeText.trim().length > 0;
+            const livePreviewIdx = (() => {
+              if (activeOrderedNotices.length === 0) return 0;
+              if (previewQueueState.currentId) {
+                const idx = activeOrderedNotices.findIndex((n) => n.id === previewQueueState.currentId);
+                if (idx !== -1) return idx;
+              }
+              return 0;
+            })();
+            const activePreviewNotice =
+              !hasDraftText && activeOrderedNotices.length > 0
+                ? activeOrderedNotices[livePreviewIdx]
+                : null;
+
+            const previewDirection = activePreviewNotice
+              ? activePreviewNotice.direction
+              : noticeDirection;
+            const previewSpeed = activePreviewNotice
+              ? sanitizeNoticeSpeed(activePreviewNotice.speed)
+              : noticeSpeed;
+            const previewMeta = activePreviewNotice
+              ? resolveModeMeta(activePreviewNotice)
+              : resolveModeMeta({
+                  tone: noticeTone,
+                  modeLabel: noticeModeLabel,
+                  modeColor: noticeModeColor,
+                });
             const previewStyle = MODE_COLOR_STYLES[previewMeta.color];
+            const previewRawText = activePreviewNotice
+              ? activePreviewNotice.text
+              : noticeText.trim() || "Next update expected in 2 days — faster downloads & UI polish";
             const previewDisplayText =
               stripDuplicateNoticePrefix(
-                noticeText.trim() || "Next update expected in 2 days — faster downloads & UI polish",
+                previewRawText,
                 previewMeta.label,
-                noticeTone
-              ) || "Next update expected in 2 days — faster downloads & UI polish";
-            const previewDurationSec = computeMarqueeDurationSec(previewDisplayText, noticeSpeed).toFixed(1);
+                activePreviewNotice ? activePreviewNotice.tone : noticeTone
+              ) || previewRawText;
+            const previewDurationSec = computeMarqueeDurationSec(previewDisplayText, previewSpeed).toFixed(1);
+            const showPreviewCountdown = activePreviewNotice
+              ? Boolean(activePreviewNotice.showCountdown && activePreviewNotice.expiresAt !== null)
+              : noticeShowCountdown;
+            const previewExpiresAt = activePreviewNotice
+              ? activePreviewNotice.expiresAt
+              : computeResolvedExpiresAt();
+
+            const handlePreviewCycleEnd = () => {
+              if (!activePreviewNotice || activeOrderedNotices.length === 0) return;
+              const nextIdx = (livePreviewIdx + 1) % activeOrderedNotices.length;
+              const nextItem = activeOrderedNotices[nextIdx];
+              setPreviewQueueState((prev) => ({
+                currentId: nextItem ? nextItem.id : null,
+                cycleKey: prev.cycleKey + 1,
+              }));
+            };
 
             return (
             <div className="flex-1 min-h-0 flex flex-col p-4 gap-2.5 overflow-hidden">
@@ -2234,7 +2297,11 @@ export default function DownexAdminClient({
               <div className="shrink-0 border border-zinc-200 rounded-lg bg-[#FAFAFA] p-2.5 space-y-2">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[10.5px] font-mono-tabular font-semibold uppercase tracking-wider text-zinc-500">
-                    Titlebar Live Preview ({previewDurationSec}s / pass &bull; {noticeSpeed}x)
+                    Titlebar Live Preview ({previewDurationSec}s / pass &bull; {previewSpeed}x
+                    {activePreviewNotice
+                      ? ` • Stack #${livePreviewIdx + 1}/${activeOrderedNotices.length}`
+                      : " • Draft"}
+                    )
                   </span>
                   <button
                     type="button"
@@ -2284,10 +2351,14 @@ export default function DownexAdminClient({
                     >
                       <div className="downex-marquee-track relative w-full h-full overflow-hidden">
                         <div
-                          key={`${noticeDirection}-${noticeTone}-${previewMeta.label}-${previewMeta.color}-${noticeSpeed}-${previewDisplayText}`}
-                          style={{ animationDuration: `${previewDurationSec}s`, animationIterationCount: "infinite" }}
+                          key={`${activePreviewNotice ? `live-${activePreviewNotice.id}-${previewQueueState.cycleKey}` : "draft"}-${previewDirection}-${previewMeta.label}-${previewMeta.color}-${previewSpeed}-${previewDisplayText}`}
+                          onAnimationEnd={activePreviewNotice ? handlePreviewCycleEnd : undefined}
+                          style={{
+                            animationDuration: `${previewDurationSec}s`,
+                            animationIterationCount: activePreviewNotice ? 1 : "infinite",
+                          }}
                           className={`absolute inset-y-0 flex items-center whitespace-nowrap gap-1.5 text-[11.5px] leading-none font-semibold ${
-                            noticeDirection === "ltr"
+                            previewDirection === "ltr"
                               ? "downex-marquee-item-ltr"
                               : "downex-marquee-item-rtl"
                           }`}
@@ -2303,9 +2374,9 @@ export default function DownexAdminClient({
                           <span className="leading-none">
                             {previewDisplayText}
                           </span>
-                          {noticeShowCountdown && (
+                          {showPreviewCountdown && (
                             <span className="font-mono-tabular text-[10.5px] font-semibold leading-none opacity-85">
-                              ({formatRemainingCountdown(computeResolvedExpiresAt(), nowTick)})
+                              ({formatRemainingCountdown(previewExpiresAt, nowTick)})
                             </span>
                           )}
                         </div>
@@ -2720,7 +2791,7 @@ export default function DownexAdminClient({
               <div className="flex-1 min-h-0 flex flex-col border border-zinc-200 rounded-lg bg-white overflow-hidden">
                 <div className="h-9 px-4 border-b border-zinc-200 bg-[#FAFAFA] flex items-center justify-between font-mono-tabular text-[10px] text-zinc-500 uppercase tracking-wider shrink-0">
                   <span className="font-semibold">Broadcast List ({notices.length})</span>
-                  <span>Random Order Active: {activeNoticesCount}</span>
+                  <span>In Order (1 &rarr; N) &bull; Active: {activeNoticesCount}</span>
                 </div>
 
                 <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-zinc-100">
@@ -2729,12 +2800,13 @@ export default function DownexAdminClient({
                       No marquee notices yet.
                     </div>
                   ) : (
-                    notices.map((n) => {
+                    notices.map((n, rowIdx) => {
                       const isExpired = n.expiresAt !== null && n.expiresAt <= nowTick;
                       const isLiveNow = n.active && !isExpired;
                       const busy = noticeBusyId === n.id;
                       const nMeta = resolveModeMeta(n);
                       const nStyle = MODE_COLOR_STYLES[nMeta.color];
+                      const activeOrder = activeStackOrderMap.get(n.id);
 
                       return (
                         <div
@@ -2743,6 +2815,9 @@ export default function DownexAdminClient({
                         >
                           <div className="min-w-0 flex-1 space-y-1">
                             <div className="flex items-center gap-2 min-w-0">
+                              <span className="px-1.5 py-0.5 text-[9.5px] font-mono-tabular font-bold rounded border border-zinc-200 bg-zinc-50 text-zinc-600 shrink-0">
+                                #{activeOrder || rowIdx + 1}
+                              </span>
                               <span
                                 className={`px-1.5 py-0.5 text-[9px] font-mono-tabular font-bold uppercase rounded border shrink-0 ${nStyle.badge}`}
                               >

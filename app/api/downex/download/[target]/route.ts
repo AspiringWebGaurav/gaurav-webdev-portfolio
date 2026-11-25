@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+const DESKTOP_DOWNLOAD_PAUSED = true;
+
 const TARGETS = {
   desktop: {
     slug: "downex-desktop",
@@ -37,6 +39,20 @@ async function handleDownload(
 
   if (target !== "desktop" && target !== "extension") {
     return NextResponse.json({ error: "Unknown download target" }, { status: 404 });
+  }
+
+  if (target === "desktop" && DESKTOP_DOWNLOAD_PAUSED) {
+    return NextResponse.json(
+      {
+        error: "Downex for Windows downloads are temporarily paused while finalizing the release. Please check back shortly.",
+      },
+      {
+        status: 503,
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate",
+        },
+      }
+    );
   }
 
   const meta = TARGETS[target];
