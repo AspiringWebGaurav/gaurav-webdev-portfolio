@@ -45,7 +45,7 @@ interface DownloadClientProps {
 type MobileTab = "windows" | "extension";
 type DownexView = "marketing" | "download";
 
-const SHA256_CHECKSUM = "f3fd6a77d8a5a4ed8ba7f3cfba0fc9b6783d3d7752b6216ed0d9cef1d3c99b16";
+const SHA256_CHECKSUM = "7b56a0e36a6c0a64c58df832a4c6f26941b29448ae1fd4bbc4c4c795c101327a";
 
 export default function DownloadClient({
   desktopDownloadUrl,
