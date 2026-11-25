@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rtdbDataSource } from "@/lib/admin/datasource/rtdb";
 import { filterActiveNotices, normalizeNotices } from "@/lib/downex/notices";
+import { isValidDownexHwid, normalizeDownexHwid } from "@/lib/downex/machines";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -8,9 +9,9 @@ export const runtime = "nodejs";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const hwid = (body.hwid || "").trim().toUpperCase();
+    const hwid = normalizeDownexHwid(body.hwid);
 
-    if (!hwid || hwid.length < 10) {
+    if (!isValidDownexHwid(hwid)) {
       return NextResponse.json({ error: "Invalid or missing hwid" }, { status: 400 });
     }
 
@@ -30,11 +31,12 @@ export async function POST(req: NextRequest) {
 
     const updated = {
       hwid,
-      version: body.version || "0.0.1",
-      os: body.os || "Windows 11 x64",
+      version: body.version || (existing?.version as string) || "0.0.1",
+      os: body.os || (existing?.os as string) || "Windows 11 x64",
       last_seen: Date.now(),
       first_seen: (existing?.first_seen as number) || Date.now(),
       is_banned: isBanned,
+      is_connected: existing?.is_connected === true,
       ban_reason: banReason || null,
       last_ip: clientIp,
     };

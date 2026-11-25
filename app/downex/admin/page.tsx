@@ -4,6 +4,7 @@ import { DOWNEX_ADMIN_COOKIE_NAME, ADMIN_COOKIE_NAME } from "@/lib/admin/constan
 import { verifyAdminSession } from "@/lib/admin/auth";
 import { rtdbDataSource } from "@/lib/admin/datasource/rtdb";
 import { MarqueeNotice, normalizeNotices } from "@/lib/downex/notices";
+import { normalizeMachinesMap, type DownexMachine } from "@/lib/downex/machines";
 import DownexAdminClient from "./DownexAdminClient";
 
 export const dynamic = "force-dynamic";
@@ -23,20 +24,7 @@ export default async function DownexAdminPage({
     cookieStore.get(ADMIN_COOKIE_NAME)?.value;
   const verifiedSession = sessionCookie ? await verifyAdminSession(sessionCookie) : null;
 
-  let initialMachines: Array<{
-    hwid: string;
-    name?: string;
-    version: string;
-    os: string;
-    arch?: string;
-    first_seen?: number;
-    last_seen: number;
-    is_banned: boolean;
-    ban_reason?: string;
-    last_ip?: string;
-    downloads_completed?: number;
-    total_bytes?: number;
-  }> = [];
+  let initialMachines: DownexMachine[] = [];
   let initialNotices: MarqueeNotice[] = [];
 
   if (verifiedSession) {
@@ -45,9 +33,7 @@ export default async function DownexAdminPage({
       rtdbDataSource.getValue<Record<string, unknown>>("ecosystem/apps/downex/notices"),
     ]);
 
-    initialMachines = Object.values(machinesMap || {}).sort(
-      (a, b) => Number(b.last_seen || 0) - Number(a.last_seen || 0)
-    ) as typeof initialMachines;
+    initialMachines = normalizeMachinesMap(machinesMap);
 
     initialNotices = normalizeNotices(noticesMap);
   }

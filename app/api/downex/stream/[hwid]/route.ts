@@ -1,6 +1,7 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/admin/firebase-admin";
 import { filterActiveNotices, normalizeNotices } from "@/lib/downex/notices";
+import { isValidDownexHwid, normalizeDownexHwid } from "@/lib/downex/machines";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -10,7 +11,16 @@ export async function GET(
   context: { params: Promise<{ hwid: string }> }
 ) {
   const { hwid: rawHwid } = await context.params;
-  const hwid = rawHwid?.trim().toUpperCase();
+  const hwid = normalizeDownexHwid(rawHwid);
+
+  if (!isValidDownexHwid(hwid)) {
+    return NextResponse.json({ error: "Invalid hardware ID" }, { status: 400 });
+  }
+
+  const clientIp =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    "unknown";
 
   const encoder = new TextEncoder();
   const db = getAdminDb();
@@ -35,10 +45,21 @@ export async function GET(
       const machineRef = db.ref(`ecosystem/apps/downex/machines/${hwid}`);
       const noticesRef = db.ref("ecosystem/apps/downex/notices");
 
-      // Mark machine as connected and refresh presence
-      machineRef.update({
-        is_connected: true,
-        last_seen: Date.now(),
+      // Self-healing atomic upsert: always guarantees complete machine fields including hwid
+      machineRef.transaction((current) => {
+        const now = Date.now();
+        const existing = (current && typeof current === "object" ? current : {}) as Record<string, unknown>;
+        return {
+          ...existing,
+          hwid,
+          version: typeof existing.version === "string" && existing.version ? existing.version : "0.0.1",
+          os: typeof existing.os === "string" && existing.os ? existing.os : "Windows 11 x64",
+          first_seen: typeof existing.first_seen === "number" && existing.first_seen > 0 ? existing.first_seen : now,
+          last_seen: now,
+          last_ip: existing.last_ip || clientIp,
+          is_banned: existing.is_banned === true,
+          is_connected: true,
+        };
       }).catch(() => {});
 
       // 2. Listen for instantaneous push events from Firebase (directives + global marquee notices)
@@ -83,6 +104,7 @@ export async function GET(
           directiveRef.off("value", listener);
           noticesRef.off("value", noticesListener);
           machineRef.update({
+            hwid,
             is_connected: false,
             last_seen: Date.now(),
           }).catch(() => {});
@@ -94,6 +116,7 @@ export async function GET(
         directiveRef.off("value", listener);
         noticesRef.off("value", noticesListener);
         machineRef.update({
+          hwid,
           is_connected: false,
           last_seen: Date.now(),
         }).catch(() => {});

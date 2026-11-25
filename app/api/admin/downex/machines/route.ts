@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rtdbDataSource } from "@/lib/admin/datasource/rtdb";
 import { getVerifiedAdminSessionFromRequest } from "@/lib/admin/auth";
+import { normalizeMachinesMap } from "@/lib/downex/machines";
 
 export const dynamic = "force-dynamic";
 
@@ -15,9 +16,7 @@ export async function GET(req: NextRequest) {
     const machinesMap =
       (await rtdbDataSource.getValue<Record<string, Record<string, unknown>>>("ecosystem/apps/downex/machines")) || {};
 
-    const machines = Object.values(machinesMap).sort(
-      (a, b) => Number(b.last_seen || 0) - Number(a.last_seen || 0)
-    );
+    const machines = normalizeMachinesMap(machinesMap);
 
     const response = NextResponse.json({
       success: true,

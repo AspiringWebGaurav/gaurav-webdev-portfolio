@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { getAdminDb } from "@/lib/admin/firebase-admin";
 import { getVerifiedAdminSessionFromRequest } from "@/lib/admin/auth";
 import { normalizeNotices } from "@/lib/downex/notices";
+import { normalizeMachinesMap } from "@/lib/downex/machines";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -41,9 +42,7 @@ export async function GET(req: NextRequest) {
       const listener = machinesRef.on("value", (snapshot) => {
         try {
           const map = (snapshot.val() || {}) as Record<string, Record<string, unknown>>;
-          const machines = Object.values(map).sort(
-            (a, b) => Number(b.last_seen || 0) - Number(a.last_seen || 0)
-          );
+          const machines = normalizeMachinesMap(map);
           controller.enqueue(
             encoder.encode(`event: machines\ndata: ${JSON.stringify({ count: machines.length, machines })}\n\n`)
           );

@@ -970,13 +970,15 @@ export default function DownexAdminClient({
     const now = Date.now();
     return machines.filter((m) => {
       const q = searchQuery.toLowerCase().trim();
+      const safeHwid = (m.hwid || "").toLowerCase();
+      const safeVersion = (m.version || "").toLowerCase();
       const matchesSearch =
         !q ||
-        m.hwid.toLowerCase().includes(q) ||
+        safeHwid.includes(q) ||
         (m.name && m.name.toLowerCase().includes(q)) ||
         (m.os && m.os.toLowerCase().includes(q)) ||
         (m.last_ip && m.last_ip.toLowerCase().includes(q)) ||
-        m.version.toLowerCase().includes(q);
+        safeVersion.includes(q);
 
       if (!matchesSearch) return false;
       if (filterTab === "ONLINE") {
