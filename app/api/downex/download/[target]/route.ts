@@ -93,7 +93,7 @@ async function handleDownload(
   );
   outHeaders.set("Accept-Ranges", "bytes");
   outHeaders.set("X-Content-Type-Options", "nosniff");
-  outHeaders.set("Cache-Control", "public, max-age=60, must-revalidate");
+  outHeaders.set("Cache-Control", "no-store, no-cache, must-revalidate");
 
   const contentLength = upstreamRes.headers.get("content-length");
   if (contentLength) {
