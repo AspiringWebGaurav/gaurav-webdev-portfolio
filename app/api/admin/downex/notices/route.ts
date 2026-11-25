@@ -7,7 +7,9 @@ import {
   normalizeNotices,
   resolveModeMeta,
   sanitizeColor,
+  sanitizeNoticeSpeed,
   sanitizeTone,
+  stripDuplicateNoticePrefix,
 } from "@/lib/downex/notices";
 
 export const dynamic = "force-dynamic";
@@ -39,8 +41,8 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const text = typeof body.text === "string" ? body.text.trim() : "";
-    if (!text) {
+    const rawText = typeof body.text === "string" ? body.text.trim() : "";
+    if (!rawText) {
       return NextResponse.json({ error: "Notice text is required" }, { status: 400 });
     }
 
@@ -50,7 +52,12 @@ export async function POST(req: NextRequest) {
       modeLabel: typeof body.modeLabel === "string" ? body.modeLabel : undefined,
       modeColor: body.modeColor ? sanitizeColor(body.modeColor) : undefined,
     });
+    const text = stripDuplicateNoticePrefix(rawText, meta.label, tone);
+    if (!text) {
+      return NextResponse.json({ error: "Notice text is required" }, { status: 400 });
+    }
     const direction: MarqueeNoticeDirection = body.direction === "rtl" ? "rtl" : "ltr";
+    const speed = sanitizeNoticeSpeed(body.speed);
     const showCountdown = body.showCountdown === true;
 
     const now = Date.now();
@@ -69,6 +76,7 @@ export async function POST(req: NextRequest) {
       modeLabel: meta.label,
       modeColor: meta.color,
       direction,
+      speed,
       showCountdown,
       active: true,
       createdAt: now,
@@ -110,12 +118,13 @@ export async function PATCH(req: NextRequest) {
       modeColor: body.modeColor ? sanitizeColor(body.modeColor) : existing.modeColor,
     });
 
+    const nextTextRaw =
+      typeof body.text === "string" && body.text.trim() ? body.text.trim() : existing.text;
+    const cleanedText = stripDuplicateNoticePrefix(nextTextRaw, meta.label, nextTone);
+
     const updated: MarqueeNotice = {
       ...existing,
-      text:
-        typeof body.text === "string" && body.text.trim()
-          ? body.text.trim().slice(0, 240)
-          : existing.text,
+      text: (cleanedText || existing.text).slice(0, 240),
       tone: nextTone,
       modeLabel: meta.label,
       modeColor: meta.color,
@@ -123,6 +132,10 @@ export async function PATCH(req: NextRequest) {
         body.direction === "rtl" || body.direction === "ltr"
           ? body.direction
           : existing.direction,
+      speed:
+        body.speed !== undefined
+          ? sanitizeNoticeSpeed(body.speed)
+          : sanitizeNoticeSpeed(existing.speed),
       showCountdown:
         typeof body.showCountdown === "boolean" ? body.showCountdown : existing.showCountdown,
       active: typeof body.active === "boolean" ? body.active : existing.active,

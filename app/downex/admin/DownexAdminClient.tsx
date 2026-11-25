@@ -23,12 +23,19 @@ import {
   Sun,
   Moon,
   RotateCcw,
+  Minus,
+  Plus,
 } from "lucide-react";
 import { FaGoogle } from "react-icons/fa6";
 import { AdminSession } from "@/lib/admin/auth";
 import {
   BUILTIN_MARQUEE_MODES,
+  computeMarqueeDurationSec,
+  DEFAULT_MARQUEE_SPEED,
+  MARQUEE_SPEED_STEPS,
   resolveModeMeta,
+  sanitizeNoticeSpeed,
+  stripDuplicateNoticePrefix,
   type MarqueeNotice,
   type MarqueeNoticeColor,
   type MarqueeNoticeDirection,
@@ -74,6 +81,7 @@ interface PersistedAdminUiState {
   noticeModeColor?: MarqueeNoticeColor;
   savedCustomModes?: CustomModeOption[];
   noticeDirection?: MarqueeNoticeDirection;
+  noticeSpeed?: number;
   noticeShowCountdown?: boolean;
   durationMode?: "preset" | "custom" | "exact";
   presetDurationMs?: number | null;
@@ -88,60 +96,84 @@ const MODE_COLOR_STYLES: Record<
   MarqueeNoticeColor,
   {
     dot: string;
+    dotRing: string;
     btnActive: string;
     badge: string;
+    labelLight: string;
+    labelDark: string;
     previewLight: string;
     previewDark: string;
   }
 > = {
   zinc: {
-    dot: "bg-zinc-500",
+    dot: "bg-zinc-600 dark:bg-zinc-300",
+    dotRing: "ring-2 ring-zinc-500/20",
     btnActive: "bg-zinc-900 border-zinc-900 text-white",
     badge: "bg-zinc-100 text-zinc-700 border-zinc-200",
-    previewLight: "bg-zinc-100/80 border-zinc-200/90 text-zinc-700",
-    previewDark: "bg-zinc-900/75 border-zinc-700/70 text-zinc-200",
+    labelLight: "bg-zinc-900/10 text-zinc-800 border-zinc-300/80",
+    labelDark: "bg-zinc-400/20 text-zinc-200 border-zinc-500/40",
+    previewLight: "bg-zinc-100/95 border-zinc-300/90 text-zinc-950 shadow-[0_1px_2px_rgba(0,0,0,0.05)]",
+    previewDark: "bg-zinc-900/90 border-zinc-600/80 text-white shadow-[0_1px_3px_rgba(0,0,0,0.35)]",
   },
   emerald: {
     dot: "bg-emerald-500",
+    dotRing: "ring-2 ring-emerald-500/25",
     btnActive: "bg-emerald-600 border-emerald-600 text-white",
     badge: "bg-emerald-500/10 text-emerald-700 border-emerald-500/30",
-    previewLight: "bg-zinc-100/80 border-zinc-200/90 text-zinc-700",
-    previewDark: "bg-zinc-900/75 border-zinc-700/70 text-zinc-200",
+    labelLight: "bg-emerald-500/15 text-emerald-800 border-emerald-500/30",
+    labelDark: "bg-emerald-400/20 text-emerald-200 border-emerald-400/35",
+    previewLight: "bg-emerald-50/95 border-emerald-300/90 text-zinc-950 shadow-[0_1px_2px_rgba(16,185,129,0.12)]",
+    previewDark: "bg-emerald-950/60 border-emerald-600/60 text-white shadow-[0_1px_3px_rgba(0,0,0,0.35)]",
   },
   rose: {
     dot: "bg-rose-500",
+    dotRing: "ring-2 ring-rose-500/25",
     btnActive: "bg-rose-600 border-rose-600 text-white",
     badge: "bg-rose-500/10 text-rose-600 border-rose-500/30",
-    previewLight: "bg-rose-50/80 border-rose-200/80 text-zinc-800",
-    previewDark: "bg-rose-950/35 border-rose-800/60 text-zinc-100",
+    labelLight: "bg-rose-500/15 text-rose-700 border-rose-500/30",
+    labelDark: "bg-rose-400/20 text-rose-200 border-rose-400/35",
+    previewLight: "bg-rose-50/95 border-rose-300/90 text-zinc-950 shadow-[0_1px_2px_rgba(244,63,94,0.12)]",
+    previewDark: "bg-rose-950/60 border-rose-600/60 text-white shadow-[0_1px_3px_rgba(0,0,0,0.35)]",
   },
   amber: {
     dot: "bg-amber-500",
+    dotRing: "ring-2 ring-amber-500/25",
     btnActive: "bg-amber-600 border-amber-600 text-white",
     badge: "bg-amber-500/10 text-amber-700 border-amber-500/30",
-    previewLight: "bg-amber-50/80 border-amber-200/80 text-zinc-800",
-    previewDark: "bg-amber-950/30 border-amber-800/60 text-zinc-100",
+    labelLight: "bg-amber-500/15 text-amber-800 border-amber-500/35",
+    labelDark: "bg-amber-400/20 text-amber-200 border-amber-400/35",
+    previewLight: "bg-amber-50/95 border-amber-300/90 text-zinc-950 shadow-[0_1px_2px_rgba(245,158,11,0.12)]",
+    previewDark: "bg-amber-950/60 border-amber-600/60 text-white shadow-[0_1px_3px_rgba(0,0,0,0.35)]",
   },
   sky: {
     dot: "bg-sky-500",
+    dotRing: "ring-2 ring-sky-500/25",
     btnActive: "bg-sky-600 border-sky-600 text-white",
     badge: "bg-sky-500/10 text-sky-700 border-sky-500/30",
-    previewLight: "bg-sky-50/75 border-sky-200/80 text-zinc-800",
-    previewDark: "bg-sky-950/30 border-sky-800/60 text-zinc-100",
+    labelLight: "bg-sky-500/15 text-sky-800 border-sky-500/30",
+    labelDark: "bg-sky-400/20 text-sky-200 border-sky-400/35",
+    previewLight: "bg-sky-50/95 border-sky-300/90 text-zinc-950 shadow-[0_1px_2px_rgba(14,165,233,0.12)]",
+    previewDark: "bg-sky-950/60 border-sky-600/60 text-white shadow-[0_1px_3px_rgba(0,0,0,0.35)]",
   },
   violet: {
     dot: "bg-violet-500",
+    dotRing: "ring-2 ring-violet-500/25",
     btnActive: "bg-violet-600 border-violet-600 text-white",
     badge: "bg-violet-500/10 text-violet-700 border-violet-500/30",
-    previewLight: "bg-violet-50/75 border-violet-200/80 text-zinc-800",
-    previewDark: "bg-violet-950/30 border-violet-800/60 text-zinc-100",
+    labelLight: "bg-violet-500/15 text-violet-800 border-violet-500/30",
+    labelDark: "bg-violet-400/20 text-violet-200 border-violet-400/35",
+    previewLight: "bg-violet-50/95 border-violet-300/90 text-zinc-950 shadow-[0_1px_2px_rgba(139,92,246,0.14)]",
+    previewDark: "bg-violet-950/60 border-violet-600/60 text-white shadow-[0_1px_3px_rgba(0,0,0,0.35)]",
   },
   indigo: {
     dot: "bg-indigo-500",
+    dotRing: "ring-2 ring-indigo-500/25",
     btnActive: "bg-indigo-600 border-indigo-600 text-white",
     badge: "bg-indigo-500/10 text-indigo-700 border-indigo-500/30",
-    previewLight: "bg-indigo-50/75 border-indigo-200/80 text-zinc-800",
-    previewDark: "bg-indigo-950/30 border-indigo-800/60 text-zinc-100",
+    labelLight: "bg-indigo-500/15 text-indigo-800 border-indigo-500/30",
+    labelDark: "bg-indigo-400/20 text-indigo-200 border-indigo-400/35",
+    previewLight: "bg-indigo-50/95 border-indigo-300/90 text-zinc-950 shadow-[0_1px_2px_rgba(99,102,241,0.14)]",
+    previewDark: "bg-indigo-950/60 border-indigo-600/60 text-white shadow-[0_1px_3px_rgba(0,0,0,0.35)]",
   },
 };
 
@@ -182,7 +214,7 @@ const READY_MARQUEE_TEMPLATES: Array<{
   },
   {
     title: "Speed Tip",
-    text: "Tip: Adjust parallel threads in Settings for faster multi-part speeds",
+    text: "Adjust parallel threads in Settings for faster multi-part speeds",
     tone: "tip",
     durationMs: 12 * 60 * 60 * 1000,
     showCountdown: false,
@@ -257,6 +289,7 @@ export default function DownexAdminClient({
   const [noticeModeColor, setNoticeModeColor] = useState<MarqueeNoticeColor>("emerald");
   const [savedCustomModes, setSavedCustomModes] = useState<CustomModeOption[]>([]);
   const [noticeDirection, setNoticeDirection] = useState<MarqueeNoticeDirection>("rtl");
+  const [noticeSpeed, setNoticeSpeed] = useState<number>(DEFAULT_MARQUEE_SPEED);
   const [noticeShowCountdown, setNoticeShowCountdown] = useState<boolean>(false);
   const [durationMode, setDurationMode] = useState<"preset" | "custom" | "exact">("preset");
   const [presetDurationMs, setPresetDurationMs] = useState<number | null>(null);
@@ -383,6 +416,9 @@ export default function DownexAdminClient({
         if (parsed.noticeDirection === "ltr" || parsed.noticeDirection === "rtl") {
           setNoticeDirection(parsed.noticeDirection);
         }
+        if (typeof parsed.noticeSpeed === "number") {
+          setNoticeSpeed(sanitizeNoticeSpeed(parsed.noticeSpeed));
+        }
         if (typeof parsed.noticeShowCountdown === "boolean") {
           setNoticeShowCountdown(parsed.noticeShowCountdown);
         }
@@ -423,6 +459,7 @@ export default function DownexAdminClient({
         noticeModeColor,
         savedCustomModes,
         noticeDirection,
+        noticeSpeed,
         noticeShowCountdown,
         durationMode,
         presetDurationMs,
@@ -453,6 +490,7 @@ export default function DownexAdminClient({
     noticeModeColor,
     savedCustomModes,
     noticeDirection,
+    noticeSpeed,
     noticeShowCountdown,
     durationMode,
     presetDurationMs,
@@ -1161,16 +1199,24 @@ export default function DownexAdminClient({
         modeLabel: noticeModeLabel,
         modeColor: noticeModeColor,
       });
+      const sanitizedText = stripDuplicateNoticePrefix(cleanText, resolvedMeta.label, noticeTone);
+      if (!sanitizedText) {
+        setActionFeedback({ text: "Notice message cannot be empty after label.", type: "error" });
+        setTimeout(() => setActionFeedback(null), 2600);
+        setIsSavingNotice(false);
+        return;
+      }
 
       const res = await fetch("/api/admin/downex/notices", {
         method: "POST",
         headers,
         body: JSON.stringify({
-          text: cleanText,
+          text: sanitizedText,
           tone: noticeTone,
           modeLabel: resolvedMeta.label,
           modeColor: resolvedMeta.color,
           direction: noticeDirection,
+          speed: noticeSpeed,
           showCountdown: noticeShowCountdown,
           expiresAt: resolvedExpiresAt,
         }),
@@ -2174,6 +2220,13 @@ export default function DownexAdminClient({
               modeColor: noticeModeColor,
             });
             const previewStyle = MODE_COLOR_STYLES[previewMeta.color];
+            const previewDisplayText =
+              stripDuplicateNoticePrefix(
+                noticeText.trim() || "Next update expected in 2 days — faster downloads & UI polish",
+                previewMeta.label,
+                noticeTone
+              ) || "Next update expected in 2 days — faster downloads & UI polish";
+            const previewDurationSec = computeMarqueeDurationSec(previewDisplayText, noticeSpeed).toFixed(1);
 
             return (
             <div className="flex-1 min-h-0 flex flex-col p-4 gap-2.5 overflow-hidden">
@@ -2181,7 +2234,7 @@ export default function DownexAdminClient({
               <div className="shrink-0 border border-zinc-200 rounded-lg bg-[#FAFAFA] p-2.5 space-y-2">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[10.5px] font-mono-tabular font-semibold uppercase tracking-wider text-zinc-500">
-                    Titlebar Live Preview
+                    Titlebar Live Preview ({previewDurationSec}s / pass &bull; {noticeSpeed}x)
                   </span>
                   <button
                     type="button"
@@ -2225,30 +2278,33 @@ export default function DownexAdminClient({
                   {/* Frosted Glass Marquee Capsule */}
                   <div className="flex-1 min-w-0 flex justify-center px-2">
                     <div
-                      className={`downex-marquee-group relative h-[24px] w-full max-w-[400px] rounded-full border backdrop-blur-md overflow-hidden flex items-center transition-colors ${
+                      className={`downex-marquee-group relative h-[24px] w-full max-w-[460px] rounded-full border backdrop-blur-md overflow-hidden flex items-center transition-colors ${
                         previewDark ? previewStyle.previewDark : previewStyle.previewLight
                       }`}
                     >
                       <div className="downex-marquee-track relative w-full h-full overflow-hidden">
                         <div
-                          key={`${noticeDirection}-${noticeTone}-${previewMeta.label}-${previewMeta.color}-${noticeText || "sample"}`}
-                          style={{ animationDuration: "10s", animationIterationCount: "infinite" }}
-                          className={`absolute inset-y-0 flex items-center whitespace-nowrap gap-1.5 text-[11px] leading-none font-medium ${
+                          key={`${noticeDirection}-${noticeTone}-${previewMeta.label}-${previewMeta.color}-${noticeSpeed}-${previewDisplayText}`}
+                          style={{ animationDuration: `${previewDurationSec}s`, animationIterationCount: "infinite" }}
+                          className={`absolute inset-y-0 flex items-center whitespace-nowrap gap-1.5 text-[11.5px] leading-none font-semibold ${
                             noticeDirection === "ltr"
                               ? "downex-marquee-item-ltr"
                               : "downex-marquee-item-rtl"
                           }`}
                         >
-                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${previewStyle.dot}`} />
-                          <span className="font-semibold uppercase tracking-wide opacity-80 leading-none">
-                            {previewMeta.label}:
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${previewStyle.dot} ${previewStyle.dotRing}`} />
+                          <span
+                            className={`px-1.5 py-[2px] rounded-full border text-[9.5px] font-bold uppercase tracking-wider leading-none ${
+                              previewDark ? previewStyle.labelDark : previewStyle.labelLight
+                            }`}
+                          >
+                            {previewMeta.label}
                           </span>
                           <span className="leading-none">
-                            {noticeText.trim() ||
-                              "Next update expected in 2 days — faster downloads & UI polish"}
+                            {previewDisplayText}
                           </span>
                           {noticeShowCountdown && (
-                            <span className="font-mono-tabular text-[10.5px] leading-none opacity-75">
+                            <span className="font-mono-tabular text-[10.5px] font-semibold leading-none opacity-85">
                               ({formatRemainingCountdown(computeResolvedExpiresAt(), nowTick)})
                             </span>
                           )}
@@ -2268,7 +2324,7 @@ export default function DownexAdminClient({
                 onSubmit={handleCreateNotice}
                 className="shrink-0 border border-zinc-200 rounded-lg bg-white p-3 space-y-2"
               >
-                {/* Message + Direction */}
+                {/* Message + Direction + Speed (- / +) */}
                 <div className="flex flex-wrap items-center gap-2">
                   <input
                     type="text"
@@ -2301,6 +2357,48 @@ export default function DownexAdminClient({
                       }`}
                     >
                       R &rarr; L
+                    </button>
+                  </div>
+
+                  {/* Speed Stepper (- slower / + faster) */}
+                  <div
+                    className="inline-flex items-center h-8 rounded-md border border-zinc-200 bg-zinc-50 overflow-hidden font-mono-tabular text-[10.5px]"
+                    title="Control marquee scroll speed before sending (- slower, + faster)"
+                  >
+                    <span className="px-2 text-[9.5px] uppercase tracking-wider font-semibold text-zinc-400 border-r border-zinc-200 h-full inline-flex items-center select-none">
+                      Speed
+                    </span>
+                    <button
+                      type="button"
+                      disabled={noticeSpeed <= MARQUEE_SPEED_STEPS[0]}
+                      onClick={() => {
+                        const idx = MARQUEE_SPEED_STEPS.findIndex((s) => s >= noticeSpeed);
+                        const nextIdx = idx <= 0 ? 0 : idx - 1;
+                        setNoticeSpeed(MARQUEE_SPEED_STEPS[nextIdx]);
+                      }}
+                      title="Slower (-)"
+                      aria-label="Decrease marquee speed"
+                      className="w-7 h-full inline-flex items-center justify-center hover:bg-zinc-200/70 text-zinc-700 cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <Minus className="w-3 h-3" />
+                    </button>
+                    <span className="px-2 min-w-[42px] text-center font-semibold text-zinc-900 select-none">
+                      {noticeSpeed}x
+                    </span>
+                    <button
+                      type="button"
+                      disabled={noticeSpeed >= MARQUEE_SPEED_STEPS[MARQUEE_SPEED_STEPS.length - 1]}
+                      onClick={() => {
+                        const idx = MARQUEE_SPEED_STEPS.findIndex((s) => s >= noticeSpeed);
+                        const safeIdx = idx === -1 ? 2 : idx;
+                        const nextIdx = Math.min(MARQUEE_SPEED_STEPS.length - 1, safeIdx + 1);
+                        setNoticeSpeed(MARQUEE_SPEED_STEPS[nextIdx]);
+                      }}
+                      title="Faster (+)"
+                      aria-label="Increase marquee speed"
+                      className="w-7 h-full inline-flex items-center justify-center hover:bg-zinc-200/70 text-zinc-700 cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <Plus className="w-3 h-3" />
                     </button>
                   </div>
                 </div>
@@ -2584,6 +2682,7 @@ export default function DownexAdminClient({
                         setNoticeModeLabel("UPDATE");
                         setNoticeModeColor("emerald");
                         setNoticeDirection("rtl");
+                        setNoticeSpeed(DEFAULT_MARQUEE_SPEED);
                         setDurationMode("preset");
                         setPresetDurationMs(null);
                         setCustomDurationValue("2");
@@ -2656,6 +2755,8 @@ export default function DownexAdminClient({
 
                             <div className="flex items-center gap-3 text-[10.5px] font-mono-tabular text-zinc-500">
                               <span>{n.direction === "rtl" ? "R → L" : "L → R"}</span>
+                              <span>&bull;</span>
+                              <span>{sanitizeNoticeSpeed(n.speed)}x</span>
                               <span>&bull;</span>
                               <span>{formatRemainingCountdown(n.expiresAt, nowTick)}</span>
                               {n.showCountdown && (

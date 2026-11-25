@@ -25,12 +25,16 @@ export interface MarqueeNotice {
   modeLabel?: string;
   modeColor?: MarqueeNoticeColor;
   direction: MarqueeNoticeDirection;
+  speed?: number;
   showCountdown: boolean;
   active: boolean;
   createdAt: number;
   updatedAt: number;
   expiresAt: number | null;
 }
+
+export const MARQUEE_SPEED_STEPS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as const;
+export const DEFAULT_MARQUEE_SPEED = 1;
 
 export const BUILTIN_MARQUEE_MODES: Array<{
   tone: Exclude<MarqueeNoticeTone, "custom">;
@@ -96,6 +100,60 @@ export function resolveModeMeta(notice: {
   };
 }
 
+export function sanitizeNoticeSpeed(raw: unknown): number {
+  const num = typeof raw === "number" ? raw : typeof raw === "string" ? Number(raw) : NaN;
+  if (!Number.isFinite(num) || num <= 0) return DEFAULT_MARQUEE_SPEED;
+  return Math.min(2, Math.max(0.5, Math.round(num * 100) / 100));
+}
+
+export function computeMarqueeDurationSec(text: string, speed?: number): number {
+  const safeSpeed = sanitizeNoticeSpeed(speed);
+  const baseDuration = Math.min(34, Math.max(16, 14 + text.length * 0.14));
+  return Math.round(Math.min(48, Math.max(8, baseDuration / safeSpeed)) * 10) / 10;
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+export function stripDuplicateNoticePrefix(
+  rawText: string,
+  modeLabel?: string,
+  tone?: MarqueeNoticeTone
+): string {
+  let clean = rawText.trim();
+  const candidates = new Set<string>([
+    "NOTICE",
+    "NORMAL",
+    "UPDATE",
+    "ALERT",
+    "TIP",
+    "WARNING",
+    "INFO",
+    "CUSTOM",
+  ]);
+  if (modeLabel && modeLabel.trim()) {
+    candidates.add(modeLabel.trim().toUpperCase());
+  }
+  if (tone && tone.trim()) {
+    candidates.add(tone.trim().toUpperCase());
+  }
+
+  const pattern = new RegExp(
+    `^(?:${Array.from(candidates).map(escapeRegExp).join("|")})\\s*(?::|—|–|-\\s+)\\s*`,
+    "i"
+  );
+
+  // Guard against multi-prefix inputs like "TIP: Tip: ..." across any mode
+  for (let i = 0; i < 4; i++) {
+    const next = clean.replace(pattern, "").trimStart();
+    if (!next || next === clean) break;
+    clean = next;
+  }
+
+  return clean;
+}
+
 export function normalizeNotices(
   rawMap: Record<string, unknown> | null | undefined
 ): MarqueeNotice[] {
@@ -105,8 +163,8 @@ export function normalizeNotices(
   for (const [key, value] of Object.entries(rawMap)) {
     if (!value || typeof value !== "object") continue;
     const item = value as Record<string, unknown>;
-    const text = typeof item.text === "string" ? item.text.trim() : "";
-    if (!text) continue;
+    const rawText = typeof item.text === "string" ? item.text.trim() : "";
+    if (!rawText) continue;
 
     const tone = sanitizeTone(item.tone);
     const direction: MarqueeNoticeDirection = item.direction === "rtl" ? "rtl" : "ltr";
@@ -115,14 +173,21 @@ export function normalizeNotices(
       modeLabel: typeof item.modeLabel === "string" ? item.modeLabel : undefined,
       modeColor: typeof item.modeColor === "string" ? sanitizeColor(item.modeColor) : undefined,
     });
+    const modeLabel =
+      typeof item.modeLabel === "string" && item.modeLabel.trim()
+        ? item.modeLabel.trim().toUpperCase().slice(0, 14)
+        : meta.label;
+    const text = stripDuplicateNoticePrefix(rawText, modeLabel, tone);
+    if (!text) continue;
 
     list.push({
       id: typeof item.id === "string" && item.id ? item.id : key,
       text,
       tone,
-      modeLabel: typeof item.modeLabel === "string" && item.modeLabel.trim() ? item.modeLabel.trim().toUpperCase().slice(0, 14) : meta.label,
+      modeLabel,
       modeColor: meta.color,
       direction,
+      speed: sanitizeNoticeSpeed(item.speed),
       showCountdown: item.showCountdown === true,
       active: item.active !== false,
       createdAt: Number(item.createdAt || Date.now()),
