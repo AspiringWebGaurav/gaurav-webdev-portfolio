@@ -11,19 +11,21 @@ import {
   Trash2,
   Search,
   File,
-  Menu,
   Copy,
   ChevronDown,
   ChevronLeft,
-  Folder,
+  FolderOpen,
   X,
+  Minus,
+  Power,
+  Moon,
+  Sun,
   ArrowRight,
   Puzzle,
   Zap,
   RefreshCw,
   ShieldCheck,
   Pause,
-  Clock,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Spotlight } from "@/components/ui/Spotlight";
@@ -97,80 +99,108 @@ export default function MarketingLayer({
           </p>
         </div>
 
-        {/* Mobile PC App Mockup Preview (Exact Downex Mobile Card) */}
+        {/* Mobile PC App Mockup Preview (Matched to Latest Downex Desktop UI) */}
         <div className="flex-1 min-h-0 flex flex-col justify-center my-2">
           <div className="w-full rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-3 shadow-md flex flex-col justify-between">
-            {/* Title Bar */}
-            <div className="flex items-center justify-between pb-2 mb-2 border-b border-zinc-100 dark:border-zinc-800/80">
-              <div className="flex items-center gap-2">
-                <Download className="w-4 h-4 text-violet-600 dark:text-violet-400 stroke-[2.2]" />
-                <span className="font-brand text-[18px] text-zinc-900 dark:text-zinc-100 leading-none">
+            {/* Window Header */}
+            <div className="flex items-center justify-between pb-2 mb-2 border-b border-zinc-200/80 dark:border-zinc-800/80">
+              <div className="flex items-center gap-1.5">
+                <img
+                  src="/brand/downex-logo.png"
+                  alt="Downex"
+                  className="w-4 h-4 shrink-0 object-contain pointer-events-none"
+                />
+                <span className="font-extrabold text-[13px] tracking-tight text-zinc-900 dark:text-zinc-100 leading-none">
                   downex
+                </span>
+                <span className="text-[8.5px] font-bold text-emerald-600 dark:text-emerald-400 tracking-[0.12em] uppercase font-mono leading-none">
+                  download manager
                 </span>
               </div>
 
-              <div className="flex items-center text-zinc-400">
+              <div className="flex items-center gap-1 text-zinc-400">
+                <Minus className="w-3 h-3" />
                 <X className="w-3.5 h-3.5" />
               </div>
             </div>
 
-            {/* Active Download Task Card (Exact Downex Structure - DOWNLOADING) */}
-            <div className="rounded-xl border border-emerald-500/30 dark:border-emerald-500/25 bg-white dark:bg-zinc-900/60 p-2.5 space-y-2 shadow-xs">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/70 dark:border-zinc-700/70 flex items-center justify-center shrink-0">
-                    <File className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-200 stroke-[1.8]" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-[11px] font-semibold text-zinc-900 dark:text-zinc-100 truncate">
-                      ubuntu-24.04-desktop-amd64.iso
-                    </div>
-                    <div className="text-[9px] font-mono text-zinc-400 truncate">
-                      C:\Users\gaura\Downloads\Downex\...
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <span className="text-[9px] font-mono px-2 py-0.5 rounded-full uppercase tracking-wider bg-blue-500/10 text-blue-600 dark:text-blue-400 font-semibold animate-pulse border border-blue-500/20">
+            {/* Active Download Task Card (Latest Industrial Card Layout) */}
+            <div className="rounded-xl border border-emerald-500/50 dark:border-emerald-500/40 bg-white dark:bg-zinc-950 overflow-hidden shadow-xs ring-1 ring-emerald-500/15">
+              {/* Card Title Bar Strip */}
+              <div className="h-7 px-2.5 flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-mono text-[9px] font-bold px-1.5 py-0.2 rounded border bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/35">
+                    #1
+                  </span>
+                  <span className="font-mono text-[9.5px] uppercase tracking-wider font-semibold text-emerald-600 dark:text-emerald-400">
                     DOWNLOADING
                   </span>
-                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 text-[9px] font-semibold">
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="h-5 px-1.5 border border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300 font-mono text-[9px] uppercase font-semibold inline-flex items-center gap-0.5">
                     <Pause className="w-2.5 h-2.5 fill-current" />
+                    <span>Pause</span>
                   </span>
                 </div>
               </div>
 
-              {/* Minimal Structured Metrics Grid */}
-              <div className="rounded-lg bg-zinc-50 dark:bg-zinc-900/80 border border-zinc-100 dark:border-zinc-800/80 p-2 text-[9px] font-mono grid grid-cols-2 gap-1">
-                <div>
-                  <span className="text-zinc-400">File size: </span>
-                  <span className="font-semibold text-zinc-900 dark:text-zinc-100">{FILE_SIZE}</span>
+              {/* Card Body */}
+              <div className="p-2.5 space-y-2">
+                <div className="flex items-center border border-zinc-300 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/50 px-2 py-1 gap-1.5">
+                  <File className="w-3 h-3 text-zinc-400 shrink-0" />
+                  <span className="flex-1 font-mono text-[10.5px] font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+                    ubuntu-24.04-desktop-amd64.iso
+                  </span>
+                  <span className="px-1 py-0.2 text-[8.5px] font-mono font-semibold bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 uppercase shrink-0">
+                    .ISO
+                  </span>
                 </div>
-                <div>
-                  <span className="text-zinc-400">Downloaded: </span>
-                  <span className="font-semibold text-zinc-900 dark:text-zinc-100">{DOWNLOADED_PROGRESS}</span>
-                </div>
-                <div>
-                  <span className="text-zinc-400">Transfer: </span>
-                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">{TRANSFER_RATE_COMPACT}</span>
-                </div>
-                <div>
-                  <span className="text-zinc-400">Time left: </span>
-                  <span className="font-semibold text-zinc-900 dark:text-zinc-100">{TIME_LEFT_COMPACT}</span>
-                </div>
-              </div>
 
-              {/* Real Downex Emerald Animated Progress Bar */}
-              <div className="w-full h-3 bg-zinc-200/90 dark:bg-zinc-800/90 rounded-sm p-[1px] shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.22)] border border-zinc-300/80 dark:border-zinc-700/80 relative overflow-hidden flex items-center">
-                <div
-                  className="h-full rounded-xs transition-all duration-300 relative overflow-hidden bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]"
-                  style={{ width: PROGRESS_WIDTH }}
-                >
-                  <div className="absolute inset-0 animate-stripes opacity-45 mix-blend-overlay pointer-events-none" />
-                  <div className="animate-shimmer pointer-events-none" />
-                  <div className="absolute inset-x-0 top-0 h-[45%] bg-gradient-to-b from-white/35 to-transparent pointer-events-none" />
-                  <div className="absolute inset-x-0 bottom-0 h-[30%] bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
-                  <div className="absolute right-0 top-0 bottom-0 w-1.5 bg-white shadow-[0_0_8px_#ffffff,0_0_14px_#34d399] animate-pulse pointer-events-none" />
+                {/* 2x2 Industrial Telemetry Grid */}
+                <div className="grid grid-cols-2 gap-1.5 text-[9.5px] font-mono">
+                  <div className="border border-zinc-200 dark:border-zinc-800 bg-zinc-50/40 dark:bg-zinc-950/40 px-2 py-1 flex items-center justify-between">
+                    <div>
+                      <span className="text-[8px] uppercase text-zinc-400 block leading-tight">File Size</span>
+                      <span className="font-bold text-zinc-900 dark:text-zinc-100">{FILE_SIZE}</span>
+                    </div>
+                    <span className="text-[8px] px-1 py-0.2 border border-emerald-500/50 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5">
+                      RESUME OK
+                    </span>
+                  </div>
+                  <div className="border border-zinc-200 dark:border-zinc-800 bg-zinc-50/40 dark:bg-zinc-950/40 px-2 py-1 flex items-center justify-between">
+                    <div>
+                      <span className="text-[8px] uppercase text-zinc-400 block leading-tight">Downloaded</span>
+                      <span className="font-bold text-zinc-900 dark:text-zinc-100">{DOWNLOADED_PROGRESS}</span>
+                    </div>
+                    <span className="text-[8px] px-1 py-0.2 border border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-900 font-semibold">
+                      75%
+                    </span>
+                  </div>
+                  <div className="border border-zinc-200 dark:border-zinc-800 bg-zinc-50/40 dark:bg-zinc-950/40 px-2 py-1">
+                    <span className="text-[8px] uppercase text-zinc-400 block leading-tight">Transfer rate</span>
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400">{TRANSFER_RATE_COMPACT}</span>
+                  </div>
+                  <div className="border border-zinc-200 dark:border-zinc-800 bg-zinc-50/40 dark:bg-zinc-950/40 px-2 py-1 flex items-center justify-between">
+                    <div>
+                      <span className="text-[8px] uppercase text-zinc-400 block leading-tight">Time left</span>
+                      <span className="font-bold text-zinc-900 dark:text-zinc-100">{TIME_LEFT_COMPACT}</span>
+                    </div>
+                    <span className="text-[8px] text-zinc-400 uppercase">LIVE</span>
+                  </div>
+                </div>
+
+                {/* Emerald Progress Bar */}
+                <div className="w-full h-3 bg-zinc-200/90 dark:bg-zinc-800/90 rounded-sm p-[1px] shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.22)] border border-zinc-300/80 dark:border-zinc-700/80 relative overflow-hidden flex items-center">
+                  <div
+                    className="h-full rounded-xs transition-all duration-300 relative overflow-hidden bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]"
+                    style={{ width: PROGRESS_WIDTH }}
+                  >
+                    <div className="absolute inset-0 animate-stripes opacity-45 mix-blend-overlay pointer-events-none" />
+                    <div className="animate-shimmer pointer-events-none" />
+                    <div className="absolute inset-x-0 top-0 h-[45%] bg-gradient-to-b from-white/35 to-transparent pointer-events-none" />
+                    <div className="absolute inset-x-0 bottom-0 h-[30%] bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+                    <div className="absolute right-0 top-0 bottom-0 w-1.5 bg-white shadow-[0_0_8px_#ffffff,0_0_14px_#34d399] animate-pulse pointer-events-none" />
+                  </div>
                 </div>
               </div>
             </div>
@@ -179,7 +209,7 @@ export default function MarketingLayer({
             <div className="grid grid-cols-2 gap-1.5 mt-2 text-[10px] text-zinc-600 dark:text-zinc-400">
               <div className="flex items-center gap-1">
                 <Zap className="w-3 h-3 text-violet-600 dark:text-violet-400 shrink-0" />
-                <span>Multi-Stream 16x</span>
+                <span>32x Multi-Thread</span>
               </div>
               <div className="flex items-center gap-1">
                 <Puzzle className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
@@ -189,15 +219,23 @@ export default function MarketingLayer({
           </div>
         </div>
 
-        {/* Mobile Main CTA Button */}
-        <div className="shrink-0 mb-1">
+        {/* Mobile Main CTA Buttons (Live v0.0.1 Installer + Mirrors) */}
+        <div className="shrink-0 mb-1 flex items-center gap-2">
+          <a
+            href={desktopDownloadUrl}
+            download="DownexSetup.exe"
+            className="flex-1 h-10 rounded-xl bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-950 text-xs font-bold shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Download v0.0.1</span>
+            <ArrowRight className="w-3 h-3 opacity-70" />
+          </a>
           <button
             onClick={onOpenDownload}
-            className="w-full h-11 rounded-xl bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 text-xs font-bold shadow-xs active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+            className="h-10 px-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 text-[11px] font-semibold active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
           >
-            <Clock className="w-4 h-4 text-amber-500" />
-            <span>Download on Hold • Coming Soon</span>
-            <ArrowRight className="w-3.5 h-3.5 opacity-70" />
+            <Puzzle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            <span>Extension</span>
           </button>
         </div>
 
@@ -306,219 +344,297 @@ export default function MarketingLayer({
             </div>
           </div>
 
-          {/* PC App UI Mockup (100% Pixel-Matched to Actual Downex App from Image 2) */}
+          {/* PC App UI Mockup (1:1 Matched to Latest Downex Desktop UI v0.0.1) */}
           <div className="w-full max-w-4xl mx-auto shrink-0 my-1">
             <div className="rounded-2xl border border-zinc-200/90 dark:border-zinc-800/90 bg-white dark:bg-zinc-950 shadow-2xl shadow-zinc-900/10 dark:shadow-black/60 overflow-hidden text-left transition-all">
-              {/* Window Header (Actual Downex Titlebar: Purple Download Icon + Cursive downex + X Close) */}
-              <div className="h-11 px-4 bg-white dark:bg-zinc-950 border-b border-zinc-200/80 dark:border-zinc-800/80 flex items-center justify-between select-none">
-                <div className="flex items-center gap-2">
-                  <div className="text-violet-600 dark:text-violet-400">
-                    <Download className="w-5 h-5 stroke-[2.2]" />
-                  </div>
-                  <span className="font-brand text-[23px] text-zinc-900 dark:text-zinc-100 tracking-wide leading-none select-none">
+              {/* Window Header (Latest DownexWindowHeader: Logo + downex DOWNLOAD MANAGER + Frosted Notice Marquee + Window Controls) */}
+              <div className="h-9 px-3 bg-white/95 dark:bg-zinc-950/95 border-b border-zinc-200/80 dark:border-zinc-800/80 flex items-center justify-between select-none">
+                <div className="flex items-center gap-2 shrink-0">
+                  <img
+                    src="/brand/downex-logo.png"
+                    alt="Downex"
+                    className="w-[18px] h-[18px] shrink-0 object-contain pointer-events-none"
+                  />
+                  <span className="font-extrabold text-[13.5px] tracking-tight text-zinc-900 dark:text-zinc-100 leading-none select-none">
                     downex
+                  </span>
+                  <span className="text-[9.5px] font-bold text-emerald-600 dark:text-emerald-400 tracking-[0.14em] uppercase font-mono leading-none select-none">
+                    download manager
                   </span>
                 </div>
 
-                <div className="flex items-center">
-                  <button className="w-7 h-7 flex items-center justify-center text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 rounded-md transition-colors cursor-pointer">
-                    <X className="w-4 h-4 stroke-[2]" />
-                  </button>
+                {/* Empty Draggable Titlebar Center (Dynamic Marquee Reserved Strictly for App Owner Broadcasts) */}
+                <div className="flex-1 min-w-0" />
+
+                {/* Window Controls */}
+                <div className="flex items-center gap-0.5 shrink-0">
+                  <span className="w-7 h-6 flex items-center justify-center rounded-[2px] text-zinc-400 hover:bg-zinc-200/80 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">
+                    <Minus className="w-3.5 h-3.5 stroke-[2.2]" />
+                  </span>
+                  <span className="w-7 h-6 flex items-center justify-center rounded-[2px] text-zinc-400 hover:bg-[#e81123] hover:text-white transition-colors">
+                    <X className="w-3.5 h-3.5 stroke-[2.2]" />
+                  </span>
                 </div>
               </div>
 
-              {/* App Body: Real Sidebar + Main Area */}
+              {/* App Body: Real Sidebar + Main Workspace */}
               <div className="flex">
-                {/* Real Downex Left Sidebar (Matching Image 2) */}
-                <div className="relative hidden sm:flex flex-col justify-between w-44 lg:w-48 bg-white dark:bg-zinc-950 p-2.5 shrink-0 select-none text-xs border-r border-zinc-200/70 dark:border-zinc-800/60">
-                  {/* Subtle Collapse Pill Arrow between sidebar and content */}
-                  <div className="absolute -right-3 top-3.5 z-10 w-5 h-5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 shadow-2xs flex items-center justify-center text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 cursor-pointer">
-                    <ChevronLeft className="w-3 h-3 stroke-[2.5]" />
+                {/* Latest DownexSidebar (#FAFAFA light / zinc-900 dark, crisp rounded-sm items + Bottom APP VERSION + Check updates + Theme toggle) */}
+                <div className="relative hidden sm:flex flex-col justify-between w-[164px] lg:w-[172px] bg-[#FAFAFA] dark:bg-zinc-900 shrink-0 select-none text-xs border-r border-zinc-200 dark:border-zinc-800">
+                  {/* Collapse Toggle Circle on Border */}
+                  <div className="absolute -right-2.5 top-[23px] -translate-y-1/2 z-10 w-5 h-5 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200/90 dark:border-zinc-700/90 shadow-sm flex items-center justify-center text-zinc-500 dark:text-zinc-400">
+                    <ChevronLeft className="w-3 h-3 stroke-[2.2]" />
                   </div>
 
-                  <div className="space-y-1">
-                    {/* All Downloads (Active: Solid Black Capsule) */}
-                    <div className="px-3 py-2 rounded-xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 font-semibold shadow-xs flex items-center justify-between">
-                      <div className="flex items-center gap-2.5">
-                        <Download className="w-4 h-4 stroke-[2.2]" />
-                        <span className="text-xs">All Downloads</span>
+                  {/* Top Navigation */}
+                  <div className="px-2.5 pt-2 space-y-0.5 font-mono">
+                    <div className="h-[27px] px-2.5 rounded-sm bg-black text-white dark:bg-white dark:text-zinc-950 font-semibold flex items-center justify-between text-[11px]">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Download className="w-3.5 h-3.5 stroke-[2]" />
+                        <span className="truncate">All Downloads</span>
                       </div>
-                      <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-zinc-800 text-zinc-200 dark:bg-zinc-200 dark:text-zinc-800 font-bold">
+                      <span className="text-[9.5px] px-1.5 py-0.2 rounded-sm bg-zinc-800 text-white dark:bg-zinc-200 dark:text-zinc-900 font-bold">
                         1
                       </span>
                     </div>
 
-                    <div className="px-3 py-1.5 rounded-xl text-zinc-600 dark:text-zinc-400 flex items-center gap-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer">
-                      <ListOrdered className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
-                      <span className="text-xs">Queues</span>
+                    <div className="h-[26px] px-2.5 rounded-sm text-zinc-600 dark:text-zinc-400 flex items-center gap-2 text-[11px] font-medium">
+                      <ListOrdered className="w-3.5 h-3.5 shrink-0" />
+                      <span>Queues</span>
                     </div>
 
-                    <div className="px-3 py-1.5 rounded-xl text-zinc-600 dark:text-zinc-400 flex items-center gap-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer">
-                      <Activity className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
-                      <span className="text-xs">Speed &amp; Stats</span>
+                    <div className="h-[26px] px-2.5 rounded-sm text-zinc-600 dark:text-zinc-400 flex items-center gap-2 text-[11px] font-medium">
+                      <Activity className="w-3.5 h-3.5 shrink-0" />
+                      <span>Speed &amp; Stats</span>
                     </div>
 
-                    <div className="px-3 py-1.5 rounded-xl text-zinc-600 dark:text-zinc-400 flex items-center justify-between hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer">
-                      <div className="flex items-center gap-2.5">
-                        <Plus className="w-4 h-4 text-zinc-500 dark:text-zinc-400 stroke-[2.2]" />
-                        <span className="text-xs">Add URL</span>
+                    <div className="h-[26px] px-2.5 rounded-sm text-zinc-600 dark:text-zinc-400 flex items-center justify-between text-[11px] font-medium">
+                      <div className="flex items-center gap-2">
+                        <Plus className="w-3.5 h-3.5 shrink-0 stroke-[2]" />
+                        <span>Add URL</span>
                       </div>
-                      <span className="text-[10px] font-mono text-zinc-400 dark:text-zinc-500">
+                      <span className="text-[9.5px] text-zinc-400 dark:text-zinc-500">
                         Ctrl+N
                       </span>
                     </div>
 
-                    <div className="px-3 py-1.5 rounded-xl text-zinc-600 dark:text-zinc-400 flex items-center gap-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer">
-                      <Settings className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
-                      <span className="text-xs">Settings</span>
+                    <div className="h-[26px] px-2.5 rounded-sm text-zinc-600 dark:text-zinc-400 flex items-center gap-2 text-[11px] font-medium">
+                      <Settings className="w-3.5 h-3.5 shrink-0" />
+                      <span>Settings</span>
                     </div>
 
-                    <div className="px-3 py-1.5 rounded-xl text-zinc-600 dark:text-zinc-400 flex items-center gap-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer">
-                      <Gauge className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
-                      <span className="text-xs">Speed Test</span>
+                    <div className="h-[26px] px-2.5 rounded-sm text-zinc-600 dark:text-zinc-400 flex items-center gap-2 text-[11px] font-medium">
+                      <Gauge className="w-3.5 h-3.5 shrink-0" />
+                      <span>Speed Test</span>
                     </div>
 
-                    <div className="px-3 py-1.5 rounded-xl text-zinc-600 dark:text-zinc-400 flex items-center gap-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer">
-                      <Trash2 className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
-                      <span className="text-xs">Trash</span>
+                    <div className="h-[26px] px-2.5 rounded-sm text-zinc-600 dark:text-zinc-400 flex items-center gap-2 text-[11px] font-medium">
+                      <Trash2 className="w-3.5 h-3.5 shrink-0" />
+                      <span>Trash</span>
+                    </div>
+                  </div>
+
+                  {/* Bottom Sidebar Version & Utility Footer */}
+                  <div className="pt-1.5">
+                    <div className="h-[24px] px-2.5 flex items-center justify-between font-mono text-[9.5px] uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                      <span>APP VERSION</span>
+                      <span className="font-semibold text-zinc-600 dark:text-zinc-300">v0.0.1</span>
+                    </div>
+                    <div className="border-t border-zinc-200 dark:border-zinc-800 px-2.5 py-1.5 space-y-0.5 font-mono text-[10.5px]">
+                      <div className="h-[24px] px-2 rounded-sm text-zinc-600 dark:text-zinc-400 flex items-center gap-2 font-medium">
+                        <RefreshCw className="w-3.5 h-3.5 shrink-0 stroke-[1.8]" />
+                        <span>Check updates</span>
+                      </div>
+                      <div className="h-[24px] px-2 rounded-sm text-zinc-600 dark:text-zinc-400 flex items-center gap-2 font-medium">
+                        <Moon className="w-3.5 h-3.5 shrink-0 stroke-[1.8] dark:hidden" />
+                        <Sun className="w-3.5 h-3.5 shrink-0 stroke-[1.8] text-amber-400 hidden dark:block" />
+                        <span className="dark:hidden">Dark mode</span>
+                        <span className="hidden dark:inline">Light mode</span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Main Content Area */}
-                <div className="flex-1 min-w-0 p-3 lg:p-4 flex flex-col justify-between gap-3 bg-zinc-50/50 dark:bg-zinc-950/40">
-                  {/* Top Action Bar (Search with Ctrl+K + Solid Black New Download Button) */}
-                  <div className="flex items-center justify-between gap-3 pb-1 border-b border-zinc-100 dark:border-zinc-800/60">
-                    <div className="flex-1 max-w-sm flex items-center justify-between px-3 py-1.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800/80 text-xs text-zinc-400 shadow-2xs">
-                      <div className="flex items-center gap-2">
-                        <Search className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                <div className="flex-1 min-w-0 flex flex-col justify-between bg-white dark:bg-zinc-950">
+                  {/* Top Control Bar (h-10 border-b with Search in app + New Download) */}
+                  <div className="h-10 px-3 flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800/60 gap-2.5">
+                    <div className="flex-1 max-w-xs h-7 px-2.5 rounded-lg bg-zinc-100 dark:bg-zinc-900 flex items-center justify-between text-[11.5px] font-mono text-zinc-400 dark:text-zinc-500">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Search className="w-3.5 h-3.5 shrink-0" />
                         <span className="truncate">Search in app... (Ctrl+K)</span>
                       </div>
-                      <span className="px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-[10px] font-mono text-zinc-400 border border-zinc-200 dark:border-zinc-700 shrink-0">
+                      <kbd className="text-[9.5px] px-1.5 py-0.2 rounded bg-zinc-200/70 dark:bg-zinc-800 text-zinc-500 border border-zinc-300/60 dark:border-zinc-700/60 shrink-0">
                         Ctrl+K
-                      </span>
+                      </kbd>
                     </div>
 
-                    <button className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-semibold shadow-xs transition-all">
+                    <div className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[11px] font-semibold shadow-xs shrink-0">
                       <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                       <span>New Download</span>
-                    </button>
+                    </div>
                   </div>
 
-                  {/* Active Download Card (1:1 Exact Match to Downex - DOWNLOADING State) */}
-                  <div className="rounded-2xl border border-emerald-500/25 dark:border-emerald-500/20 bg-white dark:bg-zinc-900/70 p-3.5 space-y-2.5 shadow-xs">
-                    {/* Row 1: File icon, Title, Path, Status Badge, Pause & Delete Buttons */}
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-9 h-9 rounded-xl bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200/60 dark:border-zinc-700/60 flex items-center justify-center shrink-0 shadow-2xs">
-                          <File className="w-4.5 h-4.5 text-zinc-700 dark:text-zinc-200 stroke-[1.8]" />
+                  {/* Active Download Card Workspace */}
+                  <div className="p-2.5 lg:p-3">
+                    <div className="rounded-xl border border-emerald-500/50 dark:border-emerald-500/40 bg-white dark:bg-zinc-950 shadow-sm ring-1 ring-emerald-500/20 overflow-hidden">
+                      {/* Card Header Strip (#1 DOWNLOADING + Auto-Shutdown + Pause + Delete) */}
+                      <div className="h-7.5 px-3 flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-[10px] font-bold px-1.5 py-0.2 rounded border bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/35">
+                            #1
+                          </span>
+                          <span className="font-mono text-[10px] uppercase tracking-wider font-semibold text-emerald-600 dark:text-emerald-400">
+                            DOWNLOADING
+                          </span>
                         </div>
-                        <div className="min-w-0">
-                          <h4 className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-100 truncate tracking-tight">
+
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className="px-2 py-0.5 text-[9.5px] font-mono font-medium border bg-zinc-100 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 flex items-center gap-1">
+                            <Power className="w-2.5 h-2.5 text-zinc-400" />
+                            <span className="hidden sm:inline">Auto-Shutdown</span>
+                          </span>
+                          <span className="h-5.5 px-2 border border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300 font-mono text-[9.5px] uppercase tracking-wider font-semibold flex items-center gap-1">
+                            <Pause className="w-2.5 h-2.5 fill-current" />
+                            <span>Pause</span>
+                          </span>
+                          <span className="h-5.5 px-2 border border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-zinc-900/50 text-zinc-400 dark:text-zinc-600 font-mono text-[9.5px] uppercase tracking-wider flex items-center gap-1 opacity-55">
+                            <Trash2 className="w-2.5 h-2.5" />
+                            <span>Delete</span>
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Card Body: Structured Industrial Layout */}
+                      <div className="p-2.5 lg:p-3 space-y-2">
+                        {/* Row 1: File Name Box */}
+                        <div className="flex items-center border border-zinc-300 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/50 px-2.5 py-1 gap-2">
+                          <File className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
+                          <span className="flex-1 font-mono text-[11.5px] font-semibold text-zinc-900 dark:text-zinc-100 truncate">
                             ubuntu-24.04-desktop-amd64.iso
-                          </h4>
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-zinc-100/80 dark:bg-zinc-800/80 border border-zinc-200/70 dark:border-zinc-700/60 text-[11px] font-mono text-zinc-600 dark:text-zinc-300 truncate max-w-sm">
-                              <Menu className="w-3 h-3 text-zinc-400 shrink-0 stroke-[2.2]" />
-                              <span className="truncate">C:\Users\gaura\Downloads\Downex\ubuntu-24.04-desktop-amd64.iso</span>
+                          </span>
+                          <span className="px-1.5 py-0.2 text-[9.5px] font-mono font-semibold bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 uppercase shrink-0">
+                            .ISO
+                          </span>
+                        </div>
+
+                        {/* Row 2: 2x2 Boxed Telemetry Grid */}
+                        <div className="grid grid-cols-2 gap-1.5 font-mono">
+                          <div className="border border-zinc-200 dark:border-zinc-800 bg-zinc-50/40 dark:bg-zinc-950/40 px-2.5 py-1 flex items-center justify-between">
+                            <div>
+                              <span className="text-[9px] uppercase text-zinc-400 block leading-tight">File Size</span>
+                              <span className="text-[12px] font-bold text-zinc-900 dark:text-zinc-100 block leading-snug">
+                                {FILE_SIZE}
+                              </span>
                             </div>
-                            <Copy className="w-3 h-3 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 cursor-pointer shrink-0 stroke-[2]" />
+                            <span className="text-[9px] px-1.5 py-0.2 border border-emerald-500/50 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 shrink-0">
+                              RESUME OK
+                            </span>
+                          </div>
+
+                          <div className="border border-zinc-200 dark:border-zinc-800 bg-zinc-50/40 dark:bg-zinc-950/40 px-2.5 py-1 flex items-center justify-between">
+                            <div>
+                              <span className="text-[9px] uppercase text-zinc-400 block leading-tight">Downloaded</span>
+                              <span className="text-[12px] font-bold text-zinc-900 dark:text-zinc-100 block leading-snug">
+                                {DOWNLOADED_PROGRESS}
+                              </span>
+                            </div>
+                            <span className="text-[9px] px-1.5 py-0.2 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-900 font-semibold shrink-0">
+                              75%
+                            </span>
+                          </div>
+
+                          <div className="border border-zinc-200 dark:border-zinc-800 bg-zinc-50/40 dark:bg-zinc-950/40 px-2.5 py-1 flex items-center justify-between gap-2">
+                            <div className="min-w-0">
+                              <span className="text-[9px] uppercase text-zinc-400 block leading-tight">Transfer rate</span>
+                              <span className="text-[12px] font-bold text-emerald-600 dark:text-emerald-400 block leading-snug truncate">
+                                {TRANSFER_RATE_FULL}
+                              </span>
+                            </div>
+                            <span className="hidden lg:inline text-[9px] text-zinc-400 uppercase shrink-0">
+                              32 Connections
+                            </span>
+                          </div>
+
+                          <div className="border border-zinc-200 dark:border-zinc-800 bg-zinc-50/40 dark:bg-zinc-950/40 px-2.5 py-1 flex items-center justify-between">
+                            <div>
+                              <span className="text-[9px] uppercase text-zinc-400 block leading-tight">Time left</span>
+                              <span className="text-[12px] font-bold text-zinc-900 dark:text-zinc-100 block leading-snug">
+                                {TIME_LEFT_FULL}
+                              </span>
+                            </div>
+                            <span className="text-[9px] text-zinc-400 uppercase shrink-0">
+                              LIVE
+                            </span>
                           </div>
                         </div>
-                      </div>
 
-                      {/* Top Right: Status Badge & Pause + Delete Action Buttons */}
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 uppercase tracking-wider animate-pulse">
-                          DOWNLOADING
-                        </span>
-                        <button
-                          type="button"
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/20 text-xs font-semibold transition-all cursor-pointer shadow-2xs"
-                          title="Pause active download"
-                        >
-                          <Pause className="w-3 h-3 fill-current" />
-                          <span>Pause</span>
-                        </button>
-                        <button
-                          type="button"
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/20 text-xs font-semibold transition-all cursor-pointer shadow-2xs"
-                          title="Stop and delete active download"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                          <span>Delete</span>
-                        </button>
-                      </div>
-                    </div>
+                        {/* Row 3: Progress Bar + Inline Speed Limiter (Tight 2px Gap) */}
+                        <div className="flex flex-col gap-[2px]">
+                          <div className="w-full h-[13px] bg-zinc-200/90 dark:bg-zinc-800/90 rounded-sm p-[1px] shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.22)] border border-zinc-300/80 dark:border-zinc-700/80 relative overflow-hidden flex items-center">
+                            <div
+                              className="h-full rounded-xs transition-all duration-300 relative overflow-hidden bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]"
+                              style={{ width: PROGRESS_WIDTH }}
+                            >
+                              <div className="absolute inset-0 animate-stripes opacity-45 mix-blend-overlay pointer-events-none" />
+                              <div className="animate-shimmer pointer-events-none" />
+                              <div className="absolute inset-x-0 top-0 h-[45%] bg-gradient-to-b from-white/35 to-transparent pointer-events-none" />
+                              <div className="absolute inset-x-0 bottom-0 h-[30%] bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+                              <div className="absolute right-0 top-0 bottom-0 w-1.5 bg-white shadow-[0_0_8px_#ffffff,0_0_14px_#34d399] animate-pulse pointer-events-none" />
+                            </div>
+                          </div>
 
-                    {/* Row 2: The Minimal Structured Metrics Grid (2 Columns, matching Downex Downloading state) */}
-                    <div className="rounded-xl bg-zinc-50/80 dark:bg-zinc-900/80 border border-zinc-100 dark:border-zinc-800/80 p-2.5 text-xs font-mono grid grid-cols-2 gap-x-6 gap-y-1.5 select-text shadow-2xs">
-                      <div>
-                        <span className="text-zinc-400">File size: </span>
-                        <span className="font-semibold text-zinc-900 dark:text-zinc-100">{FILE_SIZE}</span>
-                      </div>
-                      <div>
-                        <span className="text-zinc-400">Downloaded: </span>
-                        <span className="font-semibold text-zinc-900 dark:text-zinc-100">
-                          {DOWNLOADED_PROGRESS}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-zinc-400">Transfer rate: </span>
-                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                          {TRANSFER_RATE_FULL}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-zinc-400">Time left: </span>
-                        <span className="font-semibold text-zinc-900 dark:text-zinc-100">
-                          {TIME_LEFT_FULL}
-                        </span>
-                      </div>
-                    </div>
+                          {/* Inline Speed Limiter Strip */}
+                          <div className="flex items-center justify-between gap-1 px-1.5 h-[24px] bg-zinc-50/80 dark:bg-zinc-900/60 rounded-md border border-zinc-200/80 dark:border-zinc-800/80 text-[9.5px] font-mono">
+                            <div className="flex items-center gap-1 min-w-0">
+                              <span className="flex items-center gap-1 text-zinc-500 dark:text-zinc-400 font-sans font-medium shrink-0">
+                                <Gauge className="w-3 h-3 text-emerald-500 shrink-0" />
+                                <span className="hidden sm:inline">Limit:</span>
+                              </span>
+                              <div className="flex items-center gap-0.5">
+                                {["50M", "100M", "150M", "180M", "200M"].map((preset) => (
+                                  <span
+                                    key={preset}
+                                    className="h-[18px] px-1.5 rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center"
+                                  >
+                                    {preset}
+                                  </span>
+                                ))}
+                                <span className="hidden sm:inline-flex h-[18px] px-1.5 rounded border border-zinc-200/90 dark:border-zinc-700/80 bg-white/80 dark:bg-zinc-800/60 text-zinc-400 items-center">
+                                  Custom
+                                </span>
+                              </div>
+                            </div>
+                            <span className="text-[9px] text-zinc-400 dark:text-zinc-500 shrink-0">
+                              Unlimited
+                            </span>
+                          </div>
+                        </div>
 
-                    {/* Row 3: Signature Downex Progress Bar with Multi-layer Animations */}
-                    <div className="w-full h-[15px] bg-zinc-200/90 dark:bg-zinc-800/90 rounded-sm p-[1px] shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.22)] border border-zinc-300/80 dark:border-zinc-700/80 relative overflow-hidden flex items-center">
-                      <div
-                        className="h-full rounded-xs transition-all duration-300 relative overflow-hidden bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]"
-                        style={{ width: PROGRESS_WIDTH }}
-                      >
-                        {/* 1. Flowing animated barber-pole diagonal stripes */}
-                        <div className="absolute inset-0 animate-stripes opacity-45 mix-blend-overlay pointer-events-none" />
+                        {/* Row 4: Save To Path + Browse */}
+                        <div className="flex items-center gap-1.5">
+                          <div className="flex-1 min-w-0 border border-zinc-300 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/50 px-2 py-0.5 flex items-center gap-1.5">
+                            <FolderOpen className="w-3 h-3 text-zinc-400 shrink-0" />
+                            <span className="flex-1 font-mono text-[10.5px] text-zinc-800 dark:text-zinc-200 truncate">
+                              C:\Users\gaura\Downloads\Downex\ubuntu-24.04-desktop-amd64.iso
+                            </span>
+                            <Copy className="w-3 h-3 text-zinc-400 shrink-0" />
+                          </div>
+                          <span className="h-[24px] px-2.5 border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 font-mono text-[9.5px] uppercase tracking-wider text-zinc-700 dark:text-zinc-200 flex items-center shrink-0">
+                            Browse
+                          </span>
+                        </div>
 
-                        {/* 2. Sweeping specular light shimmer beam */}
-                        <div className="animate-shimmer pointer-events-none" />
-
-                        {/* 3. Top gloss glass highlight */}
-                        <div className="absolute inset-x-0 top-0 h-[45%] bg-gradient-to-b from-white/35 to-transparent pointer-events-none" />
-
-                        {/* 4. Bottom 3D bevel shadow */}
-                        <div className="absolute inset-x-0 bottom-0 h-[30%] bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
-
-                        {/* 5. Pulsing energetic leading-edge head at download boundary */}
-                        <div className="absolute right-0 top-0 bottom-0 w-1.5 bg-white shadow-[0_0_8px_#ffffff,0_0_14px_#34d399] animate-pulse pointer-events-none" />
-                      </div>
-                    </div>
-
-                    {/* Row 4: Footer Actions inside Card (Matching Downex Downloading state) */}
-                    <div className="flex items-center justify-between text-xs pt-0.5">
-                      <button className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors">
-                        <ChevronDown className="w-3.5 h-3.5 stroke-[2.2]" />
-                        <span>Show details (Connections &amp; Segments)</span>
-                      </button>
-
-                      <div className="flex items-center gap-3">
-                        <button className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">
-                          <Folder className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400 stroke-[2]" />
-                          <span>Destination folder</span>
-                        </button>
-
-                        <span className="text-zinc-300 dark:text-zinc-700">•</span>
-
-                        <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold font-mono text-[11px]">
-                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                          <span>Resume: Yes</span>
-                        </span>
+                        {/* Row 5: Details Toggle */}
+                        <div className="flex items-center justify-between pt-0.5">
+                          <span className="text-[10px] font-mono font-medium text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
+                            <ChevronDown className="w-3 h-3" />
+                            <span>Show details (Connections &amp; Segments)</span>
+                          </span>
+                          <span className="text-[9.5px] font-mono text-zinc-400 uppercase">
+                            ACTIVE TASK
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -530,7 +646,7 @@ export default function MarketingLayer({
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 pt-2">
               <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-zinc-100/70 dark:bg-zinc-800/60 border border-zinc-200/60 dark:border-zinc-700/60 text-[11px] text-zinc-700 dark:text-zinc-300">
                 <Zap className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400 shrink-0" />
-                <span className="truncate"><strong>16x Streams:</strong> Turbo Speed</span>
+                <span className="truncate"><strong>32x Threads:</strong> Turbo Speed</span>
               </div>
               <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-zinc-100/70 dark:bg-zinc-800/60 border border-zinc-200/60 dark:border-zinc-700/60 text-[11px] text-zinc-700 dark:text-zinc-300">
                 <Puzzle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
