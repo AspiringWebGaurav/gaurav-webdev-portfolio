@@ -26,6 +26,9 @@ export async function POST(req: NextRequest) {
     const existing = await rtdbDataSource.getValue<Record<string, unknown>>(machinePath);
 
     if (existing) {
+      if (!existing.first_seen) {
+        existing.first_seen = existing.last_seen || Date.now();
+      }
       existing.is_banned = isBan;
       if (isBan) {
         existing.ban_reason = reason;
@@ -35,11 +38,13 @@ export async function POST(req: NextRequest) {
       existing.updated_at = Date.now();
       await rtdbDataSource.setValue(machinePath, existing);
     } else {
+      const now = Date.now();
       const newMachine: Record<string, unknown> = {
         hwid,
         is_banned: isBan,
-        last_seen: Date.now(),
-        updated_at: Date.now(),
+        first_seen: now,
+        last_seen: now,
+        updated_at: now,
       };
       if (isBan && reason) {
         newMachine.ban_reason = reason;

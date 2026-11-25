@@ -25,6 +25,17 @@ export function isValidDownexHwid(raw?: string | null): boolean {
   return DOWNEX_HWID_PATTERN.test(normalized);
 }
 
+export function sortMachinesByInstallOrder<T extends Pick<DownexMachine, "hwid" | "first_seen" | "last_seen">>(
+  list: T[]
+): T[] {
+  return [...list].sort((a, b) => {
+    const aOrder = Number(a.first_seen || a.last_seen || 0);
+    const bOrder = Number(b.first_seen || b.last_seen || 0);
+    if (aOrder !== bOrder) return aOrder - bOrder;
+    return (a.hwid || "").localeCompare(b.hwid || "");
+  });
+}
+
 export function normalizeMachinesMap(
   rawMap: Record<string, Record<string, unknown>> | null | undefined
 ): DownexMachine[] {
@@ -67,7 +78,5 @@ export function normalizeMachinesMap(
     });
   }
 
-  return Array.from(byHwid.values()).sort(
-    (a, b) => Number(b.last_seen || 0) - Number(a.last_seen || 0)
-  );
+  return sortMachinesByInstallOrder(Array.from(byHwid.values()));
 }

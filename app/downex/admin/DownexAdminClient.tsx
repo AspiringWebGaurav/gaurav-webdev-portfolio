@@ -34,6 +34,7 @@ import {
   type MarqueeNoticeDirection,
   type MarqueeNoticeTone,
 } from "@/lib/downex/notices";
+import { sortMachinesByInstallOrder } from "@/lib/downex/machines";
 
 export interface Machine {
   hwid: string;
@@ -237,7 +238,9 @@ export default function DownexAdminClient({
   const [token, setToken] = useState<string | null>(null);
   const [isHydrating, setIsHydrating] = useState<boolean>(!initialSession);
   const [adminTab, setAdminTab] = useState<"CLIENTS" | "NOTICES">(initialTab);
-  const [machines, setMachines] = useState<Machine[]>(initialMachines);
+  const [machines, setMachines] = useState<Machine[]>(() =>
+    sortMachinesByInstallOrder(initialMachines)
+  );
   const [notices, setNotices] = useState<MarqueeNotice[]>(initialNotices);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -602,7 +605,7 @@ export default function DownexAdminClient({
       });
       if (res.ok) {
         const data = await res.json();
-        const list: Machine[] = data.machines || [];
+        const list: Machine[] = sortMachinesByInstallOrder(data.machines || []);
         setMachines(list);
         setActionFeedback({
           text: `List updated (${list.length} devices).`,
@@ -641,7 +644,7 @@ export default function DownexAdminClient({
         try {
           const payload = JSON.parse(e.data);
           if (payload && Array.isArray(payload.machines)) {
-            setMachines(payload.machines);
+            setMachines(sortMachinesByInstallOrder(payload.machines));
             setIsLiveStream(true);
           }
         } catch {}
