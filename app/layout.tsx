@@ -223,6 +223,10 @@ export default async function RootLayout({
   const isContactPortal =
     reqHeaders.get("x-is-contact-portal") === "true" ||
     reqHeaders.get("x-pathname")?.startsWith("/contact-portal");
+  const isDownloadPortal =
+    reqHeaders.get("x-is-download-portal") === "true" ||
+    reqHeaders.get("x-pathname")?.startsWith("/download") ||
+    reqHeaders.get("x-pathname")?.startsWith("/downex");
   const cookieStore = await cookies();
   const rawTheme = (themeHeader === "light" || themeHeader === "dark")
     ? themeHeader
@@ -255,7 +259,7 @@ export default async function RootLayout({
         suppressHydrationWarning
       >
         <ThemeProvider defaultTheme={initialTheme}>
-          <PortfolioPreloader />
+          <PortfolioPreloader disabled={isDownloadPortal} />
           <RouteProgressBar />
           <ThemeToggle />
           {children}

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Download,
   ListOrdered,
@@ -48,8 +48,14 @@ interface MarketingLayerProps {
 
 export default function MarketingLayer({
   onOpenDownload,
-  desktopDownloadUrl = "https://gphost.eu.cc/raw/downex-desktop",
+  desktopDownloadUrl = "/api/downex/download/desktop",
 }: MarketingLayerProps) {
+  const [startingDesktop, setStartingDesktop] = useState(false);
+
+  const handleDesktopDownloadClick = () => {
+    setStartingDesktop(true);
+    setTimeout(() => setStartingDesktop(false), 2200);
+  };
   return (
     <div data-portal="download" className="relative w-full h-full max-h-dvh flex flex-col justify-between overflow-hidden select-none">
       {/* Aceternity Spotlight for subtle ambient glow in dark mode */}
@@ -224,10 +230,12 @@ export default function MarketingLayer({
           <a
             href={desktopDownloadUrl}
             download="DownexSetup.exe"
+            data-downex-bypass="true"
+            onClick={handleDesktopDownloadClick}
             className="flex-1 h-10 rounded-xl bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-950 text-xs font-bold shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
-            <Download className="w-3.5 h-3.5" />
-            <span>Download v0.0.1</span>
+            <Download className={`w-3.5 h-3.5 ${startingDesktop ? "animate-bounce" : ""}`} />
+            <span>{startingDesktop ? "Starting download..." : "Download v0.0.1"}</span>
             <ArrowRight className="w-3 h-3 opacity-70" />
           </a>
           <button
@@ -327,10 +335,12 @@ export default function MarketingLayer({
               <a
                 href={desktopDownloadUrl}
                 download="DownexSetup.exe"
+                data-downex-bypass="true"
+                onClick={handleDesktopDownloadClick}
                 className="group inline-flex items-center justify-center gap-2.5 h-10 lg:h-11 px-6 rounded-xl bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-950 text-xs lg:text-sm font-bold shadow-md active:scale-95 transition-all cursor-pointer"
               >
-                <Download className="w-4 h-4" />
-                <span>Download for Windows</span>
+                <Download className={`w-4 h-4 ${startingDesktop ? "animate-bounce" : ""}`} />
+                <span>{startingDesktop ? "Starting download..." : "Download for Windows"}</span>
                 <ArrowRight className="w-3.5 h-3.5 opacity-70 group-hover:translate-x-0.5 transition-transform" />
               </a>
 

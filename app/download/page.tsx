@@ -29,12 +29,12 @@ export const metadata: Metadata = {
 // These endpoints are strictly locked, permanent, and never overwritten or deleted by OTA releases.
 const baseDesktopDownloadUrl = (
   process.env.NEXT_PUBLIC_DOWNEX_DOWNLOAD_URL ||
-  "https://gphost.eu.cc/raw/downex-desktop"
+  "/api/downex/download/desktop"
 ).split("?")[0];
 
 const baseExtensionDownloadUrl = (
   process.env.NEXT_PUBLIC_DOWNEX_EXTENSION_DOWNLOAD_URL ||
-  "https://gphost.eu.cc/raw/downex-extension"
+  "/api/downex/download/extension"
 ).split("?")[0];
 
 export default function DownloadPage() {

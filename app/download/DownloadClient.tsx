@@ -49,12 +49,20 @@ const SHA256_CHECKSUM = "7b56a0e36a6c0a64c58df832a4c6f26941b29448ae1fd4bbc4c4c79
 
 export default function DownloadClient({
   desktopDownloadUrl,
-  extensionDownloadUrl = "https://gphost.eu.cc/raw/downex-extension",
+  extensionDownloadUrl = "/api/downex/download/extension",
 }: DownloadClientProps) {
   const [view, setView] = useState<DownexView>("marketing");
   const [detectedOS, setDetectedOS] = useState<DetectedPlatform>("windows");
   const [copiedHash, setCopiedHash] = useState(false);
   const [mobileTab, setMobileTab] = useState<MobileTab>("windows");
+  const [startingTarget, setStartingTarget] = useState<"desktop" | "extension" | null>(null);
+
+  const notifyStarting = (target: "desktop" | "extension") => {
+    setStartingTarget(target);
+    setTimeout(() => {
+      setStartingTarget((prev) => (prev === target ? null : prev));
+    }, 2200);
+  };
 
   const openDownloadView = () => {
     setView("download");
@@ -148,7 +156,7 @@ export default function DownloadClient({
             initial={{ opacity: 0, scale: 0.995 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.995 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.12, ease: "easeOut" }}
             className="w-full h-full overflow-hidden"
           >
             <MarketingLayer
@@ -164,7 +172,7 @@ export default function DownloadClient({
             initial={{ opacity: 0, scale: 0.995 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.995 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.12, ease: "easeOut" }}
             className="w-full h-full overflow-hidden flex flex-col justify-between"
           >
             {/* =========================================================================
@@ -289,10 +297,12 @@ export default function DownloadClient({
                   <a
                     href={desktopDownloadUrl}
                     download="DownexSetup.exe"
+                    data-downex-bypass="true"
+                    onClick={() => notifyStarting("desktop")}
                     className="flex-1 inline-flex items-center justify-center gap-2 h-10 px-3 rounded-xl bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-950 text-xs font-bold shadow-xs active:scale-[0.98] transition-all cursor-pointer"
                   >
-                    <Download className="w-4 h-4" />
-                    <span>Download for Windows</span>
+                    <Download className={`w-4 h-4 ${startingTarget === "desktop" ? "animate-bounce" : ""}`} />
+                    <span>{startingTarget === "desktop" ? "Starting download..." : "Download for Windows"}</span>
                   </a>
                 </div>
 
@@ -356,10 +366,12 @@ export default function DownloadClient({
                   <a
                     href={extensionDownloadUrl}
                     download="downex-browser-extension.zip"
+                    data-downex-bypass="true"
+                    onClick={() => notifyStarting("extension")}
                     className="flex-1 inline-flex items-center justify-center gap-2 h-10 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs active:scale-[0.98] transition-all cursor-pointer"
                   >
-                    <Download className="w-4 h-4" />
-                    <span>Download Extension</span>
+                    <Download className={`w-4 h-4 ${startingTarget === "extension" ? "animate-bounce" : ""}`} />
+                    <span>{startingTarget === "extension" ? "Starting download..." : "Download Extension"}</span>
                   </a>
                   <a
                     href="https://github.com/AspiringWebGaurav/downex/tree/main/downex-browser-extension#readme"
@@ -576,10 +588,12 @@ export default function DownloadClient({
                   <a
                     href={desktopDownloadUrl}
                     download="DownexSetup.exe"
+                    data-downex-bypass="true"
+                    onClick={() => notifyStarting("desktop")}
                     className="flex-1 inline-flex items-center justify-center gap-2 h-10 lg:h-11 rounded-xl bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-950 text-xs lg:text-sm font-bold shadow-sm active:scale-[0.99] transition-all cursor-pointer"
                   >
-                    <Download className="w-4 h-4 shrink-0" />
-                    <span>Download for Windows (DownexSetup.exe)</span>
+                    <Download className={`w-4 h-4 shrink-0 ${startingTarget === "desktop" ? "animate-bounce" : ""}`} />
+                    <span>{startingTarget === "desktop" ? "Starting download (DownexSetup.exe)..." : "Download for Windows (DownexSetup.exe)"}</span>
                   </a>
                 </div>
 
@@ -661,10 +675,12 @@ export default function DownloadClient({
                   <a
                     href={extensionDownloadUrl}
                     download="downex-browser-extension.zip"
+                    data-downex-bypass="true"
+                    onClick={() => notifyStarting("extension")}
                     className="flex-1 inline-flex items-center justify-center gap-2 h-10 lg:h-11 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs lg:text-sm font-bold shadow-sm active:scale-[0.99] transition-all cursor-pointer"
                   >
-                    <Download className="w-4 h-4 shrink-0" />
-                    <span>Download Extension (.zip)</span>
+                    <Download className={`w-4 h-4 shrink-0 ${startingTarget === "extension" ? "animate-bounce" : ""}`} />
+                    <span>{startingTarget === "extension" ? "Starting download (.zip)..." : "Download Extension (.zip)"}</span>
                   </a>
 
                   <a

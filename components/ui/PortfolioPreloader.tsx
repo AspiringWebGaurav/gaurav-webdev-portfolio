@@ -16,11 +16,16 @@ import { cn } from "@/lib/utils";
  * 5. Reduced Motion Compliance: Respects prefers-reduced-motion media query.
  * 6. Leak-Free Timer Garbage Collection: All refs and listeners reliably flushed on unmount.
  */
-export function PortfolioPreloader() {
+export function PortfolioPreloader({ disabled = false }: { disabled?: boolean } = {}) {
   const pathname = usePathname();
   const isUninstalledRoute =
-    Boolean(pathname && pathname.includes("/uninstalled")) ||
-    (typeof window !== "undefined" && window.location.pathname.includes("/uninstalled"));
+    disabled ||
+    Boolean(pathname && (pathname.includes("/uninstalled") || pathname.startsWith("/download") || pathname.startsWith("/downex"))) ||
+    (typeof window !== "undefined" &&
+      (window.location.pathname.includes("/uninstalled") ||
+        window.location.pathname.startsWith("/download") ||
+        window.location.pathname.startsWith("/downex") ||
+        window.location.hostname.startsWith("downex.")));
 
   const [mounted, setMounted] = useState(!isUninstalledRoute);
   const [isExiting, setIsExiting] = useState(false);
