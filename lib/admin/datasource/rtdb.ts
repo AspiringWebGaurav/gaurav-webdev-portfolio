@@ -39,7 +39,8 @@ class RtdbDataSource {
     if (!db) throw new Error("Firebase Admin RTDB not configured");
 
     try {
-      await db.ref(path).set(value);
+      const sanitized = value !== undefined ? JSON.parse(JSON.stringify(value)) : null;
+      await db.ref(path).set(sanitized);
       adminLogger.latency(`RTDB:setValue:${path}`, Date.now() - startTime);
     } catch (err) {
       adminLogger.error(`RTDB:setValue:${path}`, err, "Failed to set RTDB value");

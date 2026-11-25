@@ -1,4 +1,5 @@
 export const ADMIN_COOKIE_NAME = "admin_session";
+export const DOWNEX_ADMIN_COOKIE_NAME = "downex_admin_session";
 export const ADMIN_OTP_COOKIE_NAME = "admin_otp_challenge";
 export const PRIMARY_ADMIN_EMAIL = "gauravpatil5737@gmail.com";
 export const PRIMARY_ADMIN_NAME = "Gaurav Patil";
@@ -19,6 +20,14 @@ export const ADMIN_SESSION_MAX_AGE_SECONDS = ADMIN_SESSION_TTL_HOURS * 60 * 60;
  * Internally derived session expiration in milliseconds for timestamps & tokens
  */
 export const ADMIN_SESSION_TTL_MS = ADMIN_SESSION_MAX_AGE_SECONDS * 1000;
+
+/**
+ * Downex Admin & Ecosystem Long-Lived Session Constants:
+ * 30-day persistent session window matching GPHost and GPN.
+ * Admin stays permanently logged in until explicitly clicking 'Sign Out'.
+ */
+export const DOWNEX_SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60; // 30 Days (2,592,000s)
+export const DOWNEX_SESSION_TTL_MS = DOWNEX_SESSION_MAX_AGE_SECONDS * 1000;
 
 /**
  * Two-Factor OTP Security Constants

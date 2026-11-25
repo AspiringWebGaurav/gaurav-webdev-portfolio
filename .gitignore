@@ -234,7 +234,9 @@ temp-contact/
 tsconfig.tsbuildinfo
 *.tsbuildinfo
 
-# Archives & Backups
+# Archives, Local Runners & Backups
+run-local.bat
+*.bat
 *.zip
 *.tar.gz
 *.tgz

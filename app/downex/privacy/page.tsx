@@ -1,208 +1,132 @@
 import type { Metadata } from "next";
 import DownexLegalLayout from "@/components/downex/DownexLegalLayout";
-import {
-  EyeOff,
-  Copy,
-  Puzzle,
-  HardDrive,
-  RefreshCw,
-  Trash2,
-  Mail,
-  Globe,
-} from "lucide-react";
 
 export const dynamic = "force-static";
 export const revalidate = false;
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | Downex Download Manager",
+  title: "Privacy & Policies | Downex Download Manager",
   description:
-    "Official Privacy Policy for Downex Download Manager: 100% Zero-Telemetry, private clipboard link interception, local loopback IPC, and complete data wipe architecture.",
+    "Official Privacy Policy for Downex Download Manager: 100% Zero-Telemetry, local processing only, and complete data wipe support.",
   openGraph: {
-    title: "Privacy Policy | Downex Download Manager",
+    title: "Privacy & Policies | Downex Download Manager",
     description:
-      "Downex Download Manager Privacy Policy: Zero tracking, local memory clipboard inspection, private loopback IPC, and full wipe support.",
+      "Downex Privacy Policy: Zero tracking, local memory clipboard inspection, private localhost IPC, and full wipe support.",
     url: "https://downex.apps.gauravpatil.site/privacy",
     siteName: "Downex",
   },
 };
 
-const privacySections = [
-  { id: "privacy", title: "1. Privacy First & Zero Telemetry" },
-  { id: "clipboard-privacy", title: "2. Local Clipboard Link Detection" },
-  { id: "extension-privacy", title: "3. Companion Browser Extension Scope" },
-  { id: "file-storage", title: "4. Local File Storage & Metadata" },
-  { id: "dynamic-updates", title: "5. Silent Dynamic Edge Updates" },
-  { id: "uninstall-wipe", title: "6. Data Retention & Complete Wipe" },
-  { id: "third-party", title: "7. Third-Party Download Sources" },
-  { id: "contact", title: "8. Contact & Security Inquiries" },
-];
-
 export default function DownexPrivacyPage() {
   return (
     <DownexLegalLayout
-      title="Privacy Policy & Data Security"
-      badge="Zero Telemetry &bull; Local-First Architecture"
-      lastUpdated="November 2026"
-      summary="Downex is built with an uncompromising privacy-first philosophy. We do not track you, we do not log your downloads, and we collect zero personal data. All processing, link capture, and file operations remain 100% local to your device."
-      sections={privacySections}
+      title="Privacy & Policies"
+      lastUpdated="November 24, 2026"
     >
-      {/* 1. Privacy First & Zero Telemetry */}
-      <section id="privacy" className="space-y-4 scroll-mt-28">
-        <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-200 dark:border-zinc-800">
-          <EyeOff className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-          <h2 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-zinc-50">
-            1. Privacy First &amp; Zero Telemetry
-          </h2>
-        </div>
-        <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          Downex adheres to a strict <strong>Zero Telemetry</strong> architecture. Unlike conventional download managers that embed behavioral analytics, tracking beacons, advertising networks, or usage statistics SDKs, Downex contains:
+      <p className="text-lg font-medium text-zinc-900 dark:text-zinc-100">
+        Thank you for using Downex!
+      </p>
+
+      <p>
+        At Downex, privacy is not an afterthought&mdash;it is the fundamental architectural principle of the software. This Privacy Policy explains our zero-telemetry architecture and how your data remains completely private and local when you use Downex Download Manager, our companion browser extension, and related local tools.
+      </p>
+
+      {/* 1. Zero-Telemetry Commitment */}
+      <section id="telemetry" tabIndex={-1} className="space-y-4 pt-4 scroll-mt-20 outline-none target:ring-2 target:ring-emerald-500/40 target:bg-emerald-500/5 target:rounded-lg p-3 -m-3 transition-all duration-500">
+        <h2 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
+          1. Our Zero-Telemetry Commitment
+        </h2>
+        <p>
+          <strong>No analytics SDKs.</strong> Downex does not include or load Google Analytics, Mixpanel, Sentry, telemetry trackers, or advertising frameworks in its desktop applications, background daemons, or browser extensions.
         </p>
-        <ul className="list-disc pl-5 space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
-          <li><strong>Zero Analytics SDKs:</strong> No Google Analytics, Mixpanel, Sentry, or third-party telemetry libraries are bundled into the desktop binaries or background services.</li>
-          <li><strong>Zero Activity Logs:</strong> Your download history, file names, URLs, transfer volumes, and timestamps are never transmitted to us or any remote server.</li>
-          <li><strong>Zero Account Requirement:</strong> Downex requires no account registration, login credentials, or phone/email validation. The application operates entirely anonymously.</li>
+        <p>
+          <strong>No activity tracking.</strong> We do not record, monitor, or transmit your download URLs, file names, file sizes, transfer speeds, or browsing history to any remote server.
+        </p>
+        <p>
+          <strong>No account requirement.</strong> Downex operates completely anonymously. You do not need to register, provide an email address, or create an account to download files at maximum speed.
+        </p>
+      </section>
+
+      {/* 2. Local Workstation Processing */}
+      <section id="local-processing" tabIndex={-1} className="space-y-4 pt-4 scroll-mt-20 outline-none target:ring-2 target:ring-emerald-500/40 target:bg-emerald-500/5 target:rounded-lg p-3 -m-3 transition-all duration-500">
+        <h2 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
+          2. Local Workstation Processing
+        </h2>
+        <p>
+          <strong>Clipboard link detection.</strong> When clipboard link auto-detection is enabled in your Settings, Downex monitors the Windows clipboard strictly in volatile memory (RAM) to detect valid web download links (<code className="font-mono text-sm px-1 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800">http://</code>, <code className="font-mono text-sm px-1 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800">https://</code>). Any clipboard contents that are not download URLs are instantly discarded without reading, caching, or logging. Clipboard data is never saved to disk and never leaves your computer.
+        </p>
+        <p>
+          <strong>Local database storage.</strong> Your download task history, custom queue order, and aggregate bandwidth statistics are stored exclusively in a local SQLite database (<code className="font-mono text-sm px-1 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800">downex.db</code>) located in your personal Windows AppData folder (<code className="font-mono text-sm px-1 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800">%LOCALAPPDATA%\com.downex.manager</code>). This data is completely private to your local user profile.
+        </p>
+      </section>
+
+      {/* 3. Browser Companion Extension */}
+      <section id="extension" tabIndex={-1} className="space-y-4 pt-4 scroll-mt-20 outline-none target:ring-2 target:ring-emerald-500/40 target:bg-emerald-500/5 target:rounded-lg p-3 -m-3 transition-all duration-500">
+        <h2 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
+          3. Browser Companion Extension Scope
+        </h2>
+        <p>
+          <strong>Local loopback IPC.</strong> The optional browser extension for Chromium browsers communicates exclusively with your local Downex desktop engine over a loopback socket (<code className="font-mono text-sm px-1 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800">http://127.0.0.1:18888</code>).
+        </p>
+        <p>
+          <strong>Zero web page inspection.</strong> The extension intercepts only native browser file download events. It does not inspect, read, or transmit your browsing history, webpage content, form inputs, cookies, or credentials.
+        </p>
+      </section>
+
+      {/* 4. Software Updates */}
+      <section id="security" tabIndex={-1} className="space-y-4 pt-4 scroll-mt-20 outline-none target:ring-2 target:ring-emerald-500/40 target:bg-emerald-500/5 target:rounded-lg p-3 -m-3 transition-all duration-500 relative">
+        <span id="updates" className="absolute -top-20 block h-0 w-0 opacity-0 pointer-events-none" />
+        <h2 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
+          4. Software Updates &amp; Network Requests
+        </h2>
+        <p>
+          <strong>Minimal update checks.</strong> To verify that your software is up to date, Downex performs a periodic HTTP GET request for a signed release manifest hosted on high-speed mirrors (Cloudflare R2). No hardware serial numbers, device fingerprints, or user identifiers are collected or stored during update checks.
+        </p>
+        <p>
+          <strong>In-memory verification.</strong> All software updates are cryptographically validated in memory before any files are written to disk.
+        </p>
+      </section>
+
+      {/* 5. Data Retention & Uninstallation */}
+      <section id="retention" tabIndex={-1} className="space-y-4 pt-4 scroll-mt-20 outline-none target:ring-2 target:ring-emerald-500/40 target:bg-emerald-500/5 target:rounded-lg p-3 -m-3 transition-all duration-500">
+        <h2 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
+          5. Data Retention &amp; Uninstallation
+        </h2>
+        <p>
+          Because Downex does not store any of your data on remote servers, you maintain complete control over data retention:
+        </p>
+        <ul className="list-disc pl-6 space-y-2">
+          <li><strong>Preserve history (Default):</strong> When uninstalling, you can choose to preserve your task database and completed downloads so they are immediately available if you reinstall in the future.</li>
+          <li><strong>Complete clean wipe:</strong> You can choose the clean wipe option in the uninstaller (<code className="font-mono text-sm px-1 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800">uninstall.exe</code>) to permanently delete all application binaries, task databases, configuration files, and temporary cache from your computer.</li>
+          <li><strong>Completed files:</strong> Your downloaded files in your personal Downloads folder are never removed automatically during uninstallation.</li>
         </ul>
       </section>
 
-      {/* 2. Clipboard Link Detection */}
-      <section id="clipboard-privacy" className="space-y-4 scroll-mt-28">
-        <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-200 dark:border-zinc-800">
-          <Copy className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-          <h2 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-zinc-50">
-            2. Local Clipboard Link Detection
-          </h2>
-        </div>
-        <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          When the <em>Clipboard link auto-detection</em> setting is enabled by the user, Downex monitors the Windows clipboard to detect when valid web download links (<code className="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 font-mono text-xs">http://</code>, <code className="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 font-mono text-xs">https://</code>) are copied.
-        </p>
-        <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          This inspection occurs <strong>strictly in volatile local memory (RAM)</strong>. Clipboard content that does not represent a download URL is discarded immediately without inspection, caching, or logging. Clipboard data never leaves your workstation and is never written to disk or transmitted over the network.
+      {/* 6. Third-Party Download Sources */}
+      <section id="third-party" tabIndex={-1} className="space-y-4 pt-4 scroll-mt-20 outline-none target:ring-2 target:ring-emerald-500/40 target:bg-emerald-500/5 target:rounded-lg p-3 -m-3 transition-all duration-500">
+        <h2 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
+          6. Third-Party Download Sources
+        </h2>
+        <p>
+          When you download a file, Downex establishes a direct TCP socket connection to the third-party server hosting that file. That server receives your IP address and standard HTTP request headers necessary to complete the file transfer. Those third-party hosts operate under their own privacy policies.
         </p>
       </section>
 
-      {/* 3. Companion Browser Extension Scope */}
-      <section id="extension-privacy" className="space-y-4 scroll-mt-28">
-        <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-200 dark:border-zinc-800">
-          <Puzzle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-          <h2 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-zinc-50">
-            3. Companion Browser Extension Scope
-          </h2>
-        </div>
-        <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          The companion browser extension (packaged inside <code className="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 font-mono text-xs">%LOCALAPPDATA%\Downex\browser-extension</code>) is designed with minimal attack surface:
+      {/* 7. Contact Us */}
+      <section id="contact" tabIndex={-1} className="space-y-4 pt-4 scroll-mt-20 outline-none target:ring-2 target:ring-emerald-500/40 target:bg-emerald-500/5 target:rounded-lg p-3 -m-3 transition-all duration-500 relative">
+        <span id="privacy" className="absolute -top-20 block h-0 w-0 opacity-0 pointer-events-none" />
+        <h2 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
+          7. Contact Us
+        </h2>
+        <p>
+          If you have any questions about this Privacy Policy or wish to report a security disclosure, please contact the developer directly at{" "}
+          <a
+            href="mailto:hello@gauravpatil.site"
+            className="font-medium underline underline-offset-3 hover:text-black dark:hover:text-white"
+          >
+            hello@gauravpatil.site
+          </a>.
         </p>
-        <ul className="list-disc pl-5 space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
-          <li><strong>Local Loopback IPC:</strong> Intercepted download links are forwarded strictly to your local Downex daemon over localhost (<code className="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 font-mono text-xs">http://127.0.0.1:18888</code>).</li>
-          <li><strong>Zero Remote Communication:</strong> The extension makes no external HTTP requests to remote analytics, ad trackers, or third-party servers.</li>
-          <li><strong>Zero Page Content Inspection:</strong> The extension does not read form inputs, cookies, passwords, or webpage DOM contents. It intercepts only native browser download requests.</li>
-        </ul>
-      </section>
-
-      {/* 4. Local File Storage & Metadata */}
-      <section id="file-storage" className="space-y-4 scroll-mt-28">
-        <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-200 dark:border-zinc-800">
-          <HardDrive className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-          <h2 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-zinc-50">
-            4. Local File Storage &amp; Metadata
-          </h2>
-        </div>
-        <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          All application state, active download tasks, and temporary segment chunks are maintained entirely on your local storage:
-        </p>
-        <ul className="list-disc pl-5 space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
-          <li><strong>Target Destination:</strong> Complete files are stored in your configured downloads folder (default: <code className="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 font-mono text-xs">%USERPROFILE%\Downloads\Downex</code>).</li>
-          <li><strong>In-Flight Chunks:</strong> Incomplete downloads create atomic staging files (<code className="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 font-mono text-xs">*.part</code>) in the destination directory until verified and combined.</li>
-          <li><strong>Application Configuration:</strong> User preferences (speed limits, connection count, tray minimization) are saved in <code className="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 font-mono text-xs">%LOCALAPPDATA%\Downex\settings.json</code>.</li>
-        </ul>
-      </section>
-
-      {/* 5. Dynamic Edge Updates */}
-      <section id="dynamic-updates" className="space-y-4 scroll-mt-28">
-        <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-200 dark:border-zinc-800">
-          <RefreshCw className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-          <h2 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-zinc-50">
-            5. Silent Dynamic Edge Updates
-          </h2>
-        </div>
-        <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          To ensure security and stability, Downex periodically checks for software updates against our edge release distribution network (hosted on Cloudflare R2 / GPHost high-speed mirrors):
-        </p>
-        <ul className="list-disc pl-5 space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
-          <li><strong>Standard HTTP GET Request:</strong> Update checks perform a simple HTTP GET for the signed release manifest. No device identifiers, IP geolocation queries, or hardware fingerprints are stored.</li>
-          <li><strong>In-Memory Cryptographic Verification:</strong> Downloaded update containers (<code className="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 font-mono text-xs">.bin</code>) are verified in memory with AES-256 decryption, PE MZ headers (<code className="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 font-mono text-xs">0x4D, 0x5A</code>), and AMD64 architecture checks before installation.</li>
-          <li><strong>Zero Unsolicited Interruption:</strong> Update operations occur silently in the background without popups, marketing banners, or surveys.</li>
-        </ul>
-      </section>
-
-      {/* 6. Data Retention & Complete Wipe */}
-      <section id="uninstall-wipe" className="space-y-4 scroll-mt-28">
-        <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-200 dark:border-zinc-800">
-          <Trash2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-          <h2 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-zinc-50">
-            6. Local Database Persistence &amp; Uninstallation Retention Policy
-          </h2>
-        </div>
-        <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          Because Downex stores zero data remotely on any cloud server, you retain 100% control over all data retention on your physical computer:
-        </p>
-        <ul className="list-disc pl-5 space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
-          <li>
-            <strong>True Local SQLite Persistence:</strong> All task queue lifecycles, active/paused download states, total volume statistics, peak speeds, and lifetime throughput counters are saved strictly in your local SQLite database (<code className="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 font-mono text-xs">downex.db</code>) located in <code className="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 font-mono text-xs">%LOCALAPPDATA%\com.downex.manager</code>.
-          </li>
-          <li>
-            <strong>Option 1: Keep Downloaded Files &amp; History (Recommended):</strong> When uninstalling Downex, choosing this option removes the application executable and background service while preserving your downloaded files, task queue database, and historical telemetry intact on your local drive. If you reinstall Downex later, your full download history and statistics resume instantly.
-          </li>
-          <li>
-            <strong>Option 2: Delete App &amp; Settings:</strong> Removes the application binaries and clears local settings and temporary cache.
-          </li>
-          <li>
-            <strong>Option 3: Complete Clean Wipe (Irreversible):</strong> Running the official uninstaller (<code className="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 font-mono text-xs">uninstall.exe</code>) with the clean wipe option permanently removes all binaries, local task databases, staged chunks, registry autostart keys, and firewall rules. Zero residual traces remain.
-          </li>
-          <li>
-            <strong>Preservation of Completed Files:</strong> Your already-downloaded personal files in your configured Downloads folder are never deleted unless you manually choose to remove them from your file manager.
-          </li>
-        </ul>
-      </section>
-
-      {/* 7. Third-Party Download Sources */}
-      <section id="third-party" className="space-y-4 scroll-mt-28">
-        <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-200 dark:border-zinc-800">
-          <Globe className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-          <h2 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-zinc-50">
-            7. Third-Party Download Sources
-          </h2>
-        </div>
-        <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          When Downex downloads a file on your behalf, it connects directly to the third-party server hosting that file. These third-party servers receive your IP address, user-agent string, and standard HTTP range request headers necessary to fulfill the transfer.
-        </p>
-        <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          We encourage you to review the privacy policies of the external websites and servers from which you choose to download files.
-        </p>
-      </section>
-
-      {/* 8. Contact & Security */}
-      <section id="contact" className="space-y-4 scroll-mt-28">
-        <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-200 dark:border-zinc-800">
-          <Mail className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-          <h2 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-zinc-50">
-            8. Contact &amp; Security Inquiries
-          </h2>
-        </div>
-        <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          If you have questions regarding this Privacy Policy, data privacy practices, or wish to report a security disclosure:
-        </p>
-        <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 space-y-2">
-          <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-            Gaurav Patil &bull; Downex Security &amp; Privacy
-          </div>
-          <div className="text-xs text-zinc-600 dark:text-zinc-400 font-mono">
-            Website: <a href="https://gauravpatil.site" target="_blank" rel="noopener noreferrer" className="text-emerald-600 dark:text-emerald-400 hover:underline">https://gauravpatil.site</a>
-          </div>
-          <div className="text-xs text-zinc-600 dark:text-zinc-400 font-mono">
-            Portal: <a href="https://downex.apps.gauravpatil.site" className="text-emerald-600 dark:text-emerald-400 hover:underline">https://downex.apps.gauravpatil.site</a>
-          </div>
-        </div>
       </section>
     </DownexLegalLayout>
   );

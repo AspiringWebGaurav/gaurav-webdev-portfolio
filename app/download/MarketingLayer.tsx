@@ -24,7 +24,6 @@ import {
   ShieldCheck,
   Pause,
   Clock,
-  Wrench,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Spotlight } from "@/components/ui/Spotlight";
@@ -47,6 +46,7 @@ interface MarketingLayerProps {
 
 export default function MarketingLayer({
   onOpenDownload,
+  desktopDownloadUrl = "https://gphost.eu.cc/raw/downex-desktop",
 }: MarketingLayerProps) {
   return (
     <div data-portal="download" className="relative w-full h-full max-h-dvh flex flex-col justify-between overflow-hidden select-none">
@@ -75,10 +75,10 @@ export default function MarketingLayer({
             <ThemeToggle variant="inline" className="w-7 h-7 shrink-0" />
             <button
               onClick={onOpenDownload}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 text-[11px] font-bold shadow-xs active:scale-95 transition-all"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-[11px] font-bold shadow-xs active:scale-95 transition-all cursor-pointer"
             >
-              <Wrench className="w-3 h-3 text-amber-500" />
-              <span>Maintenance</span>
+              <Download className="w-3 h-3" />
+              <span>Download</span>
             </button>
           </div>
         </header>
@@ -261,10 +261,10 @@ export default function MarketingLayer({
 
             <button
               onClick={onOpenDownload}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 font-semibold text-xs shadow-xs active:scale-95 transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 font-semibold text-xs shadow-xs active:scale-95 transition-all cursor-pointer"
             >
-              <Wrench className="w-3.5 h-3.5 text-amber-500" />
-              <span>Under Maintenance</span>
+              <Download className="w-3.5 h-3.5" />
+              <span>Download</span>
             </button>
           </nav>
         </header>
@@ -286,21 +286,22 @@ export default function MarketingLayer({
 
             {/* Primary Action Buttons */}
             <div className="flex items-center justify-center gap-3 mt-2.5">
-              <button
-                onClick={onOpenDownload}
-                className="group inline-flex items-center justify-center gap-2.5 h-10 lg:h-11 px-6 rounded-xl bg-amber-500/15 hover:bg-amber-500/20 text-amber-800 dark:text-amber-200 text-xs lg:text-sm font-bold border border-amber-500/30 shadow-xs active:scale-95 transition-all cursor-pointer"
+              <a
+                href={desktopDownloadUrl}
+                download="DownexSetup.exe"
+                className="group inline-flex items-center justify-center gap-2.5 h-10 lg:h-11 px-6 rounded-xl bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-950 text-xs lg:text-sm font-bold shadow-md active:scale-95 transition-all cursor-pointer"
               >
-                <Wrench className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                <span>Under Maintenance • View Details</span>
+                <Download className="w-4 h-4" />
+                <span>Download for Windows</span>
                 <ArrowRight className="w-3.5 h-3.5 opacity-70 group-hover:translate-x-0.5 transition-transform" />
-              </button>
+              </a>
 
               <button
                 onClick={onOpenDownload}
-                className="inline-flex items-center justify-center gap-2 h-10 lg:h-11 px-4 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-semibold hover:bg-zinc-50 dark:hover:bg-zinc-800/80 active:scale-95 transition-all"
+                className="inline-flex items-center justify-center gap-2 h-10 lg:h-11 px-4 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-semibold hover:bg-zinc-50 dark:hover:bg-zinc-800/80 active:scale-95 transition-all cursor-pointer"
               >
                 <Puzzle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                <span>Browser Extension</span>
+                <span>Extension &amp; Mirrors</span>
               </button>
             </div>
           </div>

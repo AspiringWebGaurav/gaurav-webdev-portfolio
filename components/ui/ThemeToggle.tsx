@@ -32,6 +32,7 @@ export function ThemeToggle({
     pathname.startsWith("/contact-portal") ||
     pathname.startsWith("/contact") ||
     pathname.startsWith("/download") ||
+    pathname.startsWith("/downex") ||
     pathname.startsWith("/apps") ||
     pathname.startsWith("/services") ||
     pathname.startsWith("/resume") ||
@@ -67,6 +68,7 @@ export function ThemeToggle({
         pathname.startsWith("/contact-portal") ||
         pathname.startsWith("/contact") ||
         pathname.startsWith("/download") ||
+        pathname.startsWith("/downex") ||
         pathname.startsWith("/apps") ||
         pathname.startsWith("/services") ||
         pathname.startsWith("/resume") ||

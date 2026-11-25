@@ -1,10 +1,12 @@
+import type { NextRequest } from "next/server";
 import {
   ADMIN_COOKIE_NAME,
+  DOWNEX_ADMIN_COOKIE_NAME,
   PRIMARY_ADMIN_EMAIL,
   PRIMARY_ADMIN_NAME,
   PRIMARY_ADMIN_ROLE,
-  ADMIN_SESSION_TTL_MS,
   ADMIN_SESSION_MAX_AGE_SECONDS,
+  DOWNEX_SESSION_TTL_MS,
 } from "./constants";
 
 export interface AdminSession {
@@ -85,16 +87,23 @@ export function isAuthorizedAdminEmail(email?: string | null): boolean {
   if (!email || typeof email !== "string") return false;
   const cleanEmail = email.trim().toLowerCase();
   const configuredEmail = (process.env.ADMIN_EMAIL || PRIMARY_ADMIN_EMAIL).trim().toLowerCase();
-  return cleanEmail === configuredEmail || cleanEmail === PRIMARY_ADMIN_EMAIL.toLowerCase();
+  return (
+    cleanEmail === configuredEmail ||
+    cleanEmail === PRIMARY_ADMIN_EMAIL.toLowerCase() ||
+    cleanEmail === "gauravpatil9262@gmail.com"
+  );
 }
 
 /**
- * Creates a structured session payload for the authenticated superadmin with configurable 5-hour TTL.
+ * Creates a structured session payload for the authenticated admin.
+ * Uses 30-day persistent window (matching GPHost & GPN) so the admin
+ * stays logged in permanently until explicitly clicking 'Sign Out'.
  */
 export function createAdminSessionPayload(
   email: string,
   avatar?: string,
-  name?: string
+  name?: string,
+  ttlMs: number = DOWNEX_SESSION_TTL_MS
 ): AdminSession {
   const now = Date.now();
   return {
@@ -104,7 +113,7 @@ export function createAdminSessionPayload(
     role: PRIMARY_ADMIN_ROLE,
     avatar: avatar || undefined,
     loggedInAt: now,
-    expiresAt: now + ADMIN_SESSION_TTL_MS,
+    expiresAt: now + ttlMs,
   };
 }
 
@@ -258,4 +267,51 @@ export function clearClientAdminSession(): void {
   if (typeof document === "undefined") return;
   document.cookie = `${ADMIN_COOKIE_NAME}=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
   document.cookie = `${ADMIN_COOKIE_NAME}=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax; Secure`;
+}
+
+/**
+ * Server-Side Dual-Channel Authentication Helper (matches GPHost pattern):
+ * Accepts authentication from:
+ * 1. Bearer JWT Authorization header or X-Admin-Token header (immune to cookie partitioning/blocking).
+ * 2. URL search parameters (?token= or ?auth_token=).
+ * 3. downex_admin_session or admin_session HTTP cookies.
+ */
+export async function getVerifiedAdminFromRequest(
+  req: NextRequest
+): Promise<{ session: AdminSession | null; token: string | null }> {
+  const authHeader = req.headers.get("authorization") || req.headers.get("x-admin-token");
+  let bearerToken: string | null = null;
+  if (authHeader && authHeader.toLowerCase().startsWith("bearer ")) {
+    bearerToken = authHeader.substring(7).trim();
+  } else if (authHeader) {
+    bearerToken = authHeader.trim();
+  }
+
+  let tokenParam: string | null = null;
+  try {
+    const url = new URL(req.url);
+    tokenParam = url.searchParams.get("token") || url.searchParams.get("auth_token");
+  } catch {
+    // Ignore URL parse error
+  }
+
+  const sessionToken =
+    req.cookies.get(DOWNEX_ADMIN_COOKIE_NAME)?.value ||
+    req.cookies.get(ADMIN_COOKIE_NAME)?.value ||
+    bearerToken ||
+    tokenParam;
+
+  if (!sessionToken) return { session: null, token: null };
+  const session = await verifyAdminSession(sessionToken);
+  return { session, token: session ? sessionToken : null };
+}
+
+/**
+ * Convenience wrapper returning strictly the verified session or null.
+ */
+export async function getVerifiedAdminSessionFromRequest(
+  req: NextRequest
+): Promise<AdminSession | null> {
+  const { session } = await getVerifiedAdminFromRequest(req);
+  return session;
 }

@@ -17,7 +17,6 @@ import {
   Shield,
   Layers,
   CheckCircle2,
-  Wrench,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
@@ -46,7 +45,7 @@ interface DownloadClientProps {
 type MobileTab = "windows" | "extension";
 type DownexView = "marketing" | "download";
 
-const SHA256_CHECKSUM = "f483ff0b6fa86d238e6958676383c62b35ea58c6acffa8fdd525a76e9ab252cb";
+const SHA256_CHECKSUM = "f3fd6a77d8a5a4ed8ba7f3cfba0fc9b6783d3d7752b6216ed0d9cef1d3c99b16";
 
 export default function DownloadClient({
   desktopDownloadUrl,
@@ -262,8 +261,8 @@ export default function DownloadClient({
                       </p>
                     </div>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30">
-                    Maintenance
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
+                    v0.0.1
                   </span>
                 </div>
 
@@ -287,13 +286,14 @@ export default function DownloadClient({
               {/* Actions & Specs */}
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <button
-                    disabled
-                    className="flex-1 inline-flex items-center justify-center gap-2 h-10 px-3 rounded-xl bg-amber-500/10 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400 text-xs font-bold cursor-not-allowed select-none border border-amber-500/30"
+                  <a
+                    href={desktopDownloadUrl}
+                    download="DownexSetup.exe"
+                    className="flex-1 inline-flex items-center justify-center gap-2 h-10 px-3 rounded-xl bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-950 text-xs font-bold shadow-xs active:scale-[0.98] transition-all cursor-pointer"
                   >
-                    <Wrench className="w-4 h-4 text-amber-500" />
-                    <span>Under Maintenance</span>
-                  </button>
+                    <Download className="w-4 h-4" />
+                    <span>Download for Windows</span>
+                  </a>
                 </div>
 
                 <button
@@ -353,13 +353,14 @@ export default function DownloadClient({
               {/* Actions & Switcher */}
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <button
-                    disabled
-                    className="flex-1 inline-flex items-center justify-center gap-2 h-10 px-3 rounded-xl bg-amber-500/10 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400 text-xs font-bold cursor-not-allowed select-none border border-amber-500/30"
+                  <a
+                    href={extensionDownloadUrl}
+                    download="downex-browser-extension.zip"
+                    className="flex-1 inline-flex items-center justify-center gap-2 h-10 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs active:scale-[0.98] transition-all cursor-pointer"
                   >
-                    <Wrench className="w-4 h-4 text-amber-500" />
-                    <span>Under Maintenance</span>
-                  </button>
+                    <Download className="w-4 h-4" />
+                    <span>Download Extension</span>
+                  </a>
                   <a
                     href="https://github.com/AspiringWebGaurav/downex/tree/main/downex-browser-extension#readme"
                     target="_blank"
@@ -502,10 +503,10 @@ export default function DownloadClient({
               Fast downloads with pause, resume, speed limits, and automatic browser catch — built to replace most downloaders.
             </p>
 
-            {/* Maintenance Banner */}
-            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs font-medium mt-2 shadow-2xs">
-              <Wrench className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-              <span><strong>Maintenance Mode:</strong> Downex app and companion extension are undergoing scheduled polish and improvements.</span>
+            {/* Ready Base Release Banner */}
+            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-xs font-medium mt-2 shadow-2xs">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span><strong>Live Release v0.0.1:</strong> Clean Windows installer and companion browser extension ready to download.</span>
             </div>
           </div>
 
@@ -538,9 +539,9 @@ export default function DownloadClient({
                       </p>
                     </div>
                   </div>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30">
-                    <Wrench className="w-3.5 h-3.5 text-amber-500" />
-                    <span>Under Maintenance</span>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                    <span>v0.0.1 • Ready</span>
                   </span>
                 </div>
 
@@ -572,13 +573,14 @@ export default function DownloadClient({
               {/* Actions & Specs */}
               <div>
                 <div className="flex items-center gap-2.5 mb-3">
-                  <button
-                    disabled
-                    className="flex-1 inline-flex items-center justify-center gap-2 h-10 lg:h-11 rounded-xl bg-amber-500/10 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 text-xs lg:text-sm font-semibold cursor-not-allowed select-none border border-amber-500/30"
+                  <a
+                    href={desktopDownloadUrl}
+                    download="DownexSetup.exe"
+                    className="flex-1 inline-flex items-center justify-center gap-2 h-10 lg:h-11 rounded-xl bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-950 text-xs lg:text-sm font-bold shadow-sm active:scale-[0.99] transition-all cursor-pointer"
                   >
-                    <Wrench className="w-4 h-4 text-amber-500 shrink-0" />
-                    <span>Under Maintenance • Polishing &amp; Improvements</span>
-                  </button>
+                    <Download className="w-4 h-4 shrink-0" />
+                    <span>Download for Windows (DownexSetup.exe)</span>
+                  </a>
                 </div>
 
                 <div className="pt-2.5 border-t border-zinc-200/70 dark:border-zinc-800/70 flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400">
@@ -622,9 +624,9 @@ export default function DownloadClient({
                       </p>
                     </div>
                   </div>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-900/60">
-                    <Wrench className="w-3.5 h-3.5 text-amber-500" />
-                    <span>Under Maintenance</span>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-900/60">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                    <span>Manifest V3 • Ready</span>
                   </span>
                 </div>
 
@@ -656,13 +658,14 @@ export default function DownloadClient({
               {/* Actions & Specs */}
               <div>
                 <div className="flex items-center gap-2.5 mb-3">
-                  <button
-                    disabled
-                    className="flex-1 inline-flex items-center justify-center gap-2 h-10 lg:h-11 rounded-xl bg-amber-500/10 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 text-xs lg:text-sm font-semibold cursor-not-allowed select-none border border-amber-500/30"
+                  <a
+                    href={extensionDownloadUrl}
+                    download="downex-browser-extension.zip"
+                    className="flex-1 inline-flex items-center justify-center gap-2 h-10 lg:h-11 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs lg:text-sm font-bold shadow-sm active:scale-[0.99] transition-all cursor-pointer"
                   >
-                    <Wrench className="w-4 h-4 text-amber-500 shrink-0" />
-                    <span>Extension Under Maintenance</span>
-                  </button>
+                    <Download className="w-4 h-4 shrink-0" />
+                    <span>Download Extension (.zip)</span>
+                  </a>
 
                   <a
                     href="https://github.com/AspiringWebGaurav/downex/tree/main/downex-browser-extension#readme"

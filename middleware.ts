@@ -57,9 +57,6 @@ async function handleRouting(request: NextRequest, requestHeaders: Headers): Pro
 
   // 2. Legacy Outdated Subdomain 301 Migrations -> Clubbed Subdomains
   if (isProd) {
-    if (host === LEGACY_DOWNEX_HOST) {
-      return NextResponse.redirect(new URL(`https://${DOWNEX_APP_HOST}${pathname}${search}`), 301);
-    }
     if (host === LEGACY_SELF_HOST) {
       return NextResponse.redirect(new URL(`https://${APPS_HUB_HOST}${pathname}${search}`), 301);
     }
@@ -158,6 +155,10 @@ async function handleRouting(request: NextRequest, requestHeaders: Headers): Pro
     ));
 
   if (isCpAppSubdomain) {
+    if (pathname.startsWith("/api") || pathname.startsWith("/_next")) {
+      return NextResponse.next({ request: { headers: requestHeaders } });
+    }
+
     if (pathname === "/cp" || pathname === "/cp/") {
       return NextResponse.redirect(new URL(`/${search}`, request.url), 301);
     }
@@ -222,19 +223,28 @@ async function handleRouting(request: NextRequest, requestHeaders: Headers): Pro
   }
 
   // -------------------------------------------------------------
-  // 2. DOWNEX APP PORTAL (downex.apps.gauravpatil.site)
+  // 2. DOWNEX APP PORTAL (downex.apps.gauravpatil.site & downex.gauravpatil.site)
   // -------------------------------------------------------------
   const isDownexAppSubdomain =
     host === DOWNEX_APP_HOST ||
+    host === LEGACY_DOWNEX_HOST ||
+    host === "downex.gauravpatil.site" ||
+    host.endsWith("downex.apps.gauravpatil.site") ||
+    host.endsWith("downex.gauravpatil.site") ||
     ((isLocalHost || !isProd) && (
       host === "downex.apps.localhost" ||
       host === "downex.localhost" ||
       host.startsWith("downex.apps.localhost") ||
       host.startsWith("downex.localhost") ||
+      host.includes("downex.localhost") ||
       devSubdomain === "downex"
     ));
 
   if (isDownexAppSubdomain) {
+    if (pathname.startsWith("/api") || pathname.startsWith("/_next")) {
+      return NextResponse.next({ request: { headers: requestHeaders } });
+    }
+
     if (
       pathname === "/download" ||
       pathname === "/download/" ||
@@ -257,18 +267,32 @@ async function handleRouting(request: NextRequest, requestHeaders: Headers): Pro
     const isDownexLegalOrDocRoute =
       pathname === "/terms" ||
       pathname === "/privacy" ||
+      pathname === "/policies" ||
       pathname === "/uninstalled" ||
       pathname === "/how-queues-work" ||
       pathname === "/queues" ||
       pathname.startsWith("/terms/") ||
       pathname.startsWith("/privacy/") ||
+      pathname.startsWith("/policies/") ||
       pathname.startsWith("/uninstalled/") ||
       pathname.startsWith("/how-queues-work/") ||
-      pathname.startsWith("/queues/");
+      pathname.startsWith("/queues/") ||
+      pathname.startsWith("/downex/terms") ||
+      pathname.startsWith("/downex/privacy") ||
+      pathname.startsWith("/downex/policies") ||
+      pathname.startsWith("/downex/uninstalled") ||
+      pathname.startsWith("/downex/how-queues-work");
+
+    const isDownexAdminRoute =
+      pathname === "/admin" ||
+      pathname.startsWith("/admin/") ||
+      pathname === "/downex/admin" ||
+      pathname.startsWith("/downex/admin/");
 
     if (
       pathname !== "/" &&
       !isDownexLegalOrDocRoute &&
+      !isDownexAdminRoute &&
       !pathname.startsWith("/api") &&
       !pathname.startsWith("/_next") &&
       !isImageOrStatic
@@ -280,10 +304,16 @@ async function handleRouting(request: NextRequest, requestHeaders: Headers): Pro
     const targetPath =
       pathname === "/"
         ? "/download"
+        : isDownexAdminRoute
+        ? pathname.startsWith("/downex/admin")
+          ? pathname
+          : pathname.replace(/^\/admin/, "/downex/admin")
+        : pathname.startsWith("/downex/terms") || pathname.startsWith("/downex/privacy") || pathname.startsWith("/downex/policies") || pathname.startsWith("/downex/uninstalled") || pathname.startsWith("/downex/how-queues-work")
+        ? pathname
         : pathname === "/terms" || pathname.startsWith("/terms/")
         ? pathname.replace(/^\/terms/, "/downex/terms")
-        : pathname === "/privacy" || pathname.startsWith("/privacy/")
-        ? pathname.replace(/^\/privacy/, "/downex/privacy")
+        : pathname === "/privacy" || pathname.startsWith("/privacy/") || pathname === "/policies" || pathname.startsWith("/policies/")
+        ? pathname.replace(/^\/(privacy|policies)/, "/downex/privacy")
         : pathname === "/uninstalled"
         ? "/downex/uninstalled"
         : pathname.startsWith("/uninstalled/")
@@ -330,6 +360,10 @@ async function handleRouting(request: NextRequest, requestHeaders: Headers): Pro
     ));
 
   if (isSmAppSubdomain) {
+    if (pathname.startsWith("/api") || pathname.startsWith("/_next")) {
+      return NextResponse.next({ request: { headers: requestHeaders } });
+    }
+
     if (pathname === "/sm" || pathname === "/sm/") {
       return NextResponse.redirect(new URL(`/${search}`, request.url), 301);
     }
@@ -400,6 +434,10 @@ async function handleRouting(request: NextRequest, requestHeaders: Headers): Pro
     ));
 
   if (isGpnAppSubdomain) {
+    if (pathname.startsWith("/api") || pathname.startsWith("/_next")) {
+      return NextResponse.next({ request: { headers: requestHeaders } });
+    }
+
     if (pathname === "/gpn" || pathname === "/gpn/") {
       return NextResponse.redirect(new URL(`/${search}`, request.url), 301);
     }
