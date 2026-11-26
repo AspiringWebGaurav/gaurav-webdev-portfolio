@@ -48,7 +48,7 @@ interface MarketingLayerProps {
 
 export default function MarketingLayer({
   onOpenDownload,
-  desktopDownloadUrl = "/api/downex/download/desktop",
+  desktopDownloadUrl = "https://gphost.eu.cc/raw/downex-desktop?stream=true",
 }: MarketingLayerProps) {
   const [startingDesktop, setStartingDesktop] = useState(false);
 

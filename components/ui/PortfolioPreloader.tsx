@@ -18,16 +18,11 @@ import { cn } from "@/lib/utils";
  */
 export function PortfolioPreloader({ disabled = false }: { disabled?: boolean } = {}) {
   const pathname = usePathname();
-  const isUninstalledRoute =
+  const isPathDisabled =
     disabled ||
-    Boolean(pathname && (pathname.includes("/uninstalled") || pathname.startsWith("/download") || pathname.startsWith("/downex"))) ||
-    (typeof window !== "undefined" &&
-      (window.location.pathname.includes("/uninstalled") ||
-        window.location.pathname.startsWith("/download") ||
-        window.location.pathname.startsWith("/downex") ||
-        window.location.hostname.startsWith("downex.")));
+    Boolean(pathname && (pathname.includes("/uninstalled") || pathname.startsWith("/download") || pathname.startsWith("/downex")));
 
-  const [mounted, setMounted] = useState(!isUninstalledRoute);
+  const [mounted, setMounted] = useState(!isPathDisabled);
   const [isExiting, setIsExiting] = useState(false);
   const [progress, setProgress] = useState(25);
   const [statusText, setStatusText] = useState("Initializing experience...");
@@ -76,7 +71,14 @@ export function PortfolioPreloader({ disabled = false }: { disabled?: boolean } 
   }, [restoreScroll]);
 
   useEffect(() => {
-    if (isUninstalledRoute) {
+    const isClientPortalDisabled =
+      isPathDisabled ||
+      (typeof window !== "undefined" &&
+        (window.location.pathname.includes("/uninstalled") ||
+          window.location.pathname.startsWith("/download") ||
+          window.location.pathname.startsWith("/downex") ||
+          window.location.hostname.startsWith("downex.")));
+    if (isClientPortalDisabled) {
       setMounted(false);
       return;
     }
@@ -171,9 +173,9 @@ export function PortfolioPreloader({ disabled = false }: { disabled?: boolean } 
         window.removeEventListener("keydown", handleKeyDown);
       }
     };
-  }, [finishLoading, restoreScroll, isUninstalledRoute]);
+  }, [finishLoading, restoreScroll, isPathDisabled]);
 
-  if (isUninstalledRoute || !mounted) return null;
+  if (isPathDisabled || !mounted) return null;
 
   return (
     <div

@@ -1,11 +1,7 @@
 import React from "react";
-import { cookies } from "next/headers";
 import { projectsRepository } from "@/lib/dal/repositories/cms/projects.repository";
 import { SEED_PROJECTS } from "@/lib/dal/repositories/seed-data";
 import { LaunchpadHaptics } from "@/components/self/LaunchpadHaptics";
-import { getSubdomainUrl } from "@/lib/theme/navigation";
-import { THEME_COOKIE_NAME } from "@/lib/theme/cookie";
-import { getServerTheme } from "@/lib/theme/server";
 
 /**
  * 24-hour baseline ISR caching with On-Demand Edge Revalidation.
@@ -18,9 +14,6 @@ import { getServerTheme } from "@/lib/theme/server";
 export const revalidate = 86400;
 
 export default async function SelfPage() {
-  const cookieStore = await cookies();
-  const currentTheme = cookieStore.get(THEME_COOKIE_NAME)?.value || getServerTheme();
-
   const res = await projectsRepository.getProjects();
   const rawProjects = res.data && res.data.length > 0 ? res.data : SEED_PROJECTS;
   const projects = [...rawProjects]
@@ -93,7 +86,7 @@ export default async function SelfPage() {
           className="flex items-center justify-end gap-x-1.5 min-[380px]:gap-x-2 sm:gap-x-2.5 md:gap-x-3 text-slate-500 font-medium tracking-tight whitespace-nowrap overflow-hidden"
         >
           <a
-            href={getSubdomainUrl("https://apps.gauravpatil.site", currentTheme)}
+            href="https://apps.gauravpatil.site"
             target="_blank"
             rel="noopener noreferrer"
             title="PC Apps Suite (apps.gauravpatil.site)"
@@ -114,7 +107,7 @@ export default async function SelfPage() {
           <span className="text-slate-300 select-none">·</span>
 
           <a
-            href={getSubdomainUrl("https://services.gauravpatil.site", currentTheme)}
+            href="https://services.gauravpatil.site"
             target="_blank"
             rel="noopener noreferrer"
             title="Services Hub (services.gauravpatil.site)"
@@ -135,7 +128,7 @@ export default async function SelfPage() {
           <span className="text-slate-300 select-none">·</span>
 
           <a
-            href={getSubdomainUrl("https://resume.services.gauravpatil.site", currentTheme)}
+            href="https://resume.services.gauravpatil.site"
             target="_blank"
             rel="noopener noreferrer"
             title="Interactive Resume Subdomain (resume.services.gauravpatil.site)"
@@ -156,7 +149,7 @@ export default async function SelfPage() {
           <span className="text-slate-300 select-none">·</span>
 
           <a
-            href={getSubdomainUrl("https://gauravpatil.site/#contact", currentTheme)}
+            href="https://gauravpatil.site/#contact"
             target="_blank"
             rel="noopener noreferrer"
             title="Direct Contact Form (gauravpatil.site/#contact)"

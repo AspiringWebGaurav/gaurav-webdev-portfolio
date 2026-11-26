@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { cookies, headers } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import { VercelInsights } from "@/components/analytics/VercelInsights";
 import "./globals.css";
@@ -9,8 +8,8 @@ import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { PortfolioPreloader } from "@/components/ui/PortfolioPreloader";
 import { seoRepository } from "@/lib/dal/repositories/cms/seo.repository";
 import { SEED_SEO } from "@/lib/dal/repositories/seed-data";
-import { THEME_COOKIE_NAME } from "@/lib/theme/cookie";
-import { getServerTheme } from "@/lib/theme/server";
+
+export const revalidate = 86400;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -213,42 +212,23 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const reqHeaders = await headers();
-  const themeHeader = reqHeaders.get("x-theme");
-  const isContactPortal =
-    reqHeaders.get("x-is-contact-portal") === "true" ||
-    reqHeaders.get("x-pathname")?.startsWith("/contact-portal");
-  const isDownloadPortal =
-    reqHeaders.get("x-is-download-portal") === "true" ||
-    reqHeaders.get("x-pathname")?.startsWith("/download") ||
-    reqHeaders.get("x-pathname")?.startsWith("/downex");
-  const cookieStore = await cookies();
-  const rawTheme = (themeHeader === "light" || themeHeader === "dark")
-    ? themeHeader
-    : (cookieStore.get(THEME_COOKIE_NAME)?.value || getServerTheme());
-  const initialTheme: "light" | "dark" = isContactPortal
-    ? "light"
-    : rawTheme === "light"
-    ? "light"
-    : "dark";
-
   return (
     <html
       lang="en"
-      className={initialTheme}
-      style={{ colorScheme: initialTheme }}
+      className="dark"
+      style={{ colorScheme: "dark" }}
       suppressHydrationWarning
     >
       <head>
-        {/* Synchronous pre-paint theme resolver: extracts URL theme, clears host shadowing, and aligns pre-paint DOM */}
+        {/* Synchronous pre-paint theme & portal resolver: avoids cookies()/headers() in RootLayout so public routes stay CDN-cached */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var h=window.location.hostname.toLowerCase();var path=window.location.pathname;if(h.startsWith('downex.')||h.includes('downex.')||path.startsWith('/download')){document.documentElement.setAttribute('data-portal','download');}if(h.startsWith('cp.')||h.includes('cp.apps.')||path.startsWith('/cp')){document.documentElement.setAttribute('data-portal','cp');}if(h.startsWith('contact.')||path.startsWith('/contact-portal')||path.startsWith('/contact/')){var el=document.documentElement;el.classList.remove('dark');el.classList.add('light');el.style.colorScheme='light';el.style.backgroundColor='#FAFAFA';return;}var p=new URLSearchParams(window.location.search);var u=p.get('theme');var d=(h==='gauravpatil.site'||h.endsWith('.gauravpatil.site'))?'.gauravpatil.site':((h==='devlabs.eu.cc'||h.endsWith('.devlabs.eu.cc'))?'.devlabs.eu.cc':'');if(d){document.cookie='theme=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';}var t='${initialTheme}';if(u==='light'||u==='dark'){t=u;}else{var ck=document.cookie.split(';');for(var i=0;i<ck.length;i++){var c=ck[i].trim();if(c.indexOf('theme=')===0){var v=c.substring(6);if(v==='light'||v==='dark'){t=v;}}}}var el=document.documentElement;el.classList.remove('light','dark');el.classList.add(t);el.style.colorScheme=t;if(d){document.cookie='theme='+t+'; Path=/; Max-Age=31536000; Domain='+d+'; SameSite=Lax; Secure';}else{document.cookie='theme='+t+'; Path=/; Max-Age=31536000; SameSite=Lax';}if(u==='light'||u==='dark'){p.delete('theme');var rem=p.toString();var cl=window.location.pathname+(rem?'?'+rem:'')+window.location.hash;window.history.replaceState(null,'',cl);}}catch(e){}})();`,
+            __html: `(function(){try{var h=window.location.hostname.toLowerCase();var path=window.location.pathname;if(h.startsWith('downex.')||h.includes('downex.')||path.startsWith('/download')||path.startsWith('/downex')){document.documentElement.setAttribute('data-portal','download');}if(h.startsWith('cp.')||h.includes('cp.apps.')||path.startsWith('/cp')){document.documentElement.setAttribute('data-portal','cp');}if(h.startsWith('contact.')||path.startsWith('/contact-portal')||path.startsWith('/contact/')){var el=document.documentElement;el.classList.remove('dark');el.classList.add('light');el.style.colorScheme='light';el.style.backgroundColor='#FAFAFA';return;}var p=new URLSearchParams(window.location.search);var u=p.get('theme');var d=(h==='gauravpatil.site'||h.endsWith('.gauravpatil.site'))?'.gauravpatil.site':((h==='devlabs.eu.cc'||h.endsWith('.devlabs.eu.cc'))?'.devlabs.eu.cc':'');if(d){document.cookie='theme=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';}var t='dark';if(u==='light'||u==='dark'){t=u;}else{var ck=document.cookie.split(';');for(var i=0;i<ck.length;i++){var c=ck[i].trim();if(c.indexOf('theme=')===0){var v=c.substring(6);if(v==='light'||v==='dark'){t=v;}}}}var el=document.documentElement;el.classList.remove('light','dark');el.classList.add(t);el.style.colorScheme=t;if(u==='light'||u==='dark'){if(d){document.cookie='theme='+t+'; Path=/; Max-Age=31536000; Domain='+d+'; SameSite=Lax; Secure';}else{document.cookie='theme='+t+'; Path=/; Max-Age=31536000; SameSite=Lax';}p.delete('theme');var rem=p.toString();var cl=window.location.pathname+(rem?'?'+rem:'')+window.location.hash;window.history.replaceState(null,'',cl);}}catch(e){}})();`,
           }}
         />
         <link rel="preconnect" href="https://challenges.cloudflare.com" crossOrigin="anonymous" />
@@ -258,8 +238,8 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable}`}
         suppressHydrationWarning
       >
-        <ThemeProvider defaultTheme={initialTheme}>
-          <PortfolioPreloader disabled={isDownloadPortal} />
+        <ThemeProvider defaultTheme="dark">
+          <PortfolioPreloader />
           <RouteProgressBar />
           <ThemeToggle />
           {children}

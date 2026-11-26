@@ -49,7 +49,7 @@ const SHA256_CHECKSUM = "56027fd18140861adbed8e4e09de77e2e70078667cd0f23883efe64
 
 export default function DownloadClient({
   desktopDownloadUrl,
-  extensionDownloadUrl = "/api/downex/download/extension",
+  extensionDownloadUrl = "https://gphost.eu.cc/raw/downex-extension?stream=true",
 }: DownloadClientProps) {
   const [view, setView] = useState<DownexView>("marketing");
   const [detectedOS, setDetectedOS] = useState<DetectedPlatform>("windows");

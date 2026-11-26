@@ -5,7 +5,6 @@ import { verifyAdminSession } from "@/lib/admin/auth";
 import { TALK_COOKIE_NAME, TALK_PORTAL_HOST } from "@/lib/talk/constants";
 import { verifyTalkSession } from "@/lib/talk/session";
 import { THEME_COOKIE_NAME, THEME_COOKIE_MAX_AGE, getSharedCookieDomain } from "@/lib/theme/cookie";
-import { getServerTheme, setServerTheme } from "@/lib/theme/server";
 
 // Canonical Subdomain Host Definitions
 const APPS_HUB_HOST = "apps.gauravpatil.site";
@@ -696,9 +695,7 @@ async function handleRouting(request: NextRequest, requestHeaders: Headers): Pro
     });
   }
 
-  return NextResponse.next({
-    request: { headers: requestHeaders },
-  });
+  return NextResponse.next();
 }
 
 export async function middleware(request: NextRequest) {
@@ -709,88 +706,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const host = (request.headers.get("host") || "").toLowerCase().split(":")[0];
-  const devSubdomain = request.headers.get("x-dev-subdomain") || "";
-
-  const isContactPortal =
-    host === CONTACT_SERVICE_HOST ||
-    host === LEGACY_CONTACT_HOST ||
-    host.includes("contact.services.localhost") ||
-    host.includes("contact.localhost") ||
-    devSubdomain === "contact" ||
-    pathname.startsWith("/contact-portal");
-
-  const isDownloadPortal =
-    host === DOWNEX_APP_HOST ||
-    host === LEGACY_DOWNEX_HOST ||
-    host.includes("downex.apps.localhost") ||
-    host.includes("downex.localhost") ||
-    devSubdomain === "downex" ||
-    pathname.startsWith("/download") ||
-    pathname.startsWith("/downex");
-
-  const isCpPortal =
-    host === CP_APP_HOST ||
-    host.includes("cp.apps.localhost") ||
-    host.includes("cp.localhost") ||
-    devSubdomain === "cp" ||
-    pathname.startsWith("/cp");
-
-  const isSmPortal =
-    host === SM_APP_HOST ||
-    host.includes("sm.apps.localhost") ||
-    host.includes("sm.localhost") ||
-    devSubdomain === "sm" ||
-    pathname.startsWith("/sm");
-
-  const isGpnPortal =
-    host === GPN_APP_HOST ||
-    host.includes("gpn.apps.localhost") ||
-    host.includes("gpn.localhost") ||
-    devSubdomain === "gpn" ||
-    pathname.startsWith("/gpn");
-
-  // -------------------------------------------------------------
-  // THEME SYNCHRONIZATION (Single Backend Authority)
-  // -------------------------------------------------------------
-  const themeQuery = request.nextUrl.searchParams.get("theme");
-  const isThemeQueryValid = themeQuery === "light" || themeQuery === "dark";
-  const cookieTheme = request.cookies.get(THEME_COOKIE_NAME)?.value;
-  const isCookieThemeValid = cookieTheme === "light" || cookieTheme === "dark";
-
-  // Resolve authoritative theme across the whole portfolio:
-  // 1. Explicit query parameter (?theme=light|dark)
-  // 2. Client cookie
-  // 3. Server-side authoritative state (single backend sync)
-  let resolvedTheme: "light" | "dark" = "dark";
-  if (isThemeQueryValid && themeQuery) {
-    resolvedTheme = themeQuery;
-    setServerTheme(themeQuery);
-  } else if (isCookieThemeValid && cookieTheme) {
-    resolvedTheme = cookieTheme;
-    setServerTheme(cookieTheme);
-  } else {
-    resolvedTheme = getServerTheme();
-  }
-
   const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("x-pathname", pathname);
-
-  if (isContactPortal) {
-    requestHeaders.set("x-theme", "light");
-    requestHeaders.set("x-is-contact-portal", "true");
-  } else {
-    requestHeaders.set("x-theme", resolvedTheme);
-    if (isDownloadPortal) requestHeaders.set("x-is-download-portal", "true");
-    if (isCpPortal) requestHeaders.set("x-is-cp-portal", "true");
-    if (isSmPortal) requestHeaders.set("x-is-sm-portal", "true");
-    if (isGpnPortal) requestHeaders.set("x-is-gpn-portal", "true");
-  }
-
   const response = await handleRouting(request, requestHeaders);
 
-  // Cross-subdomain theme synchronization across whole portfolio
-  if (!isContactPortal) {
+  // Only emit Set-Cookie on explicit ?theme= query handoff so Edge CDN caches public HTML pages cleanly
+  const themeQuery = request.nextUrl.searchParams.get("theme");
+  if (themeQuery === "light" || themeQuery === "dark") {
+    const host = (request.headers.get("host") || "").toLowerCase().split(":")[0];
     const isLocalHost =
       host.includes("localhost") ||
       host.startsWith("127.0.0.1") ||
@@ -800,7 +722,7 @@ export async function middleware(request: NextRequest) {
     const domain = getSharedCookieDomain(host);
     const isSecure = process.env.NODE_ENV === "production" && !isLocalHost;
 
-    response.cookies.set(THEME_COOKIE_NAME, resolvedTheme, {
+    response.cookies.set(THEME_COOKIE_NAME, themeQuery, {
       path: "/",
       domain: domain || undefined,
       maxAge: THEME_COOKIE_MAX_AGE,
@@ -815,6 +737,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|_vercel|favicon\\.ico|icon\\.png|icon\\.svg|apple-icon\\.png|apple-touch-icon\\.png|og-image\\.png|manifest\\.webmanifest|robots\\.txt|sitemap\\.xml|.*\\.(?:jpg|jpeg|gif|png|webp|avif|svg|ico|pdf|mp4|webm|json|woff|woff2|ttf|otf|eot|glb|gltf|mp3|wav|ogg|xml|txt|map)$).*)",
+    "/((?!api|_next/static|_next/image|_vercel|opengraph-image|twitter-image|favicon\\.ico|icon\\.png|icon\\.svg|apple-icon\\.png|apple-touch-icon\\.png|og-image\\.png|manifest\\.webmanifest|robots\\.txt|sitemap\\.xml|.*\\.(?:jpg|jpeg|gif|png|webp|avif|svg|ico|pdf|mp4|webm|json|woff|woff2|ttf|otf|eot|glb|gltf|mp3|wav|ogg|xml|txt|map|css|js)$).*)",
   ],
 };

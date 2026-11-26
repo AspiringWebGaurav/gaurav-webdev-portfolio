@@ -130,7 +130,7 @@ export const FooterSection = ({
     }
 
     // Default fallback icon
-    return <Image src="/git.svg" alt={item.platform} width={20} height={20} className="invert-0 dark:invert" />;
+    return <Image src="/git.svg" alt={item.platform} width={20} height={20} unoptimized className="invert-0 dark:invert" />;
   };
 
   return (

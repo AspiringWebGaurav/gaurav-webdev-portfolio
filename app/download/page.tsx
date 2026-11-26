@@ -25,17 +25,14 @@ export const metadata: Metadata = {
   },
 };
 
-// Permanent Base 0.0.0 Endpoints on GPHost
-// These endpoints are strictly locked, permanent, and never overwritten or deleted by OTA releases.
-const baseDesktopDownloadUrl = (
+// Permanent Base v0.0.1 Endpoints on GPHost (direct CDN delivery, 0 Vercel Origin Transfer)
+const baseDesktopDownloadUrl =
   process.env.NEXT_PUBLIC_DOWNEX_DOWNLOAD_URL ||
-  "/api/downex/download/desktop"
-).split("?")[0];
+  "https://gphost.eu.cc/raw/downex-desktop?stream=true";
 
-const baseExtensionDownloadUrl = (
+const baseExtensionDownloadUrl =
   process.env.NEXT_PUBLIC_DOWNEX_EXTENSION_DOWNLOAD_URL ||
-  "/api/downex/download/extension"
-).split("?")[0];
+  "https://gphost.eu.cc/raw/downex-extension?stream=true";
 
 export default function DownloadPage() {
   const desktopDownloadUrl = baseDesktopDownloadUrl;

@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import React from "react";
 
+export const revalidate = 86400;
+
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
@@ -39,7 +41,7 @@ export default function ServicesLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="h-[100dvh] min-h-[100dvh] max-h-[100dvh] w-full overflow-hidden bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-white selection:bg-purple-500 selection:text-white touch-manipulation [-webkit-tap-highlight-color:transparent]">
+    <div className="h-[100dvh] min-h-[100dvh] max-h-[100dvh] w-full overflow-hidden bg-[#fafafa] dark:bg-[#09090b] text-zinc-900 dark:text-zinc-100 selection:bg-violet-500 selection:text-white touch-manipulation [-webkit-tap-highlight-color:transparent]">
       {children}
     </div>
   );

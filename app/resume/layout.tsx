@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import React from "react";
-import { getResumeData } from "@/lib/resume/services/resume-data.service";
+import { getCachedPublicResumeData } from "@/lib/resume/services/resume-data.service";
 
-export const dynamic = "force-dynamic";
+// 1-hour ISR + on-demand revalidation on admin save (avoids running SSR/DB per bot/visitor hit)
+export const revalidate = 3600;
 
 /**
  * Dynamic Metadata Generator for resume.gauravpatil.site
@@ -10,7 +11,7 @@ export const dynamic = "force-dynamic";
  * Optimized for rich social sharing cards on WhatsApp, LinkedIn, iMessage, Twitter/X, and Slack.
  */
 export async function generateMetadata(): Promise<Metadata> {
-  const resume = await getResumeData();
+  const resume = await getCachedPublicResumeData();
   const name = resume.basics?.name || "Gaurav Patil";
   const label = resume.basics?.label || "Full-Stack & Systems Software Engineer";
   const summary =
@@ -121,7 +122,7 @@ export default async function ResumeLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const resume = await getResumeData();
+  const resume = await getCachedPublicResumeData();
   const name = resume.basics?.name || "Gaurav Patil";
   const label = resume.basics?.label || "Full-Stack & Systems Software Engineer";
 

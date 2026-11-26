@@ -435,3 +435,9 @@ html.dark body:has([data-portal="talk"]) {
   animation-play-state: paused;
 }
 
+/* Pre-hydration zero-flash preloader suppression for isolated download portals */
+html[data-portal="download"] #portfolio-preloader,
+html[data-portal="downex"] #portfolio-preloader {
+  display: none !important;
+}
+

@@ -63,7 +63,30 @@ export function LivePortfolioSync() {
       }
     } catch {}
 
-    // 2. Firebase RTDB Realtime Listener (Primary Low-Latency Push)
+    const attachFirestoreFallback = () => {
+      if (firestoreUnsub || !isMounted) return;
+      try {
+        const firestore = getFirebaseFirestore();
+        if (firestore) {
+          const signalDocRef = doc(firestore, "portfolio_signal", "sync");
+          firestoreUnsub = onSnapshot(
+            signalDocRef,
+            (snapshot) => {
+              if (snapshot.exists()) {
+                const data = snapshot.data() as SyncSignalPayload;
+                triggerRefresh(data);
+              }
+            },
+            () => {
+              // Firestore onSnapshot fallback error suppressed
+            }
+          );
+        }
+      } catch {}
+    };
+
+    // 2. Firebase RTDB Realtime Listener (Primary Low-Latency Push); Firestore attaches only if RTDB unavailable
+    let rtdbAttached = false;
     try {
       const rtdb = getFirebaseRtdb();
       if (rtdb) {
@@ -77,10 +100,11 @@ export function LivePortfolioSync() {
             }
           },
           () => {
-            // RTDB permission / connection fallback handled by Firestore listener
+            attachFirestoreFallback();
           }
         );
 
+        rtdbAttached = true;
         rtdbUnsub = () => {
           try {
             off(syncRef);
@@ -90,25 +114,9 @@ export function LivePortfolioSync() {
       }
     } catch {}
 
-    // 3. Firebase Firestore onSnapshot Fallback Listener
-    try {
-      const firestore = getFirebaseFirestore();
-      if (firestore) {
-        const signalDocRef = doc(firestore, "portfolio_signal", "sync");
-        firestoreUnsub = onSnapshot(
-          signalDocRef,
-          (snapshot) => {
-            if (snapshot.exists()) {
-              const data = snapshot.data() as SyncSignalPayload;
-              triggerRefresh(data);
-            }
-          },
-          () => {
-            // Firestore onSnapshot fallback error suppressed
-          }
-        );
-      }
-    } catch {}
+    if (!rtdbAttached) {
+      attachFirestoreFallback();
+    }
 
     return () => {
       isMounted = false;

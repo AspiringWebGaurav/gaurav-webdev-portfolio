@@ -4,6 +4,7 @@
  */
 
 
+import { unstable_cache } from "next/cache";
 import { getAdminDb } from "@/lib/admin/firebase-admin";
 import { redisClient } from "../../redis";
 import { DEFAULT_RESUME_DATA } from "../constants";
@@ -56,6 +57,19 @@ export async function getResumeData(): Promise<ResumeData> {
 
   return DEFAULT_RESUME_DATA;
 }
+
+/**
+ * Edge/ISR-cached resume projection for public SEO metadata & status endpoint.
+ * Prevents Upstash fetch cache:no-store from forcing SSR on /resume and /api/resume/status.
+ */
+export const getCachedPublicResumeData = unstable_cache(
+  async (): Promise<ResumeData> => getResumeData(),
+  ["resume-public-data-v1"],
+  {
+    tags: ["resume-data"],
+    revalidate: 3600,
+  }
+);
 
 /**
  * Updates resume data in Firebase RTDB and invalidates Redis cache

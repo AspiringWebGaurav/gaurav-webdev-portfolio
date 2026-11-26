@@ -3,6 +3,8 @@ import React from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import { RecruiterThemeEnforcer } from "@/components/contact-portal/layout/RecruiterThemeEnforcer";
 
+export const revalidate = 86400;
+
 const adminSans = Geist({
   variable: "--font-admin-sans",
   subsets: ["latin"],

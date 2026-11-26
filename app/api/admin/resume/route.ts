@@ -42,8 +42,10 @@ export async function PUT(req: NextRequest) {
     }
 
     try {
-      const { revalidatePath } = await import("next/cache");
-      revalidatePath("/resume");
+      const { revalidatePath, revalidateTag } = await import("next/cache");
+      revalidateTag("resume-data");
+      revalidatePath("/resume", "layout");
+      revalidatePath("/api/resume/status");
       revalidatePath("/");
     } catch {
       // Best-effort cache purge

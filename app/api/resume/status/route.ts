@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
-import { getResumeData } from "@/lib/resume/services/resume-data.service";
+import { getCachedPublicResumeData } from "@/lib/resume/services/resume-data.service";
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-static";
+export const revalidate = 300;
 
 export async function GET() {
   try {
-    const data = await getResumeData();
+    const data = await getCachedPublicResumeData();
     return NextResponse.json(
       {
         status: data.status || "active",

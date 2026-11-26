@@ -6,6 +6,7 @@ import { normalizeMachinesMap } from "@/lib/downex/machines";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 export async function GET(req: NextRequest) {
   const session = await getVerifiedAdminSessionFromRequest(req);
@@ -20,11 +21,15 @@ export async function GET(req: NextRequest) {
   const encoder = new TextEncoder();
   const db = getAdminDb();
 
+  let cleanup: () => void = () => {};
+
   const stream = new ReadableStream({
     start(controller) {
+      let isClosed = false;
+
       controller.enqueue(
         encoder.encode(
-          `event: connected\ndata: ${JSON.stringify({ status: "connected", timestamp: Date.now() })}\n\n`
+          `retry: 5000\nevent: connected\ndata: ${JSON.stringify({ status: "connected", timestamp: Date.now() })}\n\n`
         )
       );
 
@@ -38,47 +43,61 @@ export async function GET(req: NextRequest) {
       const machinesRef = db.ref("ecosystem/apps/downex/machines");
       const noticesRef = db.ref("ecosystem/apps/downex/notices");
 
-      // Push real-time snapshot whenever any machine connects, changes status, or heartbeats
+      let lastMachinesJson = "";
       const listener = machinesRef.on("value", (snapshot) => {
+        if (isClosed) return;
         try {
           const map = (snapshot.val() || {}) as Record<string, Record<string, unknown>>;
           const machines = normalizeMachinesMap(map);
+          const payload = JSON.stringify({ count: machines.length, machines });
+          if (payload === lastMachinesJson) return;
+          lastMachinesJson = payload;
           controller.enqueue(
-            encoder.encode(`event: machines\ndata: ${JSON.stringify({ count: machines.length, machines })}\n\n`)
+            encoder.encode(`event: machines\ndata: ${payload}\n\n`)
           );
         } catch {
-          // Stream might be closed
+          cleanup();
         }
       });
 
+      let lastNoticesJson = "";
       const noticesListener = noticesRef.on("value", (snapshot) => {
+        if (isClosed) return;
         try {
           const rawMap = (snapshot.val() || {}) as Record<string, unknown>;
           const notices = normalizeNotices(rawMap);
+          const payload = JSON.stringify({ count: notices.length, notices });
+          if (payload === lastNoticesJson) return;
+          lastNoticesJson = payload;
           controller.enqueue(
-            encoder.encode(`event: notices\ndata: ${JSON.stringify({ count: notices.length, notices })}\n\n`)
+            encoder.encode(`event: notices\ndata: ${payload}\n\n`)
           );
         } catch {
-          // Stream might be closed
+          cleanup();
         }
       });
 
-      // Heartbeat comment every 25 seconds
       const keepaliveInterval = setInterval(() => {
+        if (isClosed) return;
         try {
           controller.enqueue(encoder.encode(": keepalive\n\n"));
         } catch {
-          clearInterval(keepaliveInterval);
-          machinesRef.off("value", listener);
-          noticesRef.off("value", noticesListener);
+          cleanup();
         }
-      }, 25000);
+      }, 45000);
 
-      req.signal.addEventListener("abort", () => {
+      cleanup = () => {
+        if (isClosed) return;
+        isClosed = true;
         clearInterval(keepaliveInterval);
         machinesRef.off("value", listener);
         noticesRef.off("value", noticesListener);
-      });
+      };
+
+      req.signal.addEventListener("abort", cleanup, { once: true });
+    },
+    cancel() {
+      cleanup();
     },
   });
 
