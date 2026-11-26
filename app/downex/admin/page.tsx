@@ -15,8 +15,12 @@ export default async function DownexAdminPage({
   searchParams?: Promise<{ tab?: string }>;
 }) {
   const sp = searchParams ? await searchParams : undefined;
-  const initialTab: "CLIENTS" | "NOTICES" =
-    sp?.tab === "notices" ? "NOTICES" : "CLIENTS";
+  const initialTab: "HOME" | "CLIENTS" | "NOTICES" =
+    sp?.tab === "notices"
+      ? "NOTICES"
+      : sp?.tab === "clients"
+      ? "CLIENTS"
+      : "HOME";
 
   const cookieStore = await cookies();
   const sessionCookie =

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
+  Home,
   Laptop,
   Search,
   Copy,
@@ -71,7 +72,7 @@ interface CustomModeOption {
 }
 
 interface PersistedAdminUiState {
-  adminTab?: "CLIENTS" | "NOTICES";
+  adminTab?: "HOME" | "CLIENTS" | "NOTICES";
   filterTab?: "ALL" | "ONLINE" | "BANNED";
   searchQuery?: string;
   currentPage?: number;
@@ -246,7 +247,7 @@ interface DownexAdminClientProps {
   initialSession: AdminSession | null;
   initialMachines?: Machine[];
   initialNotices?: MarqueeNotice[];
-  initialTab?: "CLIENTS" | "NOTICES";
+  initialTab?: "HOME" | "CLIENTS" | "NOTICES";
 }
 
 const NOTICE_DURATION_PRESETS: Array<{ label: string; ms: number | null }> = [
@@ -264,12 +265,12 @@ export default function DownexAdminClient({
   initialSession,
   initialMachines = [],
   initialNotices = [],
-  initialTab = "CLIENTS",
+  initialTab = "HOME",
 }: DownexAdminClientProps) {
   const [session, setSession] = useState<AdminSession | null>(initialSession);
   const [token, setToken] = useState<string | null>(null);
   const [isHydrating, setIsHydrating] = useState<boolean>(!initialSession);
-  const [adminTab, setAdminTab] = useState<"CLIENTS" | "NOTICES">(initialTab);
+  const [adminTab, setAdminTab] = useState<"HOME" | "CLIENTS" | "NOTICES">(initialTab);
   const [machines, setMachines] = useState<Machine[]>(() =>
     sortMachinesByInstallOrder(initialMachines)
   );
@@ -370,13 +371,13 @@ export default function DownexAdminClient({
       const rawUi = localStorage.getItem(STORAGE_UI_STATE_KEY);
       if (rawUi) {
         const parsed = JSON.parse(rawUi) as PersistedAdminUiState;
-        const resolvedTab =
+        const resolvedTab: "HOME" | "CLIENTS" | "NOTICES" =
           urlTab === "notices"
             ? "NOTICES"
             : urlTab === "clients"
             ? "CLIENTS"
-            : parsed.adminTab === "NOTICES" || parsed.adminTab === "CLIENTS"
-            ? parsed.adminTab
+            : urlTab === "home"
+            ? "HOME"
             : initialTab;
         setAdminTab(resolvedTab);
 
@@ -439,8 +440,10 @@ export default function DownexAdminClient({
         if (typeof parsed.exactEndTime === "string") setExactEndTime(parsed.exactEndTime);
         if (typeof parsed.previewDark === "boolean") setPreviewDark(parsed.previewDark);
         if (typeof parsed.authEmail === "string" && parsed.authEmail) setAuthEmail(parsed.authEmail);
-      } else if (urlTab === "notices" || urlTab === "clients") {
-        setAdminTab(urlTab === "notices" ? "NOTICES" : "CLIENTS");
+      } else if (urlTab === "notices" || urlTab === "clients" || urlTab === "home") {
+        setAdminTab(urlTab === "notices" ? "NOTICES" : urlTab === "clients" ? "CLIENTS" : "HOME");
+      } else {
+        setAdminTab("HOME");
       }
     } catch {} finally {
       setIsUiStateHydrated(true);
@@ -476,9 +479,15 @@ export default function DownexAdminClient({
       localStorage.setItem(STORAGE_UI_STATE_KEY, JSON.stringify(payload));
 
       const url = new URL(window.location.href);
-      const desiredParam = adminTab === "NOTICES" ? "notices" : "clients";
-      if (url.searchParams.get("tab") !== desiredParam) {
-        url.searchParams.set("tab", desiredParam);
+      if (session) {
+        const desiredParam =
+          adminTab === "NOTICES" ? "notices" : adminTab === "CLIENTS" ? "clients" : "home";
+        if (url.searchParams.get("tab") !== desiredParam) {
+          url.searchParams.set("tab", desiredParam);
+          window.history.replaceState({}, "", url.pathname + url.search + url.hash);
+        }
+      } else if (url.searchParams.has("tab")) {
+        url.searchParams.delete("tab");
         window.history.replaceState({}, "", url.pathname + url.search + url.hash);
       }
     } catch {}
@@ -503,6 +512,7 @@ export default function DownexAdminClient({
     exactEndTime,
     previewDark,
     authEmail,
+    session,
   ]);
 
   const toggleSidebarCollapse = useCallback(() => {
@@ -899,6 +909,7 @@ export default function DownexAdminClient({
         localStorage.setItem(STORAGE_LAST_ACTIVE_KEY, Date.now().toString());
       }
       setTimeout(() => {
+        setAdminTab("HOME");
         setSession(data.session);
         setIsOtpSuccess(false);
         setAuthStage("LOGIN");
@@ -940,6 +951,7 @@ export default function DownexAdminClient({
       }
       setSession(null);
       setToken(null);
+      setAdminTab("HOME");
       setSignedOutMsg(true);
       setAuthStage("LOGIN");
     } finally {
@@ -1643,6 +1655,27 @@ export default function DownexAdminClient({
         <nav className={collapsed ? "px-2 space-y-1" : "px-2.5 space-y-0.5"}>
           <button
             type="button"
+            title={collapsed ? "Home" : undefined}
+            onClick={() => {
+              setAdminTab("HOME");
+              if (onCloseMobile) onCloseMobile();
+            }}
+            className={`w-full flex items-center justify-between px-2.5 py-1.5 text-[11.5px] font-mono-tabular transition-colors text-left rounded cursor-pointer ${
+              collapsed ? "w-10 h-10 mx-auto justify-center p-0 relative rounded-md" : ""
+            } ${
+              adminTab === "HOME"
+                ? "bg-black text-white font-semibold"
+                : "text-zinc-600 hover:text-zinc-950 hover:bg-zinc-200/60 font-medium"
+            }`}
+          >
+            <div className={`flex items-center ${collapsed ? "justify-center relative" : "gap-2.5 min-w-0"}`}>
+              <Home size={15} strokeWidth={2} className="shrink-0" />
+              {!collapsed && <span className="truncate">Home</span>}
+            </div>
+          </button>
+
+          <button
+            type="button"
             title={collapsed ? `Client List (${machines.length})` : undefined}
             onClick={() => {
               if (adminTab === "CLIENTS") {
@@ -1871,7 +1904,9 @@ export default function DownexAdminClient({
             </div>
           )}
 
-          {adminTab === "CLIENTS" ? (
+          {adminTab === "HOME" ? (
+            <div className="flex-1 min-h-0 h-full bg-white" data-testid="admin-home-empty" />
+          ) : adminTab === "CLIENTS" ? (
             <>
               {/* Top Control Bar: Search, All/Online/Banned Filters, and Single Refresh Button */}
               <div className="px-4 py-2.5 flex flex-wrap items-center justify-between border-b border-zinc-200/80 shrink-0 gap-2.5">
