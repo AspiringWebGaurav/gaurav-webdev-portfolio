@@ -6,13 +6,29 @@ import { isValidDownexHwid, normalizeDownexHwid } from "@/lib/downex/machines";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: CORS_HEADERS,
+  });
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const hwid = normalizeDownexHwid(body.hwid);
 
     if (!isValidDownexHwid(hwid)) {
-      return NextResponse.json({ error: "Invalid or missing hwid" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid or missing hwid" },
+        { status: 400, headers: CORS_HEADERS }
+      );
     }
 
     const path = `ecosystem/apps/downex/machines/${hwid}`;
@@ -45,15 +61,21 @@ export async function POST(req: NextRequest) {
 
     const notices = filterActiveNotices(normalizeNotices(rawNotices));
 
-    return NextResponse.json({
-      status: "ok",
-      hwid,
-      is_banned: isBanned,
-      reason: banReason,
-      notices,
-    });
+    return NextResponse.json(
+      {
+        status: "ok",
+        hwid,
+        is_banned: isBanned,
+        reason: banReason,
+        notices,
+      },
+      { headers: CORS_HEADERS }
+    );
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to attest machine";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json(
+      { error: message },
+      { status: 500, headers: CORS_HEADERS }
+    );
   }
 }
