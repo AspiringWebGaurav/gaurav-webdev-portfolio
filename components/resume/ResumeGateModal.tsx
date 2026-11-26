@@ -66,6 +66,8 @@ export const ResumeGateModal: React.FC<ResumeGateModalProps> = ({
   // Turnstile state
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [isTurnstileReady, setIsTurnstileReady] = useState(false);
+  const [turnstileScale, setTurnstileScale] = useState(1);
+  const turnstileSlotRef = useRef<HTMLDivElement | null>(null);
   const turnstileContainerRef = useRef<HTMLDivElement | null>(null);
   const turnstileWidgetIdRef = useRef<string | null>(null);
 
@@ -135,7 +137,7 @@ export const ResumeGateModal: React.FC<ResumeGateModalProps> = ({
       const id = window.turnstile.render(turnstileContainerRef.current, {
         sitekey: activeSiteKey,
         theme: isDark ? "dark" : "light",
-        size: "normal",
+        size: "flexible",
         action: "resume_gate",
         callback: (token: string) => {
           setTurnstileToken(token);
@@ -218,6 +220,27 @@ export const ResumeGateModal: React.FC<ResumeGateModalProps> = ({
       renderTurnstile();
     }
   }, [isDark, isOpen, step, mounted, renderTurnstile]);
+
+  // Keep Turnstile proportionally fitted on ultra-narrow viewports (< 300px inner width)
+  useEffect(() => {
+    const slot = turnstileSlotRef.current;
+    if (!slot || typeof ResizeObserver === "undefined" || !isOpen || step !== "details") {
+      setTurnstileScale(1);
+      return;
+    }
+    const updateScale = () => {
+      const w = slot.clientWidth;
+      if (w > 0 && w < 300) {
+        setTurnstileScale(w / 300);
+      } else {
+        setTurnstileScale(1);
+      }
+    };
+    updateScale();
+    const ro = new ResizeObserver(updateScale);
+    ro.observe(slot);
+    return () => ro.disconnect();
+  }, [isOpen, step]);
 
   // 2. Email Autocorrect & Anti-Abuse detection
   const handleEmailChange = (val: string) => {
@@ -476,18 +499,18 @@ export const ResumeGateModal: React.FC<ResumeGateModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-slate-950/65 dark:bg-black/85 backdrop-blur-xl animate-in fade-in duration-300"
+      className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto p-3 sm:p-6 bg-slate-950/65 dark:bg-black/85 backdrop-blur-xl animate-in fade-in duration-300"
       role="dialog"
       aria-modal="true"
     >
       {/* Ambient subtle radial glow behind the card for luxurious depth */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[520px] bg-gradient-to-tr from-purple-500/10 via-indigo-500/10 to-transparent rounded-full blur-[110px] pointer-events-none" />
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[520px] bg-gradient-to-tr from-purple-500/10 via-indigo-500/10 to-transparent rounded-full blur-[110px] pointer-events-none" />
 
       {/* 
         High-End Engineered Card:
-        Precision border reflections, layered specular shadows, and smooth 24px radius.
-        Desktop: clamped strictly to 420px max width.
-        Mobile: fluid width fitting 100dvh in ONE single view.
+        Precision border reflections, layered specular shadows, and smooth symmetric alignment.
+        Desktop: clamped strictly to 432px max width.
+        Mobile: fluid width fitting cleanly on all screens with symmetric edge-to-edge controls.
       */}
       <div
         style={{
@@ -500,7 +523,7 @@ export const ResumeGateModal: React.FC<ResumeGateModalProps> = ({
             ? "0 0 0 1px rgba(255, 255, 255, 0.08), 0 1px 0 0 rgba(255, 255, 255, 0.12) inset, 0 24px 64px -12px rgba(0, 0, 0, 0.9)"
             : "0 0 0 1px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.02), 0 12px 32px -4px rgba(15, 23, 42, 0.08), 0 24px 64px -12px rgba(15, 23, 42, 0.14)",
         }}
-        className={`relative w-full border rounded-2xl xs:rounded-3xl p-4.5 xs:p-6 sm:p-7 transition-all duration-200 ${
+        className={`relative my-auto w-full border rounded-2xl sm:rounded-3xl p-4 sm:p-7 transition-all duration-200 ${
           isShaking ? "animate-shake" : ""
         }`}
       >
@@ -515,7 +538,7 @@ export const ResumeGateModal: React.FC<ResumeGateModalProps> = ({
             borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(226, 232, 240, 0.8)",
             color: isDark ? "#FBBF24" : "#64748B",
           }}
-          className="absolute top-4 right-4 w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shadow-xs"
+          className="absolute top-3.5 right-3.5 sm:top-5 sm:right-5 w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shadow-xs"
         >
           {isDark ? (
             <IoSunnyOutline className="w-4 h-4 text-amber-400" />
@@ -525,7 +548,7 @@ export const ResumeGateModal: React.FC<ResumeGateModalProps> = ({
         </button>
 
         {/* Clean Header: Prominent Big Name + Subtitle Heading Below + Anti-Spam Notice */}
-        <div className="text-center mb-5 pt-1 px-1">
+        <div className="text-center mb-5 pt-1 px-8 sm:px-6">
           {step === "details" ? (
             <>
               <h2
@@ -661,18 +684,52 @@ export const ResumeGateModal: React.FC<ResumeGateModalProps> = ({
               </div>
             </div>
 
-            {/* Cloudflare Turnstile Widget (Clean dynamic space, no outer border) */}
-            <div className="py-1 flex flex-col items-center justify-center min-h-[65px]">
+            {/* Cloudflare Turnstile Widget (Full-width flexible widget synced seamlessly with modal surface) */}
+            <div
+              ref={turnstileSlotRef}
+              className="w-full"
+              style={
+                turnstileScale < 1
+                  ? { height: `${Math.round(65 * turnstileScale)}px`, overflow: "hidden" }
+                  : undefined
+              }
+            >
               <div
-                ref={turnstileContainerRef}
-                className="w-full max-w-[300px] flex items-center justify-center min-h-[65px]"
-                style={{ minHeight: "65px", width: "300px" }}
-              />
-              {!isTurnstileReady && (
-                <div className="text-[11px] text-slate-400 py-0.5">
-                  Cloudflare Protected
-                </div>
-              )}
+                style={{
+                  width: turnstileScale < 1 ? "300px" : "100%",
+                  minHeight: "65px",
+                  backgroundColor: isDark ? "#222222" : "#FAFAFA",
+                  borderColor: isDark ? "rgba(255, 255, 255, 0.12)" : "#CBD5E1",
+                  transform: turnstileScale < 1 ? `scale(${turnstileScale})` : undefined,
+                  transformOrigin: "top left",
+                }}
+                className="relative w-full rounded-xl border overflow-hidden transition-colors duration-150"
+              >
+                {!isTurnstileReady && (
+                  <div
+                    style={{
+                      backgroundColor: isDark ? "rgba(255, 255, 255, 0.03)" : "#F8FAFC",
+                      color: isDark ? "#64748B" : "#94A3B8",
+                    }}
+                    className="absolute inset-0 flex items-center justify-center gap-2 text-xs font-medium pointer-events-none select-none animate-pulse"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-purple-500/70" />
+                    <span>Verifying browser security...</span>
+                  </div>
+                )}
+                <div
+                  ref={turnstileContainerRef}
+                  className="block w-full"
+                  style={{
+                    width: "calc(100% + 2px)",
+                    minHeight: "65px",
+                    marginLeft: "-1px",
+                    marginTop: "-1px",
+                    marginBottom: "-1px",
+                    lineHeight: 0,
+                  }}
+                />
+              </div>
             </div>
 
             {/* Submit Action: Confident, Specular Depth */}
@@ -728,7 +785,7 @@ export const ResumeGateModal: React.FC<ResumeGateModalProps> = ({
         {/* Step 2: 6-Digit OTP */}
         {step === "otp" && (
           <div className="space-y-4">
-            <div className="flex items-center justify-center gap-1 xs:gap-1.5 sm:gap-2.5">
+            <div className="grid grid-cols-6 gap-2 sm:gap-2.5 w-full">
               {otpDigits.map((digit, i) => (
                 <input
                   key={i}
@@ -759,7 +816,7 @@ export const ResumeGateModal: React.FC<ResumeGateModalProps> = ({
                       ? "inset 0 1px 2px rgba(0,0,0,0.4)"
                       : "inset 0 1px 2px rgba(0,0,0,0.03)",
                   }}
-                  className="w-8.5 xs:w-9.5 sm:w-11 h-10 xs:h-11 sm:h-12 text-center font-mono text-lg xs:text-xl sm:text-2xl font-bold rounded-lg sm:rounded-xl border transition-all duration-150 focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10"
+                  className="w-full h-11 sm:h-12 text-center font-mono text-lg sm:text-2xl font-bold rounded-xl border transition-all duration-150 focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10"
                 />
               ))}
             </div>
@@ -859,14 +916,14 @@ export const ResumeGateModal: React.FC<ResumeGateModalProps> = ({
             borderTopWidth: "1px",
             borderTopStyle: "solid",
           }}
-          className="mt-5 pt-3.5"
+          className="mt-4 pt-4"
         >
           <div
             style={{
               backgroundColor: isDark ? "rgba(255, 255, 255, 0.03)" : "#F8FAFC",
               borderColor: isDark ? "rgba(255, 255, 255, 0.07)" : "#E2E8F0",
             }}
-            className="grid grid-cols-3 gap-1 p-1 rounded-xl border text-[11px] font-medium"
+            className="grid grid-cols-3 gap-1 p-1 rounded-xl border text-[10px] sm:text-[11px] font-medium"
           >
             <a
               href={getSubdomainUrl("https://gauravpatil.site", resolvedTheme)}
@@ -874,10 +931,10 @@ export const ResumeGateModal: React.FC<ResumeGateModalProps> = ({
               rel="noopener noreferrer"
               title="Portfolio — Gaurav Patil"
               style={{ color: isDark ? "#A1A1AA" : "#64748B" }}
-              className="py-1.5 px-2 rounded-lg text-center flex items-center justify-center gap-1 transition-all duration-150 group cursor-pointer hover:bg-white dark:hover:bg-white/10 hover:text-slate-950 dark:hover:text-white hover:shadow-xs active:scale-[0.98]"
+              className="py-1.5 px-1 sm:px-2 rounded-lg text-center flex items-center justify-center gap-1 whitespace-nowrap transition-all duration-150 group cursor-pointer hover:bg-white dark:hover:bg-white/10 hover:text-slate-950 dark:hover:text-white hover:shadow-xs active:scale-[0.98]"
             >
-              <span>Portfolio</span>
-              <IoOpenOutline className="w-2.5 h-2.5 opacity-50 group-hover:opacity-100 transition-opacity" />
+              <span className="truncate">Portfolio</span>
+              <IoOpenOutline className="w-2.5 h-2.5 shrink-0 opacity-50 group-hover:opacity-100 transition-opacity" />
             </a>
 
             <a
@@ -886,10 +943,10 @@ export const ResumeGateModal: React.FC<ResumeGateModalProps> = ({
               rel="noopener noreferrer"
               title="Recruiter Portal — Direct Messaging"
               style={{ color: isDark ? "#A1A1AA" : "#64748B" }}
-              className="py-1.5 px-2 rounded-lg text-center flex items-center justify-center gap-1 transition-all duration-150 group cursor-pointer hover:bg-white dark:hover:bg-white/10 hover:text-purple-600 dark:hover:text-purple-400 hover:shadow-xs active:scale-[0.98]"
+              className="py-1.5 px-1 sm:px-2 rounded-lg text-center flex items-center justify-center gap-1 whitespace-nowrap transition-all duration-150 group cursor-pointer hover:bg-white dark:hover:bg-white/10 hover:text-purple-600 dark:hover:text-purple-400 hover:shadow-xs active:scale-[0.98]"
             >
               <span className="truncate">Recruiter Portal</span>
-              <IoOpenOutline className="w-2.5 h-2.5 opacity-50 group-hover:opacity-100 transition-opacity" />
+              <IoOpenOutline className="w-2.5 h-2.5 shrink-0 opacity-50 group-hover:opacity-100 transition-opacity" />
             </a>
 
             <a
@@ -898,10 +955,10 @@ export const ResumeGateModal: React.FC<ResumeGateModalProps> = ({
               rel="noopener noreferrer"
               title="Gaurav Patil — Full Stack Software Engineer Building Production-Ready Digital Systems"
               style={{ color: isDark ? "#A1A1AA" : "#64748B" }}
-              className="py-1.5 px-2 rounded-lg text-center flex items-center justify-center gap-1 transition-all duration-150 group cursor-pointer hover:bg-white dark:hover:bg-white/10 hover:text-slate-950 dark:hover:text-white hover:shadow-xs active:scale-[0.98]"
+              className="py-1.5 px-1 sm:px-2 rounded-lg text-center flex items-center justify-center gap-1 whitespace-nowrap transition-all duration-150 group cursor-pointer hover:bg-white dark:hover:bg-white/10 hover:text-slate-950 dark:hover:text-white hover:shadow-xs active:scale-[0.98]"
             >
-              <span>Submit Form</span>
-              <IoOpenOutline className="w-2.5 h-2.5 opacity-50 group-hover:opacity-100 transition-opacity" />
+              <span className="truncate">Submit Form</span>
+              <IoOpenOutline className="w-2.5 h-2.5 shrink-0 opacity-50 group-hover:opacity-100 transition-opacity" />
             </a>
           </div>
         </div>
