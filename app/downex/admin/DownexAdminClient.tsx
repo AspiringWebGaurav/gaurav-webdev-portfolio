@@ -2380,11 +2380,11 @@ export default function DownexAdminClient({
                   {/* Frosted Glass Marquee Capsule */}
                   <div className="flex-1 min-w-0 flex justify-center px-2">
                     <div
-                      className={`downex-marquee-group relative h-[24px] w-full max-w-[460px] rounded-full border backdrop-blur-md overflow-hidden flex items-center transition-colors ${
+                      className={`downex-marquee-group relative h-[20px] w-full max-w-[430px] px-1 rounded-full border backdrop-blur-md overflow-hidden flex items-center transition-colors ${
                         previewDark ? previewStyle.previewDark : previewStyle.previewLight
                       }`}
                     >
-                      <div className="downex-marquee-track relative w-full h-full overflow-hidden">
+                      <div className="downex-marquee-track relative w-full h-full flex items-center overflow-hidden">
                         <div
                           key={`${activePreviewNotice ? `live-${activePreviewNotice.id}-${previewQueueState.cycleKey}` : "draft"}-${previewDirection}-${previewMeta.label}-${previewMeta.color}-${previewSpeed}-${previewDisplayText}`}
                           onAnimationEnd={activePreviewNotice ? handlePreviewCycleEnd : undefined}
@@ -2392,24 +2392,24 @@ export default function DownexAdminClient({
                             animationDuration: `${previewDurationSec}s`,
                             animationIterationCount: activePreviewNotice ? 1 : "infinite",
                           }}
-                          className={`absolute inset-y-0 flex items-center whitespace-nowrap gap-1.5 text-[11.5px] leading-none font-semibold ${
+                          className={`absolute inset-y-0 flex items-center whitespace-nowrap gap-1.5 font-mono-tabular text-[10px] leading-none font-medium tracking-[-0.01em] ${
                             previewDirection === "ltr"
                               ? "downex-marquee-item-ltr"
                               : "downex-marquee-item-rtl"
                           }`}
                         >
                           <span
-                            className={`px-1.5 py-[2px] rounded-full border text-[9.5px] font-bold uppercase tracking-wider leading-none ${
+                            className={`inline-flex items-center justify-center h-[13px] px-1.5 rounded-full border text-[8.5px] font-bold uppercase tracking-[0.06em] leading-none shrink-0 ${
                               previewDark ? previewStyle.labelDark : previewStyle.labelLight
                             }`}
                           >
                             {previewMeta.label}
                           </span>
-                          <span className="leading-none">
+                          <span className="inline-flex items-center h-[13px] leading-none">
                             {previewDisplayText}
                           </span>
                           {showPreviewCountdown && (
-                            <span className="font-mono-tabular text-[10.5px] font-semibold leading-none opacity-85">
+                            <span className="inline-flex items-center h-[13px] font-mono-tabular text-[9.5px] font-semibold leading-none opacity-80">
                               ({formatRemainingCountdown(previewExpiresAt, nowTick)})
                             </span>
                           )}
