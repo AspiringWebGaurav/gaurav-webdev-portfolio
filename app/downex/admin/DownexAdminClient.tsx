@@ -2398,7 +2398,6 @@ export default function DownexAdminClient({
                               : "downex-marquee-item-rtl"
                           }`}
                         >
-                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${previewStyle.dot} ${previewStyle.dotRing}`} />
                           <span
                             className={`px-1.5 py-[2px] rounded-full border text-[9.5px] font-bold uppercase tracking-wider leading-none ${
                               previewDark ? previewStyle.labelDark : previewStyle.labelLight
