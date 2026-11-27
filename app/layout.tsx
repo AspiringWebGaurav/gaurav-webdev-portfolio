@@ -233,6 +233,8 @@ export default function RootLayout({
         />
         <link rel="preconnect" href="https://challenges.cloudflare.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://challenges.cloudflare.com" />
+        <link rel="alternate" type="text/plain" href="/llms.txt" title="LLM Context Summary" />
+        <link rel="alternate" type="text/plain" href="/llms-full.txt" title="Complete AI Dossier" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable}`}

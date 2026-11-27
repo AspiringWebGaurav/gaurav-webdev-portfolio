@@ -4,25 +4,24 @@ import { PROJECT_CASE_STUDIES } from "@/lib/data/case-studies";
 import { DOWNEX_ORIGIN, DOWNEX_SITEMAP_URLS } from "@/lib/data/downex-seo";
 import { seoRepository } from "@/lib/dal/repositories/cms/seo.repository";
 import { projectsRepository } from "@/lib/dal/repositories/cms/projects.repository";
+import {
+  SUBDOMAIN_ORIGINS,
+  resolvePortfolioSubdomainKey,
+} from "@/lib/ai/portfolio-ai-data";
 
 export const dynamic = "force-dynamic";
-
-function isDownexSubdomainHost(rawHost: string): boolean {
-  const host = rawHost.toLowerCase().split(":")[0];
-  return (
-    host === "downex.apps.gauravpatil.site" ||
-    host === "downex.gauravpatil.site" ||
-    host.startsWith("downex.apps.localhost") ||
-    host.startsWith("downex.localhost")
-  );
-}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const headerList = await headers();
   const rawHost = headerList.get("x-forwarded-host") || headerList.get("host") || "";
   const releaseDate = new Date("2026-11-27T00:00:00.000Z");
+  const key = resolvePortfolioSubdomainKey(rawHost);
 
-  if (isDownexSubdomainHost(rawHost)) {
+  if (key === "talk") {
+    return [];
+  }
+
+  if (key === "downex") {
     return DOWNEX_SITEMAP_URLS.map((entry) => ({
       url: `${DOWNEX_ORIGIN}${entry.path}`,
       lastModified: releaseDate,
@@ -31,7 +30,35 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
   }
 
-  const baseUrl = "https://gauravpatil.site";
+  if (key === "cp") {
+    return [
+      { url: SUBDOMAIN_ORIGINS.cp, lastModified: releaseDate, changeFrequency: "weekly", priority: 1.0 },
+      { url: `${SUBDOMAIN_ORIGINS.cp}/how-to-use`, lastModified: releaseDate, changeFrequency: "weekly", priority: 0.9 },
+      { url: `${SUBDOMAIN_ORIGINS.cp}/terms`, lastModified: releaseDate, changeFrequency: "monthly", priority: 0.6 },
+      { url: `${SUBDOMAIN_ORIGINS.cp}/privacy`, lastModified: releaseDate, changeFrequency: "monthly", priority: 0.6 },
+      { url: `${SUBDOMAIN_ORIGINS.cp}/aou`, lastModified: releaseDate, changeFrequency: "monthly", priority: 0.6 },
+    ];
+  }
+
+  if (key === "sm") {
+    return [
+      { url: SUBDOMAIN_ORIGINS.sm, lastModified: releaseDate, changeFrequency: "weekly", priority: 1.0 },
+      { url: `${SUBDOMAIN_ORIGINS.sm}/docs`, lastModified: releaseDate, changeFrequency: "weekly", priority: 0.85 },
+    ];
+  }
+
+  if (key !== "root") {
+    return [
+      {
+        url: SUBDOMAIN_ORIGINS[key],
+        lastModified: releaseDate,
+        changeFrequency: "weekly",
+        priority: 1.0,
+      },
+    ];
+  }
+
+  const baseUrl = SUBDOMAIN_ORIGINS.root;
 
   // Retrieve dynamic SEO document for genuine homepage modified date
   let homeLastModified = releaseDate;
@@ -128,15 +155,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Authoritative ecosystem subdomains
   const ecosystemSubdomains = [
-    "https://apps.gauravpatil.site",
-    "https://services.gauravpatil.site",
-    "https://resume.services.gauravpatil.site",
-    "https://talk.services.gauravpatil.site",
-    "https://contact.services.gauravpatil.site",
-    "https://cp.apps.gauravpatil.site",
-    "https://downex.apps.gauravpatil.site",
-    "https://sm.apps.gauravpatil.site",
-    "https://gpn.apps.gauravpatil.site",
+    SUBDOMAIN_ORIGINS.apps,
+    SUBDOMAIN_ORIGINS.services,
+    SUBDOMAIN_ORIGINS.resume,
+    SUBDOMAIN_ORIGINS.contact,
+    SUBDOMAIN_ORIGINS.cp,
+    SUBDOMAIN_ORIGINS.downex,
+    SUBDOMAIN_ORIGINS.sm,
+    SUBDOMAIN_ORIGINS.gpn,
   ];
 
   for (const subdomainUrl of ecosystemSubdomains) {

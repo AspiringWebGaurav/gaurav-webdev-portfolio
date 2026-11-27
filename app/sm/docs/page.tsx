@@ -9,6 +9,9 @@ export const revalidate = false;
 export const metadata: Metadata = {
   title: "Documentation & User Guide | ScheduleMe",
   description: "Official guide and technical overview of ScheduleMe — the lightweight Windows shutdown, restart, and sleep scheduler.",
+  alternates: {
+    canonical: "https://sm.apps.gauravpatil.site/docs",
+  },
   openGraph: {
     title: "Documentation | ScheduleMe",
     description: "Learn how to schedule automated power actions, configure tray integration, and use ScheduleMe on Windows.",

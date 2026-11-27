@@ -45,6 +45,7 @@ const securityHeaders = [
       "frame-ancestors 'none'",
     ].join("; "),
   },
+
 ];
 
 const nextConfig: NextConfig = {
@@ -191,6 +192,25 @@ const nextConfig: NextConfig = {
       {
         source: "/:path*",
         headers: securityHeaders,
+      },
+      {
+        // Advertise llms.txt on HTML pages without overwriting canonical Link headers
+        // emitted by /api/ai/markdown (.md routes or Accept: text/markdown requests).
+        source: "/((?!api/ai/|.*\\.md$).*)",
+        missing: [
+          {
+            type: "header",
+            key: "accept",
+            value: "(.*text/markdown.*)",
+          },
+        ],
+        headers: [
+          {
+            key: "Link",
+            value:
+              '</llms.txt>; rel="alternate"; type="text/plain", </llms-full.txt>; rel="alternate"; type="text/plain"',
+          },
+        ],
       },
       {
         // 1-Year Immutable Caching for Static Media, Images, Fonts, 3D Assets & Manifests

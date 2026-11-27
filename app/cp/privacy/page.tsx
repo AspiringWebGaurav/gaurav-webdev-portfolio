@@ -19,6 +19,9 @@ export const metadata: Metadata = {
   title: "Privacy Policy & Zero-Telemetry Architecture | CP Engine",
   description:
     "Official Enterprise Privacy Policy for CP Engine v0.0.1 (Base Foundation) and Dynamic Edge Updates. Zero user data collection, zero telemetry on clipboard contents, and local-only kernel streaming.",
+  alternates: {
+    canonical: "https://cp.apps.gauravpatil.site/privacy",
+  },
   openGraph: {
     title: "Privacy Policy | CP Engine",
     description:

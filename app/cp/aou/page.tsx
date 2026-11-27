@@ -18,6 +18,9 @@ export const metadata: Metadata = {
   title: "End User Acceptance Agreement (AOU) | CP Engine",
   description:
     "End User Acceptance Agreement and Acceptable Use Policy (AOU) governing CP Engine Desktop Client v0.0.1 (Base Foundation Release) and Dynamic Edge Over-the-Air Update Infrastructure.",
+  alternates: {
+    canonical: "https://cp.apps.gauravpatil.site/aou",
+  },
   openGraph: {
     title: "End User Acceptance Agreement (AOU) | CP Engine",
     description:

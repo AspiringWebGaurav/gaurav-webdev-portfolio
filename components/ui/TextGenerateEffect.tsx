@@ -35,6 +35,7 @@ export const TextGenerateEffect = ({
               >
                 {word}
               </span>
+              {idx < wordsArray.length - 1 ? " " : ""}
             </span>
           ))}
         </span>

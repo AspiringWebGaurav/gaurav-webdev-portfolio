@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   title: "Download CP | Fast Windows Copy & Paste App",
   description:
     "Fast and simple file copying for Windows. Move large files and folders quickly without slowing down your computer. Just install and copy.",
+  alternates: {
+    canonical: "https://cp.apps.gauravpatil.site",
+  },
   openGraph: {
     title: "Download CP — Fast Windows Copy & Paste App",
     description:

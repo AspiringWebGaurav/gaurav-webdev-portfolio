@@ -19,6 +19,9 @@ export const metadata: Metadata = {
   title: "Terms of Service | CP Engine",
   description:
     "Official Enterprise Terms of Service governing the use of CP Engine Desktop Client v0.0.1 (Base Foundation Release) and Dynamic Edge Over-the-Air (OTA) Update Infrastructure.",
+  alternates: {
+    canonical: "https://cp.apps.gauravpatil.site/terms",
+  },
   openGraph: {
     title: "Terms of Service | CP Engine",
     description:

@@ -70,6 +70,43 @@ async function handleRouting(request: NextRequest, requestHeaders: Headers): Pro
     }
   }
 
+  // AI Crawler & Markdown Discovery Pass-Through / Negotiation across all public hosts
+  if (
+    pathname === "/llms.txt" ||
+    pathname === "/llms-full.txt" ||
+    pathname === "/.well-known/llms.txt" ||
+    pathname === "/robots.txt" ||
+    pathname === "/sitemap.xml" ||
+    pathname.startsWith("/api/ai/")
+  ) {
+    return NextResponse.next({ request: { headers: requestHeaders } });
+  }
+
+  const acceptHeader = (request.headers.get("accept") || "").toLowerCase();
+  const isPrivateOrTalkRoute =
+    host === TALK_SERVICE_HOST ||
+    host === LEGACY_TALK_HOST ||
+    host.startsWith("talk.") ||
+    devSubdomain === "talk" ||
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/downex/admin") ||
+    pathname.startsWith("/talk") ||
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/wa") ||
+    pathname.startsWith("/chat/room");
+
+  if (!isPrivateOrTalkRoute && (pathname.endsWith(".md") || acceptHeader.includes("text/markdown"))) {
+    requestHeaders.set("x-ai-path", pathname);
+    requestHeaders.set("x-ai-host", rawHost);
+    const mdUrl = new URL("/api/ai/markdown", request.url);
+    mdUrl.searchParams.set("path", pathname);
+    mdUrl.searchParams.set("host", rawHost);
+    return NextResponse.rewrite(mdUrl, {
+      request: { headers: requestHeaders },
+    });
+  }
+
   // Subdomain redirect resolver (enforces pure subdomains in both dev and prod)
   const getSubdomainRedirect = (
     prodHost: string,

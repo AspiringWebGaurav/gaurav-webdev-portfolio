@@ -24,6 +24,9 @@ export const metadata: Metadata = {
   title: "User Guide & Overview | CP Engine",
   description:
     "An overview of CP Engine: the problem statement with traditional Windows file transfers, our engineering approach, system requirements, step-by-step setup, and everyday usage.",
+  alternates: {
+    canonical: "https://cp.apps.gauravpatil.site/how-to-use",
+  },
   openGraph: {
     title: "User Guide & Overview | CP Engine",
     description:
