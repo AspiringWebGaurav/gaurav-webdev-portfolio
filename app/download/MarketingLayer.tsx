@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Spotlight } from "@/components/ui/Spotlight";
+import DownexSeoSections from "@/components/downex/DownexSeoSections";
 
 // Static telemetry constants (Ubuntu 24.04 LTS open-source ISO) - 100% Zero-JS-Overhead, Vercel Edge Optimized
 const FILE_SIZE = "5.80 GB";
@@ -57,7 +58,7 @@ export default function MarketingLayer({
     setTimeout(() => setStartingDesktop(false), 2200);
   };
   return (
-    <div data-portal="download" className="relative w-full h-full max-h-dvh flex flex-col justify-between overflow-hidden select-none">
+    <div data-portal="download" className="relative w-full min-h-dvh flex flex-col">
       {/* Aceternity Spotlight for subtle ambient glow in dark mode */}
       <div className="pointer-events-none select-none hidden dark:block">
         <Spotlight
@@ -67,9 +68,9 @@ export default function MarketingLayer({
       </div>
 
       {/* =======================================================================
-          MOBILE MARKETING VIEW (Strict 100dvh, Single View, Zero Scroll)
+          MOBILE MARKETING HERO (Strict 100dvh First Fold, Scrollable SEO Below)
           ======================================================================= */}
-      <div className="flex md:hidden h-full max-h-dvh w-full flex-col justify-between overflow-hidden p-3.5 relative z-10">
+      <div className="flex md:hidden h-dvh min-h-dvh max-h-dvh w-full flex-col justify-between overflow-hidden p-3.5 relative z-10 select-none">
         {/* Mobile Header */}
         <header className="w-full h-8 flex items-center justify-between shrink-0 bg-transparent">
           <div className="flex items-center gap-2">
@@ -94,14 +95,14 @@ export default function MarketingLayer({
         {/* Mobile Hero Header */}
         <div className="shrink-0 text-center pt-1">
           <h1 className="text-xl font-black tracking-tight text-zinc-950 dark:text-zinc-50 leading-tight">
-            <span>One simple downloader.</span>{" "}
+            <span>Downex: Simple Free</span>{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 via-purple-500 to-indigo-600 dark:from-violet-400 dark:via-purple-300 dark:to-indigo-300">
-              Auto grab links.
+              Download Manager.
             </span>
           </h1>
 
           <p className="text-zinc-500 dark:text-zinc-400 text-[11px] mt-1 px-2 leading-relaxed">
-            Just install extension and ready to replace all downloader in market.
+            Auto grab links with 32-stream speed. Free Windows IDM alternative — install once and go.
           </p>
         </div>
 
@@ -247,29 +248,22 @@ export default function MarketingLayer({
           </button>
         </div>
 
-        {/* Mobile Footer */}
-        <footer className="w-full h-auto py-1 flex items-center justify-between text-[9px] text-zinc-400 dark:text-zinc-500 shrink-0 bg-transparent">
-          <div>&copy; {new Date().getFullYear()} Downex</div>
-          <div className="flex items-center gap-2">
-            <a href="/terms#terms" className="hover:text-zinc-700 dark:hover:text-zinc-300">
-              Terms
-            </a>
-            <span>&bull;</span>
-            <a href="/privacy#privacy" className="hover:text-zinc-700 dark:hover:text-zinc-300">
-              Privacy
-            </a>
-            <span>&bull;</span>
-            <a href="https://gphost.eu.cc" target="_blank" rel="noopener noreferrer" className="hover:text-zinc-700 dark:hover:text-zinc-300">
-              GPHost
-            </a>
-          </div>
-        </footer>
+        {/* Mobile Scroll Cue to SEO Overview & Comparison */}
+        <div className="w-full py-1 flex items-center justify-center shrink-0">
+          <a
+            href="#overview"
+            className="inline-flex items-center gap-1.5 text-[10px] font-medium text-zinc-500 dark:text-zinc-400 hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
+          >
+            <span>Compare vs IDM &amp; Features</span>
+            <ChevronDown className="w-3 h-3" />
+          </a>
+        </div>
       </div>
 
       {/* =======================================================================
-          DESKTOP MARKETING VIEW (Strict 100dvh, Single View, Zero Scroll)
+          DESKTOP MARKETING HERO (Strict 100dvh First Fold, Scrollable SEO Below)
           ======================================================================= */}
-      <div className="hidden md:flex h-full max-h-dvh w-full flex-col justify-between overflow-hidden relative z-10">
+      <div className="hidden md:flex h-dvh min-h-dvh max-h-dvh w-full flex-col justify-between overflow-hidden relative z-10 select-none">
         {/* Desktop Navbar */}
         <header className="w-full px-6 lg:px-8 h-12 lg:h-14 flex items-center justify-between shrink-0 bg-transparent transition-colors">
           <div className="flex items-center gap-2.5">
@@ -281,6 +275,24 @@ export default function MarketingLayer({
 
           {/* Navigation & Actions */}
           <nav className="flex items-center gap-3.5 text-xs font-medium text-zinc-600 dark:text-zinc-400">
+            <a
+              href="#vs-idm"
+              className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+            >
+              Features &amp; vs IDM
+            </a>
+
+            <span className="h-3.5 w-[1.5px] bg-zinc-300 dark:bg-zinc-700 rounded-full shrink-0" aria-hidden="true" />
+
+            <a
+              href="/faq"
+              className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+            >
+              FAQ
+            </a>
+
+            <span className="h-3.5 w-[1.5px] bg-zinc-300 dark:bg-zinc-700 rounded-full shrink-0" aria-hidden="true" />
+
             <a
               href="https://gauravpatil.site"
               className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
@@ -319,15 +331,15 @@ export default function MarketingLayer({
         <main className="w-full flex-1 min-h-0 flex flex-col justify-evenly py-1 lg:py-2 px-4 lg:px-8 max-w-5xl xl:max-w-6xl mx-auto">
           {/* Hero Pitch Headline (Locked in Single Line) */}
           <div className="text-center shrink-0 w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto">
-            <h1 className="text-2xl md:text-[28px] lg:text-[36px] xl:text-[42px] font-black tracking-tight text-zinc-950 dark:text-zinc-50 leading-tight md:whitespace-nowrap">
-              <span>One simple downloader.</span>{" "}
+            <h1 className="text-2xl md:text-[26px] lg:text-[34px] xl:text-[40px] font-black tracking-tight text-zinc-950 dark:text-zinc-50 leading-tight md:whitespace-nowrap">
+              <span>Downex: Simple Free</span>{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 dark:from-violet-400 dark:via-purple-300 dark:to-indigo-300">
-                Auto grab links.
+                Download Manager.
               </span>
             </h1>
 
             <p className="text-xs lg:text-sm text-zinc-600 dark:text-zinc-400 mt-1 font-normal max-w-2xl mx-auto leading-relaxed">
-              Just install extension and ready to replace all downloader in market.
+              Free &amp; open-source Windows IDM alternative with 32x streams and auto browser link catch.
             </p>
 
             {/* Primary Action Buttons */}
@@ -674,51 +686,78 @@ export default function MarketingLayer({
           </div>
         </main>
 
-        {/* Desktop Single-Line Footer */}
-        <footer className="w-full h-11 lg:h-12 shrink-0 bg-transparent transition-colors">
-          <div className="w-full px-6 lg:px-8 h-full flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400">
-            <div>
-              &copy; {new Date().getFullYear()} Downex &bull;{" "}
+        {/* Scroll Cue at Bottom of First Screen */}
+        <div className="w-full h-10 shrink-0 flex items-center justify-center">
+          <a
+            href="#overview"
+            className="inline-flex items-center gap-1.5 text-[11px] font-medium text-zinc-500 dark:text-zinc-400 hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
+          >
+            <span>Explore Features, vs IDM Comparison &amp; FAQ</span>
+            <ChevronDown className="w-3.5 h-3.5" />
+          </a>
+        </div>
+      </div>
+
+      {/* =======================================================================
+          BELOW-THE-FOLD CRAWLABLE SEO SHOWCASE (Comparison, Engine, FAQ & Guides)
+          ======================================================================= */}
+      <DownexSeoSections
+        desktopDownloadUrl={desktopDownloadUrl}
+        onOpenDownload={onOpenDownload}
+      />
+
+      {/* Unified Footer */}
+      <footer className="relative z-10 w-full border-t border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-950 transition-colors">
+        <div className="max-w-5xl xl:max-w-6xl mx-auto px-5 sm:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-zinc-500 dark:text-zinc-400">
+          <div>
+            &copy; {new Date().getFullYear()} Downex &bull;{" "}
+            <a
+              href="https://gauravpatil.site"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-zinc-700 dark:text-zinc-300 hover:text-violet-600 dark:hover:text-violet-400 hover:underline underline-offset-4 decoration-violet-500/50 dark:decoration-violet-400/50 transition-colors"
+            >
+              Gaurav Patil
+            </a>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs font-medium">
+            <a href="/idm-alternative" className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:underline">
+              vs IDM
+            </a>
+            <a href="/how-queues-work" className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:underline">
+              1-by-1 Queue
+            </a>
+            <a href="/faq" className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:underline">
+              FAQ
+            </a>
+            <a
+              href="/terms#terms"
+              className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:underline"
+            >
+              Terms
+            </a>
+            <a
+              href="/privacy#privacy"
+              className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:underline"
+            >
+              Privacy
+            </a>
+            <span className="hidden sm:inline-block h-3.5 w-[1.5px] bg-zinc-300 dark:bg-zinc-700 rounded-full shrink-0" aria-hidden="true" />
+            <span className="text-zinc-400 dark:text-zinc-500 text-[11px]">
+              Fast CDN mirrors powered by{" "}
               <a
-                href="https://gauravpatil.site"
+                href="https://gphost.eu.cc"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-medium text-zinc-700 dark:text-zinc-300 hover:text-violet-600 dark:hover:text-violet-400 hover:underline underline-offset-4 decoration-violet-500/50 dark:decoration-violet-400/50 transition-colors"
               >
-                Gaurav Patil
+                GPHost
               </a>
-            </div>
-
-            <div className="flex items-center gap-4 text-xs font-medium">
-              <a
-                href="/terms#terms"
-                className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:underline"
-              >
-                Terms
-              </a>
-              <span className="text-zinc-300 dark:text-zinc-700">&bull;</span>
-              <a
-                href="/privacy#privacy"
-                className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:underline"
-              >
-                Privacy
-              </a>
-              <span className="h-3.5 w-[1.5px] bg-zinc-300 dark:bg-zinc-700 rounded-full shrink-0" aria-hidden="true" />
-              <span className="text-zinc-400 dark:text-zinc-500 text-[11px]">
-                Fast CDN mirrors powered by{" "}
-                <a
-                  href="https://gphost.eu.cc"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-medium text-zinc-700 dark:text-zinc-300 hover:text-violet-600 dark:hover:text-violet-400 hover:underline underline-offset-4 decoration-violet-500/50 dark:decoration-violet-400/50 transition-colors"
-                >
-                  GPHost
-                </a>
-              </span>
-            </div>
+            </span>
           </div>
-        </footer>
-      </div>
+        </div>
+      </footer>
     </div>
   );
 }

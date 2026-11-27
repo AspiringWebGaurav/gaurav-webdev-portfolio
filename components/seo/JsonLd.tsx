@@ -31,6 +31,7 @@ export function PortfolioJsonLd({ siteUrl }: PortfolioJsonLdProps = {}) {
     sameAs: [
       "https://github.com/AspiringWebGaurav",
       "https://gauravpatil.site",
+      "https://downex.apps.gauravpatil.site",
     ],
     knowsAbout: [
       "Full Stack Development",
@@ -38,6 +39,8 @@ export function PortfolioJsonLd({ siteUrl }: PortfolioJsonLdProps = {}) {
       "Software Engineering",
       "Production-Ready Software",
       "Web Applications",
+      "Desktop Download Accelerators",
+      "Rust & Tauri",
       "Next.js",
       "React",
       "TypeScript",
@@ -52,10 +55,37 @@ export function PortfolioJsonLd({ siteUrl }: PortfolioJsonLdProps = {}) {
     ],
   };
 
+  const downexProductEntity = {
+    "@type": "SoftwareApplication",
+    "@id": "https://downex.apps.gauravpatil.site/#software",
+    name: "Downex — Simple Free Download Manager",
+    alternateName: ["Downex", "Downex Download Manager"],
+    url: "https://downex.apps.gauravpatil.site",
+    downloadUrl: "https://gphost.eu.cc/raw/downex-desktop?stream=true",
+    applicationCategory: "UtilitiesApplication",
+    operatingSystem: "Windows 10, Windows 11",
+    isAccessibleForFree: true,
+    codeRepository: "https://github.com/AspiringWebGaurav/downex",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+    },
+    description:
+      "Simple, free & open-source 32-connection Windows download manager and IDM alternative by Gaurav Patil.",
+    author: {
+      "@id": `${baseUrl}/#person`,
+    },
+    publisher: {
+      "@id": `${baseUrl}/#person`,
+    },
+  };
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
       personEntity,
+      downexProductEntity,
       {
         "@type": "WebSite",
         "@id": `${baseUrl}/#website`,

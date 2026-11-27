@@ -19,9 +19,15 @@ export const dynamic = "force-static";
 export const revalidate = false;
 
 export const metadata: Metadata = {
-  title: "How 1-by-1 Queue Works | Downex Download Manager",
+  metadataBase: new URL("https://downex.apps.gauravpatil.site"),
+  title: {
+    absolute: "How 1-by-1 Queue Works | Downex Download Manager",
+  },
   description:
     "Official guide on Downex sequential 1-by-1 Queue: how sequential downloading dedicates full 32-stream bandwidth to one file at a time, eliminating bandwidth competition and connection crawl.",
+  alternates: {
+    canonical: "https://downex.apps.gauravpatil.site/how-queues-work",
+  },
   openGraph: {
     title: "How 1-by-1 Queue Works | Downex Download Manager",
     description:

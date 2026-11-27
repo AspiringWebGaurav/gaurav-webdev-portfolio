@@ -270,17 +270,32 @@ async function handleRouting(request: NextRequest, requestHeaders: Headers): Pro
       pathname === "/uninstalled" ||
       pathname === "/how-queues-work" ||
       pathname === "/queues" ||
+      pathname === "/idm-alternative" ||
+      pathname === "/simple-download-manager" ||
+      pathname === "/open-source-download-manager" ||
+      pathname === "/browser-extension" ||
+      pathname === "/faq" ||
       pathname.startsWith("/terms/") ||
       pathname.startsWith("/privacy/") ||
       pathname.startsWith("/policies/") ||
       pathname.startsWith("/uninstalled/") ||
       pathname.startsWith("/how-queues-work/") ||
       pathname.startsWith("/queues/") ||
+      pathname.startsWith("/idm-alternative/") ||
+      pathname.startsWith("/simple-download-manager/") ||
+      pathname.startsWith("/open-source-download-manager/") ||
+      pathname.startsWith("/browser-extension/") ||
+      pathname.startsWith("/faq/") ||
       pathname.startsWith("/downex/terms") ||
       pathname.startsWith("/downex/privacy") ||
       pathname.startsWith("/downex/policies") ||
       pathname.startsWith("/downex/uninstalled") ||
-      pathname.startsWith("/downex/how-queues-work");
+      pathname.startsWith("/downex/how-queues-work") ||
+      pathname.startsWith("/downex/idm-alternative") ||
+      pathname.startsWith("/downex/simple-download-manager") ||
+      pathname.startsWith("/downex/open-source-download-manager") ||
+      pathname.startsWith("/downex/browser-extension") ||
+      pathname.startsWith("/downex/faq");
 
     const isDownexAdminRoute =
       pathname === "/admin" ||
@@ -307,7 +322,16 @@ async function handleRouting(request: NextRequest, requestHeaders: Headers): Pro
         ? pathname.startsWith("/downex/admin")
           ? pathname
           : pathname.replace(/^\/admin/, "/downex/admin")
-        : pathname.startsWith("/downex/terms") || pathname.startsWith("/downex/privacy") || pathname.startsWith("/downex/policies") || pathname.startsWith("/downex/uninstalled") || pathname.startsWith("/downex/how-queues-work")
+        : pathname.startsWith("/downex/terms") ||
+          pathname.startsWith("/downex/privacy") ||
+          pathname.startsWith("/downex/policies") ||
+          pathname.startsWith("/downex/uninstalled") ||
+          pathname.startsWith("/downex/how-queues-work") ||
+          pathname.startsWith("/downex/idm-alternative") ||
+          pathname.startsWith("/downex/simple-download-manager") ||
+          pathname.startsWith("/downex/open-source-download-manager") ||
+          pathname.startsWith("/downex/browser-extension") ||
+          pathname.startsWith("/downex/faq")
         ? pathname
         : pathname === "/terms" || pathname.startsWith("/terms/")
         ? pathname.replace(/^\/terms/, "/downex/terms")
@@ -319,6 +343,16 @@ async function handleRouting(request: NextRequest, requestHeaders: Headers): Pro
         ? pathname.replace(/^\/uninstalled/, "/downex/uninstalled")
         : pathname === "/how-queues-work" || pathname.startsWith("/how-queues-work/") || pathname === "/queues" || pathname.startsWith("/queues/")
         ? "/downex/how-queues-work"
+        : pathname === "/idm-alternative" || pathname.startsWith("/idm-alternative/")
+        ? "/downex/idm-alternative"
+        : pathname === "/simple-download-manager" || pathname.startsWith("/simple-download-manager/")
+        ? "/downex/simple-download-manager"
+        : pathname === "/open-source-download-manager" || pathname.startsWith("/open-source-download-manager/")
+        ? "/downex/open-source-download-manager"
+        : pathname === "/browser-extension" || pathname.startsWith("/browser-extension/")
+        ? "/downex/browser-extension"
+        : pathname === "/faq" || pathname.startsWith("/faq/")
+        ? "/downex/faq"
         : isImageOrStatic
         ? pathname
         : pathname.startsWith("/download")

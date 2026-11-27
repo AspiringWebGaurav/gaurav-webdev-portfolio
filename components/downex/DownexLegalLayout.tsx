@@ -56,7 +56,27 @@ export default function DownexLegalLayout({
 
   const navItems = [
     {
-      label: "Terms of Use",
+      label: "vs IDM",
+      href: "/idm-alternative",
+      active: pathname.includes("/idm-alternative"),
+    },
+    {
+      label: "1-by-1 Queue",
+      href: "/how-queues-work",
+      active: pathname.includes("/how-queues-work") || pathname.includes("/queues"),
+    },
+    {
+      label: "Extension",
+      href: "/browser-extension",
+      active: pathname.includes("/browser-extension"),
+    },
+    {
+      label: "FAQ",
+      href: "/faq",
+      active: pathname.includes("/faq"),
+    },
+    {
+      label: "Terms",
       href: "/terms",
       active: pathname.includes("/terms"),
     },
@@ -64,11 +84,6 @@ export default function DownexLegalLayout({
       label: "Policies",
       href: "/privacy",
       active: pathname.includes("/privacy") || pathname.includes("/policies"),
-    },
-    {
-      label: "How Queues Work",
-      href: "/how-queues-work",
-      active: pathname.includes("/how-queues-work") || pathname.includes("/queues"),
     },
   ];
 
@@ -190,7 +205,16 @@ export default function DownexLegalLayout({
             <span>&bull;</span>
             <span>Independent High-Speed Download Acceleration</span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+            <Link href="/idm-alternative" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">
+              Free IDM Alternative
+            </Link>
+            <Link href="/open-source-download-manager" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">
+              Open Source
+            </Link>
+            <Link href="/faq" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">
+              FAQ
+            </Link>
             <Link href="/terms" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors" suppressHydrationWarning>
               Terms
             </Link>

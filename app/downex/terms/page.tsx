@@ -5,9 +5,15 @@ export const dynamic = "force-static";
 export const revalidate = false;
 
 export const metadata: Metadata = {
-  title: "Terms of Use | Downex Download Manager",
+  metadataBase: new URL("https://downex.apps.gauravpatil.site"),
+  title: {
+    absolute: "Terms of Use | Downex Download Manager",
+  },
   description:
     "Official Terms of Use governing Downex Download Manager, the browser companion extension, and software updates.",
+  alternates: {
+    canonical: "https://downex.apps.gauravpatil.site/terms",
+  },
   openGraph: {
     title: "Terms of Use | Downex Download Manager",
     description:

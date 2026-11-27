@@ -5,9 +5,15 @@ export const dynamic = "force-static";
 export const revalidate = false;
 
 export const metadata: Metadata = {
-  title: "Privacy & Policies | Downex Download Manager",
+  metadataBase: new URL("https://downex.apps.gauravpatil.site"),
+  title: {
+    absolute: "Privacy & Policies | Downex Download Manager",
+  },
   description:
     "Official Privacy Policy for Downex Download Manager: 100% Zero-Telemetry, local processing only, and complete data wipe support.",
+  alternates: {
+    canonical: "https://downex.apps.gauravpatil.site/privacy",
+  },
   openGraph: {
     title: "Privacy & Policies | Downex Download Manager",
     description:

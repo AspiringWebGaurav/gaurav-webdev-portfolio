@@ -951,4 +951,78 @@ export const PROJECT_CASE_STUDIES: Record<string, ProjectCaseStudy> = {
       "Streamlined enterprise quoting pipeline from visitor inquiry to sales follow-up",
     ],
   },
+  "downex-download-manager": {
+    slug: "downex-download-manager",
+    projectId: "proj_17",
+    title: "Downex — Simple, Free & Open Source Windows Download Manager",
+    subtitle:
+      "High-speed 32-stream multi-connection Windows download manager & free IDM alternative built with Rust, Tokio, Tauri v2, SQLite WAL, and Chromium Manifest V3.",
+    category: "Desktop Systems Engineering & Windows Download Accelerator",
+    role: "Creator & Systems Architect",
+    timeline: "2026",
+    publishedDate: "November 27, 2026",
+    readingTime: "6 min read",
+    technologies: [
+      "Rust (Tokio Async)",
+      "Tauri v2",
+      "React 19",
+      "TypeScript",
+      "Tailwind CSS",
+      "SQLite WAL",
+      "HTTP/1.1 Range Pooling",
+      "AES-256-GCM + Ed25519 OTA",
+      "Manifest V3 Extension",
+    ],
+    liveUrl: "https://downex.apps.gauravpatil.site",
+    docsUrl: "https://downex.apps.gauravpatil.site/how-queues-work",
+    githubUrl: "https://github.com/AspiringWebGaurav/downex",
+    coverImage: "/docs/downex/queue-light.png",
+    images: [
+      "/docs/downex/queue-light.png",
+      "/docs/downex/queue-dark.png",
+    ],
+    licenseStatus: "Open Source · Free Windows Desktop Utility",
+    contractStatus: "Independent Open Source Release",
+    licenseDetails:
+      "Downex is a free, open-source Windows 10/11 download manager and zero-bloat IDM alternative engineered by Gaurav Patil with zero telemetry, zero ads, and cryptographically signed background updates.",
+    overview:
+      "Downex was built to give Windows 10 and Windows 11 users a clean, simple, and free alternative to paid shareware download managers like IDM and slow single-stream browser downloaders. Underneath a fast React and Tailwind UI lies a native Rust engine that opens up to 32 parallel HTTP/1.1 sockets with tail-end work stealing, tracks every byte atomically in SQLite WAL storage, isolates active writes inside unconfirmed staging files, and automatically adapts CPU priority, WebView lifetime, and animations on 4 GB Low-RAM systems.",
+    architecture: {
+      title: "32-Stream HTTP/1.1 Work-Stealing Pool & Adaptive Low-RAM Profile",
+      description:
+        "Combines raw throughput saturation on modern fiber lines with automatic resource conservation on 4 GB RAM laptops and heavy system loads.",
+      points: [
+        "Parallel Range Engine: Opens up to 32 independent HTTP/1.1 TCP connections with dynamic work stealing and positional file writes.",
+        "1-by-1 Sequential Queue: Focuses 100% of bandwidth on one queued file at a time before handing off automatically to the next queued download.",
+        "Authenticated Manifest V3 Bridge: Zero-UI companion browser extension connects over 127.0.0.1:18888 using Origin-verified session tokens.",
+        "Automatic Low-RAM & Heavy-Load Profile: Win32 GlobalMemoryStatusEx and GetSystemTimes hysteresis shrinks dialog WebViews, connection caps, and CSS overhead without user configuration.",
+        "Zero-Interrupt Cryptographic OTA: Background updates verify AES-256-GCM containers + Minisign Ed25519 keys with automatic boot-probation rollback.",
+      ],
+    },
+    challenges: [
+      {
+        title: "Eliminating tail-end download stalls and corrupted partial files across restarts",
+        solution:
+          "Implemented dynamic tail-end segment work stealing alongside atomic SQLite WAL checkpoints and isolated unconfirmed.*.downex staging verified before final disk promotion.",
+      },
+      {
+        title: "Keeping background tray footprint ultra-light on 4 GB RAM Windows PCs",
+        solution:
+          "Engineered an automatic hardware pressure detector that skips secondary dialog pre-warming, destroys closed dialogs cleanly, trims process working sets, and switches UI to Eco mode automatically.",
+      },
+    ],
+    features: [
+      "Up to 32 parallel HTTP/1.1 connections for maximum broadband/fiber saturation",
+      "Free, open-source Windows 10 & Windows 11 IDM alternative with zero trial popups",
+      "Auto-catch Manifest V3 extension for Chrome, Edge, and Brave",
+      "Dedicated 1-by-1 sequential Queue tab plus Pause & Resume support",
+      "Per-task custom speed limiter and disk-verified Auto-Shutdown countdown",
+      "Automatic 4 GB RAM Eco mode and silent Ed25519 OTA updates",
+    ],
+    results: [
+      "Up to 32x socket concurrency saturating 200+ Mbps lines cleanly in benchmarks",
+      "Zero adware, zero telemetry SDKs, and sub-second popup response on normal PCs",
+      "Smooth background operation automatically verified across constrained 4 GB profiles",
+    ],
+  },
 };

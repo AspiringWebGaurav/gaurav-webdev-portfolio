@@ -1,12 +1,37 @@
 import type { MetadataRoute } from "next";
+import { headers } from "next/headers";
 import { PROJECT_CASE_STUDIES } from "@/lib/data/case-studies";
+import { DOWNEX_ORIGIN, DOWNEX_SITEMAP_URLS } from "@/lib/data/downex-seo";
 import { seoRepository } from "@/lib/dal/repositories/cms/seo.repository";
 import { projectsRepository } from "@/lib/dal/repositories/cms/projects.repository";
-export const revalidate = 86400;
+
+export const dynamic = "force-dynamic";
+
+function isDownexSubdomainHost(rawHost: string): boolean {
+  const host = rawHost.toLowerCase().split(":")[0];
+  return (
+    host === "downex.apps.gauravpatil.site" ||
+    host === "downex.gauravpatil.site" ||
+    host.startsWith("downex.apps.localhost") ||
+    host.startsWith("downex.localhost")
+  );
+}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const headerList = await headers();
+  const rawHost = headerList.get("x-forwarded-host") || headerList.get("host") || "";
+  const releaseDate = new Date("2026-11-27T00:00:00.000Z");
+
+  if (isDownexSubdomainHost(rawHost)) {
+    return DOWNEX_SITEMAP_URLS.map((entry) => ({
+      url: `${DOWNEX_ORIGIN}${entry.path}`,
+      lastModified: releaseDate,
+      changeFrequency: entry.changeFrequency,
+      priority: entry.priority,
+    }));
+  }
+
   const baseUrl = "https://gauravpatil.site";
-  const releaseDate = new Date("2026-09-15T00:00:00.000Z");
 
   // Retrieve dynamic SEO document for genuine homepage modified date
   let homeLastModified = releaseDate;

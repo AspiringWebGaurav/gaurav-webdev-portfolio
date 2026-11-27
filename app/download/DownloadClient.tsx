@@ -136,7 +136,11 @@ export default function DownloadClient({
   return (
     <div
       data-portal="download"
-      className="relative w-full h-dvh max-h-dvh overflow-hidden bg-[#fafafa] dark:bg-[#09090b] text-zinc-900 dark:text-zinc-100 select-none font-sans antialiased transition-colors duration-300"
+      className={`relative w-full ${
+        view === "marketing"
+          ? "min-h-dvh overflow-x-hidden"
+          : "h-dvh max-h-dvh overflow-hidden select-none"
+      } bg-[#fafafa] dark:bg-[#09090b] text-zinc-900 dark:text-zinc-100 font-sans antialiased transition-colors duration-300`}
     >
       {/* =========================================================================
           UNIFIED CENTRALIZED DOT MATRIX CANVAS (Single Continuous Entity)
@@ -157,7 +161,7 @@ export default function DownloadClient({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.995 }}
             transition={{ duration: 0.12, ease: "easeOut" }}
-            className="w-full h-full overflow-hidden"
+            className="w-full min-h-dvh"
           >
             <MarketingLayer
               onOpenDownload={openDownloadView}

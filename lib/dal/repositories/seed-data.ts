@@ -631,6 +631,37 @@ export const SEED_PROJECTS: ProjectDocument[] = [
     updatedAt: new Date().toISOString(),
     version: 1,
   },
+  {
+    id: "proj_17",
+    order: 17,
+    title: "Downex — Simple, Free & Open Source Download Manager",
+    slug: "downex-download-manager",
+    description:
+      "Fast Windows 10 & 11 download manager and free IDM alternative with 32-connection acceleration, sequential 1-by-1 queues, Chromium auto-catch, and automatic 4 GB low-RAM Eco mode.",
+    coverImageStoragePath: "/docs/downex/queue-light.png",
+    coverImage: "/docs/downex/queue-light.png",
+    images: [
+      "/docs/downex/queue-light.png",
+      "/docs/downex/queue-dark.png",
+    ],
+    iconLists: [
+      "/rust.svg",
+      "/tauri.svg",
+      "/re.svg",
+      "/ts.svg",
+      "/tail.svg",
+    ],
+    liveUrl: "https://downex.apps.gauravpatil.site",
+    docsUrl: "https://downex.apps.gauravpatil.site/how-queues-work",
+    githubUrl: "https://github.com/AspiringWebGaurav/downex",
+    licenseStatus: "Open Source · Free Windows Utility",
+    contractStatus: "Independent Open Source Release",
+    isFeatured: true,
+    isPublished: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    version: 1,
+  },
 ];
 
 export const SEED_TESTIMONIALS: TestimonialDocument[] = [

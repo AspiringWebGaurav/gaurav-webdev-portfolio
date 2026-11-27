@@ -1,8 +1,36 @@
 import type { MetadataRoute } from "next";
+import { headers } from "next/headers";
 
-export const revalidate = 86400;
+export const dynamic = "force-dynamic";
 
-export default function robots(): MetadataRoute.Robots {
+function isDownexSubdomainHost(rawHost: string): boolean {
+  const host = rawHost.toLowerCase().split(":")[0];
+  return (
+    host === "downex.apps.gauravpatil.site" ||
+    host === "downex.gauravpatil.site" ||
+    host.startsWith("downex.apps.localhost") ||
+    host.startsWith("downex.localhost")
+  );
+}
+
+export default async function robots(): Promise<MetadataRoute.Robots> {
+  const headerList = await headers();
+  const rawHost = headerList.get("x-forwarded-host") || headerList.get("host") || "";
+
+  if (isDownexSubdomainHost(rawHost)) {
+    return {
+      rules: [
+        {
+          userAgent: "*",
+          allow: ["/"],
+          disallow: ["/admin", "/api", "/uninstalled"],
+        },
+      ],
+      sitemap: "https://downex.apps.gauravpatil.site/sitemap.xml",
+      host: "https://downex.apps.gauravpatil.site",
+    };
+  }
+
   return {
     rules: [
       {

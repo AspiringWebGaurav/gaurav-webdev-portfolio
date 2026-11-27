@@ -11,6 +11,9 @@ interface PageProps {
 }
 
 const SHORT_SLUG_MAP: Record<string, string> = {
+  downex: "downex-download-manager",
+  "downex-app": "downex-download-manager",
+  "simple-download-manager": "downex-download-manager",
   gphost: "gphost-cloud-transit",
   "gphost-eu-cc": "gphost-cloud-transit",
   send2me: "send2me-p2p-file-transfer",

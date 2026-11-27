@@ -197,6 +197,18 @@ export const FooterSection = ({
                 <span>PC Apps Suite</span>
                 <span className="ml-1 inline-block transition-transform duration-200 group-hover:translate-x-0.5">→</span>
               </a>
+              <span className="text-slate-300 dark:text-neutral-600 hidden sm:inline">·</span>
+              <a
+                href={getSubdomainUrl("https://downex.apps.gauravpatil.site", resolvedTheme)}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => writeThemeCookieSync(resolvedTheme)}
+                title="Downex — Simple Free Download Manager for Windows"
+                className="group text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 font-semibold inline-flex items-center transition-colors touch-manipulation"
+              >
+                <span>Downex Download Manager</span>
+                <span className="ml-1 inline-block transition-transform duration-200 group-hover:translate-x-0.5">→</span>
+              </a>
             </div>
           </div>
         </div>
@@ -218,6 +230,16 @@ export const FooterSection = ({
             className="hover:text-[#7C3AED] dark:hover:text-purple transition-colors duration-200"
           >
             PC Apps
+          </a>
+          <span className="text-slate-300 dark:text-neutral-600">·</span>
+          <a
+            href={getSubdomainUrl("https://downex.apps.gauravpatil.site", resolvedTheme)}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => writeThemeCookieSync(resolvedTheme)}
+            className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors duration-200 font-medium"
+          >
+            Downex
           </a>
           <span className="text-slate-300 dark:text-neutral-600">·</span>
           <a
