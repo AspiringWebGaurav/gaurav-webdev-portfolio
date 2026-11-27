@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-import { isAuthorizedAdminEmail, createAdminSessionPayload, signAdminSession } from "@/lib/admin/auth";
+import { isAuthorizedAdminEmail } from "@/lib/admin/auth";
 import { fetchWithTimeout } from "@/lib/api/fetcher";
 import { extractClientIp } from "@/lib/admin/services/ip-security.service";
 import { otpService } from "@/lib/admin/services/otp.service";
@@ -8,10 +8,8 @@ import { rtdbDataSource } from "@/lib/admin/datasource/rtdb";
 import { dispatchDownexAdminOtpEmail } from "@/lib/email/downex-otp";
 import {
   ADMIN_COOKIE_NAME,
-  DOWNEX_ADMIN_COOKIE_NAME,
   ADMIN_OTP_COOKIE_NAME,
   OTP_TTL_SECONDS,
-  DOWNEX_SESSION_MAX_AGE_SECONDS,
 } from "@/lib/admin/constants";
 import { getSharedCookieDomain } from "@/lib/theme/cookie";
 
