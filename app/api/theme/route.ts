@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getSharedCookieDomain, THEME_COOKIE_NAME, THEME_COOKIE_MAX_AGE } from "@/lib/theme/cookie";
-import { getServerTheme, setServerTheme } from "@/lib/theme/server";
+import { getServerTheme, hasExplicitServerTheme, setServerTheme } from "@/lib/theme/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,16 +12,29 @@ const themeSchema = z.object({
 
 export async function GET(req: NextRequest) {
   try {
+    const host = req.headers.get("host") || undefined;
+    const sharedDomain = getSharedCookieDomain(host);
     const cookieTheme = req.cookies.get(THEME_COOKIE_NAME)?.value;
-    const authoritativeTheme =
-      cookieTheme === "light" || cookieTheme === "dark"
-        ? cookieTheme
-        : getServerTheme();
+    const validCookie = cookieTheme === "light" || cookieTheme === "dark" ? cookieTheme : null;
 
-    return NextResponse.json({
-      success: true,
-      theme: authoritativeTheme,
-    });
+    // On localhost (where *.localhost subdomains cannot share cookies), an explicit server theme
+    // on the shared Node process is the cross-subdomain source of truth; on production shared
+    // domains (.gauravpatil.site), the wildcard domain cookie is authoritative across lambdas.
+    const authoritativeTheme = !sharedDomain
+      ? (hasExplicitServerTheme() ? getServerTheme() : validCookie || getServerTheme())
+      : (validCookie || getServerTheme());
+
+    return NextResponse.json(
+      {
+        success: true,
+        theme: authoritativeTheme,
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        },
+      }
+    );
   } catch {
     return NextResponse.json(
       { success: false, theme: getServerTheme() },
@@ -49,6 +62,8 @@ export async function POST(req: NextRequest) {
     // 2. Cookie resolution across ecosystems
     const host = req.headers.get("host") || undefined;
     const domain = getSharedCookieDomain(host);
+    const forwardedProto = req.headers.get("x-forwarded-proto");
+    const isHttps = forwardedProto === "https" || req.nextUrl.protocol === "https:";
 
     const res = NextResponse.json({ success: true, theme });
 
@@ -57,7 +72,7 @@ export async function POST(req: NextRequest) {
       domain: domain || undefined,
       maxAge: THEME_COOKIE_MAX_AGE,
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production" && domain !== undefined,
+      secure: isHttps && domain !== undefined,
       httpOnly: false, // Must be accessible to the pre-paint head script
     });
 

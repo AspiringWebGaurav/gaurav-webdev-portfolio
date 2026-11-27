@@ -22,7 +22,9 @@ export function PortfolioPreloader({ disabled = false }: { disabled?: boolean } 
     disabled ||
     Boolean(pathname && (pathname.includes("/uninstalled") || pathname.startsWith("/download") || pathname.startsWith("/downex")));
 
-  const [mounted, setMounted] = useState(!isPathDisabled);
+  // Keep SSR and initial client hydration markup identical across subdomain rewrites;
+  // pre-paint [data-portal="download"] CSS hides it instantaneously before mount cleanup.
+  const [mounted, setMounted] = useState(!disabled);
   const [isExiting, setIsExiting] = useState(false);
   const [progress, setProgress] = useState(25);
   const [statusText, setStatusText] = useState("Initializing experience...");
@@ -175,7 +177,7 @@ export function PortfolioPreloader({ disabled = false }: { disabled?: boolean } 
     };
   }, [finishLoading, restoreScroll, isPathDisabled]);
 
-  if (isPathDisabled || !mounted) return null;
+  if (disabled || !mounted) return null;
 
   return (
     <div

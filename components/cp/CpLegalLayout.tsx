@@ -17,6 +17,7 @@ import {
   Clock,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { EcosystemLink } from "@/components/ui/EcosystemLink";
 
 interface Section {
   id: string;
@@ -437,7 +438,7 @@ export default function CpLegalLayout({
               </div>
               <ul className="space-y-1.5 text-zinc-600 dark:text-zinc-400">
                 <li>
-                  <a
+                  <EcosystemLink
                     href="https://gauravpatil.site"
                     target="_blank"
                     rel="noopener noreferrer"
@@ -445,7 +446,7 @@ export default function CpLegalLayout({
                   >
                     <span>Author Portfolio (Gaurav Patil)</span>
                     <ExternalLink className="w-3 h-3" />
-                  </a>
+                  </EcosystemLink>
                 </li>
                 <li>
                   <a
@@ -476,14 +477,14 @@ export default function CpLegalLayout({
           <div className="pt-6 border-t border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
             <div>
               &copy; {new Date().getFullYear()} CP Engine &bull; Developed by{" "}
-              <a
+              <EcosystemLink
                 href="https://gauravpatil.site"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-semibold text-zinc-700 dark:text-zinc-300 hover:text-emerald-600 dark:hover:text-emerald-400"
               >
                 Gaurav Patil
-              </a>
+              </EcosystemLink>
               . Released under MIT License.
             </div>
 

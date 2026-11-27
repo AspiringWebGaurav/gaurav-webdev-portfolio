@@ -28,6 +28,7 @@ import {
   Pause,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { EcosystemLink } from "@/components/ui/EcosystemLink";
 import { Spotlight } from "@/components/ui/Spotlight";
 import DownexSeoSections from "@/components/downex/DownexSeoSections";
 
@@ -293,12 +294,12 @@ export default function MarketingLayer({
 
             <span className="h-3.5 w-[1.5px] bg-zinc-300 dark:bg-zinc-700 rounded-full shrink-0" aria-hidden="true" />
 
-            <a
+            <EcosystemLink
               href="https://gauravpatil.site"
               className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
             >
               Portfolio
-            </a>
+            </EcosystemLink>
 
             <span className="h-3.5 w-[1.5px] bg-zinc-300 dark:bg-zinc-700 rounded-full shrink-0" aria-hidden="true" />
 
@@ -711,14 +712,14 @@ export default function MarketingLayer({
         <div className="max-w-5xl xl:max-w-6xl mx-auto px-5 sm:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-zinc-500 dark:text-zinc-400">
           <div>
             &copy; {new Date().getFullYear()} Downex &bull;{" "}
-            <a
+            <EcosystemLink
               href="https://gauravpatil.site"
               target="_blank"
               rel="noopener noreferrer"
               className="font-medium text-zinc-700 dark:text-zinc-300 hover:text-violet-600 dark:hover:text-violet-400 hover:underline underline-offset-4 decoration-violet-500/50 dark:decoration-violet-400/50 transition-colors"
             >
               Gaurav Patil
-            </a>
+            </EcosystemLink>
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs font-medium">

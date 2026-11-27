@@ -1165,9 +1165,10 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
                       <a
-                        href={getSubdomainUrl("https://resume.services.gauravpatil.site", resolvedTheme)}
+                        href={themeMounted ? getSubdomainUrl("https://resume.services.gauravpatil.site", resolvedTheme) : "https://resume.services.gauravpatil.site"}
                         target="_blank"
                         rel="noopener noreferrer"
+                        suppressHydrationWarning
                         onClick={() => writeThemeCookieSync(resolvedTheme)}
                         className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-semibold transition-colors inline-flex items-center gap-1 shadow-sm"
                       >
@@ -1175,9 +1176,10 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                         <span>→</span>
                       </a>
                       <a
-                        href={getSubdomainUrl("https://contact.services.gauravpatil.site", resolvedTheme)}
+                        href={themeMounted ? getSubdomainUrl("https://contact.services.gauravpatil.site", resolvedTheme) : "https://contact.services.gauravpatil.site"}
                         target="_blank"
                         rel="noopener noreferrer"
+                        suppressHydrationWarning
                         onClick={() => writeThemeCookieSync(resolvedTheme)}
                         className="px-2.5 py-1 rounded-lg bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-[11px] font-semibold transition-colors inline-flex items-center gap-1 shadow-sm"
                       >

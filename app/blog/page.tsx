@@ -5,6 +5,7 @@ import Image from "next/image";
 import { FaLocationArrow, FaArrowRight, FaBookOpen, FaCalendarDays, FaClock, FaGithub } from "react-icons/fa6";
 import { PROJECT_CASE_STUDIES } from "@/lib/data/case-studies";
 import { FloatingNav } from "@/components/ui/FloatingNav";
+import { EcosystemLink } from "@/components/ui/EcosystemLink";
 import { SEED_NAVIGATION } from "@/lib/dal/repositories/seed-data";
 
 export const revalidate = 86400;
@@ -226,7 +227,7 @@ export default function BlogHubPage() {
                     </Link>
 
                     {featuredArticle.liveUrl && (
-                      <a
+                      <EcosystemLink
                         href={featuredArticle.liveUrl}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -234,7 +235,7 @@ export default function BlogHubPage() {
                       >
                         <span>Visit Site</span>
                         <FaLocationArrow className="w-3 h-3 text-[#7C3AED] dark:text-purple" />
-                      </a>
+                      </EcosystemLink>
                     )}
 
                     {featuredArticle.githubUrl && (
@@ -333,7 +334,7 @@ export default function BlogHubPage() {
                     </Link>
 
                     {article.liveUrl && (
-                      <a
+                      <EcosystemLink
                         href={article.liveUrl}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -341,7 +342,7 @@ export default function BlogHubPage() {
                         title="Live Site"
                       >
                         Live Demo ↗
-                      </a>
+                      </EcosystemLink>
                     )}
                   </div>
                 </div>

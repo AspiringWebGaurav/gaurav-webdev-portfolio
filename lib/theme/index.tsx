@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, useMemo, useRef, useCallback } from "react";
-import { writeThemeCookieSync, readThemeCookieSync } from "./cookie";
+import { writeThemeCookieSync, readThemeCookieSync, getSharedCookieDomain } from "./cookie";
 
 export type Theme = "light" | "dark";
 
@@ -38,12 +38,45 @@ export function isRecruiterPortalEnvironment(): boolean {
     const host = window.location.hostname.toLowerCase();
     if (host.startsWith("contact.")) return true;
     const path = window.location.pathname;
-    if (path.startsWith("/contact-portal") || path.startsWith("/contact")) return true;
+    if (path === "/contact" || path.startsWith("/contact/") || path.startsWith("/contact-portal")) return true;
     if (typeof document !== "undefined") {
       if (
         document.documentElement.getAttribute("data-theme-isolated") === "recruiter" ||
         document.querySelector('[data-portal-type="recruiter"]') ||
         document.querySelector('[data-portal="recruiter"]')
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/**
+ * Returns true on portals where the theme switcher was intentionally removed /
+ * locked to pure light (Recruiter, Admin, Downex Admin, Self launchpad).
+ */
+export function isFixedLightPortalEnvironment(): boolean {
+  if (isRecruiterPortalEnvironment()) return true;
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname.toLowerCase();
+    const path = window.location.pathname;
+    if (
+      host.startsWith("admin.") ||
+      host.startsWith("self.") ||
+      path === "/admin" ||
+      path.startsWith("/admin/") ||
+      path === "/downex/admin" ||
+      path.startsWith("/downex/admin/") ||
+      path === "/self" ||
+      path.startsWith("/self/")
+    ) {
+      return true;
+    }
+    if (typeof document !== "undefined") {
+      if (
+        document.querySelector('[data-admin="true"]') ||
+        document.getElementById("self-launchpad")
       ) {
         return true;
       }
@@ -60,9 +93,9 @@ export function ThemeProvider({
   const lastTimestampRef = useRef(Date.now());
   const broadcastRef = useRef<BroadcastChannel | null>(null);
 
-  // Initialize state from URL param, shared cookie, or established DOM class
+  // Initialize state from URL param, pre-paint handoff attribute, shared cookie, or established DOM class
   const [theme, setThemeState] = useState<Theme>(() => {
-    if (typeof window !== "undefined" && isRecruiterPortalEnvironment()) {
+    if (typeof window !== "undefined" && isFixedLightPortalEnvironment()) {
       return "light";
     }
     if (typeof window !== "undefined") {
@@ -74,6 +107,10 @@ export function ThemeProvider({
       } catch {}
     }
     if (typeof document !== "undefined") {
+      const handoff = document.documentElement.getAttribute("data-theme-url-handoff");
+      if (handoff === "light" || handoff === "dark") {
+        return handoff;
+      }
       const fromCookie = readThemeCookieSync();
       if (fromCookie) return fromCookie;
       return document.documentElement.classList.contains("light") ? "light" : "dark";
@@ -84,7 +121,7 @@ export function ThemeProvider({
   const applyThemeToDOM = useCallback((newTheme: Theme) => {
     if (typeof document === "undefined") return;
     const d = document.documentElement;
-    if (isRecruiterPortalEnvironment()) {
+    if (isFixedLightPortalEnvironment()) {
       d.classList.remove("dark");
       d.classList.add("light");
       d.style.colorScheme = "light";
@@ -96,7 +133,7 @@ export function ThemeProvider({
   }, []);
 
   const setTheme = useCallback((next: Theme | string) => {
-    if (isRecruiterPortalEnvironment()) return;
+    if (isFixedLightPortalEnvironment()) return;
     const validTheme: Theme = next === "light" ? "light" : "dark";
     const now = Date.now();
     versionRef.current += 1;
@@ -141,41 +178,91 @@ export function ThemeProvider({
     });
   }, [applyThemeToDOM]);
 
-  // Synchronize on mount from URL param or established DOM class
+  // Synchronize on mount from URL param / pre-paint handoff / shared server state
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      if (isRecruiterPortalEnvironment()) {
-        applyThemeToDOM("light");
-        setThemeState("light");
-        return;
+    if (typeof window === "undefined") return;
+
+    if (isFixedLightPortalEnvironment()) {
+      applyThemeToDOM("light");
+      setThemeState("light");
+      return;
+    }
+
+    let urlTheme: string | null = null;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      urlTheme = params.get("theme");
+      if (urlTheme === "light" || urlTheme === "dark") {
+        params.delete("theme");
+        const remaining = params.toString();
+        const cleanUrl =
+          window.location.pathname +
+          (remaining ? `?${remaining}` : "") +
+          window.location.hash;
+        window.history.replaceState(null, "", cleanUrl);
       }
+    } catch {}
+
+    const prePaintHandoff = document.documentElement.getAttribute("data-theme-url-handoff");
+    if (prePaintHandoff) {
+      document.documentElement.removeAttribute("data-theme-url-handoff");
+    }
+
+    const explicitHandoff =
+      urlTheme === "light" || urlTheme === "dark"
+        ? urlTheme
+        : prePaintHandoff === "light" || prePaintHandoff === "dark"
+        ? prePaintHandoff
+        : null;
+
+    if (explicitHandoff) {
+      const now = Date.now();
+      lastTimestampRef.current = now;
+      applyThemeToDOM(explicitHandoff);
+      writeThemeCookieSync(explicitHandoff);
+      setThemeState(explicitHandoff);
       try {
-        const params = new URLSearchParams(window.location.search);
-        const urlTheme = params.get("theme");
-        if (urlTheme === "light" || urlTheme === "dark") {
-          applyThemeToDOM(urlTheme);
-          writeThemeCookieSync(urlTheme);
-          setThemeState(urlTheme);
-
-          // Clean URL parameter without reload
-          params.delete("theme");
-          const remaining = params.toString();
-          const cleanUrl =
-            window.location.pathname +
-            (remaining ? `?${remaining}` : "") +
-            window.location.hash;
-          window.history.replaceState(null, "", cleanUrl);
-          return;
-        }
+        localStorage.setItem(
+          "gaurav_theme_sync_storage",
+          JSON.stringify({ theme: explicitHandoff, timestamp: now })
+        );
       } catch {}
+      fetch("/api/theme", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ theme: explicitHandoff }),
+      }).catch(() => {});
+      return;
+    }
 
-      const isLight = document.documentElement.classList.contains("light");
-      const current: Theme = isLight ? "light" : "dark";
-      setThemeState((prev) => (prev !== current ? current : prev));
+    const cookieTheme = readThemeCookieSync();
+    const isLightDom = document.documentElement.classList.contains("light");
+    const domTheme: Theme = cookieTheme || (isLightDom ? "light" : "dark");
+    if (cookieTheme && (cookieTheme === "light") !== isLightDom) {
+      applyThemeToDOM(cookieTheme);
+    }
+    setThemeState((prev) => (prev !== domTheme ? domTheme : prev));
+
+    // On isolated origins (e.g. *.localhost where cookies cannot cross subdomains) or when
+    // no cookie is present yet, reconcile immediately on mount from authoritative /api/theme.
+    const isIsolatedOrigin = !getSharedCookieDomain();
+    if (isIsolatedOrigin || !cookieTheme) {
+      const mountStartTs = lastTimestampRef.current;
+      fetch("/api/theme", { cache: "no-store" })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (lastTimestampRef.current > mountStartTs) return;
+          if (data?.success && (data.theme === "light" || data.theme === "dark")) {
+            writeThemeCookieSync(data.theme);
+            applyThemeToDOM(data.theme);
+            setThemeState((current) => (current !== data.theme ? data.theme : current));
+          }
+        })
+        .catch(() => {});
     }
   }, [applyThemeToDOM]);
 
-  // Multi-Channel Sync: BroadcastChannel + Storage Events + Focus/Visibility Reconciliation
+  // Multi-Channel Sync: BroadcastChannel + Storage Events + Focus/Visibility/PageShow Reconciliation
   useEffect(() => {
     // 1. Same-Origin Fast Path via BroadcastChannel
     if (typeof window !== "undefined" && "BroadcastChannel" in window) {
@@ -183,7 +270,7 @@ export function ThemeProvider({
       broadcastRef.current = channel;
 
       channel.onmessage = (event: MessageEvent<ThemeSyncMessage>) => {
-        if (isRecruiterPortalEnvironment()) return;
+        if (isFixedLightPortalEnvironment()) return;
         if (event.data?.type === "THEME_CHANGED" && (event.data.theme === "light" || event.data.theme === "dark")) {
           // Staleness guard: ignore older or out-of-order events
           if (event.data.timestamp > lastTimestampRef.current) {
@@ -197,7 +284,7 @@ export function ThemeProvider({
 
     // 2. Storage event listener for cross-tab sync
     const handleStorage = (event: StorageEvent) => {
-      if (isRecruiterPortalEnvironment()) return;
+      if (isFixedLightPortalEnvironment()) return;
       if (event.key === "gaurav_theme_sync_storage" && event.newValue) {
         try {
           const parsed = JSON.parse(event.newValue);
@@ -211,11 +298,13 @@ export function ThemeProvider({
     };
     window.addEventListener("storage", handleStorage);
 
-    // 3. Cross-Subdomain Open Tab Reconciliation (Focus & Visibility Events via Single Backend)
+    // 3. Cross-Subdomain Open Tab & bfcache Reconciliation
     const reconcileFromSharedCookie = () => {
-      if (isRecruiterPortalEnvironment()) return;
+      if (isFixedLightPortalEnvironment()) return;
+      const isIsolatedOrigin = !getSharedCookieDomain();
       const cookieTheme = readThemeCookieSync();
-      if (cookieTheme && (cookieTheme === "light" || cookieTheme === "dark")) {
+
+      if (!isIsolatedOrigin && cookieTheme && (cookieTheme === "light" || cookieTheme === "dark")) {
         setThemeState((current) => {
           if (current !== cookieTheme) {
             applyThemeToDOM(cookieTheme);
@@ -224,15 +313,17 @@ export function ThemeProvider({
           return current;
         });
       } else {
-        // Fallback for isolated localhost subdomains: query single backend
-        fetch("/api/theme")
+        // Isolated localhost subdomains or missing cookie: query single backend
+        const reqTs = lastTimestampRef.current;
+        fetch("/api/theme", { cache: "no-store" })
           .then((res) => (res.ok ? res.json() : null))
           .then((data) => {
+            if (lastTimestampRef.current > reqTs) return;
             if (data?.success && (data.theme === "light" || data.theme === "dark")) {
+              writeThemeCookieSync(data.theme);
               setThemeState((current) => {
                 if (current !== data.theme) {
                   applyThemeToDOM(data.theme);
-                  writeThemeCookieSync(data.theme);
                   return data.theme;
                 }
                 return current;
@@ -244,6 +335,7 @@ export function ThemeProvider({
     };
 
     window.addEventListener("focus", reconcileFromSharedCookie);
+    window.addEventListener("pageshow", reconcileFromSharedCookie);
     const handleVisibility = () => {
       if (document.visibilityState === "visible") {
         reconcileFromSharedCookie();
@@ -258,6 +350,7 @@ export function ThemeProvider({
       }
       window.removeEventListener("storage", handleStorage);
       window.removeEventListener("focus", reconcileFromSharedCookie);
+      window.removeEventListener("pageshow", reconcileFromSharedCookie);
       document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, [applyThemeToDOM]);

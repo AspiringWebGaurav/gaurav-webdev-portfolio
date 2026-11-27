@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Clock,
   Power,
@@ -15,12 +15,21 @@ import { Spotlight } from "@/components/ui/Spotlight";
 import { LaunchpadHaptics } from "@/components/self/LaunchpadHaptics";
 import { useTheme } from "@/lib/theme";
 import { getSubdomainUrl } from "@/lib/theme/navigation";
+import { writeThemeCookieSync } from "@/lib/theme/cookie";
 
 const DESKTOP_SHARE_URL = "https://gphost.eu.cc/f/scheduleme-desktop";
 
 export default function ScheduleMeDownloadPage() {
   const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [copiedShare, setCopiedShare] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const resolveUrl = (rawUrl: string) =>
+    mounted ? getSubdomainUrl(rawUrl, resolvedTheme) : rawUrl;
 
   const handleCopyShare = () => {
     if (typeof navigator !== "undefined" && navigator.clipboard) {
@@ -76,16 +85,18 @@ export default function ScheduleMeDownloadPage() {
           <div className="flex items-center gap-2 sm:gap-2.5">
             <ThemeToggle variant="inline" className="w-8 h-8 rounded-lg shrink-0" />
             <a
-              href={getSubdomainUrl("https://apps.gauravpatil.site", resolvedTheme)}
+              href={resolveUrl("https://apps.gauravpatil.site")}
               suppressHydrationWarning
+              onClick={() => writeThemeCookieSync(resolvedTheme)}
               className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-white/10 transition-all inline-flex items-center gap-1.5 shadow-2xs"
             >
               <span>Apps Hub</span>
               <span className="text-[10px] text-slate-400">↗</span>
             </a>
             <a
-              href={getSubdomainUrl("https://gauravpatil.site", resolvedTheme)}
+              href={resolveUrl("https://gauravpatil.site")}
               suppressHydrationWarning
+              onClick={() => writeThemeCookieSync(resolvedTheme)}
               className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold shadow-xs transition-all inline-flex items-center gap-1 active:scale-95"
             >
               <span>Portfolio</span>
@@ -201,16 +212,18 @@ export default function ScheduleMeDownloadPage() {
 
           <nav aria-label="Ecosystem Navigation" className="flex items-center gap-4">
             <a
-              href={getSubdomainUrl("https://apps.gauravpatil.site", resolvedTheme)}
+              href={resolveUrl("https://apps.gauravpatil.site")}
               suppressHydrationWarning
+              onClick={() => writeThemeCookieSync(resolvedTheme)}
               className="hover:text-amber-500 transition-colors"
             >
               apps.gauravpatil.site
             </a>
             <span className="text-slate-300 dark:text-slate-700">|</span>
             <a
-              href={getSubdomainUrl("https://gauravpatil.site", resolvedTheme)}
+              href={resolveUrl("https://gauravpatil.site")}
               suppressHydrationWarning
+              onClick={() => writeThemeCookieSync(resolvedTheme)}
               className="hover:text-amber-500 transition-colors"
             >
               gauravpatil.site

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { permanentRedirect } from "next/navigation";
 import { FaLocationArrow, FaGithub, FaCheck, FaLightbulb, FaLayerGroup, FaBookOpen, FaShieldHalved, FaScaleBalanced } from "react-icons/fa6";
 import { ProjectImageSlider } from "@/components/portfolio/ProjectImageSlider";
+import { EcosystemLink } from "@/components/ui/EcosystemLink";
 import { PROJECT_CASE_STUDIES } from "@/lib/data/case-studies";
 
 interface PageProps {
@@ -414,7 +415,7 @@ export default async function ProjectCaseStudyPage({ params }: PageProps) {
               </a>
             )}
             {study.docsUrl && (
-              <a
+              <EcosystemLink
                 href={study.docsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -422,10 +423,10 @@ export default async function ProjectCaseStudyPage({ params }: PageProps) {
               >
                 <FaBookOpen className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                 <span>Documentation</span>
-              </a>
+              </EcosystemLink>
             )}
             {study.liveUrl && (
-              <a
+              <EcosystemLink
                 href={study.liveUrl}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -433,7 +434,7 @@ export default async function ProjectCaseStudyPage({ params }: PageProps) {
               >
                 Live Demo
                 <FaLocationArrow className="w-3 h-3" />
-              </a>
+              </EcosystemLink>
             )}
           </div>
         </div>

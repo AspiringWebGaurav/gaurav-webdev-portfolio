@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { EcosystemLink } from "@/components/ui/EcosystemLink";
 import MarketingLayer from "./MarketingLayer";
 
 export type DetectedPlatform = "windows" | "android" | "ios" | "mac" | "linux" | "other";
@@ -425,13 +426,13 @@ export default function DownloadClient({
         <footer id="mobile-footer" className="w-full h-auto py-1 flex items-center justify-between text-[9px] text-zinc-400 dark:text-zinc-500 shrink-0 bg-transparent">
           <div>&copy; {new Date().getFullYear()} Downex</div>
           <div className="flex items-center gap-2">
-            <a href="https://gauravpatil.site/terms" className="hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
+            <EcosystemLink href="https://gauravpatil.site/terms" className="hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
               Terms
-            </a>
+            </EcosystemLink>
             <span>•</span>
-            <a href="https://gauravpatil.site/privacy" className="hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
+            <EcosystemLink href="https://gauravpatil.site/privacy" className="hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
               Privacy
-            </a>
+            </EcosystemLink>
             <span>•</span>
             <a
               href="https://gphost.eu.cc"
@@ -478,12 +479,12 @@ export default function DownloadClient({
 
           {/* Cleanly Aligned Desktop Navigation with Vertical Dividers & Inline Theme Toggle */}
           <nav className="flex items-center gap-3.5 text-xs font-medium text-zinc-600 dark:text-zinc-400">
-            <a
+            <EcosystemLink
               href="https://gauravpatil.site"
               className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
             >
               Portfolio
-            </a>
+            </EcosystemLink>
 
             <span className="h-3.5 w-[1.5px] bg-zinc-300 dark:bg-zinc-700 rounded-full shrink-0" aria-hidden="true" />
 
@@ -732,34 +733,34 @@ export default function DownloadClient({
           <div className="w-full px-6 lg:px-8 h-full flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400">
             <div>
               &copy; {new Date().getFullYear()} Downex &bull;{" "}
-              <a
+              <EcosystemLink
                 href="https://gauravpatil.site"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-medium text-zinc-700 dark:text-zinc-300 hover:text-violet-600 dark:hover:text-violet-400 hover:underline underline-offset-4 decoration-violet-500/50 dark:decoration-violet-400/50 transition-colors"
               >
                 Gaurav Patil
-              </a>
+              </EcosystemLink>
             </div>
 
             <div className="flex items-center gap-4 text-xs font-medium">
-              <a
+              <EcosystemLink
                 href="https://gauravpatil.site/terms"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:underline"
               >
                 Terms
-              </a>
+              </EcosystemLink>
               <span className="text-zinc-300 dark:text-zinc-700">&bull;</span>
-              <a
+              <EcosystemLink
                 href="https://gauravpatil.site/privacy"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:underline"
               >
                 Privacy
-              </a>
+              </EcosystemLink>
               <span className="h-3.5 w-[1.5px] bg-zinc-300 dark:bg-zinc-700 rounded-full shrink-0" aria-hidden="true" />
               <span className="text-zinc-400 dark:text-zinc-500 text-[11px]">
                 Fast CDN mirrors powered by{" "}

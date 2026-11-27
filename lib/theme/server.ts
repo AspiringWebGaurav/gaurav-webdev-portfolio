@@ -7,9 +7,11 @@
  */
 
 const GLOBAL_THEME_KEY = Symbol.for("gaurav_portfolio_server_theme");
+const GLOBAL_THEME_SET_KEY = Symbol.for("gaurav_portfolio_server_theme_explicit");
 
 interface GlobalThemeContainer {
   [GLOBAL_THEME_KEY]?: "light" | "dark";
+  [GLOBAL_THEME_SET_KEY]?: boolean;
 }
 
 const globalContainer = globalThis as unknown as GlobalThemeContainer;
@@ -22,8 +24,13 @@ export function getServerTheme(): "light" | "dark" {
   return globalContainer[GLOBAL_THEME_KEY] || "dark";
 }
 
+export function hasExplicitServerTheme(): boolean {
+  return Boolean(globalContainer[GLOBAL_THEME_SET_KEY]);
+}
+
 export function setServerTheme(theme: "light" | "dark"): void {
   if (theme === "light" || theme === "dark") {
     globalContainer[GLOBAL_THEME_KEY] = theme;
+    globalContainer[GLOBAL_THEME_SET_KEY] = true;
   }
 }

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { FaLocationArrow, FaGithub, FaArrowRight, FaBookOpen } from "react-icons/fa6";
 import { ProjectImageSlider } from "@/components/portfolio/ProjectImageSlider";
+import { EcosystemLink } from "@/components/ui/EcosystemLink";
 import { cn } from "@/lib/utils";
 import { projectsRepository } from "@/lib/dal/repositories/cms/projects.repository";
 import { SEED_PROJECTS } from "@/lib/dal/repositories/seed-data";
@@ -287,7 +288,7 @@ export default async function ProjectsHubPage() {
                         </a>
                       )}
                       {project.docsUrl && (
-                        <a
+                        <EcosystemLink
                           href={project.docsUrl}
                           target="_blank"
                           rel="noopener noreferrer"
@@ -296,10 +297,10 @@ export default async function ProjectsHubPage() {
                         >
                           <FaBookOpen className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                           <span>Docs</span>
-                        </a>
+                        </EcosystemLink>
                       )}
                       {project.liveUrl && (
-                        <a
+                        <EcosystemLink
                           href={project.liveUrl}
                           target="_blank"
                           rel="noopener noreferrer"
@@ -307,7 +308,7 @@ export default async function ProjectsHubPage() {
                         >
                           Live Site
                           <FaLocationArrow className="w-2.5 h-2.5" />
-                        </a>
+                        </EcosystemLink>
                       )}
                     </div>
                   </div>

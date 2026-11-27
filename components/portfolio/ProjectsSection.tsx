@@ -1,10 +1,14 @@
 "use client";
 
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { FaLocationArrow, FaArrowRight, FaGithub, FaBookOpen } from "react-icons/fa6";
 import { PinContainer } from "@/components/ui/3d-pin";
 import { ProjectImageSlider } from "@/components/portfolio/ProjectImageSlider";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/lib/theme";
+import { getSubdomainUrl } from "@/lib/theme/navigation";
+import { writeThemeCookieSync } from "@/lib/theme/cookie";
 import type { ProjectDocument } from "@/types/portfolio";
 import { SEED_PROJECTS } from "@/lib/dal/repositories/seed-data";
 
@@ -46,6 +50,13 @@ const isMonochromeWhiteIcon = (iconUrl: string) => {
 };
 
 export const ProjectsSection = ({ projects = SEED_PROJECTS, limit = 6 }: ProjectsSectionProps) => {
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const sortedProjects = [...projects].sort((a, b) => (a.order || 0) - (b.order || 0));
   const displayedProjects = limit ? sortedProjects.slice(0, limit) : sortedProjects;
 
@@ -73,6 +84,10 @@ export const ProjectsSection = ({ projects = SEED_PROJECTS, limit = 6 }: Project
             licenseStatus,
           }) => {
             const caseStudyUrl = slug ? `/projects/${slug}` : undefined;
+            const resolvedLiveUrl = mounted ? getSubdomainUrl(liveUrl, resolvedTheme) : liveUrl;
+            const resolvedDocsUrl = docsUrl
+              ? (mounted ? getSubdomainUrl(docsUrl, resolvedTheme) : docsUrl)
+              : undefined;
 
             return (
               <div
@@ -81,7 +96,8 @@ export const ProjectsSection = ({ projects = SEED_PROJECTS, limit = 6 }: Project
               >
                 <PinContainer
                   title={liveUrl}
-                  href={liveUrl}
+                  href={resolvedLiveUrl}
+                  onLinkClick={() => writeThemeCookieSync(resolvedTheme)}
                   className="w-[88vw] sm:w-[536px] max-w-[536px] h-[375px] sm:h-[430px] flex flex-col justify-between select-none"
                 >
                   {/* Upper Content Block */}
@@ -190,14 +206,18 @@ export const ProjectsSection = ({ projects = SEED_PROJECTS, limit = 6 }: Project
                       </a>
                     )}
 
-                    {docsUrl && (
+                    {resolvedDocsUrl && (
                       <a
-                        href={docsUrl}
+                        href={resolvedDocsUrl}
                         target="_blank"
                         rel="noopener noreferrer"
+                        suppressHydrationWarning
                         className="flex items-center gap-1 text-[10px] sm:text-xs text-indigo-700 hover:text-indigo-900 dark:text-indigo-300 dark:hover:text-white transition-colors duration-200 font-medium py-1 px-1.5 sm:py-1.5 sm:px-2 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 border border-indigo-200 dark:border-indigo-500/30"
                         title="Developer Documentation"
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          writeThemeCookieSync(resolvedTheme);
+                        }}
                       >
                         <FaBookOpen className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-indigo-600 dark:text-indigo-400" />
                         <span>Docs</span>
@@ -205,11 +225,15 @@ export const ProjectsSection = ({ projects = SEED_PROJECTS, limit = 6 }: Project
                     )}
 
                     <a
-                      href={liveUrl}
+                      href={resolvedLiveUrl}
                       target="_blank"
                       rel="noopener noreferrer"
+                      suppressHydrationWarning
                       className="flex items-center gap-1 text-[10px] sm:text-xs text-[#7C3AED] dark:text-purple hover:opacity-80 transition-opacity duration-200 font-medium group/link py-1 px-2 sm:py-1.5 sm:px-2.5 rounded-lg bg-purple-50 dark:bg-purple/10 border border-purple-200 dark:border-purple/30 touch-manipulation"
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        writeThemeCookieSync(resolvedTheme);
+                      }}
                     >
                       <span>Live Site</span>
                       <FaLocationArrow className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-[#7C3AED] dark:text-purple group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform duration-200" />

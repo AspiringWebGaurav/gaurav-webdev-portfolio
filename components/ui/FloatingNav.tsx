@@ -34,9 +34,14 @@ export const FloatingNav = ({
 
   // set true for the initial state so that nav bar is visible in the hero section
   const [visible, setVisible] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const isNavigatingRef = useRef(false);
   const navigationTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Listen for Contact and Assistant Modal open/close state to dynamically hide navbar
   useEffect(() => {
@@ -376,7 +381,7 @@ export const FloatingNav = ({
           const isExternal =
             navItem.link.startsWith("http://") || navItem.link.startsWith("https://");
           const targetHref = isExternal
-            ? getSubdomainUrl(navItem.link, resolvedTheme)
+            ? (mounted ? getSubdomainUrl(navItem.link, resolvedTheme) : navItem.link)
             : navItem.link;
 
           return (
@@ -385,6 +390,7 @@ export const FloatingNav = ({
               href={targetHref}
               target={isExternal ? "_blank" : undefined}
               rel={isExternal ? "noopener noreferrer" : undefined}
+              suppressHydrationWarning
               onClick={(e) => {
                 if (isExternal) {
                   writeThemeCookieSync(resolvedTheme);

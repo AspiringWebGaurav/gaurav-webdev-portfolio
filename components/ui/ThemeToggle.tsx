@@ -26,16 +26,18 @@ export function ThemeToggle({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPortalSuppressed, setIsPortalSuppressed] = useState(false);
 
-  // SSR route suppression for portals that feature their own integrated header ThemeToggle
+  // SSR route suppression for portals that feature their own integrated header ThemeToggle or fixed themes
   const isSsrSuppressed =
     pathname.startsWith("/talk") ||
     pathname.startsWith("/contact-portal") ||
-    pathname.startsWith("/contact") ||
+    pathname === "/contact" ||
+    pathname.startsWith("/contact/") ||
     pathname.startsWith("/download") ||
     pathname.startsWith("/downex") ||
     pathname.startsWith("/apps") ||
     pathname.startsWith("/services") ||
     pathname.startsWith("/resume") ||
+    pathname.startsWith("/self") ||
     pathname.startsWith("/admin");
 
   const phase1TimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -62,16 +64,19 @@ export function ThemeToggle({
         host.includes("services.") ||
         host.startsWith("resume.") ||
         host.includes("resume.") ||
+        host.startsWith("self.") ||
         host.startsWith("admin.");
       const isSuppressedPath =
         pathname.startsWith("/talk") ||
         pathname.startsWith("/contact-portal") ||
-        pathname.startsWith("/contact") ||
+        pathname === "/contact" ||
+        pathname.startsWith("/contact/") ||
         pathname.startsWith("/download") ||
         pathname.startsWith("/downex") ||
         pathname.startsWith("/apps") ||
         pathname.startsWith("/services") ||
         pathname.startsWith("/resume") ||
+        pathname.startsWith("/self") ||
         pathname.startsWith("/cp") ||
         pathname.startsWith("/admin");
       const hasSuppressedAttr = Boolean(
@@ -146,8 +151,21 @@ export function ThemeToggle({
     setTargetTheme(next);
     setIsTransitioning(true);
 
-    // Synchronously write shared wildcard cookie immediately (race-condition free)
+    // Synchronously write shared wildcard cookie and notify server immediately (race-condition free)
     writeThemeCookieSync(next);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(
+          "gaurav_theme_sync_storage",
+          JSON.stringify({ theme: next, timestamp: Date.now() })
+        );
+      } catch {}
+      fetch("/api/theme", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ theme: next }),
+      }).catch(() => {});
+    }
 
     if (typeof document !== "undefined") {
       document.documentElement.classList.add("theme-transitioning");

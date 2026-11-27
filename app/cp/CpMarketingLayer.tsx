@@ -13,6 +13,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { EcosystemLink } from "@/components/ui/EcosystemLink";
 import { Spotlight } from "@/components/ui/Spotlight";
 
 // Static telemetry constants (Ubuntu 24.04 LTS open-source ISO) - 100% Zero-JS-Overhead, Vercel Edge Optimized
@@ -233,14 +234,14 @@ export default function CpMarketingLayer({
               Docs
             </a>
             <span>&bull;</span>
-            <a
+            <EcosystemLink
               href="https://gauravpatil.site"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-zinc-700 dark:hover:text-zinc-300"
             >
               Portfolio
-            </a>
+            </EcosystemLink>
           </div>
         </footer>
       </div>
@@ -267,14 +268,14 @@ export default function CpMarketingLayer({
 
           {/* Navigation & Actions */}
           <nav className="flex items-center gap-3.5 text-xs font-medium text-zinc-600 dark:text-zinc-400">
-            <a
+            <EcosystemLink
               href="https://gauravpatil.site"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
             >
               Portfolio
-            </a>
+            </EcosystemLink>
 
             <span className="h-3.5 w-[1.5px] bg-zinc-300 dark:bg-zinc-700 rounded-full shrink-0" aria-hidden="true" />
 
@@ -532,14 +533,14 @@ export default function CpMarketingLayer({
             <div className="flex items-center gap-2">
               <span>&copy; {new Date().getFullYear()} CP Engine</span>
               <span>&bull;</span>
-              <a
+              <EcosystemLink
                 href="https://gauravpatil.site"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-medium text-zinc-700 dark:text-zinc-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline transition-colors"
               >
                 Gaurav Patil
-              </a>
+              </EcosystemLink>
               <span>&bull;</span>
               <a
                 href="https://github.com/AspiringWebGaurav/cp/blob/main/LICENSE"
@@ -596,14 +597,14 @@ export default function CpMarketingLayer({
                 Docs
               </a>
               <span className="text-zinc-300 dark:text-zinc-700">&bull;</span>
-              <a
+              <EcosystemLink
                 href="https://gauravpatil.site"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:underline"
               >
                 Portfolio
-              </a>
+              </EcosystemLink>
               <span className="text-zinc-300 dark:text-zinc-700">&bull;</span>
               <span className="text-zinc-400 dark:text-zinc-500 text-[11px]">
                 Powered by{" "}

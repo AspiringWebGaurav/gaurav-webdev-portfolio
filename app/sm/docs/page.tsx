@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Power, RefreshCw, Moon, XCircle, ShieldCheck, Zap, Sliders, ArrowLeft } from "lucide-react";
+import { EcosystemLink } from "@/components/ui/EcosystemLink";
 
 export const dynamic = "force-static";
 export const revalidate = false;
@@ -52,14 +53,14 @@ export default function ScheduleMeDocsPage() {
               <span>Back to App</span>
             </Link>
             <span className="text-slate-300 dark:text-slate-700">|</span>
-            <a
+            <EcosystemLink
               href="https://gauravpatil.site"
               target="_blank"
               rel="noopener noreferrer"
               className="text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
             >
               Portfolio ↗
-            </a>
+            </EcosystemLink>
           </div>
         </div>
       </header>

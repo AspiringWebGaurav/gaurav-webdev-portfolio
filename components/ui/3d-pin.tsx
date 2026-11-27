@@ -9,12 +9,14 @@ export const PinContainer = ({
   href,
   className,
   containerClassName,
+  onLinkClick,
 }: {
   children: React.ReactNode;
   title?: string;
   href?: string;
   className?: string;
   containerClassName?: string;
+  onLinkClick?: () => void;
 }) => {
   const [transform, setTransform] = useState(
     "translate(-50%,-50%) rotateX(0deg)"
@@ -68,7 +70,7 @@ export const PinContainer = ({
           <div className={cn(" relative z-50 ", className)}>{children}</div>
         </div>
       </div>
-      <PinPerspective title={title} href={href} isTouched={isTouched} />
+      <PinPerspective title={title} href={href} isTouched={isTouched} onLinkClick={onLinkClick} />
     </div>
   );
 };
@@ -77,10 +79,12 @@ export const PinPerspective = ({
   title,
   href,
   isTouched = false,
+  onLinkClick,
 }: {
   title?: string;
   href?: string;
   isTouched?: boolean;
+  onLinkClick?: () => void;
 }) => {
   return (
     <motion.div
@@ -95,6 +99,8 @@ export const PinPerspective = ({
             href={href}
             target="_blank"
             rel="noopener noreferrer"
+            suppressHydrationWarning
+            onClick={() => onLinkClick?.()}
             className="relative flex space-x-2 items-center z-10 rounded-full bg-slate-900 dark:bg-zinc-950 py-2.5 px-5 min-h-[44px] ring-1 ring-slate-800 dark:ring-white/10 touch-manipulation shadow-lg"
           >
             <span className="relative z-20 text-white text-xs font-bold inline-block py-0.5">

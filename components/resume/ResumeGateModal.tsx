@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useTheme } from "@/lib/theme";
 import { getSubdomainUrl } from "@/lib/theme/navigation";
+import { writeThemeCookieSync } from "@/lib/theme/cookie";
 import {
   IoMailOutline,
   IoArrowForward,
@@ -926,9 +927,11 @@ export const ResumeGateModal: React.FC<ResumeGateModalProps> = ({
             className="grid grid-cols-3 gap-1 p-1 rounded-xl border text-[10px] sm:text-[11px] font-medium"
           >
             <a
-              href={getSubdomainUrl("https://gauravpatil.site", resolvedTheme)}
+              href={mounted ? getSubdomainUrl("https://gauravpatil.site", resolvedTheme) : "https://gauravpatil.site"}
               target="_blank"
               rel="noopener noreferrer"
+              suppressHydrationWarning
+              onClick={() => writeThemeCookieSync(resolvedTheme)}
               title="Portfolio — Gaurav Patil"
               style={{ color: isDark ? "#A1A1AA" : "#64748B" }}
               className="py-1.5 px-1 sm:px-2 rounded-lg text-center flex items-center justify-center gap-1 whitespace-nowrap transition-all duration-150 group cursor-pointer hover:bg-white dark:hover:bg-white/10 hover:text-slate-950 dark:hover:text-white hover:shadow-xs active:scale-[0.98]"
@@ -938,9 +941,11 @@ export const ResumeGateModal: React.FC<ResumeGateModalProps> = ({
             </a>
 
             <a
-              href={getSubdomainUrl("https://contact.services.gauravpatil.site", resolvedTheme)}
+              href={mounted ? getSubdomainUrl("https://contact.services.gauravpatil.site", resolvedTheme) : "https://contact.services.gauravpatil.site"}
               target="_blank"
               rel="noopener noreferrer"
+              suppressHydrationWarning
+              onClick={() => writeThemeCookieSync(resolvedTheme)}
               title="Recruiter Portal — Direct Messaging"
               style={{ color: isDark ? "#A1A1AA" : "#64748B" }}
               className="py-1.5 px-1 sm:px-2 rounded-lg text-center flex items-center justify-center gap-1 whitespace-nowrap transition-all duration-150 group cursor-pointer hover:bg-white dark:hover:bg-white/10 hover:text-purple-600 dark:hover:text-purple-400 hover:shadow-xs active:scale-[0.98]"
@@ -950,9 +955,11 @@ export const ResumeGateModal: React.FC<ResumeGateModalProps> = ({
             </a>
 
             <a
-              href={getSubdomainUrl("https://gauravpatil.site/#contact", resolvedTheme)}
+              href={mounted ? getSubdomainUrl("https://gauravpatil.site/#contact", resolvedTheme) : "https://gauravpatil.site/#contact"}
               target="_blank"
               rel="noopener noreferrer"
+              suppressHydrationWarning
+              onClick={() => writeThemeCookieSync(resolvedTheme)}
               title="Gaurav Patil — Full Stack Software Engineer Building Production-Ready Digital Systems"
               style={{ color: isDark ? "#A1A1AA" : "#64748B" }}
               className="py-1.5 px-1 sm:px-2 rounded-lg text-center flex items-center justify-center gap-1 whitespace-nowrap transition-all duration-150 group cursor-pointer hover:bg-white dark:hover:bg-white/10 hover:text-slate-950 dark:hover:text-white hover:shadow-xs active:scale-[0.98]"

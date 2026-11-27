@@ -27,9 +27,19 @@ export const FooterSection = ({
   socialLinks = SEED_SOCIAL_LINKS,
 }: FooterSectionProps) => {
   const [isContactOpen, setIsContactOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const isDirectInitRef = useRef(false);
   const { resolvedTheme } = useTheme();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const resolveSubdomainHref = useCallback(
+    (rawUrl: string) => (mounted ? getSubdomainUrl(rawUrl, resolvedTheme) : rawUrl),
+    [mounted, resolvedTheme]
+  );
 
   // Helper to open the contact form and push /contact to browser address bar
   const handleOpenContact = useCallback(() => {
@@ -157,9 +167,10 @@ export const FooterSection = ({
             <span>Hiring or Recruiter Inquiry?</span>
             <div className="flex items-center gap-2 flex-wrap justify-center">
               <a
-                href={getSubdomainUrl("https://resume.services.gauravpatil.site", resolvedTheme)}
+                href={resolveSubdomainHref("https://resume.services.gauravpatil.site")}
                 target="_blank"
                 rel="noopener noreferrer"
+                suppressHydrationWarning
                 onClick={() => writeThemeCookieSync(resolvedTheme)}
                 title="https://resume.services.gauravpatil.site"
                 className="group text-[#7C3AED] dark:text-purple hover:text-purple-600 dark:hover:text-[#CBACF9] font-semibold inline-flex items-center transition-colors touch-manipulation"
@@ -172,9 +183,10 @@ export const FooterSection = ({
               </a>
               <span className="text-slate-300 dark:text-neutral-600 hidden sm:inline">·</span>
               <a
-                href={getSubdomainUrl("https://contact.services.gauravpatil.site", resolvedTheme)}
+                href={resolveSubdomainHref("https://contact.services.gauravpatil.site")}
                 target="_blank"
                 rel="noopener noreferrer"
+                suppressHydrationWarning
                 onClick={() => writeThemeCookieSync(resolvedTheme)}
                 title="https://contact.services.gauravpatil.site"
                 className="group text-[#7C3AED] dark:text-purple hover:text-purple-600 dark:hover:text-[#CBACF9] font-semibold inline-flex items-center transition-colors touch-manipulation"
@@ -187,9 +199,10 @@ export const FooterSection = ({
               </a>
               <span className="text-slate-300 dark:text-neutral-600 hidden sm:inline">·</span>
               <a
-                href={getSubdomainUrl("https://apps.gauravpatil.site", resolvedTheme)}
+                href={resolveSubdomainHref("https://apps.gauravpatil.site")}
                 target="_blank"
                 rel="noopener noreferrer"
+                suppressHydrationWarning
                 onClick={() => writeThemeCookieSync(resolvedTheme)}
                 title="https://apps.gauravpatil.site"
                 className="group text-cyan-600 dark:text-cyan-400 hover:text-cyan-500 font-semibold inline-flex items-center transition-colors touch-manipulation"
@@ -199,9 +212,10 @@ export const FooterSection = ({
               </a>
               <span className="text-slate-300 dark:text-neutral-600 hidden sm:inline">·</span>
               <a
-                href={getSubdomainUrl("https://downex.apps.gauravpatil.site", resolvedTheme)}
+                href={resolveSubdomainHref("https://downex.apps.gauravpatil.site")}
                 target="_blank"
                 rel="noopener noreferrer"
+                suppressHydrationWarning
                 onClick={() => writeThemeCookieSync(resolvedTheme)}
                 title="Downex — Simple Free Download Manager for Windows"
                 className="group text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 font-semibold inline-flex items-center transition-colors touch-manipulation"
@@ -223,9 +237,10 @@ export const FooterSection = ({
           </span>
           <span className="text-slate-300 dark:text-neutral-600">·</span>
           <a
-            href={getSubdomainUrl("https://apps.gauravpatil.site", resolvedTheme)}
+            href={resolveSubdomainHref("https://apps.gauravpatil.site")}
             target="_blank"
             rel="noopener noreferrer"
+            suppressHydrationWarning
             onClick={() => writeThemeCookieSync(resolvedTheme)}
             className="hover:text-[#7C3AED] dark:hover:text-purple transition-colors duration-200"
           >
@@ -233,9 +248,10 @@ export const FooterSection = ({
           </a>
           <span className="text-slate-300 dark:text-neutral-600">·</span>
           <a
-            href={getSubdomainUrl("https://downex.apps.gauravpatil.site", resolvedTheme)}
+            href={resolveSubdomainHref("https://downex.apps.gauravpatil.site")}
             target="_blank"
             rel="noopener noreferrer"
+            suppressHydrationWarning
             onClick={() => writeThemeCookieSync(resolvedTheme)}
             className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors duration-200 font-medium"
           >
@@ -243,9 +259,10 @@ export const FooterSection = ({
           </a>
           <span className="text-slate-300 dark:text-neutral-600">·</span>
           <a
-            href={getSubdomainUrl("https://services.gauravpatil.site", resolvedTheme)}
+            href={resolveSubdomainHref("https://services.gauravpatil.site")}
             target="_blank"
             rel="noopener noreferrer"
+            suppressHydrationWarning
             onClick={() => writeThemeCookieSync(resolvedTheme)}
             className="hover:text-[#7C3AED] dark:hover:text-purple transition-colors duration-200"
           >
@@ -253,9 +270,10 @@ export const FooterSection = ({
           </a>
           <span className="text-slate-300 dark:text-neutral-600">·</span>
           <a
-            href={getSubdomainUrl("https://resume.services.gauravpatil.site", resolvedTheme)}
+            href={resolveSubdomainHref("https://resume.services.gauravpatil.site")}
             target="_blank"
             rel="noopener noreferrer"
+            suppressHydrationWarning
             onClick={() => writeThemeCookieSync(resolvedTheme)}
             className="hover:text-[#7C3AED] dark:hover:text-purple transition-colors duration-200"
           >
@@ -263,9 +281,10 @@ export const FooterSection = ({
           </a>
           <span className="text-slate-300 dark:text-neutral-600">·</span>
           <a
-            href={getSubdomainUrl("https://contact.services.gauravpatil.site", resolvedTheme)}
+            href={resolveSubdomainHref("https://contact.services.gauravpatil.site")}
             target="_blank"
             rel="noopener noreferrer"
+            suppressHydrationWarning
             onClick={() => writeThemeCookieSync(resolvedTheme)}
             className="hover:text-[#7C3AED] dark:hover:text-purple transition-colors duration-200"
           >

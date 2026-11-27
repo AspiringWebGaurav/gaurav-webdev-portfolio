@@ -16,6 +16,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { FaGithub } from "react-icons/fa6";
+import { EcosystemLink } from "@/components/ui/EcosystemLink";
 import {
   DOWNEX_COMPARISON_ROWS,
   DOWNEX_FAQS,
@@ -298,7 +299,7 @@ export default function DownexSeoSections({
                 Explore deep-dive pages covering IDM comparisons, simple setup, open-source Rust architecture, and browser link integration.
               </p>
             </div>
-            <a
+            <EcosystemLink
               href="https://gauravpatil.site/projects/downex-download-manager"
               target="_blank"
               rel="noopener noreferrer"
@@ -306,7 +307,7 @@ export default function DownexSeoSections({
             >
               <span>Engineering Case Study</span>
               <ExternalLink className="w-3 h-3" />
-            </a>
+            </EcosystemLink>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">

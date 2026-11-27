@@ -2,6 +2,7 @@
 
 import React from "react";
 import { IoCheckmarkCircleOutline, IoPauseCircleOutline, IoGlobeOutline, IoLogoGithub, IoLogoLinkedin } from "react-icons/io5";
+import { EcosystemLink } from "@/components/ui/EcosystemLink";
 
 interface ResumeSuspendedViewProps {
   status: "suspended" | "hired";
@@ -60,7 +61,7 @@ export const ResumeSuspendedView: React.FC<ResumeSuspendedViewProps> = ({
 
         {/* Links */}
         <div className="pt-2 border-t border-slate-100 dark:border-zinc-800/80 flex flex-wrap items-center justify-center gap-3 text-xs sm:text-sm font-medium">
-          <a
+          <EcosystemLink
             href="https://gauravpatil.site"
             target="_blank"
             rel="noopener noreferrer"
@@ -68,7 +69,7 @@ export const ResumeSuspendedView: React.FC<ResumeSuspendedViewProps> = ({
           >
             <IoGlobeOutline className="w-4 h-4 text-indigo-500" />
             <span>Main Portfolio</span>
-          </a>
+          </EcosystemLink>
           <a
             href="https://github.com/AspiringWebGaurav"
             target="_blank"

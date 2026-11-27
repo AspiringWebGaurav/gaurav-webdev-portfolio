@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { EcosystemLink } from "@/components/ui/EcosystemLink";
 import CpMarketingLayer from "./CpMarketingLayer";
 
 interface CpClientProps {
@@ -429,14 +430,14 @@ export default function CpClient({
                     Docs
                   </a>
                   <span className="text-zinc-300 dark:text-zinc-700">&bull;</span>
-                  <a
+                  <EcosystemLink
                     href="https://gauravpatil.site"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
                   >
                     Portfolio
-                  </a>
+                  </EcosystemLink>
                   <span className="text-zinc-300 dark:text-zinc-700">&bull;</span>
                   <a
                     href={desktopShareUrl || "https://gphost.eu.cc/f/cp-desktop"}

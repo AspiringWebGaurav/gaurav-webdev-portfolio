@@ -7,6 +7,7 @@ import { Spotlight } from "@/components/ui/Spotlight";
 import { LaunchpadHaptics } from "@/components/self/LaunchpadHaptics";
 import { useTheme } from "@/lib/theme";
 import { getSubdomainUrl } from "@/lib/theme/navigation";
+import { writeThemeCookieSync } from "@/lib/theme/cookie";
 
 export type HubAccentTone = "violet" | "emerald" | "amber" | "cyan" | "indigo" | "blue";
 
@@ -140,6 +141,14 @@ export function HubShell({
   footerLinks,
 }: HubShellProps) {
   const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const resolveUrl = (rawUrl: string) =>
+    mounted ? getSubdomainUrl(rawUrl, resolvedTheme) : rawUrl;
 
   const gridClass =
     columns === 4
@@ -202,16 +211,18 @@ export function HubShell({
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <ThemeToggle variant="inline" className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg shrink-0" />
           <a
-            href={getSubdomainUrl(secondaryNav.url, resolvedTheme)}
+            href={resolveUrl(secondaryNav.url)}
             suppressHydrationWarning
+            onClick={() => writeThemeCookieSync(resolvedTheme)}
             className="h-7 sm:h-8 px-2 sm:px-3 rounded-lg border border-zinc-200/90 dark:border-zinc-800 bg-white/80 hover:bg-zinc-100 dark:bg-zinc-900/80 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-200 text-[11px] sm:text-xs font-semibold inline-flex items-center gap-1 transition-all shadow-2xs active:scale-[0.98]"
           >
             <span>{secondaryNav.label}</span>
             <ArrowUpRight className="hidden sm:inline w-3.5 h-3.5 opacity-60" />
           </a>
           <a
-            href={getSubdomainUrl("https://gauravpatil.site", resolvedTheme)}
+            href={resolveUrl("https://gauravpatil.site")}
             suppressHydrationWarning
+            onClick={() => writeThemeCookieSync(resolvedTheme)}
             className="h-7 sm:h-8 px-2 sm:px-3 rounded-lg bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-950 text-[11px] sm:text-xs font-semibold inline-flex items-center gap-1 transition-all shadow-xs active:scale-[0.98]"
           >
             <span>Portfolio</span>
@@ -245,7 +256,7 @@ export function HubShell({
           >
             {items.map((item) => {
               const tone = TONE_CLASSES[item.tone];
-              const resolvedHref = getSubdomainUrl(item.href, resolvedTheme);
+              const resolvedHref = resolveUrl(item.href);
               const isCompactMobileServices = columns === 3;
 
               return (
@@ -325,6 +336,7 @@ export function HubShell({
                       target={item.external ? "_blank" : undefined}
                       rel={item.external ? "noopener noreferrer" : undefined}
                       suppressHydrationWarning
+                      onClick={() => writeThemeCookieSync(resolvedTheme)}
                       className="w-full h-9 sm:h-10 px-3 sm:px-3.5 rounded-xl bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-950 text-[11px] sm:text-xs font-semibold flex items-center justify-between transition-all duration-150 shadow-xs active:scale-[0.98]"
                     >
                       <span className="truncate">{item.ctaLabel}</span>
@@ -356,8 +368,9 @@ export function HubShell({
             <React.Fragment key={link.label}>
               {idx > 0 && <span className="text-zinc-300 dark:text-zinc-700">&middot;</span>}
               <a
-                href={getSubdomainUrl(link.url, resolvedTheme)}
+                href={resolveUrl(link.url)}
                 suppressHydrationWarning
+                onClick={() => writeThemeCookieSync(resolvedTheme)}
                 className="hover:text-zinc-950 dark:hover:text-white transition-colors"
               >
                 {link.label}

@@ -18,6 +18,7 @@ import {
 import { ProjectImageSlider } from "@/components/portfolio/ProjectImageSlider";
 import { PROJECT_CASE_STUDIES } from "@/lib/data/case-studies";
 import { FloatingNav } from "@/components/ui/FloatingNav";
+import { EcosystemLink } from "@/components/ui/EcosystemLink";
 import { SEED_NAVIGATION } from "@/lib/dal/repositories/seed-data";
 
 interface PageProps {
@@ -326,7 +327,7 @@ export default async function BlogPostPage({ params }: PageProps) {
               </a>
             )}
             {article.docsUrl && (
-              <a
+              <EcosystemLink
                 href={article.docsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -334,10 +335,10 @@ export default async function BlogPostPage({ params }: PageProps) {
               >
                 <FaBookOpen className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                 <span>Docs</span>
-              </a>
+              </EcosystemLink>
             )}
             {article.liveUrl && (
-              <a
+              <EcosystemLink
                 href={article.liveUrl}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -345,7 +346,7 @@ export default async function BlogPostPage({ params }: PageProps) {
               >
                 <span>Live Site</span>
                 <FaLocationArrow className="w-3 h-3" />
-              </a>
+              </EcosystemLink>
             )}
           </div>
         </div>

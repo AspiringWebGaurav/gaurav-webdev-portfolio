@@ -4,6 +4,7 @@ import Link from "next/link";
 import { TalkLoginForm } from "@/components/talk/TalkLoginForm";
 import { CgSpinner } from "react-icons/cg";
 import { IoArrowBack } from "react-icons/io5";
+import { EcosystemLink } from "@/components/ui/EcosystemLink";
 
 export const metadata: Metadata = {
   title: "Sign In",
@@ -25,13 +26,13 @@ export default function TalkLoginPage() {
           talk<span className="text-[#7C3AED]">.</span>
         </Link>
 
-        <a
-          href={process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === "production" ? "https://gauravpatil.site" : "http://localhost:3000")}
+        <EcosystemLink
+          href={process.env.NEXT_PUBLIC_APP_URL || "https://gauravpatil.site"}
           className="text-xs font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors flex items-center gap-1.5 group cursor-pointer"
         >
           <IoArrowBack className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
           <span>Back to Portfolio</span>
-        </a>
+        </EcosystemLink>
 
         <div className="absolute bottom-0 inset-x-0 h-px bg-[#E2E8F0] dark:bg-[#1E293B]" />
       </header>

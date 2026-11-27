@@ -36,13 +36,33 @@ export function getSharedCookieDomain(hostname?: string): string | undefined {
 }
 
 /**
- * Clears any host-only theme cookie on the current origin to prevent RFC 6265
- * cookie shadowing of wildcard domain cookies.
+ * Clears any host-only or intermediate-subdomain theme cookie on the current origin
+ * to prevent RFC 6265 cookie shadowing of wildcard domain cookies.
  */
-export function cleanHostOnlyThemeCookie(): void {
+export function cleanHostOnlyThemeCookie(hostname?: string): void {
   if (typeof document === "undefined") return;
-  const isSecure = typeof window !== "undefined" && window.location.protocol === "https:";
-  document.cookie = `${THEME_COOKIE_NAME}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${isSecure ? "; Secure" : ""}`;
+  const secureFlag =
+    typeof window !== "undefined" && window.location.protocol === "https:"
+      ? "; Secure"
+      : "";
+  document.cookie = `${THEME_COOKIE_NAME}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag}`;
+
+  const rawHost =
+    (hostname || (typeof window !== "undefined" ? window.location.hostname : ""))
+      .toLowerCase()
+      .split(":")[0];
+  const sharedDomain = getSharedCookieDomain(rawHost);
+  if (sharedDomain && rawHost && rawHost !== sharedDomain.slice(1)) {
+    document.cookie = `${THEME_COOKIE_NAME}=; Path=/; Domain=${rawHost}; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag}`;
+    document.cookie = `${THEME_COOKIE_NAME}=; Path=/; Domain=.${rawHost}; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag}`;
+    const parts = rawHost.split(".");
+    if (parts.length > 3) {
+      const parentSubdomain = `.${parts.slice(1).join(".")}`;
+      if (parentSubdomain !== sharedDomain) {
+        document.cookie = `${THEME_COOKIE_NAME}=; Path=/; Domain=${parentSubdomain}; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag}`;
+      }
+    }
+  }
 }
 
 /**
@@ -56,8 +76,8 @@ export function writeThemeCookieSync(theme: "light" | "dark", hostname?: string)
   const isSecure = typeof window !== "undefined" && window.location.protocol === "https:";
 
   if (domain) {
-    // 1. Kill any existing host-only cookie on the current host to prevent shadowing
-    cleanHostOnlyThemeCookie();
+    // 1. Kill any existing host-only / subdomain cookie on the current host to prevent shadowing
+    cleanHostOnlyThemeCookie(hostname);
 
     // 2. Set authoritative wildcard domain cookie
     document.cookie = `${THEME_COOKIE_NAME}=${theme}; Path=/; Max-Age=${THEME_COOKIE_MAX_AGE}; Domain=${domain}; SameSite=Lax${isSecure ? "; Secure" : ""}`;
@@ -74,7 +94,7 @@ export function writeThemeCookieSync(theme: "light" | "dark", hostname?: string)
 export function readThemeCookieSync(): "light" | "dark" | null {
   if (typeof document === "undefined") return null;
 
-  // On shared domains, clean up host-only cookie if present
+  // On shared domains, clean up host-only/subdomain cookies if present
   const domain = getSharedCookieDomain();
   if (domain) {
     cleanHostOnlyThemeCookie();
