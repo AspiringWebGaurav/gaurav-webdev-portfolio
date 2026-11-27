@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import DownexLegalLayout from "@/components/downex/DownexLegalLayout";
 import {
+  DOWNEX_OG_IMAGE_URL,
+  DOWNEX_ORIGIN,
+  buildDownexBreadcrumbJsonLd,
+  buildDownexSoftwareJsonLd,
+} from "@/lib/data/downex-seo";
+import {
   ListOrdered,
   Zap,
   Clock,
@@ -19,21 +25,29 @@ export const dynamic = "force-static";
 export const revalidate = false;
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://downex.apps.gauravpatil.site"),
+  metadataBase: new URL(DOWNEX_ORIGIN),
   title: {
     absolute: "How 1-by-1 Queue Works | Downex Download Manager",
   },
   description:
     "Official guide on Downex sequential 1-by-1 Queue: how sequential downloading dedicates full 32-stream bandwidth to one file at a time, eliminating bandwidth competition and connection crawl.",
   alternates: {
-    canonical: "https://downex.apps.gauravpatil.site/how-queues-work",
+    canonical: `${DOWNEX_ORIGIN}/how-queues-work`,
   },
   openGraph: {
     title: "How 1-by-1 Queue Works | Downex Download Manager",
     description:
       "Understand Downex 1-by-1 Queue: full 32-stream bandwidth dedication, automatic task handoff, FIFO waiting line, and zero-stall browsing.",
-    url: "https://downex.apps.gauravpatil.site/how-queues-work",
-    siteName: "Downex",
+    url: `${DOWNEX_ORIGIN}/how-queues-work`,
+    siteName: "Downex — Simple Free Download Manager",
+    images: [{ url: DOWNEX_OG_IMAGE_URL, width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "How 1-by-1 Queue Works | Downex Download Manager",
+    description:
+      "Full 32-stream dedicated bandwidth per file, sequential handoff, and zero bandwidth thrashing.",
+    images: [DOWNEX_OG_IMAGE_URL],
   },
 };
 
@@ -50,14 +64,29 @@ const queueSections = [
 ];
 
 export default function DownexQueueGuidePage() {
+  const breadcrumbJsonLd = buildDownexBreadcrumbJsonLd([
+    { name: "Downex — Simple Free Download Manager", url: DOWNEX_ORIGIN },
+    { name: "How 1-by-1 Queue Works", url: `${DOWNEX_ORIGIN}/how-queues-work` },
+  ]);
+  const softwareJsonLd = buildDownexSoftwareJsonLd();
+
   return (
-    <DownexLegalLayout
-      title="How 1-by-1 Queue Works"
-      badge="Sequential Turbo Architecture &bull; Zero Bandwidth Thrashing"
-      lastUpdated="November 2026"
-      summary="Downex 1-by-1 Queue is engineered to download your files sequentially at maximum speed instead of fighting over split bandwidth. By focusing all 32 parallel network sockets on one task at a time, your files finish dramatically faster with zero lag on your browsing."
-      sections={queueSections}
-    >
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }}
+      />
+      <DownexLegalLayout
+        title="How 1-by-1 Queue Works"
+        badge="Sequential Turbo Architecture &bull; Zero Bandwidth Thrashing"
+        lastUpdated="November 2026"
+        summary="Downex 1-by-1 Queue is engineered to download your files sequentially at maximum speed instead of fighting over split bandwidth. By focusing all 32 parallel network sockets on one task at a time, your files finish dramatically faster with zero lag on your browsing."
+        sections={queueSections}
+      >
       {/* 1. Why 1-by-1 Queue Beats Simultaneous Downloading */}
       <section id="concept" className="space-y-4 scroll-mt-28">
         <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-200 dark:border-zinc-800">
@@ -440,6 +469,7 @@ export default function DownexQueueGuidePage() {
           </div>
         </div>
       </section>
-    </DownexLegalLayout>
+      </DownexLegalLayout>
+    </>
   );
 }

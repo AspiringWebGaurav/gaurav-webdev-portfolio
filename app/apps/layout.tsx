@@ -14,20 +14,47 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://apps.gauravpatil.site"),
-  title: "Gaurav Patil — PC Apps & Tools Suite",
+  title: {
+    absolute: "Gaurav Patil — PC Apps & Windows Software Suite (Downex, CP Engine, ScheduleMe)",
+  },
   description:
-    "Unified PC Apps and Desktop Engineering suite by Gaurav Patil. High-performance Win32 native tools, Tauri applications, and distributed local-first software: CP Engine, Downex, ScheduleMe, and GPN Notes.",
+    "Unified PC Apps and Desktop Engineering suite by Gaurav Patil. Featuring Downex (Simple Free Download Manager & IDM Alternative), CP Engine, ScheduleMe, and GPN Notes.",
+  keywords: [
+    "Downex",
+    "Downex — Simple Free Download Manager",
+    "free IDM alternative",
+    "Windows apps suite",
+    "Gaurav Patil apps",
+    "CP Engine",
+    "ScheduleMe",
+    "GPN Notes",
+  ],
   alternates: {
     canonical: "https://apps.gauravpatil.site",
   },
   openGraph: {
     title: "Apps Suite | Gaurav Patil — PC & Native Software Hub",
     description:
-      "Unified PC Apps and Desktop Engineering suite. CP Engine, Downex, ScheduleMe, and GPN Notes — single-view zero-vertical-scroll command center.",
+      "Unified PC Apps and Desktop Engineering suite featuring Downex, CP Engine, ScheduleMe, and GPN Notes.",
     url: "https://apps.gauravpatil.site",
     siteName: "Gaurav Patil Apps",
     locale: "en_US",
     type: "website",
+    images: [
+      {
+        url: "https://gauravpatil.site/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Gaurav Patil PC Apps Suite",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Apps Suite | Gaurav Patil — Downex, CP Engine & ScheduleMe",
+    description:
+      "Windows native software hub by Gaurav Patil featuring Downex — Simple Free Download Manager.",
+    images: ["https://gauravpatil.site/og-image.png"],
   },
   robots: {
     index: true,

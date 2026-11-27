@@ -1,34 +1,57 @@
 import type { Metadata } from "next";
 import DownexLegalLayout from "@/components/downex/DownexLegalLayout";
+import {
+  DOWNEX_OG_IMAGE_URL,
+  DOWNEX_ORIGIN,
+  buildDownexBreadcrumbJsonLd,
+} from "@/lib/data/downex-seo";
 
 export const dynamic = "force-static";
 export const revalidate = false;
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://downex.apps.gauravpatil.site"),
+  metadataBase: new URL(DOWNEX_ORIGIN),
   title: {
     absolute: "Terms of Use | Downex Download Manager",
   },
   description:
     "Official Terms of Use governing Downex Download Manager, the browser companion extension, and software updates.",
   alternates: {
-    canonical: "https://downex.apps.gauravpatil.site/terms",
+    canonical: `${DOWNEX_ORIGIN}/terms`,
   },
   openGraph: {
     title: "Terms of Use | Downex Download Manager",
     description:
       "Official Terms of Use governing Downex Download Manager and related services.",
-    url: "https://downex.apps.gauravpatil.site/terms",
-    siteName: "Downex",
+    url: `${DOWNEX_ORIGIN}/terms`,
+    siteName: "Downex — Simple Free Download Manager",
+    images: [{ url: DOWNEX_OG_IMAGE_URL, width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Terms of Use | Downex Download Manager",
+    description:
+      "Official Terms of Use governing Downex Download Manager and companion extension.",
+    images: [DOWNEX_OG_IMAGE_URL],
   },
 };
 
 export default function DownexTermsPage() {
+  const breadcrumbJsonLd = buildDownexBreadcrumbJsonLd([
+    { name: "Downex — Simple Free Download Manager", url: DOWNEX_ORIGIN },
+    { name: "Terms of Use", url: `${DOWNEX_ORIGIN}/terms` },
+  ]);
+
   return (
-    <DownexLegalLayout
-      title="Terms of Use"
-      lastUpdated="November 24, 2026"
-    >
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <DownexLegalLayout
+        title="Terms of Use"
+        lastUpdated="November 24, 2026"
+      >
       <p className="text-lg font-medium text-zinc-900 dark:text-zinc-100">
         Thank you for using Downex!
       </p>
@@ -183,6 +206,7 @@ export default function DownexTermsPage() {
           </a>.
         </p>
       </section>
-    </DownexLegalLayout>
+      </DownexLegalLayout>
+    </>
   );
 }

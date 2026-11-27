@@ -1,34 +1,57 @@
 import type { Metadata } from "next";
 import DownexLegalLayout from "@/components/downex/DownexLegalLayout";
+import {
+  DOWNEX_OG_IMAGE_URL,
+  DOWNEX_ORIGIN,
+  buildDownexBreadcrumbJsonLd,
+} from "@/lib/data/downex-seo";
 
 export const dynamic = "force-static";
 export const revalidate = false;
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://downex.apps.gauravpatil.site"),
+  metadataBase: new URL(DOWNEX_ORIGIN),
   title: {
     absolute: "Privacy & Policies | Downex Download Manager",
   },
   description:
     "Official Privacy Policy for Downex Download Manager: 100% Zero-Telemetry, local processing only, and complete data wipe support.",
   alternates: {
-    canonical: "https://downex.apps.gauravpatil.site/privacy",
+    canonical: `${DOWNEX_ORIGIN}/privacy`,
   },
   openGraph: {
     title: "Privacy & Policies | Downex Download Manager",
     description:
       "Downex Privacy Policy: Zero tracking, local memory clipboard inspection, private localhost IPC, and full wipe support.",
-    url: "https://downex.apps.gauravpatil.site/privacy",
-    siteName: "Downex",
+    url: `${DOWNEX_ORIGIN}/privacy`,
+    siteName: "Downex — Simple Free Download Manager",
+    images: [{ url: DOWNEX_OG_IMAGE_URL, width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Privacy & Policies | Downex Download Manager",
+    description:
+      "Downex Zero-Telemetry privacy policy: local SQLite persistence, zero analytics, zero tracking.",
+    images: [DOWNEX_OG_IMAGE_URL],
   },
 };
 
 export default function DownexPrivacyPage() {
+  const breadcrumbJsonLd = buildDownexBreadcrumbJsonLd([
+    { name: "Downex — Simple Free Download Manager", url: DOWNEX_ORIGIN },
+    { name: "Privacy & Policies", url: `${DOWNEX_ORIGIN}/privacy` },
+  ]);
+
   return (
-    <DownexLegalLayout
-      title="Privacy & Policies"
-      lastUpdated="November 24, 2026"
-    >
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <DownexLegalLayout
+        title="Privacy & Policies"
+        lastUpdated="November 24, 2026"
+      >
       <p className="text-lg font-medium text-zinc-900 dark:text-zinc-100">
         Thank you for using Downex!
       </p>
@@ -134,6 +157,7 @@ export default function DownexPrivacyPage() {
           </a>.
         </p>
       </section>
-    </DownexLegalLayout>
+      </DownexLegalLayout>
+    </>
   );
 }
