@@ -13,7 +13,7 @@ import {
   CheckCircle2,
   Eye,
   EyeOff,
-  Wrench,
+  Download,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
@@ -28,7 +28,7 @@ interface CpClientProps {
 type CpView = "marketing" | "download";
 
 const CP_SHA256_CHECKSUM =
-  "0ab70fa3c527249dcdcdc71fe41606463dc0f074d722bc57679d6e591a7bf8b3";
+  "ee19d1b329e5291e4ffe15461dbc812284349595e724ecb538ae2d76655d582c";
 
 export default function CpClient({
   desktopDownloadUrl,
@@ -37,6 +37,7 @@ export default function CpClient({
   const [view, setView] = useState<CpView>("marketing");
   const [copiedHash, setCopiedHash] = useState(false);
   const [showHash, setShowHash] = useState(false);
+  const [startingDownload, setStartingDownload] = useState(false);
 
   const openDownloadView = () => {
     setView("download");
@@ -141,11 +142,11 @@ export default function CpClient({
               <div className="flex items-center gap-2">
                 <ThemeToggle variant="inline" className="w-8 h-8 shrink-0" />
                 <div
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-bold select-none"
-                  title="CP Engine"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold select-none"
+                  title="CP Engine Live Release"
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                  <span>Maintenance Mode</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Live • v0.0.1</span>
                 </div>
               </div>
             </header>
@@ -164,48 +165,44 @@ export default function CpClient({
                         CP for Windows
                       </h2>
                       <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                        <span className="font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                          <span>Under Maintenance</span>
+                        <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          <span>Ready to Download</span>
                         </span>
                         <span>&bull;</span>
                         <span>v0.0.1</span>
                         <span>&bull;</span>
                         <span>Windows 10 / 11 (64-bit)</span>
+                        <span>&bull;</span>
+                        <span>12.0 MB</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Maintenance Locked Button */}
+                  {/* Primary Live Download Button */}
                   <div className="flex items-center gap-2 sm:self-center">
-                    <div
-                      className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-700 dark:text-amber-300 text-xs sm:text-sm font-bold cursor-not-allowed select-none shadow-xs"
-                      title="Under Maintenance • Downloads Paused"
+                    <a
+                      href={desktopDownloadUrl}
+                      download="cpsetup.exe"
+                      data-downex-bypass="true"
+                      onClick={() => {
+                        setStartingDownload(true);
+                        setTimeout(() => setStartingDownload(false), 2200);
+                      }}
+                      className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold shadow-sm active:scale-[0.99] transition-all cursor-pointer"
                     >
-                      <Wrench className="w-4 h-4 text-amber-500 shrink-0" />
-                      <span>Under Maintenance • Downloads Paused</span>
-                    </div>
+                      <Download className={`w-4 h-4 shrink-0 ${startingDownload ? "animate-bounce" : ""}`} />
+                      <span>{startingDownload ? "Starting download (cpsetup.exe)..." : "Download for Windows (cpsetup.exe)"}</span>
+                    </a>
                   </div>
                 </div>
 
-                {/* Maintenance Notice Banner */}
-                <div className="mt-4 p-3.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-300/80 dark:border-amber-800/50 text-amber-950 dark:text-amber-200 shadow-xs">
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
-                      <Wrench className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                    </div>
-                    <div className="text-xs space-y-1">
-                      <div className="font-bold text-sm text-amber-950 dark:text-amber-100 flex items-center gap-2">
-                        <span>Scheduled Engine Maintenance</span>
-                        <span className="px-2 py-0.5 rounded-md bg-amber-200/80 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 text-[10px] font-mono uppercase tracking-wider font-semibold">
-                          Active
-                        </span>
-                      </div>
-                      <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed">
-                        CP Engine installer is temporarily locked while we polish the user experience and ship performance enhancements. Direct downloads will resume once updates are finalized.
-                      </p>
-                    </div>
-                  </div>
+                {/* Production Base Release Notice */}
+                <div className="mt-4 p-3 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/90 dark:border-emerald-800/50 text-emerald-950 dark:text-emerald-200 shadow-2xs flex items-center gap-2.5 text-xs">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span>
+                    <strong>Production Base Release v0.0.1:</strong> Verified native Windows installer streamed directly from Cloudflare R2 Global Edge CDN.
+                  </span>
                 </div>
 
                 {/* SHA-256 Checksum Card */}

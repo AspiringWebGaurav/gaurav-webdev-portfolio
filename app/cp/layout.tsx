@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import React from "react";
 
-export const revalidate = 86400;
+export const revalidate = false;
 
 export const viewport: Viewport = {
   width: "device-width",

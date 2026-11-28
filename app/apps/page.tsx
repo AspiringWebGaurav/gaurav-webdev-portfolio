@@ -37,8 +37,8 @@ const PC_APPS: HubCardItem[] = [
     ctaLabel: "Open CP Engine",
     tone: "emerald",
     status: {
-      label: "Updating · v0.0.1",
-      state: "maintenance",
+      label: "Live · v0.0.1",
+      state: "live",
     },
     features: ["Win32 Native", "4MB IOCP", "Zero Freeze"],
     icon: <Copy className="w-4 h-4 sm:w-5 sm:h-5" />,

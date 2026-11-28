@@ -10,7 +10,7 @@ import {
   X,
   Clock,
   ShieldCheck,
-  Wrench,
+  Download,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { EcosystemLink } from "@/components/ui/EcosystemLink";
@@ -33,6 +33,7 @@ export interface CpMarketingLayerProps {
 
 export default function CpMarketingLayer({
   onOpenDownload,
+  desktopDownloadUrl = "https://gphost.eu.cc/raw/cp-desktop",
 }: CpMarketingLayerProps = {}) {
 
   return (
@@ -67,10 +68,10 @@ export default function CpMarketingLayer({
             <ThemeToggle variant="inline" className="w-7 h-7 shrink-0" />
             <button
               onClick={onOpenDownload}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 text-[11px] font-bold shadow-xs active:scale-95 transition-all cursor-pointer"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold shadow-xs active:scale-95 transition-all cursor-pointer"
             >
-              <Wrench className="w-3 h-3 text-amber-500" />
-              <span>Maintenance</span>
+              <Download className="w-3 h-3" />
+              <span>Download</span>
             </button>
           </div>
         </header>
@@ -150,13 +151,15 @@ export default function CpMarketingLayer({
             </div>
 
             {/* CTA Inside Card */}
-            <button
-              onClick={onOpenDownload}
-              className="w-full py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/20 text-amber-800 dark:text-amber-200 border border-amber-500/30 font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs active:scale-95 transition-all cursor-pointer"
+            <a
+              href={desktopDownloadUrl}
+              download="cpsetup.exe"
+              data-downex-bypass="true"
+              className="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs active:scale-95 transition-all cursor-pointer"
             >
-              <Wrench className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-              <span>Under Maintenance • View Details</span>
-            </button>
+              <Download className="w-3.5 h-3.5" />
+              <span>Download for Windows • v0.0.1</span>
+            </a>
           </div>
         </div>
 
@@ -290,16 +293,27 @@ export default function CpMarketingLayer({
 
             <span className="h-3.5 w-[1.5px] bg-zinc-300 dark:bg-zinc-700 rounded-full shrink-0" aria-hidden="true" />
 
+            <a
+              href="/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+            >
+              Terms
+            </a>
+
+            <span className="h-3.5 w-[1.5px] bg-zinc-300 dark:bg-zinc-700 rounded-full shrink-0" aria-hidden="true" />
+
             <ThemeToggle variant="inline" className="w-8 h-8 shrink-0" />
 
             <span className="h-3.5 w-[1.5px] bg-zinc-300 dark:bg-zinc-700 rounded-full shrink-0" aria-hidden="true" />
 
             <button
               onClick={onOpenDownload}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 font-semibold text-xs shadow-none hover:bg-amber-500/20 transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-xs transition-all cursor-pointer"
             >
-              <Wrench className="w-3.5 h-3.5 text-amber-500" />
-              <span>Under Maintenance</span>
+              <Download className="w-3.5 h-3.5" />
+              <span>Download</span>
             </button>
           </nav>
         </header>
@@ -323,11 +337,11 @@ export default function CpMarketingLayer({
             <div className="flex items-center justify-center gap-3 mt-2 sm:mt-2.5">
               <button
                 onClick={onOpenDownload}
-                className="group inline-flex items-center justify-center gap-2 h-9 lg:h-10 px-5 rounded-xl bg-amber-500/15 hover:bg-amber-500/20 text-amber-800 dark:text-amber-200 border border-amber-500/30 text-xs sm:text-[13px] font-bold shadow-xs active:scale-95 transition-all cursor-pointer"
+                className="group inline-flex items-center justify-center gap-2 h-9 lg:h-10 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-[13px] font-bold shadow-sm active:scale-95 transition-all cursor-pointer"
               >
-                <Wrench className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                <span>Under Maintenance • View Details</span>
-                <ArrowRight className="w-3.5 h-3.5 opacity-80 group-hover:translate-x-0.5 transition-transform" />
+                <Download className="w-3.5 h-3.5" />
+                <span>Download for Windows • v0.0.1</span>
+                <ArrowRight className="w-3.5 h-3.5 opacity-85 group-hover:translate-x-0.5 transition-transform" />
               </button>
 
               <a

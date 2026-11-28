@@ -1,382 +1,294 @@
 import type { Metadata } from "next";
 import CpLegalLayout from "@/components/cp/CpLegalLayout";
-import {
-  Scale,
-  ShieldAlert,
-  Zap,
-  HardDrive,
-  RefreshCw,
-  Cpu,
-  FileCheck,
-  AlertTriangle,
-  Lock,
-} from "lucide-react";
 
 export const dynamic = "force-static";
 export const revalidate = false;
 
 export const metadata: Metadata = {
-  title: "Terms of Service | CP Engine",
+  title: "Terms of Use | CP Engine",
   description:
-    "Official Enterprise Terms of Service governing the use of CP Engine Desktop Client v0.0.1 (Base Foundation Release) and Dynamic Edge Over-the-Air (OTA) Update Infrastructure.",
+    "Terms of Use governing the CP Engine Windows file copy accelerator (v0.0.1 Base Foundation) and Dynamic Over-the-Air Update services.",
   alternates: {
     canonical: "https://cp.apps.gauravpatil.site/terms",
   },
   openGraph: {
-    title: "Terms of Service | CP Engine",
+    title: "Terms of Use | CP Engine",
     description:
-      "Enterprise Terms of Service governing CP Engine v0.0.1 Base Binary and Dynamic OTA Update Engine.",
+      "Terms of Use for CP Engine for Windows, hardware-accelerated local transfers, and dynamic edge updates.",
     url: "https://cp.apps.gauravpatil.site/terms",
     siteName: "CP Engine",
   },
 };
 
-const termsSections = [
-  { id: "preamble", title: "1. Acceptance of Terms & Foundation Scope" },
-  { id: "definitions", title: "2. Technical & Legal Definitions" },
-  { id: "version-scope", title: "3. Scope of Release v0.0.1 (Base Binary)" },
-  { id: "dynamic-ota", title: "4. Dynamic OTA Updates & Edge Protocols" },
-  { id: "kernel-iocp", title: "5. Hardware Acceleration Architecture & Safety" },
-  { id: "process-lifecycle", title: "6. Process Lifecycle & Paste Continuation" },
-  { id: "license-grant", title: "7. License Grant & Open Source Terms" },
-  { id: "acceptable-use", title: "8. Acceptable Use & Prohibited Acts" },
-  { id: "integrity-checksum", title: "9. Cryptographic Checksum & Verification" },
-  { id: "disclaimer", title: "10. Comprehensive Disclaimer of Warranties" },
-  { id: "limitation-liability", title: "11. Enterprise Limitation of Liability" },
-  { id: "governing-law", title: "12. Governing Law, Severability & Amendments" },
-];
+const CP_SHA256 =
+  "ee19d1b329e5291e4ffe15461dbc812284349595e724ecb538ae2d76655d582c";
+
+const breadcrumbJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    {
+      "@type": "ListItem",
+      position: 1,
+      name: "CP Engine",
+      item: "https://cp.apps.gauravpatil.site",
+    },
+    {
+      "@type": "ListItem",
+      position: 2,
+      name: "Terms of Use",
+      item: "https://cp.apps.gauravpatil.site/terms",
+    },
+  ],
+};
 
 export default function CpTermsPage() {
   return (
-    <CpLegalLayout
-      title="Terms of Service & Licensing Agreement"
-      badge="Release v0.0.1 Foundation &bull; Dynamic Updates"
-      lastUpdated="November 2026"
-      summary="These Terms of Service govern the installation, execution, and dynamic updating of CP Engine (Desktop Application v0.0.1 Base Foundation and related Dynamic Over-The-Air Update services). Please review these terms meticulously prior to downloading or activating CP Engine on Microsoft Windows."
-      sections={termsSections}
-    >
-      {/* 1. Acceptance */}
-      <section id="preamble" className="space-y-4 scroll-mt-28">
-        <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-200 dark:border-zinc-800">
-          <Scale className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-          <h2 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-zinc-50">
-            1. Acceptance of Terms &amp; Foundation Scope
-          </h2>
-        </div>
-        <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          By downloading, installing, executing, or permitting the execution of the CP Engine binary (specifically designated as Version 0.0.1 Foundation Base Release, compiled for Microsoft Windows x64 platforms), or by allowing the automatic acquisition of dynamic updates provided via authorized edge hosting services, you (&ldquo;User&rdquo;, &ldquo;Licensee&rdquo;, or &ldquo;Enterprise&rdquo;) enter into a legally binding agreement with Gaurav Patil and the CP Engine Open Source Initiative (&ldquo;Author&rdquo;, &ldquo;Maintainer&rdquo;, &ldquo;we&rdquo;, or &ldquo;our&rdquo;).
+    <CpLegalLayout title="Terms of Use" lastUpdated="November 28, 2026">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+
+      <p className="text-zinc-900 dark:text-zinc-100 font-medium">
+        Thank you for using CP Engine!
+      </p>
+
+      <p>
+        These Terms of Use apply to your use of CP Engine for Microsoft Windows (Desktop
+        Foundation <code className="font-mono text-sm">v0.0.1</code>), background tray services,
+        and dynamic edge update delivery (collectively, &ldquo;Services&rdquo;). These Terms
+        form an agreement between you and CP Engine (maintained by Gaurav Patil). By
+        downloading, installing, or using our Services, you agree to these Terms.
+      </p>
+
+      {/* 1. Using CP Engine */}
+      <section
+        id="services"
+        tabIndex={-1}
+        className="space-y-4 pt-4 scroll-mt-20 outline-none target:ring-2 target:ring-emerald-500/40 target:bg-emerald-500/5 target:rounded-lg p-3 -m-3 transition-all duration-500"
+      >
+        <h2 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
+          1. Using Our Services
+        </h2>
+        <p>
+          <strong>What we provide.</strong> CP Engine is a lightweight, client-side file transfer
+          accelerator for Microsoft Windows x64. The application monitors clipboard file-drop
+          operations (<code className="font-mono text-sm">CF_HDROP</code>) and executes fast,
+          parallel user-mode file transfers with a minimal transfer HUD and system tray controller.
         </p>
-        <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          If you are accepting these Terms on behalf of an enterprise, company, corporation, government entity, or other legal entity, you represent and warrant that you possess full legal authority to bind said entity to these Terms. If you do not accept these Terms in their entirety, you must immediately terminate the download, delete all cached setup packages, and refrain from utilizing CP Engine in any capacity.
+        <p>
+          <strong>System requirements.</strong> You are responsible for ensuring your workstation
+          meets Microsoft Windows 10/11 (64-bit) requirements and maintains healthy storage media
+          and power stability prior to executing large high-throughput transfers.
         </p>
-        <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs leading-relaxed flex items-start gap-3">
-          <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-          <div>
-            <strong>Foundational Beta Notice:</strong> Version 0.0.1 represents the initial stable native Win32 core release. It engages direct Windows kernel file I/O APIs and clipboard hooks. While tested across multi-terabyte synthetic and production file workloads, it is deployed with the explicit understanding that software operating at hardware NVMe speeds requires user awareness of storage controller integrity.
-          </div>
-        </div>
+        <p>
+          <strong>No kernel hooks.</strong> CP Engine operates strictly within documented Win32
+          user-mode APIs and does not install kernel-mode (Ring 0) drivers or inject unauthorized
+          shell extensions into system processes.
+        </p>
       </section>
 
-      {/* 2. Definitions */}
-      <section id="definitions" className="space-y-4 scroll-mt-28">
-        <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-200 dark:border-zinc-800">
-          <FileCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-          <h2 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-zinc-50">
-            2. Technical &amp; Legal Definitions
-          </h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-          <div className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50">
-            <div className="font-bold font-mono text-emerald-600 dark:text-emerald-400 mb-1">
-              &ldquo;CP Engine&rdquo; / &ldquo;The Application&rdquo;
-            </div>
-            <p className="text-zinc-600 dark:text-zinc-400 leading-snug">
-              The high-performance Win32 native Explorer file transfer accelerator application comprising the Tauri/Rust core runtime, the low-level Win32 clipboard hook engine, asynchronous worker pool, and UI renderer.
-            </p>
-          </div>
-
-          <div className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50">
-            <div className="font-bold font-mono text-emerald-600 dark:text-emerald-400 mb-1">
-              &ldquo;Base Binary (v0.0.1)&rdquo;
-            </div>
-            <p className="text-zinc-600 dark:text-zinc-400 leading-snug">
-              The immutable, statically anchored Windows executable distributed via the primary installer package (<code className="font-mono">cp-setup.exe</code>), verified by SHA-256 hash <code className="font-mono">3f473fbee0...</code>.
-            </p>
-          </div>
-
-          <div className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50">
-            <div className="font-bold font-mono text-emerald-600 dark:text-emerald-400 mb-1">
-              &ldquo;Dynamic OTA Updates&rdquo;
-            </div>
-            <p className="text-zinc-600 dark:text-zinc-400 leading-snug">
-              Over-the-Air differential binary modules and assets distributed seamlessly from edge hosting services (Cloudflare R2 Global CDN / GPHost) without requiring manual MSI/NSIS installer re-execution.
-            </p>
-          </div>
-
-          <div className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50">
-            <div className="font-bold font-mono text-emerald-600 dark:text-emerald-400 mb-1">
-              &ldquo;Hardware-Accelerated File Streaming&rdquo;
-            </div>
-            <p className="text-zinc-600 dark:text-zinc-400 leading-snug">
-              The asynchronous Windows file transfer engine utilizing direct storage pipelines for maximum physical drive throughput while preserving complete user-mode system stability.
-            </p>
-          </div>
-        </div>
+      {/* 2. Local File Transfers & Ownership */}
+      <section
+        id="transfers"
+        tabIndex={-1}
+        className="space-y-4 pt-4 scroll-mt-20 outline-none target:ring-2 target:ring-emerald-500/40 target:bg-emerald-500/5 target:rounded-lg p-3 -m-3 transition-all duration-500"
+      >
+        <h2 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
+          2. Local File Transfers &amp; Data Ownership
+        </h2>
+        <p>
+          <strong>100% local execution.</strong> All file copy, move, pause, resume, and verify
+          operations execute strictly on your local drives or local network shares. CP Engine
+          never uploads copied files, directory listings, filenames, or clipboard text to external
+          servers.
+        </p>
+        <p>
+          <strong>Your data.</strong> You retain all ownership, rights, and responsibility for
+          files transferred using CP Engine. Because zero user files pass through external
+          infrastructure, we cannot inspect, recover, or restore deleted or overwritten local files.
+        </p>
       </section>
 
-      {/* 3. Version Scope */}
-      <section id="version-scope" className="space-y-4 scroll-mt-28">
-        <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-200 dark:border-zinc-800">
-          <Cpu className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-          <h2 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-zinc-50">
-            3. Scope of Release v0.0.1 (Base Binary)
-          </h2>
-        </div>
-        <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          CP Engine Version 0.0.1 is specifically architected as an immutable, minimal-dependency foundation binary. The fundamental operational scope of this base release encompasses:
+      {/* 3. Acceptable Use & Verification */}
+      <section
+        id="acceptable-use"
+        tabIndex={-1}
+        className="space-y-4 pt-4 scroll-mt-20 outline-none target:ring-2 target:ring-emerald-500/40 target:bg-emerald-500/5 target:rounded-lg p-3 -m-3 transition-all duration-500"
+      >
+        <h2 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
+          3. Permitted Use &amp; Code of Conduct
+        </h2>
+        <p>
+          We provide CP Engine to improve everyday Windows productivity. You agree to use our
+          Services responsibly and not to abuse our software or update infrastructure. You must not:
         </p>
-        <ul className="space-y-2 text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 list-disc pl-5">
+        <ul className="list-disc pl-6 space-y-2 text-zinc-700 dark:text-zinc-300">
           <li>
-            <strong>Low-Level Win32 Subsystem Binding:</strong> Installs a listener for Windows clipboard update broadcasts (<code className="font-mono">WM_CLIPBOARDUPDATE</code>) and registers handling for the Standard Windows Drop Effect and File Drop formats (<code className="font-mono">CF_HDROP</code>).
+            Disrupt, overload, flood, or launch denial-of-service attacks against GPHost or
+            Cloudflare R2 dynamic update endpoints.
           </li>
           <li>
-            <strong>Single-Instance System Mutex:</strong> Maintains a kernel-level global mutex (<code className="font-mono">Global\CP_Engine_SingleInstance_Mutex</code>) to guarantee that only one supervisory instance runs per user session, eliminating race conditions on clipboard message dispatch.
+            Spoof release manifests, forge cryptographic signatures, or redistribute altered binaries
+            carrying official CP Engine branding or certificates.
           </li>
           <li>
-            <strong>Silent Background Tray Service:</strong> Resides in the Windows Notification Area (System Tray) with an idle CPU footprint approaching 0.00% and private working memory allocation under 20 megabytes.
-          </li>
-          <li>
-            <strong>Unbuffered I/O Pipeline:</strong> Employs asynchronous completion routines to bypass the Windows filesystem file cache, preventing RAM bloat and cache flushing during large file migrations (such as VM disks, database archives, and video footage).
+            Deploy CP Engine in safety-critical nuclear, medical life-support, aviation, or
+            emergency dispatch systems where failure could cause physical harm.
           </li>
         </ul>
-      </section>
-
-      {/* 4. Dynamic OTA */}
-      <section id="dynamic-ota" className="space-y-4 scroll-mt-28">
-        <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-200 dark:border-zinc-800">
-          <RefreshCw className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-          <h2 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-zinc-50">
-            4. Dynamic OTA Updates &amp; Edge Protocols
-          </h2>
-        </div>
-        <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          To maintain software performance, address operating system security updates, and deliver algorithm optimizations without forcing users to repeatedly download installers, CP Engine incorporates an automatic Dynamic Over-the-Air Update Engine.
+        <p>
+          <strong>Installer verification.</strong> The official Windows setup package (
+          <code className="font-mono text-sm">cpsetup.exe</code>,{" "}
+          <code className="font-mono text-sm">v0.0.1</code>) is distributed strictly via{" "}
+          <code className="font-mono text-sm">https://cp.apps.gauravpatil.site</code> and{" "}
+          <code className="font-mono text-sm">https://gphost.eu.cc</code> with verified SHA-256
+          digest:
         </p>
-        <div className="space-y-3 text-xs sm:text-sm text-zinc-700 dark:text-zinc-300">
-          <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/60">
-            <h3 className="font-bold text-zinc-950 dark:text-zinc-50 mb-1">
-              4.1 Automated Edge Manifest Synchronization
-            </h3>
-            <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              CP Engine periodically connects over TLS 1.3 to authorized edge CDN endpoints (hosted via Cloudflare R2 Global Edge and GPHost infrastructure) to retrieve signed update manifests. These connections transmit strictly technical handshake parameters (current client version and OS architecture). No user identifier, IP logging, or behavioral tracking is associated with these queries.
-            </p>
-          </div>
-
-          <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/60">
-            <h3 className="font-bold text-zinc-950 dark:text-zinc-50 mb-1">
-              4.2 In-Process Hot-Swapping &amp; Zero Console Flashing
-            </h3>
-            <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              When a dynamic update is downloaded and verified, CP Engine stages the updated binary into <code className="font-mono">%LOCALAPPDATA%\CP</code> and performs a quiet, seamless in-process binary replacement. Spawning occurs using native Win32 flags (<code className="font-mono">CREATE_NO_WINDOW | DETACHED_PROCESS</code>), precluding PowerShell or command prompt popups that interrupt active work.
-            </p>
-          </div>
-
-          <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/60">
-            <h3 className="font-bold text-zinc-950 dark:text-zinc-50 mb-1">
-              4.3 No Re-Installation Requirement
-            </h3>
-            <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              Once the v0.0.1 Base Binary is installed, the application autonomously stays current. Users are never required to manually uninstall prior versions, execute command-line patching tools, or configure registry hooks.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* 5. Kernel IOCP */}
-      <section id="kernel-iocp" className="space-y-4 scroll-mt-28">
-        <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-200 dark:border-zinc-800">
-          <Zap className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-          <h2 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-zinc-50">
-            5. Hardware Acceleration Architecture &amp; Safety
-          </h2>
-        </div>
-        <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          The core innovation of CP Engine is the replacement of Explorer&rsquo;s legacy single-threaded synchronous file copy subsystem with an asynchronous user-mode worker architecture:
-        </p>
-        <div className="space-y-2 text-xs sm:text-sm text-zinc-700 dark:text-zinc-300">
-          <p>
-            <strong>Clipboard Operation Handling:</strong> When a user invokes Ctrl+V or the Explorer paste menu following a file copy command, CP Engine inspects the standard file drop structure. If paths qualify for accelerated direct streaming, CP Engine presents its hardware transfer HUD and manages the stream.
-          </p>
-          <p>
-            <strong>Direct Hardware Streaming:</strong> Optimized memory pipelines stream data directly between storage channels without unnecessary intermediate operating system cache thrashing, enabling modern NVMe drives to operate at high speed.
-          </p>
-          <p>
-            <strong>Filesystem Integrity &amp; Safety:</strong> CP Engine does not install kernel-level drivers or hook the NT Kernel at Ring 0. All operations execute strictly within documented Win32 user-mode APIs, ensuring maximum operating system stability and enterprise security compatibility.
-          </p>
-        </div>
-      </section>
-
-      {/* 6. Lifecycle */}
-      <section id="process-lifecycle" className="space-y-4 scroll-mt-28">
-        <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-200 dark:border-zinc-800">
-          <HardDrive className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-          <h2 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-zinc-50">
-            6. Process Lifecycle &amp; Paste Continuation Guarantee
-          </h2>
-        </div>
-        <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          CP Engine implements resilient process lifecycle management specifically designed to avoid interrupting in-flight user tasks:
-        </p>
-        <ul className="space-y-2 text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 list-disc pl-5">
-          <li>
-            <strong>Pending Paste Persistence:</strong> If an OTA update finishes staging at the exact instant a user initiates a paste operation, CP Engine records the pending clipboard intent into a secured, transient flag (<code className="font-mono">pending_paste.flag</code>) inside the local user profile.
-          </li>
-          <li>
-            <strong>Instant Relaunch &amp; Execution:</strong> The newly spawned dynamic binary acquires the released system mutex, checks for the presence of the pending flag, restores the transfer queue immediately, and presents a fresh user interface without losing the transfer task.
-          </li>
-          <li>
-            <strong>Tray Crash Recovery:</strong> In the rare event of a process interruption, the Windows Shell notification icon auto-cleanses and restarts seamlessly via the CP supervisor thread.
-          </li>
-        </ul>
-      </section>
-
-      {/* 7. License Grant */}
-      <section id="license-grant" className="space-y-4 scroll-mt-28">
-        <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-200 dark:border-zinc-800">
-          <Scale className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-          <h2 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-zinc-50">
-            7. License Grant &amp; Open Source Terms
-          </h2>
-        </div>
-        <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          CP Engine source code and base binaries are released under the terms of the <strong>MIT License</strong>. Under this license:
-        </p>
-        <div className="p-4 rounded-xl bg-zinc-100 dark:bg-zinc-900/80 font-mono text-xs text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 space-y-2">
-          <p>
-            Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the &ldquo;Software&rdquo;), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-          </p>
-          <p className="pt-2 font-semibold">
-            The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-          </p>
-        </div>
-      </section>
-
-      {/* 8. Acceptable Use */}
-      <section id="acceptable-use" className="space-y-4 scroll-mt-28">
-        <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-200 dark:border-zinc-800">
-          <ShieldAlert className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-          <h2 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-zinc-50">
-            8. Acceptable Use &amp; Prohibited Acts
-          </h2>
-        </div>
-        <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          While CP Engine is open source, utilization of our official edge infrastructure (Cloudflare R2 and GPHost Global CDN) is subject to strict operational limits. You expressly agree that you shall NOT:
-        </p>
-        <ul className="space-y-1.5 text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 list-disc pl-5">
-          <li>Attempt to conduct denial-of-service (DDoS) attacks against the dynamic update distribution hosts;</li>
-          <li>Spoof cryptographic signatures or attempt to publish tampered dynamic update manifests under the CP Engine identifier;</li>
-          <li>Employ CP Engine in military weapons systems, nuclear installations, critical medical life-support systems, or emergency responder dispatch where software failure could result in injury or loss of life;</li>
-          <li>Distribute modified binaries containing malware, keystroke loggers, or unauthorized payload extractors while retaining CP Engine trademarks.</li>
-        </ul>
-      </section>
-
-      {/* 9. Integrity */}
-      <section id="integrity-checksum" className="space-y-4 scroll-mt-28">
-        <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-200 dark:border-zinc-800">
-          <Lock className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-          <h2 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-zinc-50">
-            9. Cryptographic Checksum &amp; Verification
-          </h2>
-        </div>
-        <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          Every official build of the CP Engine Base Binary is signed and hashed. Licensees are encouraged to verify the binary prior to execution:
-        </p>
-        <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 font-mono text-xs space-y-2">
-          <div className="text-zinc-500 text-[11px]">Official v0.0.1 Base Installer SHA-256 Hash:</div>
-          <div className="p-2.5 rounded-lg bg-zinc-100 dark:bg-black/60 text-emerald-600 dark:text-emerald-400 font-bold break-all select-all">
-            3f473fbee0aa89f9764c46756c6b887940019a694b4dc56165ab6e43d8cc8cec
-          </div>
-          <div className="text-zinc-500 text-[11px] pt-1">
-            Verification Command (Windows PowerShell):
-          </div>
-          <div className="p-2 rounded bg-zinc-100 dark:bg-black/60 text-zinc-800 dark:text-zinc-200">
-            Get-FileHash -Algorithm SHA256 .\cp-setup.exe
-          </div>
-        </div>
-      </section>
-
-      {/* 10. Disclaimer */}
-      <section id="disclaimer" className="space-y-4 scroll-mt-28">
-        <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-200 dark:border-zinc-800">
-          <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-          <h2 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-zinc-50 uppercase tracking-tight">
-            10. Comprehensive Disclaimer of Warranties
-          </h2>
-        </div>
-        <div className="p-5 rounded-2xl border border-zinc-300 dark:border-zinc-800 bg-zinc-100/50 dark:bg-zinc-900/50 text-xs sm:text-sm text-zinc-800 dark:text-zinc-300 space-y-3 leading-relaxed">
-          <p className="font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
-            THE SOFTWARE IS PROVIDED &ldquo;AS IS&rdquo;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NONINFRINGEMENT.
-          </p>
-          <p>
-            IN NO EVENT SHALL GAURAV PATIL, THE CP ENGINE CONTRIBUTORS, EDGE HOSTING PROVIDERS, OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-          </p>
-          <p>
-            THE USER EXPRESSLY ACKNOWLEDGES THAT UNBUFFERED HARDWARE FILE TRANSFERS EXERT MAXIMUM READ/WRITE STRESS ON SOLID-STATE STORAGE DRIVES, CONTROLLERS, AND BUS INTERFACES. THE AUTHOR BEARS NO RESPONSIBILITY FOR PRE-EXISTING HARDWARE LATENT DEFECTS, THERMAL THROTTLING, CONTROLLER FAULTS, POWER INTERRUPTIONS DURING IOCP WRITES, OR DATA LOSS RESULTING THEREFROM.
-          </p>
-        </div>
-      </section>
-
-      {/* 11. Limitation */}
-      <section id="limitation-liability" className="space-y-4 scroll-mt-28">
-        <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-200 dark:border-zinc-800">
-          <ShieldAlert className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-          <h2 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-zinc-50">
-            11. Enterprise Limitation of Liability
-          </h2>
-        </div>
-        <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          To the maximum extent permitted under applicable law, in no circumstances shall our aggregate liability arising out of or related to CP Engine or these Terms exceed either: (a) the total amount paid by you to the Author for the software in the preceding twelve (12) months; or (b) the nominal amount of Five United States Dollars (US $5.00), whichever is lesser.
-        </p>
-        <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          This limitation applies to all claims, whether based on warranty, contract, tort (including negligence), strict liability, or any other legal theory, even if we have been informed of the possibility of such damages.
+        <p className="font-mono text-xs sm:text-[13px] break-all text-zinc-900 dark:text-zinc-100 bg-zinc-100 dark:bg-zinc-900 px-3.5 py-2.5 rounded-lg border border-zinc-200 dark:border-zinc-800">
+          {CP_SHA256}
         </p>
       </section>
 
-      {/* 12. Governing Law */}
-      <section id="governing-law" className="space-y-4 scroll-mt-28">
-        <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-200 dark:border-zinc-800">
-          <Scale className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-          <h2 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-zinc-50">
-            12. Governing Law, Severability &amp; Amendments
-          </h2>
-        </div>
-        <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          These Terms shall be governed by, construed, and enforced in accordance with the substantive laws of India, without regard to its conflict of law principles. Any dispute arising out of or relating to CP Engine shall be submitted to the exclusive jurisdiction of the competent courts of Maharashtra, India.
+      {/* 4. Anti-Tampering & Hardware Ban Policy */}
+      <section
+        id="anti-tampering"
+        tabIndex={-1}
+        className="space-y-4 pt-4 scroll-mt-20 outline-none target:ring-2 target:ring-emerald-500/40 target:bg-emerald-500/5 target:rounded-lg p-3 -m-3 transition-all duration-500"
+      >
+        <h2 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
+          4. Software Integrity &amp; Hardware Ban Enforcement
+        </h2>
+        <p>
+          <strong>Protection against tampering.</strong> Unauthorized binary patching, memory
+          injection, DLL hijacking, reverse-engineering cracking, or tampering with embedded update
+          verification checks is strictly prohibited on official builds.
         </p>
-        <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          If any provision of these Terms is found by a court of competent jurisdiction to be invalid, unlawful, or unenforceable, such provision shall be severed, and the remaining provisions shall continue in full force and effect.
+        <p>
+          <strong>Ecosystem enforcement.</strong> Bypassing security verification or attempting to
+          inject tampered update payloads triggers automated local rollback quarantine and may
+          result in permanent machine and hardware-level bans across official Gaurav Patil
+          ecosystem distribution services.
         </p>
-        <div className="pt-4 text-xs text-zinc-500 dark:text-zinc-400">
-          For formal inquiries or enterprise governance questions, please contact the maintainer at{" "}
+      </section>
+
+      {/* 5. Open Source License & Dynamic Updates */}
+      <section
+        id="updates-license"
+        tabIndex={-1}
+        className="space-y-4 pt-4 scroll-mt-20 outline-none target:ring-2 target:ring-emerald-500/40 target:bg-emerald-500/5 target:rounded-lg p-3 -m-3 transition-all duration-500"
+      >
+        <h2 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
+          5. Software License &amp; Dynamic Updates
+        </h2>
+        <p>
+          <strong>MIT open source license.</strong> CP Engine source code and official base builds
+          are licensed under the MIT License, granting permission free of charge to use, copy,
+          modify, and distribute copies subject to preservation of the copyright and permission
+          notice. Official source is published at{" "}
           <a
-            href="mailto:gaurav@gauravpatil.site"
-            className="text-emerald-600 dark:text-emerald-400 underline font-semibold"
-          >
-            gaurav@gauravpatil.site
-          </a>{" "}
-          or visit{" "}
-          <a
-            href="https://gauravpatil.site"
+            href="https://github.com/AspiringWebGaurav/cp"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-emerald-600 dark:text-emerald-400 underline font-semibold"
+            className="text-zinc-950 dark:text-zinc-50 underline underline-offset-4 hover:text-emerald-600 dark:hover:text-emerald-400"
           >
-            gauravpatil.site
+            github.com/AspiringWebGaurav/cp
           </a>
           .
-        </div>
+        </p>
+        <p>
+          <strong>Silent binary handoffs.</strong> Once base release{" "}
+          <code className="font-mono text-sm">v0.0.1</code> is installed, CP Engine checks for
+          updates quietly, verifies AES-256-GCM / Windows PE headers, defers restarts while you
+          are actively typing or copying files, performs atomic NTFS swaps, and rolls back
+          automatically if a probationary boot fails.
+        </p>
+      </section>
+
+      {/* 6. Disclaimers & Warranties */}
+      <section
+        id="disclaimers"
+        tabIndex={-1}
+        className="space-y-4 pt-4 scroll-mt-20 outline-none target:ring-2 target:ring-emerald-500/40 target:bg-emerald-500/5 target:rounded-lg p-3 -m-3 transition-all duration-500"
+      >
+        <h2 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
+          6. Disclaimers &amp; Storage Responsibilities
+        </h2>
+        <p>
+          THE SOFTWARE IS PROVIDED &ldquo;AS IS&rdquo;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+          IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+          PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+        </p>
+        <p>
+          High-throughput sequential disk I/O places sustained workload on SSDs, NVMe controllers,
+          and USB bridges. You acknowledge sole responsibility for maintaining backups of
+          irreplaceable data and ensuring underlying hardware health.
+        </p>
+      </section>
+
+      {/* 7. Limitation of Liability */}
+      <section
+        id="liability"
+        tabIndex={-1}
+        className="space-y-4 pt-4 scroll-mt-20 outline-none target:ring-2 target:ring-emerald-500/40 target:bg-emerald-500/5 target:rounded-lg p-3 -m-3 transition-all duration-500"
+      >
+        <h2 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
+          7. Limitation of Liability
+        </h2>
+        <p>
+          To the fullest extent permitted by applicable law, neither Gaurav Patil nor CP Engine
+          contributors shall be liable for any indirect, incidental, special, consequential, or
+          punitive damages, including data loss, hardware fault, or loss of business profits
+          arising from your use or inability to use the Services.
+        </p>
+        <p>
+          In no event shall aggregate liability exceed Five United States Dollars (US $5.00) or the
+          amount paid by you for the free software during the preceding twelve months, whichever is
+          lesser.
+        </p>
+      </section>
+
+      {/* 8. Governing Law & Contact */}
+      <section
+        id="general"
+        tabIndex={-1}
+        className="space-y-4 pt-4 scroll-mt-20 outline-none target:ring-2 target:ring-emerald-500/40 target:bg-emerald-500/5 target:rounded-lg p-3 -m-3 transition-all duration-500"
+      >
+        <h2 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
+          8. Governing Law &amp; Contact
+        </h2>
+        <p>
+          These Terms are governed by the laws of India, with disputes subject to the exclusive
+          jurisdiction of the competent courts of Maharashtra, India. If any clause is held
+          unenforceable, the remaining Terms remain in full force.
+        </p>
+        <p>
+          We may update these Terms when new capabilities or legal requirements apply. Questions
+          can be sent to{" "}
+          <a
+            href="mailto:hello@gauravpatil.site"
+            className="text-zinc-950 dark:text-zinc-50 underline underline-offset-4 hover:text-emerald-600 dark:hover:text-emerald-400"
+          >
+            hello@gauravpatil.site
+          </a>{" "}
+          or reviewed alongside our{" "}
+          <a
+            href="/privacy"
+            className="text-zinc-950 dark:text-zinc-50 underline underline-offset-4 hover:text-emerald-600 dark:hover:text-emerald-400"
+          >
+            Privacy Policy
+          </a>{" "}
+          and{" "}
+          <a
+            href="/aou"
+            className="text-zinc-950 dark:text-zinc-50 underline underline-offset-4 hover:text-emerald-600 dark:hover:text-emerald-400"
+          >
+            Acceptance of Use (AOU)
+          </a>
+          .
+        </p>
       </section>
     </CpLegalLayout>
   );
 }
-

@@ -33,7 +33,7 @@ export default function CpUninstalledPage() {
         href="/"
         target="_blank"
         rel="noopener noreferrer"
-        prefetch={true}
+        prefetch={false}
         className="inline-flex items-center gap-3 mb-6 group cursor-pointer"
         title="CP Engine"
       >
@@ -66,7 +66,7 @@ export default function CpUninstalledPage() {
           href="/"
           target="_blank"
           rel="noopener noreferrer"
-          prefetch={true}
+          prefetch={false}
           className="text-blue-600 dark:text-blue-400 hover:underline font-normal"
         >
           Click here
@@ -83,7 +83,7 @@ export default function CpUninstalledPage() {
           href="/how-to-use"
           target="_blank"
           rel="noopener noreferrer"
-          prefetch={true}
+          prefetch={false}
           className="hover:underline"
         >
           Docs
@@ -95,7 +95,7 @@ export default function CpUninstalledPage() {
           href="/"
           target="_blank"
           rel="noopener noreferrer"
-          prefetch={true}
+          prefetch={false}
           className="hover:underline"
         >
           App
